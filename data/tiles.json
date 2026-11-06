@@ -3,5 +3,14 @@
   "cobble": { "base": "#8a7d6b", "speck": "#6e6354", "count": 14 },
   "grass": { "base": "#4f9d4a", "speck": "#3f8a3c", "count": 12 },
   "puddle": { "base": "#4a4d55", "speck": "#6fa8dc", "count": 0 },
-  "wall": { "base": "#a2553c", "speck": "#7d3f2c", "count": 8 }
+  "wall": { "base": "#a2553c", "speck": "#7d3f2c", "count": 8 },
+  "lane": { "base": "#8a4b45", "speck": "#9a5a52", "count": 8 },
+  "path": { "base": "#b9a77d", "speck": "#a08f66", "count": 14 },
+  "concrete": { "base": "#9a9ea6", "speck": "#85898f", "count": 8 },
+  "water": { "base": "#2f6fb0", "speck": "#5b9bd5", "count": 10 },
+  "tree": { "base": "#4f9d4a", "speck": "#3f8a3c", "count": 12 },
+  "fence": { "base": "#9a9ea6", "speck": "#85898f", "count": 8 },
+  "hedge": { "base": "#2e7a34", "speck": "#256a2b", "count": 16 },
+  "dumpster": { "base": "#9a9ea6", "speck": "#85898f", "count": 8 },
+  "booth": { "base": "#9a9ea6", "speck": "#85898f", "count": 8 }
 }

@@ -60,6 +60,94 @@
       "bike": 1.0
     },
     "rattle": 0.0,
-    "particle": null
+    "particle": null,
+    "solid": true
+  },
+  "lane": {
+    "grip": 1.0,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.05
+    },
+    "rattle": 0.0,
+    "particle": "dust-grey"
+  },
+  "path": {
+    "grip": 0.9,
+    "speed": {
+      "foot": 1.0,
+      "bike": 0.85
+    },
+    "rattle": 0.0,
+    "particle": "dust-sand"
+  },
+  "concrete": {
+    "grip": 1.0,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0
+    },
+    "rattle": 0.0,
+    "particle": "dust-grey"
+  },
+  "water": {
+    "grip": 1.0,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0
+    },
+    "rattle": 0.0,
+    "particle": null,
+    "solid": true
+  },
+  "tree": {
+    "grip": 1.0,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0
+    },
+    "rattle": 0.0,
+    "particle": null,
+    "solid": true
+  },
+  "fence": {
+    "grip": 1.0,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0
+    },
+    "rattle": 0.0,
+    "particle": null,
+    "solid": true
+  },
+  "hedge": {
+    "grip": 1.0,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0
+    },
+    "rattle": 0.0,
+    "particle": null,
+    "solid": true
+  },
+  "dumpster": {
+    "grip": 1.0,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0
+    },
+    "rattle": 0.0,
+    "particle": null,
+    "solid": true
+  },
+  "booth": {
+    "grip": 1.0,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0
+    },
+    "rattle": 0.0,
+    "particle": null,
+    "solid": true
   }
 }

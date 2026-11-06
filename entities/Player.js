@@ -37,8 +37,12 @@ export class Player {
     m.update(dt, i.move.x, i.move.y, i.sprint);
     this.sprite.setPosition(this.x, this.y);
     this.sprite.setDepth(this.y);
-    if (m.profile.faceHeading) this.sprite.setRotation(m.heading);
-    else if (i.move.x) this.sprite.setFlipX(i.move.x < 0);
+    if (m.profile.faceHeading) {
+      // facing west: mirror instead of rotating past 90 degrees, so the rider never appears upside down
+      const h = m.heading;
+      const west = Math.cos(h) < 0;
+      this.sprite.setFlipX(west).setRotation(west ? h + (h > 0 ? -Math.PI : Math.PI) : h);
+    } else if (i.move.x) this.sprite.setFlipX(i.move.x < 0);
 
     if (m.surface !== this.lastSurface) {
       this.lastSurface = m.surface;

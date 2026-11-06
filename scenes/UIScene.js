@@ -1,4 +1,5 @@
 import { TouchControls } from '../ui/touch.js';
+import { ObjectiveArrow } from '../ui/ObjectiveArrow.js';
 
 // Overlay HUD, touch controls and rotate hint. Reads only; never mutates the world (AD-13).
 export class UIScene extends Phaser.Scene {
@@ -9,6 +10,7 @@ export class UIScene extends Phaser.Scene {
     this.fps = this.add.text(4, 2, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffff66' });
     this.nextFps = 0;
     this.makeStatus();
+    this.arrow = new ObjectiveArrow(this, this.ctx, this.scene.get('Game'));
     this.touch = new TouchControls(this, this.ctx, this.cache.json.get('input'));
     this.hint = this.makeRotateHint();
     this.events.once('shutdown', () => this.hint.remove());
@@ -58,6 +60,7 @@ export class UIScene extends Phaser.Scene {
 
   update(time) {
     this.touch.update();
+    this.arrow.update();
     const blocked = this.ctx.input.blocked;
     if (this.hint.hidden === blocked) this.hint.hidden = !blocked;
     if (time < this.nextFps) return;

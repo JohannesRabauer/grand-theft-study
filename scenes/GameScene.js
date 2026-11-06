@@ -4,6 +4,7 @@ import { addStaticWall } from '../physics/bodies.js';
 import { Input } from '../ui/input.js';
 import { Bikes } from '../entities/Bike.js';
 import { Player } from '../entities/Player.js';
+import { Zones } from '../entities/Zones.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -32,6 +33,7 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this, ctx, (spawn.x + 0.5) * ts, (spawn.y + 0.5) * ts, cache.get('vehicles'), 'foot');
     ctx.player = this.player;
     this.bikes = new Bikes(this, ctx);
+    this.zones = new Zones(this, ctx);
     this.zoomCfg = cache.get('camera');
 
     const worldW = map.rows[0].length * ts;
@@ -70,7 +72,7 @@ export class GameScene extends Phaser.Scene {
     map.rows.forEach((row, ty) => {
       let start = -1;
       for (let tx = 0; tx <= row.length; tx++) {
-        const wall = tx < row.length && map.legend[row[tx]] === 'wall';
+        const wall = tx < row.length && this.ctx.surfaces.solid(map.legend[row[tx]]);
         if (wall && start < 0) start = tx;
         if (!wall && start >= 0) {
           addStaticWall(this, ((start + tx) / 2) * ts, (ty + 0.5) * ts, (tx - start) * ts, ts);
@@ -85,6 +87,7 @@ export class GameScene extends Phaser.Scene {
     this.ctx.input.update();
     this.player.update(dt);
     this.bikes.update(dt);
+    this.zones.update();
     this.updateZoom(dt);
   }
 }

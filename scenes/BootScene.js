@@ -18,6 +18,7 @@ export class BootScene extends Phaser.Scene {
     this.makePlayer();
     this.makeBike();
     this.makeFx();
+    this.makeArrow();
     this.scene.start('Menu');
   }
 
@@ -42,12 +43,44 @@ export class BootScene extends Phaser.Scene {
         c.fillStyle = '#9cc7ec';
         c.fillRect(4, 5, 4, 1);
       }
+      this.decorateTile(c, id, size);
       if (id === 'wall') {
         c.fillStyle = '#5d2e20';
         c.fillRect(0, size - 2, size, 2);
       }
       tex.refresh();
     }
+  }
+
+  // Small pixel details so special tiles read at a glance.
+  decorateTile(c, id, size) {
+    const px = (col, x, y, w, h) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+    if (id === 'tree') {
+      px('#2c6a2c', 2, 2, 12, 12); px('#3f8a3c', 3, 3, 10, 9); px('#6dbb5a', 5, 4, 3, 2); px('#5a3a1e', 7, 13, 2, 3);
+    } else if (id === 'water') {
+      px('#8fc1ee', 2, 4, 5, 1); px('#8fc1ee', 9, 10, 5, 1);
+    } else if (id === 'fence') {
+      px('#9a9ea6', 0, 7, size, 2);
+      for (let x = 1; x < size; x += 5) px('#5d6168', x, 3, 2, 10);
+    } else if (id === 'hedge') {
+      px('#1f5a26', 0, 0, size, 2); px('#4fae52', 3, 5, 3, 2); px('#4fae52', 10, 10, 3, 2);
+    } else if (id === 'dumpster') {
+      px('#2f6b3a', 1, 2, 14, 12); px('#1f4a28', 1, 2, 14, 3); px('#3f8a4c', 2, 7, 12, 1);
+    } else if (id === 'booth') {
+      px('#c8352f', 3, 1, 10, 14); px('#9fd3f0', 5, 3, 6, 8); px('#7a1f1b', 3, 12, 10, 3);
+    } else if (id === 'lane') {
+      px('#e8e4d8', 0, 7, 6, 2);
+    }
+  }
+
+  makeArrow() {
+    const tex = this.textures.createCanvas('arrow', 12, 12);
+    const c = tex.getContext();
+    c.fillStyle = '#000000';
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(12, 6); c.lineTo(0, 12); c.lineTo(3, 6); c.closePath(); c.fill();
+    c.fillStyle = '#ffe14d';
+    c.beginPath(); c.moveTo(2, 2.5); c.lineTo(9.5, 6); c.lineTo(2, 9.5); c.lineTo(4, 6); c.closePath(); c.fill();
+    tex.refresh();
   }
 
   makePlayer() {

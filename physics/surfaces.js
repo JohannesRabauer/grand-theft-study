@@ -16,6 +16,10 @@ export class Surfaces {
     return this.legend[this.rows[ty][tx]];
   }
 
+  solid(id) {
+    return !!this.data[id]?.solid;
+  }
+
   props(id) {
     return this.data[id] || this.data.grass;
   }
