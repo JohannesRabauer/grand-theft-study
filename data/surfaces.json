@@ -1,0 +1,7 @@
+{
+  "asphalt": { "grip": 1.0, "speed": { "foot": 1.0 } },
+  "cobble": { "grip": 0.9, "speed": { "foot": 0.95 } },
+  "grass": { "grip": 0.8, "speed": { "foot": 0.85 } },
+  "puddle": { "grip": 0.5, "speed": { "foot": 0.6 } },
+  "wall": { "grip": 1.0, "speed": { "foot": 1.0 } }
+}

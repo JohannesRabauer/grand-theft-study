@@ -1,0 +1,3 @@
+{
+  "foot": { "maxSpeed": 70, "accel": 600, "grip": 1.0, "radius": 5 }
+}

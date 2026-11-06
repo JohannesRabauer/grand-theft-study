@@ -1,0 +1,7 @@
+{
+  "asphalt": { "base": "#4a4d55", "speck": "#5a5d66", "count": 10 },
+  "cobble": { "base": "#8a7d6b", "speck": "#6e6354", "count": 14 },
+  "grass": { "base": "#4f9d4a", "speck": "#3f8a3c", "count": 12 },
+  "puddle": { "base": "#4a4d55", "speck": "#6fa8dc", "count": 0 },
+  "wall": { "base": "#a2553c", "speck": "#7d3f2c", "count": 8 }
+}
