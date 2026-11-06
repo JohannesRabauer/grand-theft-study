@@ -3,6 +3,8 @@
 Retro top-down browser game prototype: a kid walks, rides and sneaks to school through a small town.
 Phaser 3.90.0 (from jsDelivr, includes Matter.js), native ES modules, no build step.
 
+**Status: the full prototype (stories 1.1 to 1.11) is built.** Not yet verified: the 60 FPS target on a real phone (only desktop CPU cost was measured, see [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for numbers and the manual phone test).
+
 ## Run (Windows PowerShell)
 
 The game must be served over HTTP; `file://` breaks ES modules.
@@ -14,8 +16,16 @@ npx serve .
 python -m http.server 8080
 ```
 
-Open the printed URL (`http://localhost:3000` or `http://localhost:8080`). Add `?debug` to the URL for physics outlines.
-For a phone on the same network, open the LAN URL of the PC (the firewall may prompt).
+Open the printed URL (`http://localhost:3000` or `http://localhost:8080`). URL flags: `?debug` (FPS, physics outlines, pool counters, bully paths), `?q=low|medium|high` (quality for this load), `?bench` (stepping benchmark and smoke test, see below). For a phone on the same network see the protocol in docs/PERFORMANCE.md.
+
+## Features
+
+- Walk (sprint with stamina), ride a bike (slides, skid marks, bell), surfaces that change speed and grip (asphalt, cobble, grass, puddles).
+- A 96x64 tile town with two routes from home to the school, an objective arrow with distance, zoom that follows speed.
+- Living world: wind, rain with puddles (T), particles, pushable props, flags.
+- Chase: the skatepark and the back of the schoolyard are bully turf; bullies see, chase, search and give up (levels 0 to 2, A* pathfinding). Hide in hedges, dumpsters and phone booths to escape; if you are caught a comic frame shows, you lose a euro and respawn at home.
+- Slingshot with wind-bent aim; pebbles only affect objects (cans, crates, trash cans), never people or animals. Hits lure bullies.
+- Menu and pause overlay with language (Deutsch / English) and quality (Low / Medium / High); touch controls, gamepad and keyboard.
 
 ## Controls
 
@@ -36,6 +46,28 @@ All devices produce the same intent snapshot (`ctx.input.intent`); `ctx.input.ty
 Touch controls appear on touch devices and hide as soon as a key or mouse is used. In portrait on a touch device a rotate hint covers the game and input is ignored.
 The 480x270 picture is scaled by a whole number (letterboxed, pixelated); only windows smaller than 480x270 get a fractional fit.
 An FPS counter shows at the top left.
+
+## Known limitations
+
+- Placeholder procedural art, no audio, no saves (only language and quality are remembered), no school scene: arriving only shows a banner.
+- Phone performance is unmeasured on real hardware (desktop proxy only); the reference phone is not chosen.
+- Touch has no weather or map button; the map key does nothing yet.
+- Bullies, props and the slingshot are tuned by feel, not playtested with children.
+- Physics is fixed at 60 Hz steps; on screens above 60 Hz the picture is not interpolated.
+
+## Check scripts and benchmark
+
+```powershell
+node scripts/check-all.mjs        # runs the four checks below, exits non-zero on failure
+node scripts/check-collisions.mjs # collision category table
+node scripts/check-i18n.mjs       # DE/EN keys identical, every t('...') key exists
+node scripts/check-map.mjs        # town map shape, objects, two routes to school
+node scripts/check-chase.mjs      # pathfinding, level rules, escape rules
+node scripts/bench-cdp.mjs --url http://localhost:8080          # CPU cost per update, all scenarios and tiers (headless Edge/Chrome)
+node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke  # scripted whole-game smoke test
+```
+
+`index.html?bench` loads `scripts/bench.js` and `window.SCHULWEG_BENCH` (`runAll()`, `live()`, `smoke()`); details in docs/PERFORMANCE.md.
 
 ## Movement and surfaces
 
@@ -100,13 +132,14 @@ Hold the left mouse button (touch: hold the tool button and drag from it to aim;
 | `vehicles/` | `MovementController.js`: drives any actor from a profile in `data/vehicles.json` |
 | `tools/` | Slingshot and other tools |
 | `ai/` | Chase director and level rules, bully state machine, perception, pathfinding |
-| `physics/` | `categories.js`, `bodies.js` (only place that creates bodies), surfaces service (with weather overrides), `Wind.js`, `Weather.js` |
+| `physics/` | `categories.js`, `bodies.js` (only place that creates bodies), surfaces service (with weather overrides), `Wind.js`, `Weather.js`, `WallStreamer.js` (keeps only walls near moving things in the Matter world) |
 | `particles/` | `ParticleHub.js`: pooled emitters, surface effects, rain, ambient life |
 | `learning/`, `minigames/`, `missions/` | Empty in the prototype |
 | `services/` | `quality.js`: active quality tier, persistence, `quality:changed` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |
 | `data/` | Tuning JSON, `maps/town.json` (ASCII grid, objects in tile coordinates) |
 | `ui/` | `input.js` (intent snapshot), HUD |
-| `scripts/` | Dev scripts |
+| `scripts/` | `check-*.mjs` and `check-all.mjs`, `bench.js` / `smoke.js` (loaded by `?bench`), `bench-cdp.mjs` (headless runner) |
+| `docs/` | `PERFORMANCE.md`: benchmark results, optimizations, manual phone test |
 
 Design rules live in `_bmad-output/initiative-schulweg/architecture-schulweg-prototype/`.

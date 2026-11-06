@@ -12,6 +12,7 @@ export class UIScene extends Phaser.Scene {
     this.ctx = data.ctx;
     this.fps = this.add.text(4, 2, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffff66' });
     this.nextFps = 0;
+    this.lastFps = -1;
     this.makeStatus();
     this.makeAnger();
     this.makeMoney();
@@ -24,6 +25,7 @@ export class UIScene extends Phaser.Scene {
     if (window.SCHULWEG_DEBUG) this.windArrow = this.add.graphics();
     if (window.SCHULWEG_DEBUG) this.debug = this.add.text(4, 62, '', { fontFamily: 'monospace', fontSize: '8px', color: '#9fe0ff' });
     this.nextDebug = 0;
+    this.windKey = -1;
     const ev = this.ctx.events;
     // every visible text re-resolves when the language changes
     const onLang = () => this.retext();
@@ -39,6 +41,8 @@ export class UIScene extends Phaser.Scene {
 
   retext() {
     const { ctx } = this;
+    this.lastFps = -1; // re-resolved on the next FPS tick
+    this.windKey = -1; // and the wind label while aiming
     this.stamina.setText(ctx.t('hud.stamina'));
     this.angerLabel.setText(ctx.t('hud.anger'));
     this.spotted.setText(ctx.t('hud.spotted'));
@@ -119,6 +123,7 @@ export class UIScene extends Phaser.Scene {
     this.hidden = this.add.text(width - 4, 22, ctx.t('hud.hidden'), { ...style, color: '#7dff8a', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 0).setVisible(false);
     this.hideBar = this.add.graphics();
     this.hideShown = false;
+    this.hideFill = -1;
     const colors = [0xe8731c, 0xe0302a];
     const drawLevel = ({ level }) => {
       const g = this.angerBars.clear();
@@ -175,9 +180,14 @@ export class UIScene extends Phaser.Scene {
     if (aiming !== this.windGfx.visible) {
       this.windGfx.setVisible(aiming);
       this.windText.setVisible(aiming);
+      this.windKey = -1;
     }
     if (!aiming) return;
     const v = ctx.wind.vector;
+    // the wind drifts slowly: redraw only when angle (about 3 deg steps) or strength (2 % steps) changed
+    const key = Math.round(Math.atan2(v.y, v.x) * 20) * 1000 + Math.round(ctx.wind.strength * 50);
+    if (key === this.windKey) return;
+    this.windKey = key;
     const { width, height } = this.scale;
     const cx = width / 2 - 14;
     const cy = height - 22;
@@ -189,7 +199,7 @@ export class UIScene extends Phaser.Scene {
     g.lineBetween(cx, cy, ex, ey);
     g.lineBetween(ex, ey, ex - Math.cos(a - 0.5) * 4, ey - Math.sin(a - 0.5) * 4);
     g.lineBetween(ex, ey, ex - Math.cos(a + 0.5) * 4, ey - Math.sin(a + 0.5) * 4);
-    this.windText.setText(ctx.t('hud.wind', { n: Math.round(ctx.wind.strength * 100) }));
+    this.windText.setText(ctx.t('hud.wind', { n: Math.round(ctx.wind.strength * 50) * 2 }));
   }
 
   formatMoney(v) {
@@ -204,14 +214,19 @@ export class UIScene extends Phaser.Scene {
     if (show !== this.hideShown) {
       this.hideShown = show;
       this.hidden.setVisible(show);
+      this.hideFill = -1; // force a redraw (or clear) below
       if (!show) this.hideBar.clear();
     }
     if (!show) return;
+    // -2 = nothing drawn (level 0), otherwise the bar's pixel width; redrawn only when it changes
+    const fill = chase.level === 0 ? -2 : Math.round(46 * chase.hideProgress);
+    if (fill === this.hideFill) return;
+    this.hideFill = fill;
     const g = this.hideBar.clear();
-    if (chase.level === 0) return;
+    if (fill < 0) return;
     const { width } = this.scale;
     g.fillStyle(0x000000, 0.6).fillRect(width - 52, 33, 48, 6);
-    g.fillStyle(0x7dff8a).fillRect(width - 51, 34, Math.round(46 * chase.hideProgress), 4);
+    g.fillStyle(0x7dff8a).fillRect(width - 51, 34, fill, 4);
   }
 
   // HTML overlay: in portrait the 480x270 canvas is tiny, so the hint is drawn in page pixels.
@@ -238,7 +253,11 @@ export class UIScene extends Phaser.Scene {
     if (this.hint.hidden === blocked) this.hint.hidden = !blocked;
     if (time < this.nextFps) return;
     this.nextFps = time + 250;
-    this.fps.setText(this.ctx.t('hud.fps', { n: Math.round(this.game.loop.actualFps) }));
+    const fps = Math.round(this.game.loop.actualFps);
+    if (fps !== this.lastFps) {
+      this.lastFps = fps;
+      this.fps.setText(this.ctx.t('hud.fps', { n: fps }));
+    }
     if (this.debug) this.showDebug();
   }
 

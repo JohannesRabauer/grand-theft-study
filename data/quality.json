@@ -1,4 +1,5 @@
 {
+  "wallRadius": 160,
   "default": { "desktop": "high", "mobile": "medium" },
   "tiers": {
     "low": {

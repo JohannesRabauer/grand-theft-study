@@ -1,0 +1,15 @@
+// Runs every node check script in sequence; exits non-zero when any of them fails.
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const dir = dirname(fileURLToPath(import.meta.url));
+const checks = ['check-collisions.mjs', 'check-i18n.mjs', 'check-map.mjs', 'check-chase.mjs'];
+let failed = 0;
+for (const c of checks) {
+  console.log(`\n== ${c}`);
+  const r = spawnSync(process.execPath, [join(dir, c)], { stdio: 'inherit', cwd: join(dir, '..') });
+  if (r.status !== 0) { failed++; console.error(`FAILED: ${c} (exit ${r.status})`); }
+}
+console.log(failed ? `\n${failed} of ${checks.length} checks failed` : `\nall ${checks.length} checks passed`);
+process.exit(failed ? 1 : 0);

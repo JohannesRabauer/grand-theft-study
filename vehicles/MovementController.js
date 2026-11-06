@@ -22,6 +22,7 @@ export class MovementController {
     this.exhausted = false;
     this.regenIn = 0;
     this.vel = { x: 0, y: 0 };
+    this.matterVel = { x: 0, y: 0 }; // reused argument for Body.setVelocity (no per-frame object)
     this.slip = 0; // angle (rad) between real velocity and heading
     this.velSpeed = 0;
   }
@@ -67,7 +68,10 @@ export class MovementController {
     let slip = Math.atan2(this.vel.y, this.vel.x) - this.heading;
     slip -= Math.round(slip / (2 * Math.PI)) * 2 * Math.PI;
     this.slip = this.velSpeed > 1 ? Math.abs(slip) : 0;
-    this.matter.body.setVelocity(body, { x: this.vel.x / 60, y: this.vel.y / 60 });
+    const mv = this.matterVel;
+    mv.x = this.vel.x / 60;
+    mv.y = this.vel.y / 60;
+    this.matter.body.setVelocity(body, mv);
   }
 
   // Returns the speed multiplier for this frame.
