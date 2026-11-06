@@ -51,19 +51,29 @@ A bike is parked near the start. Walk up to it and press F to mount; press F aga
 
 `node scripts/check-map.mjs` validates the map: grid shape, legend, objects (none inside walls), and that the school is reachable by two different, bike-friendly routes, even when the middle of either one is blocked.
 
+## Menu, language and quality
+
+The main menu has Start, a language toggle (Deutsch / English) and a quality selector (Low / Medium / High); use the mouse, touch, or arrow keys + Enter. Esc (or the pause button, or Start on a gamepad) opens the pause overlay in the game with Resume, the same two toggles, and Back to menu.
+
+- Language: switches instantly (all HUD and menu text re-resolves on the `lang:changed` event) and is saved in `localStorage` key `schulweg.lang`. All visible text lives in `i18n/de.json` and `i18n/en.json` and is read with `ctx.t('key')`.
+- Quality: tiers are in `data/quality.json` (particle and prop caps, bullies, NPCs, rain density, pool sizes, shadows; Medium is the AD-14 budget). The choice is saved in `schulweg.quality`; desktop starts on High, phones (coarse pointer or small screen) on Medium. `?q=low|medium|high` overrides it for one load. Changing it emits `quality:changed`; pooled effects (skid marks, smoke, bell rings) change their active cap without allocating.
+- `?debug` also shows the current tier and live/cap counts of every pool under the HUD.
+- `node scripts/check-i18n.mjs` checks that both language files have identical keys and no empty values, and that every `t('...')` key used in the source exists.
+
 ## Folder map
 
 | Path | Purpose |
 | --- | --- |
 | `index.html`, `main.js` | Entry point, Phaser config (480x270, pixel art, Matter with zero gravity) |
 | `scenes/` | Boot (load + procedural textures), Menu, Game (owns `ctx`), UI (overlay HUD) |
-| `entities/` | Player, bikes (+ skid, smoke, bell effects) and later bully, NPC, props, pools |
+| `entities/` | Player, bikes (+ skid, smoke, bell effects), `pools.js` (pool registry, fade pool) and later bully, NPC, props, pools |
 | `vehicles/` | `MovementController.js`: drives any actor from a profile in `data/vehicles.json` |
 | `tools/` | Slingshot and other tools |
 | `ai/` | Chase director, bully state machine, pathfinding |
 | `physics/` | `categories.js`, `bodies.js` (only place that creates bodies), surfaces service |
 | `particles/` | Emitter registry |
 | `learning/`, `minigames/`, `missions/` | Empty in the prototype |
+| `services/` | `quality.js`: active quality tier, persistence, `quality:changed` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |
 | `data/` | Tuning JSON, `maps/town.json` (ASCII grid, objects in tile coordinates) |
 | `ui/` | `input.js` (intent snapshot), HUD |

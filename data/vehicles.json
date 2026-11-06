@@ -32,11 +32,8 @@
       "skidAngle": 16,
       "skidMinSpeed": 45,
       "brakeSpeed": 80,
-      "skidCap": 120,
       "skidLife": 5,
-      "puffCap": 24,
-      "bellCooldown": 0.4,
-      "bellCap": 3
+      "bellCooldown": 0.4
     }
   }
 }

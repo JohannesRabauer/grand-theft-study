@@ -1,6 +1,6 @@
 {
   "menu.title": "Schulweg",
-  "menu.start": "Taste oder Klick zum Starten",
+  "menu.start": "Los geht's!",
   "hud.fps": "FPS {n}",
   "ui.rotate": "Bitte dreh dein Handy ins Querformat",
   "hud.stamina": "Ausdauer",
@@ -19,5 +19,17 @@
   "surface.wall": "Mauer",
   "hud.vehicle": "Unterwegs: {name}",
   "vehicle.foot": "Zu Fuß",
-  "vehicle.bike": "Fahrrad"
+  "vehicle.bike": "Fahrrad",
+  "lang.de": "Deutsch",
+  "lang.en": "English",
+  "menu.tagline": "Komm bloß nicht zu spät zur Schule!",
+  "menu.hint": "Pfeiltasten + Enter, Maus oder Touch",
+  "menu.language": "Sprache",
+  "menu.quality": "Qualität",
+  "quality.low": "Niedrig",
+  "quality.medium": "Mittel",
+  "quality.high": "Hoch",
+  "pause.title": "Kurze Pause",
+  "pause.resume": "Weiter geht's",
+  "pause.menu": "Zurück zum Menü"
 }

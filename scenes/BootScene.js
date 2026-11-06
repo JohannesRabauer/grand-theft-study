@@ -1,4 +1,5 @@
-import { currentLang } from '../i18n/i18n.js';
+import { createI18n } from '../i18n/i18n.js';
+import { createQuality } from '../services/quality.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
@@ -10,10 +11,17 @@ export class BootScene extends Phaser.Scene {
     this.load.json('tiles', 'data/tiles.json');
     this.load.json('camera', 'data/camera.json');
     this.load.json('input', 'data/input.json');
-    this.load.json('i18n', `i18n/${currentLang()}.json`);
+    this.load.json('quality', 'data/quality.json');
+    this.load.json('de', 'i18n/de.json');
+    this.load.json('en', 'i18n/en.json');
   }
 
   create() {
+    // App-wide services that outlive GameScene (menu uses them too); GameScene reuses them in ctx.
+    const events = new Phaser.Events.EventEmitter();
+    const i18n = createI18n({ de: this.cache.json.get('de'), en: this.cache.json.get('en') }, events);
+    const quality = createQuality(this.cache.json.get('quality'), events);
+    this.registry.set('app', { events, i18n, t: i18n.t, quality });
     this.makeTiles(this.cache.json.get('tiles'), this.cache.json.get('town').tileSize);
     this.makePlayer();
     this.makeBike();

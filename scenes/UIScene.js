@@ -1,5 +1,7 @@
 import { TouchControls } from '../ui/touch.js';
 import { ObjectiveArrow } from '../ui/ObjectiveArrow.js';
+import { ButtonMenu } from '../ui/ButtonMenu.js';
+import { settingsRows } from '../ui/settingsRows.js';
 
 // Overlay HUD, touch controls and rotate hint. Reads only; never mutates the world (AD-13).
 export class UIScene extends Phaser.Scene {
@@ -13,14 +15,62 @@ export class UIScene extends Phaser.Scene {
     this.arrow = new ObjectiveArrow(this, this.ctx, this.scene.get('Game'));
     this.touch = new TouchControls(this, this.ctx, this.cache.json.get('input'));
     this.hint = this.makeRotateHint();
-    this.events.once('shutdown', () => this.hint.remove());
+    this.makePause();
+    if (window.SCHULWEG_DEBUG) this.debug = this.add.text(4, 52, '', { fontFamily: 'monospace', fontSize: '8px', color: '#9fe0ff' });
+    this.nextDebug = 0;
+    const ev = this.ctx.events;
+    // every visible text re-resolves when the language changes
+    const onLang = () => this.retext();
+    const onToggle = () => this.togglePause();
+    ev.on('lang:changed', onLang);
+    ev.on('ui:pause-toggle', onToggle);
+    this.events.once('shutdown', () => {
+      ev.off('lang:changed', onLang);
+      ev.off('ui:pause-toggle', onToggle);
+      this.hint.remove();
+    });
+  }
+
+  retext() {
+    const { ctx } = this;
+    this.stamina.setText(ctx.t('hud.stamina'));
+    this.showSurface(ctx.player.surface);
+    this.showVehicle(ctx.player.vehicle);
+    this.arrow.retext();
+    this.hintText.textContent = ctx.t('ui.rotate');
+    this.pauseTitle.setText(ctx.t('pause.title'));
+    this.pauseMenu.refresh();
+  }
+
+  togglePause() {
+    const on = !this.pauseMenu.active;
+    this.pauseUi.forEach(o => o.setVisible(on));
+    this.pauseMenu.setActive(on);
+    this.ctx.events.emit(on ? 'game:pause' : 'game:resume');
+  }
+
+  makePause() {
+    const { ctx } = this;
+    const { width, height } = this.scale;
+    const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0).setDepth(20).setInteractive(); // swallows clicks
+    this.pauseTitle = this.add.text(width / 2, 60, ctx.t('pause.title'), { fontFamily: 'monospace', fontSize: '20px', color: '#ffe14d', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(21);
+    const rows = [
+      { items: [{ label: () => ctx.t('pause.resume'), on: () => this.togglePause() }] },
+      ...settingsRows(ctx),
+      { items: [{ label: () => ctx.t('pause.menu'), on: () => ctx.events.emit('game:quit') }] }
+    ];
+    this.pauseMenu = new ButtonMenu(this, ctx.t, rows, width / 2, 100, 28);
+    this.pauseMenu.objects.forEach(o => o.setDepth(21));
+    this.pauseUi = [dim, this.pauseTitle];
+    this.pauseUi.forEach(o => o.setVisible(false));
+    this.pauseMenu.setActive(false);
   }
 
   // Stamina bar and ground label, driven by player events (read-only).
   makeStatus() {
     const { ctx } = this;
     const style = { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff' };
-    this.add.text(4, 14, ctx.t('hud.stamina'), style);
+    this.stamina = this.add.text(4, 14, ctx.t('hud.stamina'), style);
     this.bar = this.add.graphics();
     this.label = this.add.text(4, 30, '', style);
     const onStamina = (v) => {
@@ -29,8 +79,10 @@ export class UIScene extends Phaser.Scene {
       g.fillStyle(v > 0.25 ? 0x62d26f : 0xe0483c).fillRect(47, 16, Math.round(40 * v), 4);
     };
     this.vehicle = this.add.text(4, 40, '', style);
-    const onVehicle = (id) => this.vehicle.setText(ctx.t('hud.vehicle', { name: ctx.t(`vehicle.${id}`) }));
-    const onSurface = (id) => this.label.setText(ctx.t('hud.surface', { name: ctx.t(`surface.${id}`) }));
+    this.showVehicle = (id) => this.vehicle.setText(ctx.t('hud.vehicle', { name: ctx.t(`vehicle.${id}`) }));
+    this.showSurface = (id) => this.label.setText(ctx.t('hud.surface', { name: ctx.t(`surface.${id}`) }));
+    const onVehicle = this.showVehicle;
+    const onSurface = this.showSurface;
     ctx.events.on('player:stamina', onStamina);
     ctx.events.on('player:surface', onSurface);
     ctx.events.on('player:vehicle', onVehicle);
@@ -51,9 +103,9 @@ export class UIScene extends Phaser.Scene {
     el.hidden = true;
     const icon = document.createElement('div');
     icon.className = 'rotate-icon';
-    const text = document.createElement('p');
-    text.textContent = this.ctx.t('ui.rotate');
-    el.append(icon, text);
+    this.hintText = document.createElement('p');
+    this.hintText.textContent = this.ctx.t('ui.rotate');
+    el.append(icon, this.hintText);
     document.body.append(el);
     return el;
   }
@@ -66,5 +118,15 @@ export class UIScene extends Phaser.Scene {
     if (time < this.nextFps) return;
     this.nextFps = time + 250;
     this.fps.setText(this.ctx.t('hud.fps', { n: Math.round(this.game.loop.actualFps) }));
+    if (this.debug) this.showDebug();
+  }
+
+  // ?debug: active tier plus live/cap of every registered pool.
+  showDebug() {
+    const { quality, pools } = this.ctx;
+    let s = `quality: ${quality.id}`;
+    for (const [name, p] of pools.byName) s += `
+${name}: ${p.live()}/${p.cap}`;
+    this.debug.setText(s);
   }
 }

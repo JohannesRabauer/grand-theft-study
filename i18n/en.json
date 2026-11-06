@@ -1,6 +1,6 @@
 {
   "menu.title": "Schulweg",
-  "menu.start": "Press any key or click to start",
+  "menu.start": "Let's gooo!",
   "hud.fps": "FPS {n}",
   "ui.rotate": "Please turn your phone to landscape",
   "hud.stamina": "Stamina",
@@ -19,5 +19,17 @@
   "surface.wall": "Wall",
   "hud.vehicle": "Riding: {name}",
   "vehicle.foot": "On foot",
-  "vehicle.bike": "Bicycle"
+  "vehicle.bike": "Bicycle",
+  "lang.de": "Deutsch",
+  "lang.en": "English",
+  "menu.tagline": "Whatever you do, don't be late for school!",
+  "menu.hint": "Arrow keys + Enter, mouse or touch",
+  "menu.language": "Language",
+  "menu.quality": "Quality",
+  "quality.low": "Low",
+  "quality.medium": "Medium",
+  "quality.high": "High",
+  "pause.title": "Quick break",
+  "pause.resume": "Back to it",
+  "pause.menu": "Back to menu"
 }

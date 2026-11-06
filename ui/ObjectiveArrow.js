@@ -49,4 +49,9 @@ export class ObjectiveArrow {
       this.text.setText(this.ctx.t('hud.goal', { m }));
     }
   }
+
+  retext() {
+    this.msg.setText(this.ctx.t('msg.arrived'));
+    this.lastMeters = -1; // next update re-resolves the distance text
+  }
 }

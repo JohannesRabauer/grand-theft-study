@@ -1,0 +1,17 @@
+{
+  "default": { "desktop": "high", "mobile": "medium" },
+  "tiers": {
+    "low": {
+      "particleMul": 0.5, "maxParticles": 150, "maxProps": 30, "maxNPCs": 6, "maxBullies": 2,
+      "rainDensity": 0.4, "skidPool": 60, "smokePool": 12, "bellPool": 2, "shadows": false
+    },
+    "medium": {
+      "particleMul": 1, "maxParticles": 300, "maxProps": 60, "maxNPCs": 12, "maxBullies": 3,
+      "rainDensity": 1, "skidPool": 120, "smokePool": 24, "bellPool": 3, "shadows": true
+    },
+    "high": {
+      "particleMul": 1.5, "maxParticles": 500, "maxProps": 100, "maxNPCs": 16, "maxBullies": 4,
+      "rainDensity": 1.6, "skidPool": 240, "smokePool": 48, "bellPool": 4, "shadows": true
+    }
+  }
+}

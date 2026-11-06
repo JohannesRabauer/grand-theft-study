@@ -1,4 +1,4 @@
-import { createT } from '../i18n/i18n.js';
+import { Pools } from '../entities/pools.js';
 import { Surfaces } from '../physics/surfaces.js';
 import { addStaticWall } from '../physics/bodies.js';
 import { Input } from '../ui/input.js';
@@ -15,10 +15,13 @@ export class GameScene extends Phaser.Scene {
     const ts = map.tileSize;
 
     // AD-2: one ctx, created once, handed to every system.
-    const events = new Phaser.Events.EventEmitter();
+    const { events, i18n, t, quality } = this.registry.get('app');
     const ctx = {
       events,
-      t: createT(cache.get('i18n')),
+      i18n,
+      t,
+      quality,
+      pools: new Pools(),
       map,
       surfaces: new Surfaces(map, cache.get('surfaces')),
       input: new Input(this, events, cache.get('input'))
@@ -41,8 +44,16 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, worldW, worldH);
     this.cameras.main.startFollow(this.player.sprite, true, 0.15, 0.15);
 
+    // UIScene asks for pause / quit through events; the world is only changed here.
+    this.paused = false;
+    events.on('game:pause', () => this.setPaused(true));
+    events.on('game:resume', () => this.setPaused(false));
+    events.on('game:quit', () => this.scene.start('Menu'));
     this.scene.launch('UI', { ctx });
-    this.events.once('shutdown', () => this.scene.stop('UI'));
+    this.events.once('shutdown', () => {
+      this.scene.stop('UI');
+      events.removeAllListeners(); // the shared emitter outlives this run; menu re-subscribes in create
+    });
   }
 
   // Zoom follows real speed continuously (1.0 standing .. 0.6 at top speed), smoothed.
@@ -82,9 +93,16 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  setPaused(on) {
+    this.paused = on;
+    if (on) this.matter.world.pause(); else this.matter.world.resume();
+  }
+
   update(time, delta) {
     const dt = Math.min(delta, 50) / 1000;
     this.ctx.input.update();
+    if (this.ctx.input.intent.pause) this.ctx.events.emit('ui:pause-toggle');
+    if (this.paused) return;
     this.player.update(dt);
     this.bikes.update(dt);
     this.zones.update();
