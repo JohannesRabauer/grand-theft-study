@@ -3,7 +3,9 @@
     "grip": 1.0,
     "speed": {
       "foot": 1.0,
-      "bike": 1.0
+      "bike": 1.0,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0
     },
     "rattle": 0.0,
     "particle": "dust-grey"
@@ -12,7 +14,9 @@
     "grip": 0.9,
     "speed": {
       "foot": 0.9,
-      "bike": 0.6
+      "bike": 0.6,
+      "bully-foot": 0.9,
+      "bully-bike": 0.6
     },
     "rattle": 0.6,
     "particle": "dust-sand"
@@ -21,7 +25,9 @@
     "grip": 0.75,
     "speed": {
       "foot": 0.8,
-      "bike": 0.55
+      "bike": 0.55,
+      "bully-foot": 0.8,
+      "bully-bike": 0.55
     },
     "rattle": 0.2,
     "particle": "grass-bits"
@@ -30,7 +36,9 @@
     "grip": 0.5,
     "speed": {
       "foot": 0.6,
-      "bike": 0.5
+      "bike": 0.5,
+      "bully-foot": 0.6,
+      "bully-bike": 0.5
     },
     "rattle": 0.0,
     "particle": "splash"
@@ -39,7 +47,9 @@
     "grip": 0.5,
     "speed": {
       "foot": 0.7,
-      "bike": 0.5
+      "bike": 0.5,
+      "bully-foot": 0.7,
+      "bully-bike": 0.5
     },
     "rattle": 0.0,
     "particle": "snow-puff"
@@ -48,7 +58,9 @@
     "grip": 0.15,
     "speed": {
       "foot": 1.0,
-      "bike": 1.0
+      "bike": 1.0,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0
     },
     "rattle": 0.0,
     "particle": "ice-chips"
@@ -57,7 +69,9 @@
     "grip": 1.0,
     "speed": {
       "foot": 1.0,
-      "bike": 1.0
+      "bike": 1.0,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -67,7 +81,9 @@
     "grip": 1.0,
     "speed": {
       "foot": 1.0,
-      "bike": 1.05
+      "bike": 1.05,
+      "bully-foot": 1.0,
+      "bully-bike": 1.05
     },
     "rattle": 0.0,
     "particle": "dust-grey"
@@ -76,7 +92,9 @@
     "grip": 0.9,
     "speed": {
       "foot": 1.0,
-      "bike": 0.85
+      "bike": 0.85,
+      "bully-foot": 1.0,
+      "bully-bike": 0.85
     },
     "rattle": 0.0,
     "particle": "dust-sand"
@@ -85,7 +103,9 @@
     "grip": 1.0,
     "speed": {
       "foot": 1.0,
-      "bike": 1.0
+      "bike": 1.0,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0
     },
     "rattle": 0.0,
     "particle": "dust-grey"
@@ -94,7 +114,9 @@
     "grip": 1.0,
     "speed": {
       "foot": 1.0,
-      "bike": 1.0
+      "bike": 1.0,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -104,7 +126,9 @@
     "grip": 1.0,
     "speed": {
       "foot": 1.0,
-      "bike": 1.0
+      "bike": 1.0,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -114,7 +138,9 @@
     "grip": 1.0,
     "speed": {
       "foot": 1.0,
-      "bike": 1.0
+      "bike": 1.0,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -124,7 +150,9 @@
     "grip": 1.0,
     "speed": {
       "foot": 1.0,
-      "bike": 1.0
+      "bike": 1.0,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -134,7 +162,9 @@
     "grip": 1.0,
     "speed": {
       "foot": 1.0,
-      "bike": 1.0
+      "bike": 1.0,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -144,7 +174,9 @@
     "grip": 1.0,
     "speed": {
       "foot": 1.0,
-      "bike": 1.0
+      "bike": 1.0,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0
     },
     "rattle": 0.0,
     "particle": null,

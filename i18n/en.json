@@ -3,6 +3,8 @@
   "menu.start": "Let's gooo!",
   "hud.fps": "FPS {n}",
   "ui.rotate": "Please turn your phone to landscape",
+  "hud.anger": "Trouble",
+  "hud.spotted": "Spotted!",
   "hud.stamina": "Stamina",
   "hud.surface": "Ground: {name}",
   "surface.asphalt": "Asphalt",

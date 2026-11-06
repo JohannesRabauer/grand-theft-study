@@ -12,6 +12,7 @@ export class UIScene extends Phaser.Scene {
     this.fps = this.add.text(4, 2, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffff66' });
     this.nextFps = 0;
     this.makeStatus();
+    this.makeAnger();
     this.arrow = new ObjectiveArrow(this, this.ctx, this.scene.get('Game'));
     this.touch = new TouchControls(this, this.ctx, this.cache.json.get('input'));
     this.hint = this.makeRotateHint();
@@ -35,6 +36,8 @@ export class UIScene extends Phaser.Scene {
   retext() {
     const { ctx } = this;
     this.stamina.setText(ctx.t('hud.stamina'));
+    this.angerLabel.setText(ctx.t('hud.anger'));
+    this.spotted.setText(ctx.t('hud.spotted'));
     this.showSurface(ctx.player.surface);
     this.showVehicle(ctx.player.vehicle);
     this.arrow.retext();
@@ -97,6 +100,32 @@ export class UIScene extends Phaser.Scene {
     onVehicle(ctx.player.vehicle);
   }
 
+  // Ärger meter (two bars, grey -> orange -> red) and a "spotted" flag, from chase events (read-only).
+  makeAnger() {
+    const { ctx } = this;
+    const { width } = this.scale;
+    const style = { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff' };
+    this.angerLabel = this.add.text(width - 4, 2, ctx.t('hud.anger'), style).setOrigin(1, 0);
+    this.angerBars = this.add.graphics();
+    this.spotted = this.add.text(width - 4, 22, ctx.t('hud.spotted'), { ...style, color: '#ff5a4d', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 0).setVisible(false);
+    const colors = [0xe8731c, 0xe0302a];
+    const drawLevel = ({ level }) => {
+      const g = this.angerBars.clear();
+      for (let i = 0; i < 2; i++) {
+        g.fillStyle(0x000000, 0.6).fillRect(width - 52 + i * 24, 12, 22, 7);
+        g.fillStyle(i < level ? colors[Math.min(level, 2) - 1] : 0x444444).fillRect(width - 51 + i * 24, 13, 20, 5);
+      }
+    };
+    const onSeen = (seen) => this.spotted.setVisible(seen);
+    ctx.events.on('chase:level', drawLevel);
+    ctx.events.on('chase:seen', onSeen);
+    this.events.once('shutdown', () => {
+      ctx.events.off('chase:level', drawLevel);
+      ctx.events.off('chase:seen', onSeen);
+    });
+    drawLevel({ level: ctx.chase.level });
+  }
+
   // HTML overlay: in portrait the 480x270 canvas is tiny, so the hint is drawn in page pixels.
   makeRotateHint() {
     const el = document.createElement('div');
@@ -125,8 +154,9 @@ export class UIScene extends Phaser.Scene {
 
   // ?debug: active tier plus live/cap of every registered pool.
   showDebug() {
-    const { quality, pools, wind, weather } = this.ctx;
+    const { quality, pools, wind, weather, chase } = this.ctx;
     let s = `quality: ${quality.id}
+chase: level ${chase.level}  seen: ${chase.seen}
 weather: ${weather.state}  wind: ${wind.vector.x.toFixed(2)}, ${wind.vector.y.toFixed(2)}`;
     for (const [name, p] of pools.byName) s += `
 ${name}: ${p.live()}/${p.cap}`;

@@ -1,6 +1,7 @@
 {
   "cullEvery": 0.2,
   "margin": 64,
+  "bullyWakeRadius": 40,
   "hitSpeed": 70,
   "hitCooldown": 0.15,
   "kinds": {

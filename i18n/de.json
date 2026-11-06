@@ -4,6 +4,8 @@
   "hud.fps": "FPS {n}",
   "ui.rotate": "Bitte dreh dein Handy ins Querformat",
   "hud.stamina": "Ausdauer",
+  "hud.anger": "Ärger",
+  "hud.spotted": "Entdeckt!",
   "hud.surface": "Boden: {name}",
   "surface.asphalt": "Asphalt",
   "surface.cobble": "Kopfsteinpflaster",

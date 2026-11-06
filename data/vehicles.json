@@ -35,5 +35,25 @@
       "skidLife": 5,
       "bellCooldown": 0.4
     }
+  },
+  "bully-foot": {
+    "texture": "bully",
+    "faceHeading": false,
+    "maxSpeed": 90,
+    "accel": 380,
+    "turnRate": 720,
+    "grip": 12,
+    "drift": 0,
+    "radius": 5
+  },
+  "bully-bike": {
+    "texture": "bully-bike",
+    "faceHeading": true,
+    "maxSpeed": 135,
+    "accel": 200,
+    "turnRate": 210,
+    "grip": 8,
+    "drift": 0.15,
+    "radius": 5
   }
 }

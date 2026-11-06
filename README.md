@@ -68,6 +68,16 @@ The main menu has Start, a language toggle (Deutsch / English) and a quality sel
 - **Particles** (`particles/ParticleHub.js`, `data/particles.json`): a few shared emitters created once, fired with `ctx.particles.emit(name, x, y, opts)`: `dust` (sprinting, bike drifting), `splash` + `ripple` (moving through puddles), `leaves` (kicked up on grass, plus an ambient swirl), `rain`, `steam` (bakery, manhole and a chimney) and `debris`. The effect under you comes from the surface's `particle` name in `data/surfaces.json`. Each emitter gets a share of the tier's `maxParticles`; burst sizes follow `particleMul` and rain follows `rainDensity`, re-read on `quality:changed`. Fish occasionally ripple the pond.
 - **Props** (`entities/Prop.js`, `data/props.json`): cones, cans, crates and balls from the map markers are Matter bodies in the `PROP` category. Walk or ride into them to push them; cones tip over on a hard hit, cans roll, the ball bounces far, a crate breaks into debris when hit fast (about sprint speed or more). Strong hits emit `prop:hit` with `{ prop, speed }`. Props away from the camera sleep and are not drawn; at most the tier's `maxProps` are awake.
 
+## Chase (Ärger, bullies)
+
+- **Ärger level 0-2** (`ai/ChaseDirector.js`, rules in `ai/ChaseLevel.js`, tuning in `data/chase.json`): the director is the only writer of the level and the only spawner of bullies. Entering bully turf (skatepark, back of the schoolyard) raises it to 1 and spawns a foot bully at the nearest `bully-spawn` point outside the camera view; staying in turf (`turfSecondsPerLevel`) or a bump (`bully:bump`, also a near-miss with a bully that is not chasing) raises it to 2, which adds a bike bully and a second foot bully (never more than the tier's `maxBullies`). Emits `chase:level` `{ level, reason }` and `chase:seen`. `chaseEnabled: false` in `data/chase.json` keeps the level at 0 (hook for a parent setting).
+- **Service for later stories** (`ctx.chase`): `level`, `seen` (some bully sees the player), `cool(seconds)` (level falls to 0 after that long and the bullies give up), `reset()` (level 0, bullies removed at once). Contact with a bully emits `bully:caught-contact` `{ bully }` and freezes it in `CAUGHT`; the caught frame itself is story 1.9.
+- **Bully states** (`ai/BullyFSM.js`): `IDLE` (short beat after spawn), `CHASE`, `SEARCH` (walk to the last seen spot, look around), `DISTRACTED` (a `prop:hit` within `distractRadius` makes a bully that is not watching the player walk to the hit point), `GIVE_UP` (walks to the farthest spawn point and vanishes out of view; when the last bully is gone the level drops to 0), `CAUGHT`. Bullies use the movement profiles `bully-foot` (a bit slower than sprinting) and `bully-bike` in `data/vehicles.json`, and are pooled (`entities/Bully.js`, pool `bullies`). Their bodies do not collide with the player; contact is a proximity check.
+- **Seeing** (`ai/Perception.js`): view distance and field of view from `data/chase.json`, grid raycast against solid tiles. Standing almost still (below `hideSpeed`) inside a hiding spot makes you invisible, and a hidden player is not caught or bumped.
+- **Pathfinding** (`ai/Pathfinding.js`): grid A* over the map (walls blocked, surface speed and wall proximity as cost), requests queued with a shared budget of 2 per frame, per-bully cached path re-requested about every 0.5 s or when the target tile changes, straight-line steering when the way is clear. A full-map search takes about 0.25 ms in node.
+- **HUD and debug**: top right an Ärger meter (two bars) and "Entdeckt!" / "Spotted!" while seen; angry steam puffs over chasing bullies (`anger` emitter). `?debug` shows each bully's state, path, line-of-sight ray and bump radius plus the level in the debug text.
+- `node scripts/check-chase.mjs` checks pathfinding on the real map (home to school, walls, request budget, timing) and the level thresholds.
+
 ## Folder map
 
 | Path | Purpose |
@@ -77,7 +87,7 @@ The main menu has Start, a language toggle (Deutsch / English) and a quality sel
 | `entities/` | Player, bikes (+ skid, smoke, bell effects), `pools.js` (pool registry, fade pool), `Prop.js`, `Flag.js` and later bully, NPC |
 | `vehicles/` | `MovementController.js`: drives any actor from a profile in `data/vehicles.json` |
 | `tools/` | Slingshot and other tools |
-| `ai/` | Chase director, bully state machine, pathfinding |
+| `ai/` | Chase director and level rules, bully state machine, perception, pathfinding |
 | `physics/` | `categories.js`, `bodies.js` (only place that creates bodies), surfaces service (with weather overrides), `Wind.js`, `Weather.js` |
 | `particles/` | `ParticleHub.js`: pooled emitters, surface effects, rain, ambient life |
 | `learning/`, `minigames/`, `missions/` | Empty in the prototype |

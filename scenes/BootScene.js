@@ -15,6 +15,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('weather', 'data/weather.json');
     this.load.json('particles', 'data/particles.json');
     this.load.json('props', 'data/props.json');
+    this.load.json('chase', 'data/chase.json');
     this.load.json('de', 'i18n/de.json');
     this.load.json('en', 'i18n/en.json');
   }
@@ -28,6 +29,7 @@ export class BootScene extends Phaser.Scene {
     this.makeTiles(this.cache.json.get('tiles'), this.cache.json.get('town').tileSize);
     this.makePlayer();
     this.makeBike();
+    this.makeBully();
     this.makeFx();
     this.makeWorldFx();
     this.makeArrow();
@@ -131,6 +133,39 @@ export class BootScene extends Phaser.Scene {
       }
       tex.refresh();
     }
+  }
+
+  // Bullies: dark hoodie, cap and a frown, so they never read as the player. The bike bully
+  // rides a red bike facing right.
+  makeBully() {
+    const mk = (key, w, h, draw) => {
+      const tex = this.textures.createCanvas(key, w, h);
+      const c = tex.getContext();
+      draw((col, x, y, pw, ph) => { c.fillStyle = col; c.fillRect(x, y, pw, ph); });
+      tex.refresh();
+    };
+    mk('bully', 12, 16, px => {
+      px('#000000', 3, 14, 6, 2);   // shadow
+      px('#3a3a48', 3, 10, 2, 4);   // legs
+      px('#3a3a48', 7, 10, 2, 4);
+      px('#5a2a7a', 2, 5, 8, 6);    // hoodie
+      px('#f2c9a0', 3, 1, 6, 5);    // head
+      px('#1a1a1a', 2, 0, 8, 2);    // cap
+      px('#1a1a1a', 3, 3, 2, 1);    // angry brows
+      px('#1a1a1a', 7, 3, 2, 1);
+      px('#1a1a1a', 5, 5, 2, 1);    // frown
+    });
+    mk('bully-bike', 20, 12, px => {
+      px('#1a1a1a', 1, 5, 5, 2);
+      px('#1a1a1a', 14, 5, 5, 2);
+      px('#c8352f', 5, 5, 10, 2);   // frame
+      px('#888888', 14, 2, 1, 8);
+      px('#5a2a7a', 5, 3, 6, 6);    // hoodie
+      px('#f2c9a0', 11, 3, 4, 1);
+      px('#f2c9a0', 11, 8, 4, 1);
+      px('#f2c9a0', 8, 4, 4, 4);    // head
+      px('#1a1a1a', 7, 4, 4, 4);    // cap
+    });
   }
 
   // Skid mark, smoke puff and bell ring.

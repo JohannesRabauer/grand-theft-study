@@ -1,0 +1,52 @@
+{
+  "chaseEnabled": true,
+  "level": {
+    "turfSecondsPerLevel": 8,
+    "bumpCooldown": 1.5,
+    "lockoutAfterClear": 5,
+    "spawnByLevel": [[], ["foot"], ["foot", "bike", "foot"]]
+  },
+  "kinds": {
+    "foot": "bully-foot",
+    "bike": "bully-bike"
+  },
+  "spawn": {
+    "margin": 40,
+    "minSeparation": 24
+  },
+  "bully": {
+    "idleSeconds": 0.6,
+    "loseSightSeconds": 0.8,
+    "searchSeconds": 6,
+    "giveUpMinSeconds": 1,
+    "giveUpMaxSeconds": 15,
+    "despawnMargin": 32,
+    "distractSeconds": 3.5,
+    "distractRadius": 160,
+    "distractWhileSeen": false,
+    "ownHitRadius": 22,
+    "arriveRadius": 6,
+    "reachBase": 5,
+    "reachSpeedGain": 0.06,
+    "bumpRadius": 16,
+    "catchRadius": 9,
+    "steamInterval": 0.22,
+    "steamOffsetY": 10
+  },
+  "perception": {
+    "viewDistance": 170,
+    "fovDeg": 130,
+    "chaseFovDeg": 220,
+    "senseRadius": 22,
+    "hideSpeed": 14
+  },
+  "nav": {
+    "budget": 2,
+    "queueSize": 16,
+    "maxPath": 400,
+    "repathInterval": 0.5,
+    "repathMin": 0.2,
+    "wallPenalty": 0.6,
+    "snapRadius": 3
+  }
+}

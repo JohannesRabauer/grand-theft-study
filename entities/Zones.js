@@ -18,6 +18,7 @@ export class Zones {
         return z;
       });
     this.reached = false;
+    this.hiding = 0; // number of hiding-spot zones the player is inside (read by bully perception)
     if (window.SCHULWEG_DEBUG) this.drawDebug(scene);
   }
 
@@ -37,6 +38,7 @@ export class Zones {
         }
         continue;
       }
+      if (type === 'hiding') this.hiding += now ? 1 : -1;
       const ev = type === 'hiding' ? 'hide' : 'turf';
       events.emit(`${ev}:${now ? 'enter' : 'leave'}`, { id, kind: kind ?? id });
     }

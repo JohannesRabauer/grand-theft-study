@@ -10,6 +10,7 @@ import { Weather } from '../physics/Weather.js';
 import { ParticleHub } from '../particles/ParticleHub.js';
 import { Props } from '../entities/Prop.js';
 import { Flags } from '../entities/Flag.js';
+import { ChaseDirector } from '../ai/ChaseDirector.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -42,12 +43,14 @@ export class GameScene extends Phaser.Scene {
     ctx.player = this.player;
     this.bikes = new Bikes(this, ctx);
     this.zones = new Zones(this, ctx);
+    ctx.zones = this.zones;
     const wcfg = cache.get('weather');
     ctx.wind = new Wind(wcfg.wind);
     ctx.weather = new Weather(this, ctx, wcfg.weather);
     ctx.particles = new ParticleHub(this, ctx, cache.get('particles'));
     this.props = new Props(this, ctx, cache.get('props'));
     this.flags = new Flags(this, ctx, wcfg.flag);
+    this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
     this.zoomCfg = cache.get('camera');
 
     const worldW = map.rows[0].length * ts;
@@ -120,6 +123,7 @@ export class GameScene extends Phaser.Scene {
     this.player.update(dt);
     this.bikes.update(dt);
     this.zones.update();
+    this.chase.update(dt);
     this.updateZoom(dt);
     this.props.update(dt);
     this.flags.update(dt);

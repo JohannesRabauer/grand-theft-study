@@ -88,7 +88,7 @@ export class Props {
     for (const p of list) {
       if (!p.alive) continue;
       const { x, y } = p.body.position;
-      const near = x > v.x - m && x < v.right + m && y > v.y - m && y < v.bottom + m;
+      const near = (x > v.x - m && x < v.right + m && y > v.y - m && y < v.bottom + m) || this.nearBully(x, y);
       const want = near && awake < cap;
       if (want) awake++;
       if (want === p.awake) continue;
@@ -98,6 +98,15 @@ export class Props {
       if (want) this.sync(p);
     }
     this.awake = awake;
+  }
+
+  // Bullies run offscreen too, so props in their way must be awake (sleeping bodies block them).
+  nearBully(x, y) {
+    const list = this.ctx.chase?.bullies;
+    if (!list) return false;
+    const r = this.cfg.bullyWakeRadius;
+    for (const b of list) if (b.active && Math.abs(b.x - x) < r && Math.abs(b.y - y) < r) return true;
+    return false;
   }
 
   sync(p) {
