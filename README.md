@@ -36,6 +36,11 @@ Touch controls appear on touch devices and hide as soon as a key or mouse is use
 The 480x270 picture is scaled by a whole number (letterboxed, pixelated); only windows smaller than 480x270 get a fractional fit.
 An FPS counter shows at the top left.
 
+## Movement and surfaces
+
+Walking is the movement profile `foot` (`data/vehicles.json`). Hold Sprint to run faster; stamina (bar at the top left) drains while sprinting and refills when you stop. When it hits zero you move slower until it recovers to 25%. Stopping and turning slide a little, more on slippery ground. The label under the bar shows the ground you stand on; asphalt, cobblestone, grass and puddles change speed and grip (`data/surfaces.json`, which also defines unused snow and ice).
+`node scripts/check-collisions.mjs` checks the collision category table.
+
 ## Folder map
 
 | Path | Purpose |
@@ -43,7 +48,7 @@ An FPS counter shows at the top left.
 | `index.html`, `main.js` | Entry point, Phaser config (480x270, pixel art, Matter with zero gravity) |
 | `scenes/` | Boot (load + procedural textures), Menu, Game (owns `ctx`), UI (overlay HUD) |
 | `entities/` | Player and later bully, NPC, props, pools |
-| `vehicles/` | Movement profile loaders (profiles live in `data/vehicles.json`) |
+| `vehicles/` | `MovementController.js`: drives any actor from a profile in `data/vehicles.json` |
 | `tools/` | Slingshot and other tools |
 | `ai/` | Chase director, bully state machine, pathfinding |
 | `physics/` | `categories.js`, `bodies.js` (only place that creates bodies), surfaces service |

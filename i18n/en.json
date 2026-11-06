@@ -2,5 +2,14 @@
   "menu.title": "Schulweg",
   "menu.start": "Press any key or click to start",
   "hud.fps": "FPS {n}",
-  "ui.rotate": "Please turn your phone to landscape"
+  "ui.rotate": "Please turn your phone to landscape",
+  "hud.stamina": "Stamina",
+  "hud.surface": "Ground: {name}",
+  "surface.asphalt": "Asphalt",
+  "surface.cobble": "Cobblestone",
+  "surface.grass": "Grass",
+  "surface.puddle": "Puddle",
+  "surface.snow": "Snow",
+  "surface.ice": "Ice",
+  "surface.wall": "Wall"
 }

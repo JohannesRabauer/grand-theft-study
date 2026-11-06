@@ -1,3 +1,11 @@
 {
-  "foot": { "maxSpeed": 70, "accel": 600, "grip": 1.0, "radius": 5 }
+  "foot": {
+    "maxSpeed": 70,
+    "accel": 420,
+    "turnRate": 900,
+    "grip": 14,
+    "drift": 0,
+    "radius": 5,
+    "stamina": { "max": 100, "drain": 25, "regen": 16, "regenDelay": 0.6, "sprintMult": 1.6, "tiredMult": 0.6, "recoverAt": 0.25 }
+  }
 }

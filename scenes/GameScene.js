@@ -1,6 +1,6 @@
 import { createT } from '../i18n/i18n.js';
 import { Surfaces } from '../physics/surfaces.js';
-import { addStaticRect } from '../physics/bodies.js';
+import { addStaticWall } from '../physics/bodies.js';
 import { Input } from '../ui/input.js';
 import { Player } from '../entities/Player.js';
 
@@ -28,7 +28,8 @@ export class GameScene extends Phaser.Scene {
 
     // map objects are in tile coordinates
     const spawn = map.objects.find(o => o.type === 'spawn' && o.id === 'player');
-    this.player = new Player(this, ctx, (spawn.x + 0.5) * ts, (spawn.y + 0.5) * ts, cache.get('vehicles').foot);
+    this.player = new Player(this, ctx, (spawn.x + 0.5) * ts, (spawn.y + 0.5) * ts, 'foot', cache.get('vehicles').foot);
+    ctx.player = this.player;
 
     const worldW = map.rows[0].length * ts;
     const worldH = map.rows.length * ts;
@@ -59,7 +60,7 @@ export class GameScene extends Phaser.Scene {
         const wall = tx < row.length && map.legend[row[tx]] === 'wall';
         if (wall && start < 0) start = tx;
         if (!wall && start >= 0) {
-          addStaticRect(this, ((start + tx) / 2) * ts, (ty + 0.5) * ts, (tx - start) * ts, ts);
+          addStaticWall(this, ((start + tx) / 2) * ts, (ty + 0.5) * ts, (tx - start) * ts, ts);
           start = -1;
         }
       }

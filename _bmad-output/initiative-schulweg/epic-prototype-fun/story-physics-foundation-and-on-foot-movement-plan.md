@@ -1,5 +1,5 @@
 ---
 title: "Physics foundation and on-foot movement"
 ticket: 3
-status: in-progress
+status: built
 ---

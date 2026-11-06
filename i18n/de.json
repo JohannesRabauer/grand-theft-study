@@ -2,5 +2,14 @@
   "menu.title": "Schulweg",
   "menu.start": "Taste oder Klick zum Starten",
   "hud.fps": "FPS {n}",
-  "ui.rotate": "Bitte dreh dein Handy ins Querformat"
+  "ui.rotate": "Bitte dreh dein Handy ins Querformat",
+  "hud.stamina": "Ausdauer",
+  "hud.surface": "Boden: {name}",
+  "surface.asphalt": "Asphalt",
+  "surface.cobble": "Kopfsteinpflaster",
+  "surface.grass": "Gras",
+  "surface.puddle": "Pfütze",
+  "surface.snow": "Schnee",
+  "surface.ice": "Eis",
+  "surface.wall": "Mauer"
 }
