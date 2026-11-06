@@ -1,0 +1,130 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Skeleton and tracer"
+description = "Stands up index.html, main.js, the Boot/Menu/Game/UI scenes, ctx, procedural textures, the town-map loader and a player walking on the map with an FPS counter, plus a README with PowerShell run steps."
+verify = "Run npx serve . from PowerShell, open the URL, and see the player walk around the loaded map with an FPS counter."
+covers = ["CAP-1", "CAP-4"]
+after = []
+hitl = true
+risk = "low"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-1", "../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-5", "../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-13"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Input intents and screen scaling"
+description = "Adds the input module that merges keyboard, mouse, touch and gamepad into one intent snapshot, the mobile joystick and buttons, the portrait rotate hint and integer pixel scaling."
+verify = "The same walk works with WASD on desktop and the joystick on a phone or emulator; portrait shows the rotate hint."
+covers = ["CAP-11"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-10"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Physics foundation and on-foot movement"
+description = "Adds collision categories, the body factory, the surface service, movement profiles from data/vehicles.json, and on-foot sprint with stamina and momentum."
+verify = "Sprinting drains stamina and slows when empty; walking over cobblestone and grass changes speed as defined in data/surfaces.json."
+covers = ["CAP-1", "CAP-3"]
+after = [1]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-3", "../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-4", "../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-6"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Bicycle"
+description = "Adds mounting and dismounting the bike with F, drift and skid marks, the bell, and camera zoom that follows speed."
+verify = "On asphalt the bike is clearly faster than running, a hard turn drifts and leaves skid marks, and the zoom changes smoothly with speed."
+covers = ["CAP-2"]
+after = [3]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Town v1"
+description = "Authors the small town map with street, park, old-town cobbles, school and bully turf, route choice, the objective arrow, hiding spots and turf zones."
+verify = "From the start the school can be reached by two different routes in under three minutes by following the arrow."
+covers = ["CAP-4"]
+after = [3]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-5"]
+
+[[entry]]
+id = 6
+type = "story"
+title = "Quality tiers, menu and DE/EN"
+description = "Adds the Low/Medium/High quality data and persistence, the menu with language and quality choices, ctx.t with de.json and en.json, and the i18n key-check script."
+verify = "Switching quality changes the caps shown in debug live, the language toggles instantly, and check-i18n.mjs passes."
+covers = ["CAP-10"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-9", "../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-11"]
+
+[[entry]]
+id = 7
+type = "story"
+title = "Living world"
+description = "Adds pooled particles (dust, puddle splash, leaves, rain), the wind service, one weather toggle, and Matter props (cones, cans, crates, ball) that react to the player and the wind."
+verify = "Riding through a puddle splashes, wind visibly moves leaves and a flag, the player can knock cones over, and particle counts follow the quality tier."
+covers = ["CAP-8"]
+after = [3, 6]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-7", "../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-8"]
+
+[[entry]]
+id = 8
+type = "story"
+title = "Chase director and bullies"
+description = "Adds the Ärger levels 0–2, the chase director that spawns bullies, the bully state machine, line-of-sight checks, grid pathfinding and angry steam."
+verify = "Entering bully turf starts level 1, a bump or staying reaches level 2 with a bike bully, and the bullies path around obstacles."
+covers = ["CAP-5"]
+after = [3, 5]
+hitl = false
+risk = "high"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-12"]
+
+[[entry]]
+id = 9
+type = "story"
+title = "Escape and caught"
+description = "Adds hiding in hiding spots until the meter cools, and the comic caught frame with item loss, meter reset and respawn."
+verify = "Hidden and unseen for the cooldown the level drops to 0; contact with a bully shows the caught frame, resets the level and respawns the player."
+covers = ["CAP-6", "CAP-7"]
+after = [8]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 10
+type = "story"
+title = "Slingshot (stretch)"
+description = "Adds the slingshot with mouse or drag aiming, wind-affected trajectory dots, object-only hits, and the trash-can distraction for bullies."
+verify = "A shot knocks a can off a fence and lures a bully to a hit trash can, and shots pass through people and animals."
+covers = ["CAP-9"]
+after = [7, 8]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-3"]
+
+[[entry]]
+id = 11
+type = "story"
+title = "Phone performance pass"
+description = "Measures frame rate on the reference phone during a chase on Medium and tunes caps and effects until 60 FPS holds."
+verify = "On the reference phone Medium holds 60 FPS during a level-2 chase, recorded with the ?debug FPS counter."
+covers = ["CAP-10"]
+after = [2, 4, 7, 9]
+hitl = true
+risk = "medium"
+unknown = "Which real phone is the 60 FPS reference device?"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-14"]
