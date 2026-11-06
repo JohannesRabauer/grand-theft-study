@@ -19,7 +19,22 @@ For a phone on the same network, open the LAN URL of the PC (the firewall may pr
 
 ## Controls
 
-WASD or arrow keys: walk. An FPS counter shows at the top left.
+All devices produce the same intent snapshot (`ctx.input.intent`); `ctx.input.type` is `keyboard`, `touch` or `gamepad` (whichever was used last) so prompts can adapt.
+
+| Action | Keyboard / mouse | Touch | Gamepad |
+| --- | --- | --- | --- |
+| Walk | WASD / arrows | joystick (left half) | left stick or d-pad |
+| Jump | Space | big button | A |
+| Sprint | Shift | double-chevron button | B |
+| Interact | F | circle button | Y |
+| Tool use / aim | left click, aim at the cursor | tool button, drag from it to aim | X or RT, right stick aims |
+| Next / previous tool | E / Q | small triangle button | RB / LB |
+| Map | M | - | Back |
+| Pause | Esc | pause button (top right) | Start |
+
+Touch controls appear on touch devices and hide as soon as a key or mouse is used. In portrait on a touch device a rotate hint covers the game and input is ignored.
+The 480x270 picture is scaled by a whole number (letterboxed, pixelated); only windows smaller than 480x270 get a fractional fit.
+An FPS counter shows at the top left.
 
 ## Folder map
 

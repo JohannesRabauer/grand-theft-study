@@ -1,5 +1,6 @@
 {
   "menu.title": "Schulweg",
   "menu.start": "Taste oder Klick zum Starten",
-  "hud.fps": "FPS {n}"
+  "hud.fps": "FPS {n}",
+  "ui.rotate": "Bitte dreh dein Handy ins Querformat"
 }

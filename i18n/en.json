@@ -1,5 +1,6 @@
 {
   "menu.title": "Schulweg",
   "menu.start": "Press any key or click to start",
-  "hud.fps": "FPS {n}"
+  "hud.fps": "FPS {n}",
+  "ui.rotate": "Please turn your phone to landscape"
 }

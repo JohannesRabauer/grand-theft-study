@@ -13,12 +13,13 @@ export class GameScene extends Phaser.Scene {
     const ts = map.tileSize;
 
     // AD-2: one ctx, created once, handed to every system.
+    const events = new Phaser.Events.EventEmitter();
     const ctx = {
-      events: new Phaser.Events.EventEmitter(),
+      events,
       t: createT(cache.get('i18n')),
       map,
       surfaces: new Surfaces(map, cache.get('surfaces')),
-      input: new Input(this)
+      input: new Input(this, events, cache.get('input'))
     };
     this.ctx = ctx;
 
