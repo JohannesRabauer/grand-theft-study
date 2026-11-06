@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Pathfinder } from '../ai/Pathfinding.js';
 import { ChaseLevel } from '../ai/ChaseLevel.js';
+import { Escape } from '../ai/Escape.js';
 
 const load = (p) => JSON.parse(readFileSync(new URL(`../data/${p}`, import.meta.url), 'utf8'));
 const map = load('maps/town.json');
@@ -113,5 +114,32 @@ assert.equal(lv.level, 1, 'after the lockout turf raises it again');
 lv = mk(false);
 lv.turf(true); lv.bump();
 assert.equal(lv.level, 0, 'chaseEnabled=false keeps level 0');
+
+// Escape rules: hide cooldown, resets on sighting / stumbling, slow cool-down at distance.
+const e = chase.escape;
+let es = new Escape(e);
+const step = (n, dt, active, hidden, seen, nearest) => { let r = null; for (let i = 0; i < n; i++) r = es.update(dt, active, hidden, seen, nearest) ?? r; return r; };
+assert.equal(step(1, e.hideSeconds - 0.1, true, true, false, 100), null, 'hiding: not yet');
+assert.ok(es.progress > 0.9 && es.progress < 1, 'progress fills towards 1');
+assert.equal(step(1, 0.2, true, true, false, 100), 'hidden', 'hidden and unseen for the cooldown -> level drops');
+es = new Escape(e);
+step(1, e.hideSeconds - 0.1, true, true, false, 100);
+step(1, 0.1, true, true, true, 100);
+assert.equal(es.progress, 0, 'being seen resets the hide timer');
+step(1, e.hideSeconds - 0.1, true, true, false, 100);
+step(1, 0.1, true, false, false, 100);
+assert.equal(es.progress, 0, 'leaving the spot (moving) resets the hide timer');
+step(1, e.hideSeconds - 0.1, true, true, false, 100);
+step(1, 0.1, true, true, false, e.stumbleRadius - 1);
+assert.equal(es.progress, 0, 'a bully stumbling close resets the hide timer');
+assert.equal(step(1, 100, false, true, false, 100), null, 'nothing to escape from at level 0');
+es = new Escape(e);
+assert.equal(step(1, e.farSeconds - 0.1, true, false, false, e.farDistance + 1), null, 'far: not yet');
+assert.equal(step(1, 0.2, true, false, false, e.farDistance + 1), 'escaped', 'far from every bully and unseen -> cools down');
+es = new Escape(e);
+step(1, e.farSeconds - 0.1, true, false, false, e.farDistance + 1);
+step(1, 0.1, true, false, false, e.farDistance - 1);
+assert.equal(es.farT, 0, 'a bully coming close resets the distance timer');
+assert.equal(step(1, 100, true, false, true, e.farDistance + 1), null, 'being seen blocks the distance cool-down');
 
 console.log(`chase checks passed: path ${n} tiles, A* avg ${avg.toFixed(3)} ms, p99 ${worst.toFixed(3)} ms; level events ${log.length}`);

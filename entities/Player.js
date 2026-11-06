@@ -14,6 +14,8 @@ export class Player {
     this.move = new MovementController(scene.matter, this.body, profileId, profile, ctx.surfaces);
     this.lastSurface = null;
     this.lastPct = -1;
+    this.hid = false;
+    this.leafIn = 0;
   }
 
   // Swap movement profile and look (data-driven: `texture`, `faceHeading`).
@@ -31,6 +33,20 @@ export class Player {
   get stamina() { return this.move.stamina; }
   get surface() { return this.move.surface; }
 
+  // Hidden in a hiding spot: translucent, greenish and the odd rustling leaf.
+  updateHidden(dt) {
+    const hid = this.ctx.chase.hidden;
+    if (hid !== this.hid) {
+      this.hid = hid;
+      this.sprite.setAlpha(hid ? 0.5 : 1);
+      if (hid) this.sprite.setTint(0x8fdc8f); else this.sprite.clearTint();
+      this.leafIn = 0;
+    }
+    if (!hid || (this.leafIn -= dt) > 0) return;
+    this.leafIn = this.ctx.chase.cfg.escape.leafInterval / this.ctx.quality.tier.particleMul;
+    this.ctx.particles.emit('leaves', this.x, this.y - 4, { count: 1 });
+  }
+
   update(dt) {
     const i = this.ctx.input.intent;
     const m = this.move;
@@ -44,6 +60,7 @@ export class Player {
       this.sprite.setFlipX(west).setRotation(west ? h + (h > 0 ? -Math.PI : Math.PI) : h);
     } else if (i.move.x) this.sprite.setFlipX(i.move.x < 0);
 
+    this.updateHidden(dt);
     if (m.surface !== this.lastSurface) {
       this.lastSurface = m.surface;
       this.ctx.events.emit('player:surface', m.surface);

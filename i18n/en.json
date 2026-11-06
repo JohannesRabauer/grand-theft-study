@@ -33,5 +33,17 @@
   "quality.high": "High",
   "pause.title": "Quick break",
   "pause.resume": "Back to it",
-  "pause.menu": "Back to menu"
+  "pause.menu": "Back to menu",
+  "hud.hidden": "Hidden!",
+  "hud.money": "€ {v}",
+  "caught.title": "CAUGHT!",
+  "caught.sfx": "WHAM!",
+  "caught.line1": "Your lunch is mine now, bro!",
+  "caught.line2": "Hey nerd, hand over the pocket money!",
+  "caught.line3": "Ha ha, into the locker with you!",
+  "caught.lost": "Pocket money gone: {v}",
+  "caught.nothing": "Luckily there was nothing left to take.",
+  "caught.continue.keyboard": "Space or F: continue",
+  "caught.continue.touch": "Tap the jump button",
+  "caught.continue.gamepad": "A or Y: continue"
 }

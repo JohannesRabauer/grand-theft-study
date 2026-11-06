@@ -10,6 +10,19 @@
     "foot": "bully-foot",
     "bike": "bully-bike"
   },
+  "escape": {
+    "hideSeconds": 4,
+    "stumbleRadius": 30,
+    "farDistance": 220,
+    "farSeconds": 12,
+    "leafInterval": 0.7
+  },
+  "caught": {
+    "startMoney": 5,
+    "loss": 1,
+    "seconds": 2.5,
+    "minSeconds": 0.8
+  },
   "spawn": {
     "margin": 40,
     "minSeparation": 24

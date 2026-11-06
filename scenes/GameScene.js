@@ -11,6 +11,7 @@ import { ParticleHub } from '../particles/ParticleHub.js';
 import { Props } from '../entities/Prop.js';
 import { Flags } from '../entities/Flag.js';
 import { ChaseDirector } from '../ai/ChaseDirector.js';
+import { Caught } from '../entities/Caught.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -42,6 +43,7 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this, ctx, (spawn.x + 0.5) * ts, (spawn.y + 0.5) * ts, cache.get('vehicles'), 'foot');
     ctx.player = this.player;
     this.bikes = new Bikes(this, ctx);
+    ctx.frozen = false; // set during the caught frame: the world stands still, UIScene keeps running
     this.zones = new Zones(this, ctx);
     ctx.zones = this.zones;
     const wcfg = cache.get('weather');
@@ -51,6 +53,7 @@ export class GameScene extends Phaser.Scene {
     this.props = new Props(this, ctx, cache.get('props'));
     this.flags = new Flags(this, ctx, wcfg.flag);
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
+    this.caught = new Caught(this, ctx, cache.get('chase').caught, this.bikes);
     this.zoomCfg = cache.get('camera');
 
     const worldW = map.rows[0].length * ts;
@@ -109,7 +112,16 @@ export class GameScene extends Phaser.Scene {
 
   setPaused(on) {
     this.paused = on;
-    if (on) this.matter.world.pause(); else this.matter.world.resume();
+    this.syncWorld();
+  }
+
+  freeze(on) {
+    this.ctx.frozen = on;
+    this.syncWorld();
+  }
+
+  syncWorld() {
+    if (this.paused || this.ctx.frozen) this.matter.world.pause(); else this.matter.world.resume();
   }
 
   update(time, delta) {
@@ -120,6 +132,12 @@ export class GameScene extends Phaser.Scene {
     if (this.ctx.input.intent.weather) this.ctx.weather.toggle();
     this.ctx.wind.update(dt);
     this.ctx.weather.update(dt);
+    this.caught.update(dt);
+    if (this.ctx.frozen) {
+      this.flags.update(dt);
+      this.ctx.particles.update(dt);
+      return;
+    }
     this.player.update(dt);
     this.bikes.update(dt);
     this.zones.update();

@@ -2,6 +2,7 @@ import { TouchControls } from '../ui/touch.js';
 import { ObjectiveArrow } from '../ui/ObjectiveArrow.js';
 import { ButtonMenu } from '../ui/ButtonMenu.js';
 import { settingsRows } from '../ui/settingsRows.js';
+import { CaughtFrame } from '../ui/CaughtFrame.js';
 
 // Overlay HUD, touch controls and rotate hint. Reads only; never mutates the world (AD-13).
 export class UIScene extends Phaser.Scene {
@@ -13,12 +14,14 @@ export class UIScene extends Phaser.Scene {
     this.nextFps = 0;
     this.makeStatus();
     this.makeAnger();
+    this.makeMoney();
+    this.caughtFrame = new CaughtFrame(this, this.ctx);
     this.arrow = new ObjectiveArrow(this, this.ctx, this.scene.get('Game'));
     this.touch = new TouchControls(this, this.ctx, this.cache.json.get('input'));
     this.hint = this.makeRotateHint();
     this.makePause();
     if (window.SCHULWEG_DEBUG) this.windArrow = this.add.graphics();
-    if (window.SCHULWEG_DEBUG) this.debug = this.add.text(4, 52, '', { fontFamily: 'monospace', fontSize: '8px', color: '#9fe0ff' });
+    if (window.SCHULWEG_DEBUG) this.debug = this.add.text(4, 62, '', { fontFamily: 'monospace', fontSize: '8px', color: '#9fe0ff' });
     this.nextDebug = 0;
     const ev = this.ctx.events;
     // every visible text re-resolves when the language changes
@@ -38,6 +41,8 @@ export class UIScene extends Phaser.Scene {
     this.stamina.setText(ctx.t('hud.stamina'));
     this.angerLabel.setText(ctx.t('hud.anger'));
     this.spotted.setText(ctx.t('hud.spotted'));
+    this.hidden.setText(ctx.t('hud.hidden'));
+    this.showMoney();
     this.showSurface(ctx.player.surface);
     this.showVehicle(ctx.player.vehicle);
     this.arrow.retext();
@@ -108,6 +113,10 @@ export class UIScene extends Phaser.Scene {
     this.angerLabel = this.add.text(width - 4, 2, ctx.t('hud.anger'), style).setOrigin(1, 0);
     this.angerBars = this.add.graphics();
     this.spotted = this.add.text(width - 4, 22, ctx.t('hud.spotted'), { ...style, color: '#ff5a4d', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 0).setVisible(false);
+    // hide indicator + cooldown bar (until the Ärger level drops), same spot as "spotted"
+    this.hidden = this.add.text(width - 4, 22, ctx.t('hud.hidden'), { ...style, color: '#7dff8a', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 0).setVisible(false);
+    this.hideBar = this.add.graphics();
+    this.hideShown = false;
     const colors = [0xe8731c, 0xe0302a];
     const drawLevel = ({ level }) => {
       const g = this.angerBars.clear();
@@ -124,6 +133,38 @@ export class UIScene extends Phaser.Scene {
       ctx.events.off('chase:seen', onSeen);
     });
     drawLevel({ level: ctx.chase.level });
+  }
+
+  // "€ 5,00" in the HUD; changes come from `money:changed` (read-only).
+  makeMoney() {
+    const { ctx } = this;
+    this.money = this.add.text(4, 50, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d' });
+    this.showMoney = () => this.money.setText(ctx.t('hud.money', { v: this.formatMoney(ctx.state.money) }));
+    ctx.events.on('money:changed', this.showMoney);
+    this.events.once('shutdown', () => ctx.events.off('money:changed', this.showMoney));
+    this.showMoney();
+  }
+
+  formatMoney(v) {
+    const s = v.toFixed(2);
+    return this.ctx.i18n.lang === 'de' ? s.replace('.', ',') : s;
+  }
+
+  // Hidden label, plus the cooldown bar while a chase is on (fills until the level drops to 0).
+  drawHide() {
+    const { chase } = this.ctx;
+    const show = chase.hidden;
+    if (show !== this.hideShown) {
+      this.hideShown = show;
+      this.hidden.setVisible(show);
+      if (!show) this.hideBar.clear();
+    }
+    if (!show) return;
+    const g = this.hideBar.clear();
+    if (chase.level === 0) return;
+    const { width } = this.scale;
+    g.fillStyle(0x000000, 0.6).fillRect(width - 52, 33, 48, 6);
+    g.fillStyle(0x7dff8a).fillRect(width - 51, 34, Math.round(46 * chase.hideProgress), 4);
   }
 
   // HTML overlay: in portrait the 480x270 canvas is tiny, so the hint is drawn in page pixels.
@@ -143,6 +184,7 @@ export class UIScene extends Phaser.Scene {
   update(time) {
     this.touch.update();
     this.arrow.update();
+    this.drawHide();
     if (this.windArrow) this.drawWind();
     const blocked = this.ctx.input.blocked;
     if (this.hint.hidden === blocked) this.hint.hidden = !blocked;

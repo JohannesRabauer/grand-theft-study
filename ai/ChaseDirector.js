@@ -1,11 +1,12 @@
 // Chase director (AD-12): the only writer of the Ärger level (0-2) and the only spawner of
 // bullies. It listens on ctx.events for `turf:enter|leave`, `bully:bump` and `prop:hit`, and
 // emits `chase:level` { level, reason } and `chase:seen` (bool). Exposed as ctx.chase:
-//   level, seen, cool(seconds) (level falls to 0 after that long, bullies give up), reset()
+//   level, seen, hidden, hideProgress (0..1 while the hide timer runs), cool(seconds) (level falls to 0 after that long, bullies give up), reset()
 //   (level 0, bullies removed at once). Thresholds are in ai/ChaseLevel.js + data/chase.json.
 // Contact with a bully emits `bully:caught-contact` { bully } for story 1.9 and puts it in CAUGHT.
 import { ChaseLevel } from './ChaseLevel.js';
 import { Pathfinder } from './Pathfinding.js';
+import { Escape } from './Escape.js';
 import { Perception } from './Perception.js';
 import { BullyFSM, S } from './BullyFSM.js';
 import { BullyPool } from '../entities/Bully.js';
@@ -22,6 +23,7 @@ export class ChaseDirector {
     this.perception = new Perception(ctx, cfg.perception, this.nav);
     this.fsm = new BullyFSM(this);
     this.pool = new BullyPool(scene, ctx, this);
+    this.escape = new Escape(cfg.escape);
     this.lvl = new ChaseLevel(cfg.level, cfg.chaseEnabled, (level, reason) => this.onLevel(level, reason));
     const ts = ctx.map.tileSize;
     this.spawns = ctx.map.objects.filter(o => o.type === 'bully-spawn').map(o => ({ x: (o.x + 0.5) * ts, y: (o.y + 0.5) * ts }));
@@ -39,6 +41,8 @@ export class ChaseDirector {
 
   get level() { return this.lvl.level; }
   get bullies() { return this.pool.list; }
+  get hidden() { return this.perception.hidden; }
+  get hideProgress() { return this.escape.progress; }
 
   cool(seconds) { this.lvl.cool(seconds); }
 
@@ -46,6 +50,7 @@ export class ChaseDirector {
     for (const b of this.pool.list) this.pool.release(b);
     this.lvl.clear('reset');
     this.lvl.lockout = 0;
+    this.escape.reset();
     this.setSeen(false);
   }
 
@@ -155,10 +160,12 @@ export class ChaseDirector {
     const { player, particles, quality, events } = this.ctx;
     const c = this.cfg.bully;
     let seen = false;
+    let nearest = Infinity;
     for (const b of this.pool.list) {
       if (!b.active) continue;
       this.fsm.update(b, dt);
       b.step(dt);
+      if (b.state !== S.CAUGHT) nearest = Math.min(nearest, Math.hypot(player.x - b.x, player.y - b.y));
       if (b.sees) seen = true;
       if (b.state === S.CHASE) {
         b.steamIn -= dt;
@@ -179,6 +186,8 @@ export class ChaseDirector {
       } else if (d >= c.bumpRadius) b.bumped = false;
     }
     this.setSeen(seen);
+    const gone = this.escape.update(dt, this.lvl.level > 0, this.perception.hidden, seen, nearest);
+    if (gone) this.lvl.clear(gone);
     if (this.dbg) this.drawDebug();
   }
 

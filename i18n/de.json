@@ -33,5 +33,17 @@
   "quality.high": "Hoch",
   "pause.title": "Kurze Pause",
   "pause.resume": "Weiter geht's",
-  "pause.menu": "Zurück zum Menü"
+  "pause.menu": "Zurück zum Menü",
+  "hud.hidden": "Versteckt!",
+  "hud.money": "€ {v}",
+  "caught.title": "ERWISCHT!",
+  "caught.sfx": "RUMMS!",
+  "caught.line1": "Dein Pausenbrot gehört jetzt mir, Digga!",
+  "caught.line2": "Hey Streber, her mit dem Taschengeld!",
+  "caught.line3": "Haha, ab in den Spind mit dir!",
+  "caught.lost": "Taschengeld weg: {v}",
+  "caught.nothing": "Zum Glück war nichts mehr zu holen.",
+  "caught.continue.keyboard": "Leertaste oder F: weiter",
+  "caught.continue.touch": "Tippe auf den Sprung-Knopf",
+  "caught.continue.gamepad": "A oder Y: weiter"
 }
