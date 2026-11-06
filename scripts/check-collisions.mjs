@@ -15,6 +15,14 @@ for (const n of ['PLAYER', 'BULLY', 'NPC', 'ANIMAL', 'SENSOR']) {
   assert.equal(MASK.PROJECTILE & CAT[n], 0, `projectile must not hit ${n}`);
   assert.equal(MASK[n] & CAT.PROJECTILE, 0, `${n} must not collide with projectiles`);
 }
+// Projectiles never collide with people or animals, whichever side is asked (Matter tests both masks).
+for (const n of ['PLAYER', 'BULLY', 'NPC', 'ANIMAL']) {
+  const hit = (MASK.PROJECTILE & CAT[n]) !== 0 || (MASK[n] & CAT.PROJECTILE) !== 0;
+  assert.equal(hit, false, `a projectile must pass through ${n}`);
+}
+for (const n of ['PROP', 'STATIC']) {
+  assert.ok((MASK.PROJECTILE & CAT[n]) !== 0 && (MASK[n] & CAT.PROJECTILE) !== 0, `projectile must hit ${n}`);
+}
 assert.equal(MASK.SENSOR, CAT.PLAYER | CAT.BULLY, 'sensor sees only player and bully');
 
 // Collision is symmetric in Matter: A and B collide when each mask contains the other's category.

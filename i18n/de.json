@@ -45,5 +45,8 @@
   "caught.nothing": "Zum Glück war nichts mehr zu holen.",
   "caught.continue.keyboard": "Leertaste oder F: weiter",
   "caught.continue.touch": "Tippe auf den Sprung-Knopf",
-  "caught.continue.gamepad": "A oder Y: weiter"
+  "caught.continue.gamepad": "A oder Y: weiter",
+  "hud.tool": "{name}: {n}/{max}",
+  "tool.slingshot": "Steinschleuder",
+  "hud.wind": "Wind {n}%"
 }

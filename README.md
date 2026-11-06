@@ -27,7 +27,7 @@ All devices produce the same intent snapshot (`ctx.input.intent`); `ctx.input.ty
 | Jump (rings the bell on the bike) | Space | big button | A |
 | Sprint | Shift | double-chevron button | B |
 | Interact (mount / dismount bike) | F | circle button | Y |
-| Tool use / aim | left click, aim at the cursor | tool button, drag from it to aim | X or RT, right stick aims |
+| Tool use / aim (hold to charge, release to fire) | left click, aim at the cursor | tool button, drag from it to aim | X or RT, right stick aims |
 | Next / previous tool | E / Q | small triangle button | RB / LB |
 | Map | M | - | Back |
 | Weather (clear / rain) | T | - | - |
@@ -80,6 +80,15 @@ The main menu has Start, a language toggle (Deutsch / English) and a quality sel
 - **Caught** (`entities/Caught.js`, `ui/CaughtFrame.js`, `caught` in `data/chase.json`): `bully:caught-contact` freezes the world (`ctx.frozen`; UIScene keeps running), takes `loss` (1.00) from `ctx.state.money` (starts at 5.00, shown top left as "€ 5,00"), resets the chase and shows a comic frame (halftone panel, locker with the player inside, the bully with the lunchbox, a random one of three speech-bubble lines per language). After 2.5 s, or Space/F (A/Y on a gamepad, jump button on touch) once 0.8 s have passed, the player is dismounted (the bike stays where it was), put back at home with a dust puff, and the chase can start again at the next turf entry. Emits `player:caught` `{ lost, money }`, `money:changed` and `player:respawn` `{ x, y }`.
 - Reaching the school (`goal:reached`) shows the arrival banner for a few seconds; the game keeps running (prototype, no school scene).
 - `node scripts/check-chase.mjs` checks pathfinding on the real map (home to school, walls, request budget, timing), the level thresholds and the hide / distance escape rules.
+
+## Slingshot
+
+Hold the left mouse button (touch: hold the tool button and drag from it to aim; gamepad: X or RT, right stick aims) to charge for about 0.8 s, release to shoot. Aim at the cursor; without a pointer the shot goes the way you last walked. While charging, a rubber band and power ring show at the player, a dotted line shows the flight, and a wind arrow with strength shows at the bottom of the screen; the dots bend with the wind exactly like the pebble (`flightPoint` in `tools/Slingshot.js`). **Q / E** cycle tools (`ToolBelt`, only the slingshot exists so far). The HUD shows the tool and its ammo.
+
+- Pebbles are pooled sensor bodies in the `PROJECTILE` category (they collide only with `PROP` and `STATIC`): they pass through people, bullies and animals, and through fences. A hit pushes the prop (`knock` in `data/props.json`), crates take 3 hits, a spark puff shows, and `prop:hit` is emitted with the hit position (trash cans use `hitRadius` 260, cans 100, others the bully default), so bullies that are not watching you go to look (`DISTRACTED`).
+- Targets: 3 tin cans on the skatepark fence (map props with `"perch": true`, static until hit) and a trash can nearby.
+- Ammo: start with 5, magazine cap 12 (`data/tool.json`). Pebbles, chestnuts and acorns lie around (`ammo` map objects); walk over one to pick it up, it reappears after 40 s. The aim-dot count scales with the quality tier (`aimDots`).
+- `node scripts/check-collisions.mjs` asserts that projectiles never collide with player, bully, NPC or animal masks.
 
 ## Folder map
 

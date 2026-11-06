@@ -37,13 +37,15 @@ assert.ok(of('bike').length >= 1, 'bike');
 assert.ok(of('hiding').length >= 5, 'at least 5 hiding spots');
 assert.ok(new Set(of('hiding').map(o => o.kind)).size >= 3, 'hiding kinds: hedge, dumpster, phone-booth');
 assert.deepEqual(of('turf').map(o => o.id).sort(), ['schoolyard-back', 'skatepark'], 'turf zones');
+assert.ok(of('ammo').length >= 8, 'at least 8 ammo pickups');
 assert.ok(of('bully-spawn').length >= 3, 'at least 3 bully spawns');
 assert.ok(of('prop').length >= 15, 'about 15 props');
-assert.ok(of('prop').every(o => ['cone', 'can', 'crate', 'ball'].includes(o.kind)), 'prop kinds');
+assert.ok(of('prop').every(o => ['cone', 'can', 'crate', 'ball', 'trashcan'].includes(o.kind)), 'prop kinds');
 for (const o of objects) {
   for (const [x, y] of cells(o)) {
     assert.ok(x >= 0 && y >= 0 && x < W && y < H, `${o.id} out of bounds`);
     if (o.type === 'turf') continue; // the skatepark contains ramps (walls) by design
+    if (o.perch) { assert.equal(surf(x, y), 'fence', `perched ${o.id} must sit on a fence`); continue; } // cans on a fence
     assert.ok(walkable(x, y), `${o.type} ${o.id} lies in a wall at ${x},${y}`);
   }
 }

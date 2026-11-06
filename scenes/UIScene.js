@@ -15,6 +15,7 @@ export class UIScene extends Phaser.Scene {
     this.makeStatus();
     this.makeAnger();
     this.makeMoney();
+    this.makeTool();
     this.caughtFrame = new CaughtFrame(this, this.ctx);
     this.arrow = new ObjectiveArrow(this, this.ctx, this.scene.get('Game'));
     this.touch = new TouchControls(this, this.ctx, this.cache.json.get('input'));
@@ -43,6 +44,7 @@ export class UIScene extends Phaser.Scene {
     this.spotted.setText(ctx.t('hud.spotted'));
     this.hidden.setText(ctx.t('hud.hidden'));
     this.showMoney();
+    this.showTool();
     this.showSurface(ctx.player.surface);
     this.showVehicle(ctx.player.vehicle);
     this.arrow.retext();
@@ -145,6 +147,51 @@ export class UIScene extends Phaser.Scene {
     this.showMoney();
   }
 
+  // Current tool and ammo (bottom centre); a wind arrow with strength appears above it while charging.
+  makeTool() {
+    const { ctx } = this;
+    const { width, height } = this.scale;
+    const style = { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff', stroke: '#000000', strokeThickness: 2 };
+    this.tool = this.add.text(width / 2, height - 3, '', style).setOrigin(0.5, 1);
+    this.windText = this.add.text(width / 2 + 14, height - 17, '', { ...style, color: '#9fe0ff' }).setOrigin(0, 1).setVisible(false);
+    this.windGfx = this.add.graphics().setVisible(false);
+    this.showTool = () => {
+      const t = ctx.toolbelt.current;
+      this.tool.setText(ctx.t('hud.tool', { name: ctx.t(`tool.${t.id}`), n: t.ammo, max: t.max }));
+      this.tool.setColor(t.ammo === 0 ? '#ff8a7a' : '#ffffff');
+    };
+    ctx.events.on('tool:ammo', this.showTool);
+    ctx.events.on('tool:changed', this.showTool);
+    this.events.once('shutdown', () => {
+      ctx.events.off('tool:ammo', this.showTool);
+      ctx.events.off('tool:changed', this.showTool);
+    });
+    this.showTool();
+  }
+
+  drawToolWind() {
+    const { ctx } = this;
+    const aiming = ctx.toolbelt.current.charging;
+    if (aiming !== this.windGfx.visible) {
+      this.windGfx.setVisible(aiming);
+      this.windText.setVisible(aiming);
+    }
+    if (!aiming) return;
+    const v = ctx.wind.vector;
+    const { width, height } = this.scale;
+    const cx = width / 2 - 14;
+    const cy = height - 22;
+    const a = Math.atan2(v.y, v.x);
+    const len = 3 + ctx.wind.strength * 14;
+    const ex = cx + Math.cos(a) * len;
+    const ey = cy + Math.sin(a) * len;
+    const g = this.windGfx.clear().lineStyle(2, 0x9fe0ff, 1);
+    g.lineBetween(cx, cy, ex, ey);
+    g.lineBetween(ex, ey, ex - Math.cos(a - 0.5) * 4, ey - Math.sin(a - 0.5) * 4);
+    g.lineBetween(ex, ey, ex - Math.cos(a + 0.5) * 4, ey - Math.sin(a + 0.5) * 4);
+    this.windText.setText(ctx.t('hud.wind', { n: Math.round(ctx.wind.strength * 100) }));
+  }
+
   formatMoney(v) {
     const s = v.toFixed(2);
     return this.ctx.i18n.lang === 'de' ? s.replace('.', ',') : s;
@@ -185,6 +232,7 @@ export class UIScene extends Phaser.Scene {
     this.touch.update();
     this.arrow.update();
     this.drawHide();
+    this.drawToolWind();
     if (this.windArrow) this.drawWind();
     const blocked = this.ctx.input.blocked;
     if (this.hint.hidden === blocked) this.hint.hidden = !blocked;

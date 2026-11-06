@@ -1,0 +1,25 @@
+{
+  "slingshot": {
+    "startAmmo": 5,
+    "maxAmmo": 12,
+    "chargeSeconds": 0.8,
+    "minPower": 0.15,
+    "cooldown": 0.25,
+    "speed": 230,
+    "lifeMin": 0.25,
+    "lifeMax": 0.75,
+    "windAccel": 120,
+    "radius": 2,
+    "muzzle": 8,
+    "startHeight": 5,
+    "arcHeight": 10,
+    "pool": 6,
+    "passFence": true
+  },
+  "pickup": { "radius": 10, "respawn": 40 },
+  "ammo": {
+    "pebble": { "amount": 3, "texture": "ammo-pebble" },
+    "chestnut": { "amount": 2, "texture": "ammo-chestnut" },
+    "acorn": { "amount": 2, "texture": "ammo-acorn" }
+  }
+}

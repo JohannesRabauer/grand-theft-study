@@ -66,12 +66,12 @@ export class BullyFSM {
     }
   }
 
-  // A prop was hit at (x, y): bullies in range that are not watching the player go and look.
-  distract(b, x, y) {
+  // A prop was hit at (x, y) (radius: how far it is heard, default distractRadius): bullies in range that are not watching the player go and look.
+  distract(b, x, y, radius) {
     const c = this.cfg;
     if (b.state === S.CAUGHT || b.state === S.GIVE_UP) return false;
     if (b.sees && !c.distractWhileSeen) return false;
-    if (Math.hypot(x - b.x, y - b.y) > c.distractRadius) return false;
+    if (Math.hypot(x - b.x, y - b.y) > (radius ?? c.distractRadius)) return false;
     b.targetX = x;
     b.targetY = y;
     this.enter(b, S.DISTRACTED);

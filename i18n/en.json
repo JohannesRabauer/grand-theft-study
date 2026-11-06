@@ -45,5 +45,8 @@
   "caught.nothing": "Luckily there was nothing left to take.",
   "caught.continue.keyboard": "Space or F: continue",
   "caught.continue.touch": "Tap the jump button",
-  "caught.continue.gamepad": "A or Y: continue"
+  "caught.continue.gamepad": "A or Y: continue",
+  "hud.tool": "{name}: {n}/{max}",
+  "tool.slingshot": "Slingshot",
+  "hud.wind": "Wind {n}%"
 }

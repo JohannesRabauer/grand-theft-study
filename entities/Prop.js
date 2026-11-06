@@ -5,8 +5,11 @@
 // AD-8: props are created once; only those near the camera are awake (Matter sleeping), drawn and
 // pushed by wind; the number awake never exceeds the tier's `maxProps`.
 // AD-7: wind-affected kinds get a force scaled by mass from ctx.wind.vector.
-// Emits `prop:hit` ({ prop, speed }) on strong impacts; crates break into debris.
-import { addCircle, addRect } from '../physics/bodies.js';
+// Emits `prop:hit` ({ prop, speed, radius }) on strong impacts (radius = how far bullies hear it, optional);
+// crates break into debris. Slingshot pebbles call `knock`; props with `perch` (cans on a fence) are
+// static until knocked.
+import { addCircle, addRect, setPropFlying } from '../physics/bodies.js';
+import { CAT } from '../physics/categories.js';
 
 export class Props {
   constructor(scene, ctx, cfg) {
@@ -17,6 +20,7 @@ export class Props {
     this.sleeping = Phaser.Physics.Matter.Matter.Sleeping;
     const ts = ctx.map.tileSize;
     this.props = ctx.map.objects.filter(o => o.type === 'prop').map(o => this.create(o, (o.x + 0.5) * ts, (o.y + 0.5) * ts));
+    ctx.props = this;
     this.byBody = new Map(this.props.map(p => [p.body.id, p]));
     this.order = this.props.slice(); // scratch list for the nearest-first wake-up
     this.force = { x: 0, y: 0 };
@@ -34,8 +38,9 @@ export class Props {
     const opts = { restitution: k.restitution, friction: k.friction, frictionAir: k.frictionAir };
     const body = k.shape === 'circle' ? addCircle(this.scene, x, y, k.size, 'PROP', opts) : addRect(this.scene, x, y, k.size, k.size, 'PROP', opts);
     this.matter.body.setMass(body, k.mass);
+    if (o.perch) this.matter.body.setStatic(body, true);
     const sprite = this.scene.add.image(x, y, k.texture).setVisible(false);
-    const prop = { id: o.id, kind: o.kind, k, body, sprite, alive: true, awake: false, tipped: false, cool: 0 };
+    const prop = { id: o.id, kind: o.kind, k, body, sprite, alive: true, awake: false, tipped: false, cool: 0, hp: k.hp ?? Infinity, flyT: 0 };
     this.sleeping.set(body, true);
     return prop;
   }
@@ -46,6 +51,7 @@ export class Props {
     for (const pair of ev.pairs) {
       const a = pair.bodyA;
       const b = pair.bodyB;
+      if (a.collisionFilter.category === CAT.PROJECTILE || b.collisionFilter.category === CAT.PROJECTILE) continue; // see knock
       const speed = Math.hypot(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y) * 60;
       if (speed < hitSpeed) continue;
       for (const body of [a, b]) {
@@ -60,8 +66,8 @@ export class Props {
   hit(p, speed) {
     const { events, particles } = this.ctx;
     const { k, body } = p;
-    events.emit('prop:hit', { prop: p, speed });
-    if (k.breakSpeed && speed >= k.breakSpeed) {
+    events.emit('prop:hit', { prop: p, speed, radius: k.hitRadius });
+    if ((k.breakSpeed && speed >= k.breakSpeed) || p.hp <= 0) {
       p.alive = false;
       p.sprite.setVisible(false);
       this.matter.world.remove(body);
@@ -73,6 +79,23 @@ export class Props {
       p.sprite.setTexture(k.tipped);
     }
     if (k.debris) particles.emit('debris', body.position.x, body.position.y, { count: Math.ceil(k.debris / 2) });
+  }
+
+  // A slingshot pebble hit `p` travelling in direction (dx, dy): a push of `knock` px/s, one point
+  // of damage for props with hp, and a perched prop falls off its perch.
+  knock(p, dx, dy) {
+    if (!p.alive) return;
+    const { k, body } = p;
+    if (body.isStatic) {
+      this.matter.body.setStatic(body, false);
+      setPropFlying(body, true);
+      p.flyT = this.cfg.perchFly;
+    }
+    this.sleeping.set(body, false);
+    this.matter.body.setVelocity(body, { x: (dx * k.knock) / 60, y: (dy * k.knock) / 60 });
+    p.hp--;
+    p.cool = this.cfg.hitCooldown;
+    this.hit(p, k.knock);
   }
 
   // Wake props near the camera (nearest first, up to the tier cap); put the rest to sleep.
@@ -125,6 +148,7 @@ export class Props {
     for (const p of this.props) {
       if (!p.awake) continue;
       p.cool -= dt;
+      if (p.flyT > 0 && (p.flyT -= dt) <= 0) setPropFlying(p.body, false);
       if (p.k.windAccel) {
         // px/s^2 -> Matter force: mass * accel, with Matter's time unit being ms
         const s = (p.body.mass * p.k.windAccel) / 1e6;

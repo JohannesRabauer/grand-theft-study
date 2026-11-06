@@ -32,3 +32,9 @@ export function addProp(scene, x, y, w, h, options = {}) {
 export function addProjectile(scene, x, y, radius, options = {}) {
   return addCircle(scene, x, y, radius, 'PROJECTILE', options);
 }
+
+// A prop knocked off a perch starts inside the fence tile it sat on: it ignores STATIC bodies
+// while `flying` so it can leave the fence, then gets its normal mask back.
+export function setPropFlying(body, flying) {
+  body.collisionFilter.mask = flying ? MASK.PROP & ~CAT.STATIC : MASK.PROP;
+}

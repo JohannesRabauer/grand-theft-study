@@ -12,6 +12,8 @@ import { Props } from '../entities/Prop.js';
 import { Flags } from '../entities/Flag.js';
 import { ChaseDirector } from '../ai/ChaseDirector.js';
 import { Caught } from '../entities/Caught.js';
+import { ToolBelt } from '../tools/ToolBelt.js';
+import { AmmoPickups } from '../entities/AmmoPickups.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -51,6 +53,8 @@ export class GameScene extends Phaser.Scene {
     ctx.weather = new Weather(this, ctx, wcfg.weather);
     ctx.particles = new ParticleHub(this, ctx, cache.get('particles'));
     this.props = new Props(this, ctx, cache.get('props'));
+    this.tools = new ToolBelt(this, ctx, cache.get('tool'));
+    this.ammo = new AmmoPickups(this, ctx, cache.get('tool'));
     this.flags = new Flags(this, ctx, wcfg.flag);
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
     this.caught = new Caught(this, ctx, cache.get('chase').caught, this.bikes);
@@ -139,6 +143,8 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     this.player.update(dt);
+    this.tools.update(dt);
+    this.ammo.update(dt);
     this.bikes.update(dt);
     this.zones.update();
     this.chase.update(dt);

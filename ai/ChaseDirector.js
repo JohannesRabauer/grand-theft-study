@@ -143,7 +143,7 @@ export class ChaseDirector {
     }
   }
 
-  // Slingshot hits and any other strong prop impact lure bullies in range. Impacts caused by a
+  // Slingshot hits and any other strong prop impact lure bullies in range (`ev.radius` overrides the default, e.g. a trash can). Impacts caused by a
   // bully shoving the prop itself (a bully right beside it) are ignored.
   onPropHit(ev) {
     const pos = ev.prop?.body?.position ?? ev;
@@ -151,7 +151,7 @@ export class ChaseDirector {
     for (const b of this.pool.list) {
       if (b.active && Math.hypot(pos.x - b.x, pos.y - b.y) < own) return;
     }
-    for (const b of this.pool.list) if (b.active) this.fsm.distract(b, pos.x, pos.y);
+    for (const b of this.pool.list) if (b.active) this.fsm.distract(b, pos.x, pos.y, ev.radius);
   }
 
   update(dt) {

@@ -16,6 +16,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('particles', 'data/particles.json');
     this.load.json('props', 'data/props.json');
     this.load.json('chase', 'data/chase.json');
+    this.load.json('tool', 'data/tool.json');
     this.load.json('de', 'i18n/de.json');
     this.load.json('en', 'i18n/en.json');
   }
@@ -213,6 +214,14 @@ export class BootScene extends Phaser.Scene {
     mk('prop-ball', 8, 8, (c, px) => {
       px('#c8352f', 2, 0, 4, 8); px('#c8352f', 0, 2, 8, 4); px('#c8352f', 1, 1, 6, 6); px('#ffffff', 2, 2, 2, 1); px('#f2f2f2', 3, 5, 3, 1);
     });
+    mk('prop-trashcan', 10, 12, (c, px) => { px('#5d6670', 1, 0, 8, 2); px('#7d868f', 0, 2, 10, 10); px('#5d6670', 2, 3, 1, 8); px('#5d6670', 5, 3, 1, 8); px('#5d6670', 8, 3, 1, 8); px('#c9d1d9', 1, 3, 1, 3); });
+    mk('prop-trashcan-tipped', 12, 10, (c, px) => { px('#5d6670', 0, 1, 2, 8); px('#7d868f', 2, 0, 10, 10); px('#5d6670', 3, 2, 8, 1); px('#5d6670', 3, 5, 8, 1); px('#3b4046', 2, 1, 1, 8); });
+    mk('proj', 3, 3, (c, px) => { px('#d8d2c4', 0, 1, 3, 1); px('#d8d2c4', 1, 0, 1, 3); px('#ffffff', 1, 1, 1, 1); });
+    mk('proj-shadow', 4, 2, (c, px) => { c.globalAlpha = 0.35; px('#000000', 0, 0, 4, 2); });
+    mk('aim-dot', 2, 2, (c, px) => px('#ffffff', 0, 0, 2, 2));
+    mk('ammo-pebble', 5, 4, (c, px) => { px('#7a7f86', 1, 0, 3, 4); px('#9aa0a8', 0, 1, 5, 2); px('#c4c9cf', 1, 1, 1, 1); });
+    mk('ammo-chestnut', 5, 5, (c, px) => { px('#5a2f14', 1, 0, 3, 5); px('#7a4220', 0, 1, 5, 3); px('#b87a45', 1, 1, 1, 1); });
+    mk('ammo-acorn', 4, 6, (c, px) => { px('#b88a3a', 0, 2, 4, 4); px('#6b4a1e', 0, 0, 4, 2); px('#6b4a1e', 1, 0, 2, 1); px('#d9b062', 1, 3, 1, 1); });
     mk('flag-pole', 2, 22, (c, px) => { px('#6b6f76', 0, 0, 2, 22); px('#e8e4d8', 0, 0, 2, 2); });
     mk('flag-seg', 4, 9, (c, px) => px('#ffffff', 0, 0, 4, 9));
   }
