@@ -11,5 +11,8 @@
   "surface.puddle": "Pfütze",
   "surface.snow": "Schnee",
   "surface.ice": "Eis",
-  "surface.wall": "Mauer"
+  "surface.wall": "Mauer",
+  "hud.vehicle": "Unterwegs: {name}",
+  "vehicle.foot": "Zu Fuß",
+  "vehicle.bike": "Fahrrad"
 }

@@ -2,6 +2,7 @@ import { createT } from '../i18n/i18n.js';
 import { Surfaces } from '../physics/surfaces.js';
 import { addStaticWall } from '../physics/bodies.js';
 import { Input } from '../ui/input.js';
+import { Bikes } from '../entities/Bike.js';
 import { Player } from '../entities/Player.js';
 
 export class GameScene extends Phaser.Scene {
@@ -28,8 +29,10 @@ export class GameScene extends Phaser.Scene {
 
     // map objects are in tile coordinates
     const spawn = map.objects.find(o => o.type === 'spawn' && o.id === 'player');
-    this.player = new Player(this, ctx, (spawn.x + 0.5) * ts, (spawn.y + 0.5) * ts, 'foot', cache.get('vehicles').foot);
+    this.player = new Player(this, ctx, (spawn.x + 0.5) * ts, (spawn.y + 0.5) * ts, cache.get('vehicles'), 'foot');
     ctx.player = this.player;
+    this.bikes = new Bikes(this, ctx);
+    this.zoomCfg = cache.get('camera');
 
     const worldW = map.rows[0].length * ts;
     const worldH = map.rows.length * ts;
@@ -38,6 +41,16 @@ export class GameScene extends Phaser.Scene {
 
     this.scene.launch('UI', { ctx });
     this.events.once('shutdown', () => this.scene.stop('UI'));
+  }
+
+  // Zoom follows real speed continuously (1.0 standing .. 0.6 at top speed), smoothed.
+  // Only the main camera zooms; UIScene has its own camera.
+  updateZoom(dt) {
+    const z = this.zoomCfg;
+    const t = Math.min(1, this.player.move.velSpeed / z.speedForMin);
+    const target = z.max + (z.min - z.max) * t;
+    const cam = this.cameras.main;
+    cam.setZoom(cam.zoom + (target - cam.zoom) * (1 - Math.exp(-z.smooth * dt)));
   }
 
   // Static ground: all tiles drawn once into a single RenderTexture.
@@ -71,5 +84,7 @@ export class GameScene extends Phaser.Scene {
     const dt = Math.min(delta, 50) / 1000;
     this.ctx.input.update();
     this.player.update(dt);
+    this.bikes.update(dt);
+    this.updateZoom(dt);
   }
 }

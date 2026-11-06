@@ -26,15 +26,20 @@ export class UIScene extends Phaser.Scene {
       g.fillStyle(0x000000, 0.6).fillRect(46, 15, 42, 6);
       g.fillStyle(v > 0.25 ? 0x62d26f : 0xe0483c).fillRect(47, 16, Math.round(40 * v), 4);
     };
+    this.vehicle = this.add.text(4, 40, '', style);
+    const onVehicle = (id) => this.vehicle.setText(ctx.t('hud.vehicle', { name: ctx.t(`vehicle.${id}`) }));
     const onSurface = (id) => this.label.setText(ctx.t('hud.surface', { name: ctx.t(`surface.${id}`) }));
     ctx.events.on('player:stamina', onStamina);
     ctx.events.on('player:surface', onSurface);
+    ctx.events.on('player:vehicle', onVehicle);
     this.events.once('shutdown', () => {
       ctx.events.off('player:stamina', onStamina);
       ctx.events.off('player:surface', onSurface);
+      ctx.events.off('player:vehicle', onVehicle);
     });
     onStamina(ctx.player.stamina);
     onSurface(ctx.player.surface);
+    onVehicle(ctx.player.vehicle);
   }
 
   // HTML overlay: in portrait the 480x270 canvas is tiny, so the hint is drawn in page pixels.

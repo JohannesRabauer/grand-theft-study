@@ -22,6 +22,14 @@ export class MovementController {
     this.exhausted = false;
     this.regenIn = 0;
     this.vel = { x: 0, y: 0 };
+    this.slip = 0; // angle (rad) between real velocity and heading
+    this.velSpeed = 0;
+  }
+
+  // Switch profile (mount/dismount) keeping heading, speed and velocity so the change is seamless.
+  setProfile(profileId, profile) {
+    this.profileId = profileId;
+    this.profile = profile;
   }
 
   update(dt, moveX, moveY, sprintWanted) {
@@ -55,6 +63,10 @@ export class MovementController {
     const k = 1 - Math.exp(-p.grip * surf.grip * (1 - p.drift) * dt);
     this.vel.x = vx + (Math.cos(this.heading) * this.speed - vx) * k;
     this.vel.y = vy + (Math.sin(this.heading) * this.speed - vy) * k;
+    this.velSpeed = Math.hypot(this.vel.x, this.vel.y);
+    let slip = Math.atan2(this.vel.y, this.vel.x) - this.heading;
+    slip -= Math.round(slip / (2 * Math.PI)) * 2 * Math.PI;
+    this.slip = this.velSpeed > 1 ? Math.abs(slip) : 0;
     this.matter.body.setVelocity(body, { x: this.vel.x / 60, y: this.vel.y / 60 });
   }
 

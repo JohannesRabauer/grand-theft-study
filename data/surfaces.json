@@ -1,9 +1,65 @@
 {
-  "asphalt": { "grip": 1.0, "speed": { "foot": 1.0 }, "rattle": 0.0, "particle": "dust-grey" },
-  "cobble": { "grip": 0.9, "speed": { "foot": 0.9 }, "rattle": 0.6, "particle": "dust-sand" },
-  "grass": { "grip": 0.75, "speed": { "foot": 0.8 }, "rattle": 0.2, "particle": "grass-bits" },
-  "puddle": { "grip": 0.5, "speed": { "foot": 0.6 }, "rattle": 0.0, "particle": "splash" },
-  "snow": { "grip": 0.5, "speed": { "foot": 0.7 }, "rattle": 0.0, "particle": "snow-puff" },
-  "ice": { "grip": 0.15, "speed": { "foot": 1.0 }, "rattle": 0.0, "particle": "ice-chips" },
-  "wall": { "grip": 1.0, "speed": { "foot": 1.0 }, "rattle": 0.0, "particle": null }
+  "asphalt": {
+    "grip": 1.0,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0
+    },
+    "rattle": 0.0,
+    "particle": "dust-grey"
+  },
+  "cobble": {
+    "grip": 0.9,
+    "speed": {
+      "foot": 0.9,
+      "bike": 0.6
+    },
+    "rattle": 0.6,
+    "particle": "dust-sand"
+  },
+  "grass": {
+    "grip": 0.75,
+    "speed": {
+      "foot": 0.8,
+      "bike": 0.55
+    },
+    "rattle": 0.2,
+    "particle": "grass-bits"
+  },
+  "puddle": {
+    "grip": 0.5,
+    "speed": {
+      "foot": 0.6,
+      "bike": 0.5
+    },
+    "rattle": 0.0,
+    "particle": "splash"
+  },
+  "snow": {
+    "grip": 0.5,
+    "speed": {
+      "foot": 0.7,
+      "bike": 0.5
+    },
+    "rattle": 0.0,
+    "particle": "snow-puff"
+  },
+  "ice": {
+    "grip": 0.15,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0
+    },
+    "rattle": 0.0,
+    "particle": "ice-chips"
+  },
+  "wall": {
+    "grip": 1.0,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0
+    },
+    "rattle": 0.0,
+    "particle": null
+  }
 }

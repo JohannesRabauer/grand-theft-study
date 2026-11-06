@@ -11,5 +11,8 @@
   "surface.puddle": "Puddle",
   "surface.snow": "Snow",
   "surface.ice": "Ice",
-  "surface.wall": "Wall"
+  "surface.wall": "Wall",
+  "hud.vehicle": "Riding: {name}",
+  "vehicle.foot": "On foot",
+  "vehicle.bike": "Bicycle"
 }
