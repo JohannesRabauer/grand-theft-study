@@ -2,7 +2,7 @@
 type: epic
 title: "Fun-to-ride prototype with one escapable chase"
 parent: initiative-schulweg
-covers: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, CAP-10, CAP-11]
+covers: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, CAP-10, CAP-11, CAP-12]
 assignee: ""
 risk: medium
 ---
@@ -41,3 +41,4 @@ The whole prototype as one capability slice, following the spec. Not the full ga
 - Open question: which real phone is the 60 FPS reference device; entry 11 waits on it.
 - Decision: 2026-11-06 slingshot (CAP-9) stays in as a stretch story, entry 10.
 - Decision: 2026-11-06 no closing Refactor sweep story; the prototype is throwaway.
+- Decision: 2026-11-06 after first playtest, entries 12-14 added (resolution, smooth zoom, pedestrians); CAP-12 added.

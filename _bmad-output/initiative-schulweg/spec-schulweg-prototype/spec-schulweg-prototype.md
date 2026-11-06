@@ -50,6 +50,10 @@ A vision to realize, de-risked first. Schulweg is a retro top-down, GTA-1997-sty
   - **intent:** Desktop and mobile controls work with auto-detected prompts, and portrait mode shows a rotate hint.
   - **success:** Desktop WASD/Space/Shift/F/Q-E/mouse and mobile joystick + buttons both complete CAP-4; portrait shows the hint instead of the game.
 
+- **CAP-12**
+  - **intent:** The town is populated by pedestrians who walk the streets and park, and who react to the player.
+  - **success:** Up to 12 pedestrians (Medium cap) walk in view in the town; ringing the bike bell or riding close makes them step aside and shout a kid-safe line; at least dog walkers, kids with a ball and grandparents appear; the cap and frame budget hold.
+
 ## Constraints
 
 - Phaser 3.90.0 (exact pin; Phaser 4 upgrade deferred) with its built-in Matter.js from a CDN, no backend, runs from `index.html` plus assets; all run instructions are Windows PowerShell (`npx serve .` or `python -m http.server`), no bash-only scripts.
@@ -59,7 +63,7 @@ A vision to realize, de-risked first. Schulweg is a retro top-down, GTA-1997-sty
 - Every visible string comes from `i18n/de.json` / `i18n/en.json` with an instant DE/EN toggle, even in the prototype; text stays kid-safe (no swearing, slurs, appearance/origin/gender/religion/disability insults, sexual content).
 - Particles, projectiles, pedestrians and bullies are pooled and culled off-screen; no per-frame allocation in hot paths.
 - Kid-safe by construction: no ads, purchases, chat, external links, or data collection.
-- Integer pixel scaling with `image-rendering: pixelated`; responsive, landscape preferred.
+- Internal resolution follows the quality tier (960×540 on Medium/High, 480×270 on Low) with integer, crisp scaling; responsive, landscape preferred. The speed-based camera zoom must not make pixels jump or swim (user feedback after first play).
 
 ## Non-goals
 

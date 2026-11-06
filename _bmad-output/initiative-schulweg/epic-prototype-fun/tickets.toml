@@ -128,3 +128,39 @@ hitl = true
 risk = "medium"
 unknown = "Which real phone is the 60 FPS reference device?"
 references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-14"]
+
+[[entry]]
+id = 12
+type = "story"
+title = "Higher-resolution rendering"
+description = "Raises the internal resolution to 960x540 on Medium and High (480x270 on Low) and regenerates textures, tiles, sprites, HUD and touch controls at matching detail, keeping integer crisp scaling."
+verify = "On Medium the game renders at 960x540 with visibly finer art and a correctly laid-out HUD, Low still runs at 480x270, and all check scripts and the smoke test pass."
+covers = ["CAP-10", "CAP-11"]
+after = [11]
+hitl = false
+risk = "high"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-14"]
+
+[[entry]]
+id = 13
+type = "story"
+title = "Smooth camera zoom"
+description = "Makes the speed-based zoom look smooth: eased zoom, sub-pixel camera position and texture filtering that avoid jumping or swimming pixels at every zoom between 0.6 and 1.0."
+verify = "Riding the bike through the full speed range shows no visible pixel jitter or tile seams, checked by stepped frame captures at several zoom values, and cost per update stays in budget."
+covers = ["CAP-2"]
+after = [12]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-14"]
+
+[[entry]]
+id = 14
+type = "story"
+title = "Pedestrians and crowd"
+description = "Adds pooled pedestrians (up to the quality cap) including dog walkers, kids with a ball and grandparents, walking streets and park, stepping aside and shouting kid-safe lines when the bell rings or the player rides close."
+verify = "With the Medium cap up to 12 pedestrians walk in view, a bell ring near them makes them step aside with a shout, the cap and the update budget hold, and tools still never affect them."
+covers = ["CAP-12"]
+after = [12]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-prototype/architecture-schulweg-prototype.md#ad-15"]

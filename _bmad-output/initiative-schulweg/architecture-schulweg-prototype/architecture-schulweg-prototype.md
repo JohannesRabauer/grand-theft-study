@@ -103,7 +103,12 @@ Dependency rule: scenes → ctx/services → entities → data. Services never i
 ### AD-14 — Frame and render budget
 - **Binds:** CAP-8, CAP-10
 - **Prevents:** unmeasured performance claims and shimmering pixels.
-- **Rule:** Target 60 FPS on Medium. Medium caps: ≤300 live particles, ≤60 awake props, ≤3 bullies, ≤12 NPCs. Internal resolution 480×270 with `pixelArt: true`, `roundPixels: true`, scaled by an integer factor (letterboxed) and `image-rendering: pixelated`. Matter uses a fixed timestep. Camera zoom ranges 0.6–1.0 and is smoothed.
+- **Rule:** Target 60 FPS on Medium. Medium caps: ≤300 live particles, ≤60 awake props, ≤3 bullies, ≤12 NPCs. Internal resolution is set by the quality tier: 960×540 on Medium and High, 480×270 on Low (applied at load), scaled by an integer factor (letterboxed) with crisp, non-blurred scaling. Art is generated procedurally at the matching detail level. Matter uses a fixed timestep. Camera zoom ranges 0.6–1.0, is eased, and must not make sprites or tiles visibly jitter or swim (sub-pixel camera position and zoom-safe texture filtering, not per-frame pixel snapping while zooming).
+
+### AD-15 — Pedestrians are pooled, event-driven NPCs
+- **Binds:** CAP-12, CAP-5, CAP-8
+- **Prevents:** NPCs with private spawning, physics or reaction code, and tools affecting them.
+- **Rule:** `entities/Npc.js` actors come from the pool `npcs` (cap from `ctx.quality.maxNPCs`), use the `NPC` or `ANIMAL` category via the body factory, and are spawned and despawned only by `ai/CrowdDirector` using `npc-spawn` and path markers in the AD-5 map. Behaviour is a small state machine (`WALK, STAND, REACT, FLEE`) driven by data in `data/npcs.json`. Reactions to the player (`bike:bell`, close fast approach) are handled through `ctx.events`; NPC lines come from i18n keys. Tools never affect NPCs (AD-3).
 
 ## Consistency Conventions
 
