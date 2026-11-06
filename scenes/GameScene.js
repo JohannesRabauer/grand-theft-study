@@ -5,6 +5,11 @@ import { Input } from '../ui/input.js';
 import { Bikes } from '../entities/Bike.js';
 import { Player } from '../entities/Player.js';
 import { Zones } from '../entities/Zones.js';
+import { Wind } from '../physics/Wind.js';
+import { Weather } from '../physics/Weather.js';
+import { ParticleHub } from '../particles/ParticleHub.js';
+import { Props } from '../entities/Prop.js';
+import { Flags } from '../entities/Flag.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -37,6 +42,12 @@ export class GameScene extends Phaser.Scene {
     ctx.player = this.player;
     this.bikes = new Bikes(this, ctx);
     this.zones = new Zones(this, ctx);
+    const wcfg = cache.get('weather');
+    ctx.wind = new Wind(wcfg.wind);
+    ctx.weather = new Weather(this, ctx, wcfg.weather);
+    ctx.particles = new ParticleHub(this, ctx, cache.get('particles'));
+    this.props = new Props(this, ctx, cache.get('props'));
+    this.flags = new Flags(this, ctx, wcfg.flag);
     this.zoomCfg = cache.get('camera');
 
     const worldW = map.rows[0].length * ts;
@@ -103,9 +114,15 @@ export class GameScene extends Phaser.Scene {
     this.ctx.input.update();
     if (this.ctx.input.intent.pause) this.ctx.events.emit('ui:pause-toggle');
     if (this.paused) return;
+    if (this.ctx.input.intent.weather) this.ctx.weather.toggle();
+    this.ctx.wind.update(dt);
+    this.ctx.weather.update(dt);
     this.player.update(dt);
     this.bikes.update(dt);
     this.zones.update();
     this.updateZoom(dt);
+    this.props.update(dt);
+    this.flags.update(dt);
+    this.ctx.particles.update(dt);
   }
 }

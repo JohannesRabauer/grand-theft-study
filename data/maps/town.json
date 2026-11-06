@@ -100,6 +100,11 @@
     { "type":"prop", "id":"p13", "kind":"crate", "x":56, "y":38 },
     { "type":"prop", "id":"p14", "kind":"ball", "x":72, "y":18 },
     { "type":"prop", "id":"p15", "kind":"ball", "x":18, "y":43 },
-    { "type":"prop", "id":"p16", "kind":"ball", "x":85, "y":45 }
+    { "type":"prop", "id":"p16", "kind":"ball", "x":85, "y":45 },
+    { "type":"flag", "id":"flag-school", "x":75, "y":14, "color":"#e0483c" },
+    { "type":"flag", "id":"flag-park", "x":31, "y":35, "color":"#3b7dd8" },
+    { "type":"ambient", "id":"steam-bakery", "kind":"steam", "x":15, "y":14 },
+    { "type":"ambient", "id":"steam-manhole", "kind":"steam", "x":35, "y":56 },
+    { "type":"ambient", "id":"smoke-chimney", "kind":"chimney", "x":66, "y":13 }
   ]
 }

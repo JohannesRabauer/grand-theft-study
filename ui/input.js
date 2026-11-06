@@ -3,9 +3,9 @@
 // through the `input:touch-bind` event. Gameplay reads ctx.input.intent only.
 //
 // Level intents (held): move, aim, sprint, jump, toolUse.
-// Edge intents (true for exactly one frame per press): interact, toolNext, toolPrev, map, pause.
-const KEYS = 'W,A,S,D,UP,LEFT,DOWN,RIGHT,SHIFT,SPACE,F,Q,E,M,ESC';
-const EDGES = ['interact', 'toolNext', 'toolPrev', 'map', 'pause'];
+// Edge intents (true for exactly one frame per press): interact, toolNext, toolPrev, map, weather, pause.
+const KEYS = 'W,A,S,D,UP,LEFT,DOWN,RIGHT,SHIFT,SPACE,F,Q,E,M,T,ESC';
+const EDGES = ['interact', 'toolNext', 'toolPrev', 'map', 'weather', 'pause'];
 // Standard gamepad mapping: A, B, X, Y, LB, RB, LT, RT, Back, Start, d-pad.
 const PAD = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
 
@@ -38,6 +38,7 @@ export class Input {
       toolNext: false,
       toolPrev: false,
       map: false,
+      weather: false,
       pause: false
     };
     this.aimPoint = { x: 0, y: 0 };
@@ -123,6 +124,7 @@ export class Input {
     this.edge('toolNext', k.E.isDown || btn.toolNext || down(PAD.RB));
     this.edge('toolPrev', k.Q.isDown || down(PAD.LB));
     this.edge('map', k.M.isDown || down(PAD.BACK));
+    this.edge('weather', k.T.isDown);
     this.edge('pause', k.ESC.isDown || btn.pause || down(PAD.START));
 
     this.updateAim(rx, ry, mouse);

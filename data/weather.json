@@ -1,0 +1,22 @@
+{
+  "wind": {
+    "base": 0.45,
+    "gust": 0.6,
+    "periods": [37, 11, 3.7],
+    "baseAngle": 12,
+    "swing": 40,
+    "swingPeriod": 53,
+    "startTime": 5
+  },
+  "flag": { "poleHeight": 22, "segments": 6, "segWidth": 4, "turn": 3, "speed": 6, "wave": 3, "droop": 1.2 },
+  "weather": {
+    "fade": 2,
+    "overlayColor": "#16264a",
+    "overlayAlpha": 0.3,
+    "puddleEvery": 0.3,
+    "dryEvery": 0.25,
+    "maxWet": 80,
+    "range": 20,
+    "wettable": ["asphalt", "cobble", "concrete", "path", "lane"]
+  }
+}

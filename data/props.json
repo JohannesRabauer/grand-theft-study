@@ -1,0 +1,12 @@
+{
+  "cullEvery": 0.2,
+  "margin": 64,
+  "hitSpeed": 70,
+  "hitCooldown": 0.15,
+  "kinds": {
+    "cone": { "texture": "prop-cone", "tipped": "prop-cone-tipped", "shape": "circle", "size": 4, "mass": 0.05, "restitution": 0.35, "friction": 0.4, "frictionAir": 0.1, "tipSpeed": 55, "windAccel": 0, "debris": 2 },
+    "can": { "texture": "prop-can", "shape": "circle", "size": 3, "mass": 0.02, "restitution": 0.5, "friction": 0.05, "frictionAir": 0.03, "windAccel": 70, "debris": 2 },
+    "crate": { "texture": "prop-crate", "shape": "rect", "size": 12, "mass": 0.25, "restitution": 0.1, "friction": 0.6, "frictionAir": 0.2, "windAccel": 0, "breakSpeed": 105, "debris": 12 },
+    "ball": { "texture": "prop-ball", "shape": "circle", "size": 4, "mass": 0.04, "restitution": 0.85, "friction": 0.02, "frictionAir": 0.01, "windAccel": 30, "debris": 0 }
+  }
+}

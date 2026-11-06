@@ -16,6 +16,7 @@ export class UIScene extends Phaser.Scene {
     this.touch = new TouchControls(this, this.ctx, this.cache.json.get('input'));
     this.hint = this.makeRotateHint();
     this.makePause();
+    if (window.SCHULWEG_DEBUG) this.windArrow = this.add.graphics();
     if (window.SCHULWEG_DEBUG) this.debug = this.add.text(4, 52, '', { fontFamily: 'monospace', fontSize: '8px', color: '#9fe0ff' });
     this.nextDebug = 0;
     const ev = this.ctx.events;
@@ -113,6 +114,7 @@ export class UIScene extends Phaser.Scene {
   update(time) {
     this.touch.update();
     this.arrow.update();
+    if (this.windArrow) this.drawWind();
     const blocked = this.ctx.input.blocked;
     if (this.hint.hidden === blocked) this.hint.hidden = !blocked;
     if (time < this.nextFps) return;
@@ -123,10 +125,25 @@ export class UIScene extends Phaser.Scene {
 
   // ?debug: active tier plus live/cap of every registered pool.
   showDebug() {
-    const { quality, pools } = this.ctx;
-    let s = `quality: ${quality.id}`;
+    const { quality, pools, wind, weather } = this.ctx;
+    let s = `quality: ${quality.id}
+weather: ${weather.state}  wind: ${wind.vector.x.toFixed(2)}, ${wind.vector.y.toFixed(2)}`;
     for (const [name, p] of pools.byName) s += `
 ${name}: ${p.live()}/${p.cap}`;
     this.debug.setText(s);
+  }
+
+  // ?debug: small wind arrow (length = strength) in the lower-left corner.
+  drawWind() {
+    const v = this.ctx.wind.vector;
+    const g = this.windArrow.clear().lineStyle(2, 0x9fe0ff, 1);
+    const cx = 30;
+    const cy = this.scale.height - 30;
+    const ex = cx + v.x * 24;
+    const ey = cy + v.y * 24;
+    g.strokeCircle(cx, cy, 2).lineBetween(cx, cy, ex, ey);
+    const a = Math.atan2(v.y, v.x);
+    g.lineBetween(ex, ey, ex - Math.cos(a - 0.5) * 5, ey - Math.sin(a - 0.5) * 5);
+    g.lineBetween(ex, ey, ex - Math.cos(a + 0.5) * 5, ey - Math.sin(a + 0.5) * 5);
   }
 }

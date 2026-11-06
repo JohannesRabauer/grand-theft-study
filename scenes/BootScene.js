@@ -12,6 +12,9 @@ export class BootScene extends Phaser.Scene {
     this.load.json('camera', 'data/camera.json');
     this.load.json('input', 'data/input.json');
     this.load.json('quality', 'data/quality.json');
+    this.load.json('weather', 'data/weather.json');
+    this.load.json('particles', 'data/particles.json');
+    this.load.json('props', 'data/props.json');
     this.load.json('de', 'i18n/de.json');
     this.load.json('en', 'i18n/en.json');
   }
@@ -26,6 +29,7 @@ export class BootScene extends Phaser.Scene {
     this.makePlayer();
     this.makeBike();
     this.makeFx();
+    this.makeWorldFx();
     this.makeArrow();
     this.scene.start('Menu');
   }
@@ -145,5 +149,36 @@ export class BootScene extends Phaser.Scene {
       c.strokeStyle = '#fff2a8'; c.lineWidth = 2;
       c.beginPath(); c.arc(12, 12, 10, 0, Math.PI * 2); c.stroke();
     });
+  }
+
+  // Particle textures (white where tint colours them), props and flags.
+  makeWorldFx() {
+    const mk = (key, w, h, draw) => {
+      const tex = this.textures.createCanvas(key, w, h);
+      const c = tex.getContext();
+      const px = (col, x, y, pw, ph) => { c.fillStyle = col; c.fillRect(x, y, pw, ph); };
+      draw(c, px);
+      tex.refresh();
+    };
+    mk('p-dust', 4, 4, (c, px) => { px('#ffffff', 1, 0, 2, 4); px('#ffffff', 0, 1, 4, 2); });
+    mk('p-drop', 2, 3, (c, px) => px('#9fd0ff', 0, 0, 2, 3));
+    mk('p-leaf', 3, 3, (c, px) => { px('#ffffff', 0, 1, 3, 1); px('#ffffff', 1, 0, 1, 3); });
+    mk('p-debris', 3, 3, (c, px) => px('#ffffff', 0, 0, 3, 3));
+    mk('p-rain', 1, 5, (c, px) => px('#bcd8ff', 0, 0, 1, 5));
+    mk('p-ring', 12, 12, c => {
+      c.strokeStyle = '#cfe8ff'; c.lineWidth = 1;
+      c.beginPath(); c.arc(6, 6, 5, 0, Math.PI * 2); c.stroke();
+    });
+    mk('prop-cone', 8, 8, (c, px) => { px('#7a3a10', 1, 1, 6, 6); px('#e8731c', 1, 0, 6, 6); px('#e8731c', 0, 1, 8, 4); px('#ffffff', 2, 2, 4, 3); px('#e8731c', 3, 3, 2, 1); });
+    mk('prop-cone-tipped', 10, 6, (c, px) => { px('#e8731c', 0, 1, 8, 4); px('#ffffff', 3, 1, 2, 4); px('#7a3a10', 8, 0, 2, 6); });
+    mk('prop-can', 6, 6, (c, px) => { px('#7d868f', 1, 0, 4, 6); px('#7d868f', 0, 1, 6, 4); px('#c9d1d9', 1, 1, 3, 2); });
+    mk('prop-crate', 12, 12, (c, px) => {
+      px('#5a3a1e', 0, 0, 12, 12); px('#b9854a', 1, 1, 10, 10); px('#8a5f31', 1, 5, 10, 2); px('#8a5f31', 5, 1, 2, 10);
+    });
+    mk('prop-ball', 8, 8, (c, px) => {
+      px('#c8352f', 2, 0, 4, 8); px('#c8352f', 0, 2, 8, 4); px('#c8352f', 1, 1, 6, 6); px('#ffffff', 2, 2, 2, 1); px('#f2f2f2', 3, 5, 3, 1);
+    });
+    mk('flag-pole', 2, 22, (c, px) => { px('#6b6f76', 0, 0, 2, 22); px('#e8e4d8', 0, 0, 2, 2); });
+    mk('flag-seg', 4, 9, (c, px) => px('#ffffff', 0, 0, 4, 9));
   }
 }
