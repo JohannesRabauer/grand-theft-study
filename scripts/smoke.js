@@ -3,11 +3,13 @@
 // stepping the game by hand: bike ride home -> school, skatepark turf, chase, hide and escape,
 // getting caught and respawning, slingshot, weather, language, quality, pause, back to menu and a
 // second run. Every step asserts game state; console errors and exceptions fail the run.
-// The scenarios live in scripts/smoke/<area>.js and are listed in scripts/smoke/index.js (AD-29).
+// The scenarios live in scripts/smoke/<area>.js and are listed in scripts/smoke/index.js (AD-29). `only` (an array of
+// scenario names, e.g. SCHULWEG_BENCH.smoke(['skatepark'])) runs just those, for development; scenarios that build on state
+// of an earlier one may fail on their own.
 import { createEnv } from './smoke/env.js';
 import { scenarios } from './smoke/index.js';
 
-export async function runSmoke(game, h) {
+export async function runSmoke(game, h, only = null) {
   const checks = [];
   const problems = [];
   const check = (name, ok, detail = '') => { checks.push({ name, ok: !!ok, detail: String(detail) }); return ok; };
@@ -25,7 +27,7 @@ export async function runSmoke(game, h) {
   try {
     game.loop.sleep();
     const env = createEnv(game, h, check, savedLang);
-    for (const scenario of scenarios) {
+    for (const scenario of scenarios.filter(sc => !only || only.includes(sc.name))) {
       try { await scenario.run(game, check, env); } catch (e) { check(`scenario ${scenario.name} finished without throwing`, false, e.stack ?? e); break; }
     }
   } catch (e) {

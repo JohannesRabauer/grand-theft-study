@@ -101,15 +101,17 @@ export const skates = {
     // ---- skates can grind a rail with the same trick system
     const slot = ctx.tricks.forPlayer(0);
     ctx.surfaces.at = () => 'asphalt';
+    const railX = ctx.map.objects.find(o => o.id === 'park-rail-long').points[0][0] * 16; // the skatepark's long rail, y 656
     ctx.chase.reset();
-    h.teleport(gs, ctx, 10, 56);
+    ctx.chase.lvl.enabled = false; // the park is bully turf; this is only about the rail
+    h.teleport(gs, ctx, Math.floor((railX - 44) / 16), 41);
     step(15);
-    place(player, 228, 904, 110);
+    place(player, railX - 44, 656, 110);
     const mag = 110 / (sk.maxSpeed * player.move.speedMult);
     let ground = false;
     for (let f = 0; f < 200 && !ground; f++) {
       intent.move.x = mag;
-      intent.jump = player.x >= 252 && !skatesSvc.riders[0].skate.air && slot.state !== 'grind' && f < 60;
+      intent.jump = player.x >= railX - 20 && !skatesSvc.riders[0].skate.air && slot.state !== 'grind' && f < 60;
       step(1);
       ground = slot.state === 'grind';
     }
@@ -119,6 +121,8 @@ export const skates = {
     assert('hop onto a rail grinds it with sparks and scores (TrickSystem works for skates)', ground && slot.combo.tricks.includes('grind') && fx.spark > 0, `${slot.combo.tricks}`);
     delete ctx.surfaces.at;
     for (let n = 0; slot.combo.tricks.length && n < 400; n++) step(1);
+    ctx.chase.lvl.enabled = true;
+    ctx.chase.reset();
 
     // ---- grab: hold interact in the rear zone
     quiet();

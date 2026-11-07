@@ -139,16 +139,19 @@ function ramp(c, o, ts) {
   c.fillStyle = 'rgba(0,0,0,0.25)';
   c.fillRect(x + 1.5, y + 2, w, h);
   const g = c.createLinearGradient(dx > 0 ? x : dx < 0 ? x + w : x + w / 2, dy > 0 ? y : dy < 0 ? y + h : y + h / 2, dx > 0 ? x + w : dx < 0 ? x : x + w / 2, dy > 0 ? y + h : dy < 0 ? y : y + h / 2);
-  g.addColorStop(0, '#8a5a30');
-  g.addColorStop(1, '#e0a964');
+  g.addColorStop(0, '#6f747e');
+  g.addColorStop(0.7, '#a3a8b2');
+  g.addColorStop(1, '#cfd4dc');
   c.fillStyle = g;
   c.fillRect(x, y, w, h);
-  c.strokeStyle = '#4a3019';
+  // shaded sides and a steel coping lip at the launching edge
+  c.fillStyle = 'rgba(20,24,32,0.22)';
+  if (dx) { c.fillRect(x, y, w, 1.6); c.fillRect(x, y + h - 1.6, w, 1.6); } else { c.fillRect(x, y, 1.6, h); c.fillRect(x + w - 1.6, y, 1.6, h); }
+  c.strokeStyle = '#3c404c';
   c.lineWidth = 1.2;
   c.strokeRect(x + 0.6, y + 0.6, w - 1.2, h - 1.2);
-  // the lip at the launching edge
-  c.fillStyle = '#f2d9a8';
-  if (dx) c.fillRect(dx > 0 ? x + w - 2 : x, y, 2, h); else c.fillRect(x, dy > 0 ? y + h - 2 : y, w, 2);
+  c.fillStyle = '#e4eaf3';
+  if (dx) c.fillRect(dx > 0 ? x + w - 2.4 : x, y, 2.4, h); else c.fillRect(x, dy > 0 ? y + h - 2.4 : y, w, 2.4);
   chevrons(c, x, y, w, h, o.dir, '#ffe14d');
 }
 

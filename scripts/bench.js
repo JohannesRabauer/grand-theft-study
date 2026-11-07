@@ -345,7 +345,7 @@ export function installBench(game) {
       console.table(rows);
       return rows;
     },
-    async smoke() { return (await import('./smoke.js')).runSmoke(game, { startGame, stepAll: stepFrame, makeDriver, makeRouteRunner, makeShooter, teleport, tilePx, obj, panel }); }
+    async smoke(only) { return (await import('./smoke.js')).runSmoke(game, { startGame, stepAll: stepFrame, makeDriver, makeRouteRunner, makeShooter, teleport, tilePx, obj, panel }, only); }
   };
   window.SCHULWEG_BENCH = api;
   window.SCHULWEG_GAME = game;

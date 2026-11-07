@@ -14,9 +14,10 @@
 // banked when the window runs out, when the player gets off the board, or leaves the map. A bail (wall hit, being caught,
 // a manual falling over while the multiplier is large) banks only part of it. Banking pays money (`wallet.earn`
 // 'trick') and XP (`xp.add`) through state actions and emits `style:banked` { player, points, multiplier, tricks, bailed,
-// reason, cents, xp }. Other events: `style:changed` { player, points (chain value), multiplier }, `style:trick` { player, id,
+// reason, cents, xp, bonus, spot }: rolling slowly over a `bank-spot` object with a chain banks it cleanly with a bonus
+// (reason 'bank-spot', data/tricks.json bankSpot). Other events: `style:changed` { player, points (chain value), multiplier }, `style:trick` { player, id,
 // name (i18n key), points (0 for a rattle) }, `trick:grind` and `trick:ramp` { player, phase, ... }.
-import { addTrick, benchPath, buildPath, bankedValue, captureRail, comboValue, createCombo, facing, hitWall, inRect, isActive, payout, pointAt, rampAirtime, resetCombo, tickCombo, trickPoints } from './trickCore.js';
+import { addTrick, benchPath, buildPath, bankedValue, canBankAt, captureRail, comboValue, createCombo, facing, hitWall, inRect, isActive, payout, pointAt, rampAirtime, resetCombo, tickCombo, trickPoints } from './trickCore.js';
 import { drawTrickObjects, release } from './trickArt.js';
 
 const GRIND_TYPES = new Set(['rail', 'bench']);
@@ -35,6 +36,7 @@ export class TrickSystem {
     this.rails = [];
     this.ramps = [];
     this.stairs = [];
+    this.spots = [];
     this.art = [];
     this.time = 0;
     this.hit = { s: 0, dist: 0, x: 0, y: 0, ux: 1, uy: 0, dir: 1 }; // reused outputs: no allocation per frame
@@ -67,12 +69,13 @@ export class TrickSystem {
       else if (o.type === 'bench') this.rails.push({ id: o.id, path: benchPath(o, ts, cfg.bench.inset), half: (cfg.bench.width * ts) / 2 + cfg.grind.capture });
       else if (o.type === 'ramp') this.ramps.push({ id: o.id, ...rect(o, ts), dir: o.dir, height: o.height, in: new Uint8Array(ctx.maxPlayers) });
       else if (o.type === 'stairs') this.stairs.push({ id: o.id, ...rect(o, ts), dir: o.dir, steps: o.steps });
+      else if (o.type === 'bank-spot') this.spots.push({ id: o.id, x: (o.x + 0.5) * ts, y: (o.y + 0.5) * ts, r: o.r * ts });
     }
     this.art = drawTrickObjects(this.scene, ctx, objects.filter(o => GRIND_TYPES.has(o.type) || o.type === 'ramp' || o.type === 'stairs'), cfg.bench);
   }
 
   unloadMap() {
-    this.rails.length = this.ramps.length = this.stairs.length = 0;
+    this.rails.length = this.ramps.length = this.stairs.length = this.spots.length = 0;
     release(this.scene, this.art);
   }
 
@@ -122,12 +125,12 @@ export class TrickSystem {
     this.ctx.events.emit('style:changed', { player: slot.index, points: comboValue(slot.combo), multiplier: slot.combo.mult });
   }
 
-  // Banks the chain: all of it, or `bailShare` of it after a bail.
-  bank(slot, bailed, reason) {
+  // Banks the chain: all of it, or `bailShare` of it after a bail; at a bank spot `bonus` more.
+  bank(slot, bailed, reason, bonus = 0, spot = '') {
     const c = slot.combo;
     if (!isActive(c)) return;
     const { ctx, cfg } = this;
-    const value = bankedValue(c, cfg, bailed);
+    const value = bankedValue(c, cfg, bailed, bonus);
     const mult = c.mult;
     const tricks = c.tricks.slice();
     resetCombo(c);
@@ -135,7 +138,7 @@ export class TrickSystem {
     if (cents > 0 || xp > 0) {
       if (cents > 0) ctx.state.dispatch('wallet.earn', { cents, reason: 'trick' });
       if (xp > 0) ctx.state.dispatch('xp.add', { player: slot.index, amount: xp });
-      ctx.events.emit('style:banked', { player: slot.index, points: value, multiplier: mult, tricks, bailed, reason, cents, xp });
+      ctx.events.emit('style:banked', { player: slot.index, points: value, multiplier: mult, tricks, bailed, reason, cents, xp, bonus, spot });
     }
     this.changed(slot);
   }
@@ -178,6 +181,7 @@ export class TrickSystem {
       this.checkRamps(p, slot, s, grounded);
       if (s.air > 0 && s.air < s.airTime * cfg.grind.descent) this.tryRail(p, slot, s);
       slot.rattling = grounded && this.rattle(dt, p, slot);
+      if (grounded && !s.manual && !slot.rattling && isActive(c)) this.checkSpots(p, slot);
     }
     slot.speed = m.velSpeed;
     if (tickCombo(c, cfg, dt, s.air > 0 || s.grind || s.manual || slot.rattling || p.grabbing)) this.bank(slot, false, 'timeout');
@@ -254,6 +258,14 @@ export class TrickSystem {
   dropGrind(slot, p) {
     slot.rail = null;
     this.rollerOf(slot.index)?.finishGrind(p);
+  }
+
+  // ---- bank spots: rolling through one slowly banks the chain cleanly, with a bonus
+  checkSpots(p, slot) {
+    const k = this.cfg.bankSpot;
+    for (const sp of this.spots) {
+      if (canBankAt(this.cfg, sp, p.x, p.y, p.move.velSpeed, slot.combo)) { this.bank(slot, false, 'bank-spot', k.bonus, sp.id); return; }
+    }
   }
 
   // ---- ramps and stairs

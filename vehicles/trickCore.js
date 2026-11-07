@@ -56,10 +56,18 @@ export function tickCombo(c, cfg, dt, hold) {
   return c.timer <= 0;
 }
 
-// The points a chain banks: all of it, or `bailShare` of it for a bail while the multiplier is large.
-export function bankedValue(c, cfg, bailed) {
+// The points a chain banks: all of it, or `bailShare` of it for a bail while the multiplier is large. A clean bank at a
+// bank spot adds `bonus` (a share, 0.3 = +30%).
+export function bankedValue(c, cfg, bailed, bonus = 0) {
   const v = comboValue(c);
-  return bailed && c.mult >= cfg.bank.bailMinMult ? Math.floor(v * cfg.bank.bailShare) : v;
+  if (bailed) return c.mult >= cfg.bank.bailMinMult ? Math.floor(v * cfg.bank.bailShare) : v;
+  return Math.round(v * (1 + bonus));
+}
+
+// Does a rider at (x, y) rolling `speed` px/s with this chain bank it at `spot` ({ x, y, r } px)? Slow enough, inside the
+// ring, and the chain is worth paying out (a small chain is left to grow).
+export function canBankAt(cfg, spot, x, y, speed, c) {
+  return speed <= cfg.bankSpot.maxSpeed && (x - spot.x) ** 2 + (y - spot.y) ** 2 <= spot.r * spot.r && comboValue(c) >= cfg.bank.minValue;
 }
 
 // Money (cents) and XP of banked points. Below `minValue` nothing is paid.

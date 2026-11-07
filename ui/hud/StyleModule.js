@@ -66,7 +66,7 @@ export class StyleModule extends HudModule {
     const { ctx } = this;
     const s = (e.cents / 100).toFixed(2);
     const v = ctx.i18n.lang === 'de' ? s.replace('.', ',') : s;
-    this.flash(ctx.t(e.bailed ? 'style.saved' : 'style.banked', { v, xp: e.xp }), POP_MS);
+    this.flash(ctx.t(e.bailed ? 'style.saved' : e.reason === 'bank-spot' ? 'style.bankedSpot' : 'style.banked', { v, xp: e.xp, b: Math.round(e.bonus * 100) }), POP_MS);
     this.fx.burst(this.sparkX, this.y + 36, 6);
   }
 

@@ -20,6 +20,7 @@ import { Weather } from '../physics/Weather.js';
 import { ParticleHub } from '../particles/ParticleHub.js';
 import { Props } from '../entities/Prop.js';
 import { Flags } from '../entities/Flag.js';
+import { Park } from '../entities/Park.js';
 import { ChaseDirector } from '../ai/ChaseDirector.js';
 import { Caught } from '../entities/Caught.js';
 import { ToolBelt } from '../tools/ToolBelt.js';
@@ -108,6 +109,7 @@ export class GameScene extends Phaser.Scene {
     this.props = new Props(this, ctx, cache.get('props'));
     this.ammo = new AmmoPickups(this, ctx, cache.get('tool'));
     this.flags = new Flags(this, ctx, wcfg.flag);
+    this.park = new Park(this, ctx, cache.get('park')); // story 5.4: skatepark art and hint signs
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
     this.caught = new Caught(this, ctx, cache.get('chase').caught, [this.bikes, this.skateboards, this.skates]);
     this.rig = new CameraRig(ctx, this.zoomCfg); // AD-18: focus, fit zoom and tether of all players
@@ -303,6 +305,7 @@ export class GameScene extends Phaser.Scene {
     this.tricks.update(dt);
     this.bikes.update(dt);
     this.zones.update();
+    this.park.update();
     this.doors.update();
     this.chase.update(dt);
     this.rig.update(dt);

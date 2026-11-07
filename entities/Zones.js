@@ -4,6 +4,7 @@ import { addSensor } from '../physics/bodies.js';
 // Hiding and turf zones get SENSOR bodies (read later by bullies and the chase director);
 // each player's overlap is a cheap per-frame point-in-rect test that emits
 // `hide:enter|leave` and `turf:enter|leave` ({ id, kind, player }) and, once per player, `goal:reached` ({ id, player }).
+// A turf object with `toast` / `toastLeave` (i18n keys) also shows a HUD toast (`ui:toast`) when a player enters or leaves it.
 const COLORS = { hiding: 0x4cd964, turf: 0xff4d4d, goal: 0xffe14d };
 
 export class Zones {
@@ -33,7 +34,7 @@ export class Zones {
 
   // Players still inside a zone leave it (so chase and hiding state reset), then the sensors go.
   unloadMap() {
-    for (let i = 0; i < this.ctx.players.length; i++) for (const z of this.zones) this.setInside(z, i, false);
+    for (let i = 0; i < this.ctx.players.length; i++) for (const z of this.zones) this.setInside(z, i, false, true);
     for (const z of this.zones) if (z.body) this.scene.matter.world.remove(z.body);
     this.zones = [];
     for (const o of this.debugObjs) o.destroy();
@@ -49,7 +50,7 @@ export class Zones {
     }
   }
 
-  setInside(z, i, now) {
+  setInside(z, i, now, quiet = false) {
     if (now === !!z.inside[i]) return;
     const { events } = this.ctx;
     z.inside[i] = now ? 1 : 0;
@@ -64,6 +65,8 @@ export class Zones {
     if (type === 'hiding') this.hiding[i] += now ? 1 : -1;
     const ev = type === 'hiding' ? 'hide' : 'turf';
     events.emit(`${ev}:${now ? 'enter' : 'leave'}`, { id, kind: kind ?? id, player: i });
+    const toast = now ? z.o.toast : z.o.toastLeave;
+    if (toast && !quiet) events.emit('ui:toast', { key: toast });
   }
 
   drawDebug(scene) {

@@ -1,5 +1,5 @@
-// Smoke scenario: trick system (story 5.2, AD-23). Mehmet rides the practice strip in the town (ramp, rail, bench,
-// stairs along the road at tile rows 54..57, x 12..45): a ramp launch, the chain ollie -> grind -> ollie off -> stairs
+// Smoke scenario: trick system (story 5.2, AD-23). Mehmet rides a test strip of trick objects along the town's road (tile
+// rows 54..57, x 12..45; the objects are injected here, the real obstacles are the skatepark's, see skatepark.js): a ramp launch, the chain ollie -> grind -> ollie off -> stairs
 // jump raising the multiplier (fire trail, sparks, Style HUD), banking through wallet.earn / xp.add / style:banked with
 // the Tempo growth hook, the comic stair rattle, a wall bail that banks a reduced share, and independent co-op combos.
 export const tricks = {
@@ -36,6 +36,16 @@ export const tricks = {
       step(15);
       place(player, x, y, speed, heading);
     };
+    // the test strip replaces the park's trick objects for this scenario (the TrickSystem reads the map objects on loadMap)
+    const parkObjects = ctx.map.objects;
+    ctx.map.objects = [...parkObjects.filter(o => !['ramp', 'rail', 'stairs', 'bench', 'bank-spot'].includes(o.type)),
+      { type: 'ramp', id: 'practice-ramp', x: 12, y: 55, w: 2, h: 2, dir: 'right', height: 12 },
+      { type: 'rail', id: 'practice-rail-1', points: [[17, 56.5], [24, 56.5]], width: 0.5 },
+      { type: 'bench', id: 'practice-bench', x: 27, y: 55, w: 3, h: 1 },
+      { type: 'stairs', id: 'practice-stairs', x: 31, y: 55, w: 3, h: 2, dir: 'right', steps: 4 },
+      { type: 'rail', id: 'practice-rail-2', points: [[38, 54.5], [42, 54.5], [44.5, 56.5]], width: 0.5 }];
+    tr.unloadMap();
+    tr.loadMap();
     become('mehmet');
     const tempo0 = ctx.state.players[0].attributes.tempo;
     gs.mountStartVehicle(player);
@@ -48,7 +58,7 @@ export const tricks = {
     const money0 = ctx.state.shared.money;
     const xp0 = ctx.state.players[0].xp;
 
-    assert('the practice strip is in the town: ramp, two rails, bench, stairs', ['ramp', 'rail', 'bench', 'stairs'].every(t => ctx.map.objects.some(o => o.type === t && o.id.startsWith('practice-'))) && tr.rails.length === 3 && tr.ramps.length === 1 && tr.stairs.length === 1);
+    assert('the test strip is loaded: ramp, two rails, bench, stairs', ['ramp', 'rail', 'bench', 'stairs'].every(t => ctx.map.objects.some(o => o.type === t && o.id.startsWith('practice-'))) && tr.rails.length === 3 && tr.ramps.length === 1 && tr.stairs.length === 1);
     assert('every player has trick state and a Style combo (ctx.tricks.forPlayer, player.tricks)', tr === ctx.tricks && player.tricks === slot && slot.combo.mult === 1 && slot.state === 'roll');
 
     // ---- ramp
@@ -168,6 +178,9 @@ export const tricks = {
     step(20);
     board.unloadMap();
     board.loadMap();
+    ctx.map.objects = parkObjects;
+    tr.unloadMap();
+    tr.loadMap();
     assert('neutral kid restored on foot, no chain left', player.vehicle === 'foot' && player.character === null && slot.combo.tricks.length === 0 && slot2.combo.tricks.length === 0);
   }
 };

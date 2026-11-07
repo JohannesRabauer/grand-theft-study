@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { LAND, MANUAL_END, OLLIE, createSkate, endGrind, startAir, startGrind, stepSkate } from '../vehicles/skateLogic.js';
 import {
-  addTrick, bankedValue, benchPath, buildPath, captureRail, comboValue, createCombo, facing, hitWall, inRect, isActive, payout, pointAt,
+  addTrick, bankedValue, benchPath, buildPath, canBankAt, captureRail, comboValue, createCombo, facing, hitWall, inRect, isActive, payout, pointAt,
   projectPath, rampAirtime, resetCombo, tickCombo, trickPoints
 } from '../vehicles/trickCore.js';
 import { TrickSystem } from '../vehicles/TrickSystem.js';
@@ -472,6 +472,44 @@ const objects = [
   side.frame(0, { jump: true });
   for (let i = 0; i < 80; i++) side.frame(0, {});
   assert.equal(side.kinds('trick:grind').length, 0, 'across the rail at right angles');
+}
+
+// bank spot: rolling through its ring slowly banks a chain cleanly with a bonus; fast, outside or a small chain does not
+{
+  assert.ok(cfg.bankSpot.maxSpeed > 0 && cfg.bankSpot.bonus > 0, 'bank spot numbers');
+  const c = createCombo();
+  for (const id of ['ollie', 'grind', 'stairs']) addTrick(c, cfg, id, trickPoints(cfg, id, { air: 0.4, meters: 6, steps: 4 }));
+  const spot = { x: 100, y: 100, r: 24 };
+  assert.ok(canBankAt(cfg, spot, 110, 100, cfg.bankSpot.maxSpeed, c), 'slow inside the ring');
+  assert.ok(!canBankAt(cfg, spot, 110, 100, cfg.bankSpot.maxSpeed + 1, c), 'too fast');
+  assert.ok(!canBankAt(cfg, spot, 130, 100, 30, c), 'outside the ring');
+  const small = createCombo();
+  addTrick(small, cfg, 'ollie', 10);
+  assert.ok(!canBankAt(cfg, spot, 100, 100, 30, small), 'a chain below the payout minimum is left to grow');
+  assert.equal(bankedValue(c, cfg, false, 0.3), Math.round(comboValue(c) * 1.3), 'the bonus adds to a clean bank');
+  assert.equal(bankedValue(c, cfg, true, 0.3), Math.floor(comboValue(c) * cfg.bank.bailShare), 'a bail never gets the bonus');
+
+  const spotObjects = [{ type: 'bank-spot', id: 'bs', x: 6, y: 5, r: 1.5 }]; // centre (104, 88), radius 24 px
+  const run = (speed, tricks = ['ollie', 'grind', 'stairs']) => {
+    const w = world(spotObjects);
+    const slot = w.sys.forPlayer(0);
+    for (const id of tricks) w.sys.score(slot, id, { air: 0.4, meters: 6, steps: 4 });
+    const value = comboValue(slot.combo);
+    w.players[0].body.position.x = 60;
+    w.players[0].move.heading = 0;
+    w.players[0].move.velSpeed = w.players[0].move.speed = speed;
+    for (let i = 0; i < 90; i++) w.frame(0, { speed });
+    return { w, slot, value };
+  };
+  const slow = run(40);
+  const banked = slow.w.kinds('style:banked');
+  assert.equal(banked.length, 1, 'rolling through slowly banks once');
+  assert.ok(!banked[0].bailed && banked[0].reason === 'bank-spot' && banked[0].spot === 'bs' && banked[0].bonus === cfg.bankSpot.bonus, `clean, with the spot and the bonus in the event: ${JSON.stringify(banked[0])}`);
+  assert.equal(banked[0].points, Math.round(slow.value * (1 + cfg.bankSpot.bonus)), 'points include the bonus');
+  assert.equal(slow.w.log.find(e => e[0] === 'wallet.earn')[1].cents, Math.floor(banked[0].points * cfg.bank.centsPerPoint), 'money by the data rate through wallet.earn');
+  assert.ok(slow.w.log.some(e => e[0] === 'xp.add') && !isActive(slow.slot.combo), 'XP too, the chain is empty');
+  assert.equal(run(110).w.kinds('style:banked').filter(e => e.reason === 'bank-spot').length, 0, 'at speed the spot does not bank');
+  assert.equal(run(40, ['ollie']).w.kinds('style:banked').length, 0, 'a lone ollie is not banked');
 }
 
 console.log('check-tricks ok');
