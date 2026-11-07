@@ -112,7 +112,7 @@ The main menu has Start, a language toggle (Deutsch / English) and a quality sel
 - **Pathfinding** (`ai/Pathfinding.js`): grid A* over the map (walls blocked, surface speed and wall proximity as cost), requests queued with a shared budget of 2 per frame, per-bully cached path re-requested about every 0.5 s or when the target tile changes, straight-line steering when the way is clear. A full-map search takes about 0.25 ms in node.
 - **HUD and debug**: top right an Ärger meter (two bars) and "Entdeckt!" / "Spotted!" while seen; angry steam puffs over chasing bullies (`anger` emitter). `?debug` shows each bully's state, path, line-of-sight ray and bump radius plus the level in the debug text.
 - **Escaping** (`ai/Escape.js`, `escape` in `data/chase.json`): stand still in a hiding spot, unseen and with no bully within `stumbleRadius`, for `hideSeconds` and the level drops to 0 (bullies walk off and return to the pool). Being seen, moving, leaving the spot or a bully stumbling close resets the timer and the level stays. Staying farther than `farDistance` from every bully and out of sight for `farSeconds` also cools the level down. While hidden the player sprite turns translucent and green, leaves rustle, the HUD shows "Versteckt!" / "Hidden!" and, during a chase, a bar under the Ärger meter fills until the level drops. Still only the director writes the level.
-- **Caught** (`entities/Caught.js`, `ui/CaughtFrame.js`, `caught` in `data/chase.json`): `bully:caught-contact` freezes the world (`ctx.frozen`; UIScene keeps running), takes `loss` (1.00) from `ctx.state.money` (starts at 5.00, shown top left as "€ 5,00"), resets the chase and shows a comic frame (halftone panel, locker with the player inside, the bully with the lunchbox, a random one of three speech-bubble lines per language). After 2.5 s, or Space/F (A/Y on a gamepad, jump button on touch) once 0.8 s have passed, the player is dismounted (the bike stays where it was), put back at home with a dust puff, and the chase can start again at the next turf entry. Emits `player:caught` `{ lost, money }`, `money:changed` and `player:respawn` `{ x, y }`.
+- **Caught** (`entities/Caught.js`, `ui/CaughtFrame.js`, `caught` in `data/chase.json`): `bully:caught-contact` freezes the world (`ctx.frozen`; UIScene keeps running), spends `lossCents` (100) from `ctx.state.shared.money` (starts at 500 cents, shown top left as "€ 5,00"), resets the chase and shows a comic frame (halftone panel, locker with the player inside, the bully with the lunchbox, a random one of three speech-bubble lines per language). After 2.5 s, or Space/F (A/Y on a gamepad, jump button on touch) once 0.8 s have passed, the player is dismounted (the bike stays where it was), put back at home with a dust puff, and the chase can start again at the next turf entry. Emits `player:caught` `{ lost, money }` (cents) and `player:respawn` `{ x, y }`.
 - Reaching the school (`goal:reached`) shows the arrival banner for a few seconds; the game keeps running (prototype, no school scene).
 - `node scripts/check-chase.mjs` checks pathfinding on the real map (home to school, walls, request budget, timing), the level thresholds and the hide / distance escape rules.
 
@@ -136,6 +136,14 @@ The town is full of people so it looks lively wherever you are (`ai/CrowdDirecto
 - **Physics**: pedestrians are `NPC` bodies (feather-light, so you push them aside instead of getting stuck), they collide with walls, props and the player, never with bullies, each other or tools; dogs only with walls and props. The slingshot passes through all of them (AD-3).
 - `?debug` shows the crowd state counts, a label per pedestrian and the pools `npcs`, `dogs`, `bubbles`. `node scripts/check-crowd.mjs` checks the spawn rules, caps and reaction geometry.
 
+## Save data
+
+ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tree (`v`) with `shared` (money in integer cents, familienfrieden, vehicles, quests, clock, flags) and `players[i]` (character, attributes, xp/level, grades, learning, karate belt, cosmetics, stickers, bag). It is deep-frozen; the only way to change it is `ctx.state.dispatch('wallet.earn', { cents, reason })` and the other actions in `state/actions.js`, which emit `state:changed` with the changed path. Tuning defaults live in `data/state.json`.
+
+- Three slots in `localStorage` (`schulweg.save.1` to `3`) via `ctx.saves`: `save(n)`, `load(n)`, `delete(n)`, `list()` (summaries for the menu). Saves happen on `phase:ended` into the active slot and on explicit `save(n)`; world positions are not saved. Without a chosen slot the game runs in memory only.
+- Older saves are upgraded by the `state/migrations.js` chain. An unreadable slot is copied to `schulweg.save.<n>.bak`, removed, and reported with `state:slot-corrupt`.
+- With `?debug`, `SCHULWEG_GAME.state` is the store and `SCHULWEG_GAME.registry.get('app').saves` the slots.
+
 ## Folder map
 
 | Path | Purpose |
@@ -148,6 +156,7 @@ The town is full of people so it looks lively wherever you are (`ai/CrowdDirecto
 | `ai/` | Chase director and level rules, bully state machine, perception, pathfinding |
 | `physics/` | `categories.js`, `bodies.js` (only place that creates bodies), surfaces service (with weather overrides), `Wind.js`, `Weather.js`, `WallStreamer.js` (keeps only walls near moving things in the Matter world) |
 | `particles/` | `ParticleHub.js`: pooled emitters, surface effects, rain, ambient life |
+| `state/` | `GameState.js` (store), `actions.js`, `migrations.js`, `SaveSlots.js` (AD-16) |
 | `learning/`, `minigames/`, `missions/` | Empty in the prototype |
 | `services/` | `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |

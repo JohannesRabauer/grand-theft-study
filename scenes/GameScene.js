@@ -32,12 +32,14 @@ export class GameScene extends Phaser.Scene {
     const ts = map.tileSize;
 
     // AD-2: one ctx, created once, handed to every system.
-    const { events, i18n, t, quality, res } = this.registry.get('app');
+    const { events, i18n, t, quality, res, state, saves } = this.registry.get('app');
     const ctx = {
       events,
       i18n,
       t,
       quality,
+      state, // AD-16: saved data, changed only through state.dispatch
+      saves, // save slots (save/load/delete/list)
       res, // render scale: world units stay the same, textures are drawn `res.scale` times finer (AD-14)
       pools: new Pools(),
       map,

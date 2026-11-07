@@ -2,6 +2,8 @@ import { createI18n } from '../i18n/i18n.js';
 import { createQuality } from '../services/quality.js';
 import { makeHiResArt } from './HiResArt.js';
 import { makeNpcArt } from './NpcArt.js';
+import { GameState } from '../state/GameState.js';
+import { SaveSlots } from '../state/SaveSlots.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
@@ -20,6 +22,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('chase', 'data/chase.json');
     this.load.json('tool', 'data/tool.json');
     this.load.json('npcs', 'data/npcs.json');
+    this.load.json('state', 'data/state.json');
     this.load.json('de', 'i18n/de.json');
     this.load.json('en', 'i18n/en.json');
   }
@@ -30,7 +33,11 @@ export class BootScene extends Phaser.Scene {
     const i18n = createI18n({ de: this.cache.json.get('de'), en: this.cache.json.get('en') }, events);
     const res = this.registry.get('res'); // render resolution class, fixed at load (main.js)
     const quality = createQuality(this.cache.json.get('quality'), events, res);
-    this.registry.set('app', { events, i18n, t: i18n.t, quality, res });
+    // AD-16: one state store for the whole app; without a chosen slot it is a plain in-memory game.
+    const state = new GameState(events, this.cache.json.get('state'));
+    const saves = new SaveSlots(state, events, window.localStorage);
+    this.registry.set('app', { events, i18n, t: i18n.t, quality, res, state, saves });
+    if (window.SCHULWEG_GAME) window.SCHULWEG_GAME.state = state;
     const tiles = this.cache.json.get('tiles');
     if (res.scale > 1) {
       makeHiResArt(this, tiles); // Medium and High: textures drawn on a 2x grid (AD-14)

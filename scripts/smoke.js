@@ -58,7 +58,7 @@ export async function runSmoke(game, h) {
     let wallViolations = 0;
     const inWall = () => { if (surfaces.solid(surfaces.at(player.x, player.y))) wallViolations++; };
 
-    check('starts on foot at home with 5 euro', player.vehicle === 'foot' && ctx.state.money === 5, `money ${ctx.state.money}`);
+    check('starts on foot at home with 5 euro', player.vehicle === 'foot' && ctx.state.shared.money === 500, `money ${ctx.state.shared.money}`);
     check('no bullies, level 0, pools quiet', ctx.chase.level === 0 && live('bullies') === 0 && live('projectiles') === 0);
     const wallsAtStart = live('walls');
     check('wall streaming keeps only nearby walls', wallsAtStart > 0 && wallsAtStart < ctx.pools.byName.get('walls').cap * 0.6, `${wallsAtStart}/${ctx.pools.byName.get('walls').cap}`);
@@ -84,7 +84,7 @@ export async function runSmoke(game, h) {
     });
     intent.sprint = false;
     check('rode to the school (goal:reached)', ride >= 0 && count('goal:reached') === 1, `${ride} frames, top ${topSpeed.toFixed(0)} px/s, at ${player.x.toFixed(0)},${player.y.toFixed(0)}`);
-    check('no Ärger on the road', ctx.chase.level === 0 && live('bullies') === 0);
+    check('no ï¿½rger on the road', ctx.chase.level === 0 && live('bullies') === 0);
     check('never inside a wall tile on the way', wallViolations === 0, `${wallViolations} frames`);
     check('arrow shows arrival message', ui.arrow.done && ui.arrow.msg.visible);
 
@@ -117,7 +117,7 @@ export async function runSmoke(game, h) {
     h.teleport(gs, ctx, turf.x + 2, turf.y + 2);
     const caught = until(() => count('player:caught') >= 1, 4000, () => { intent.move.x = intent.move.y = 0; });
     check('caught by a bully', caught >= 0, `${caught} frames`);
-    check('world frozen, money -1, frame shown', ctx.frozen && ctx.state.money === 4 && ui.caughtFrame.items.length > 0 && ui.caughtFrame.items[0].visible, `money ${ctx.state.money}`);
+    check('world frozen, money -1, frame shown', ctx.frozen && ctx.state.shared.money === 400 && ui.caughtFrame.items.length > 0 && ui.caughtFrame.items[0].visible, `money ${ctx.state.shared.money}`);
     check('chase reset on catch', ctx.chase.level === 0 && live('bullies') === 0);
     const home = gs.caught.home;
     const resp = until(() => count('player:respawn') >= 1, 400);

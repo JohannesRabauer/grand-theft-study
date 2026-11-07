@@ -18,8 +18,7 @@
     "leafInterval": 0.7
   },
   "caught": {
-    "startMoney": 5,
-    "loss": 1,
+    "lossCents": 100,
     "seconds": 2.5,
     "minSeconds": 0.8
   },

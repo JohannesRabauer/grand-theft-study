@@ -1,0 +1,12 @@
+{
+  "slots": 3,
+  "players": 1,
+  "startMoneyCents": 500,
+  "startFamilienfrieden": 50,
+  "familienfriedenMax": 100,
+  "startVehicles": ["foot"],
+  "xpPerLevel": 100,
+  "maxLevel": 20,
+  "attributes": { "fitness": 1, "kopf": 1, "mut": 1, "charme": 1 },
+  "startBelt": "white"
+}

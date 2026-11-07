@@ -145,13 +145,13 @@ export class UIScene extends Phaser.Scene {
     drawLevel({ level: ctx.chase.level });
   }
 
-  // "€ 5,00" in the HUD; changes come from `money:changed` (read-only).
+  // "€ 5,00" in the HUD; changes come from `state:changed` (read-only).
   makeMoney() {
     const { ctx } = this;
     this.money = uiText(this, 4, 50, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d' });
-    this.showMoney = () => this.money.setText(ctx.t('hud.money', { v: this.formatMoney(ctx.state.money) }));
-    ctx.events.on('money:changed', this.showMoney);
-    this.events.once('shutdown', () => ctx.events.off('money:changed', this.showMoney));
+    this.showMoney = (e) => { if (!e || e.path === '' || e.path === 'shared.money') this.money.setText(ctx.t('hud.money', { v: this.formatMoney(ctx.state.shared.money) })); };
+    ctx.events.on('state:changed', this.showMoney);
+    this.events.once('shutdown', () => ctx.events.off('state:changed', this.showMoney));
     this.showMoney();
   }
 
@@ -205,8 +205,8 @@ export class UIScene extends Phaser.Scene {
     this.windText.setText(ctx.t('hud.wind', { n: Math.round(ctx.wind.strength * 50) * 2 }));
   }
 
-  formatMoney(v) {
-    const s = v.toFixed(2);
+  formatMoney(cents) {
+    const s = (cents / 100).toFixed(2);
     return this.ctx.i18n.lang === 'de' ? s.replace('.', ',') : s;
   }
 
