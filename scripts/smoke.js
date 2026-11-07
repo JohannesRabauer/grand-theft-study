@@ -3,6 +3,8 @@
 // stepping the game by hand: bike ride home -> school, skatepark turf, chase, hide and escape,
 // getting caught and respawning, slingshot, weather, language, quality, pause, back to menu and a
 // second run. Every step asserts game state; console errors and exceptions fail the run.
+import { CAT } from '../physics/categories.js';
+
 const FRAME = 1000 / 60;
 
 export async function runSmoke(game, h) {
@@ -43,7 +45,7 @@ export async function runSmoke(game, h) {
     intent.aim = null;
     const events = [];
     const log = n => ctx.events.on(n, e => events.push([n, e]));
-    ['goal:reached', 'turf:enter', 'turf:leave', 'chase:level', 'player:caught', 'player:respawn', 'tool:fire', 'prop:hit', 'weather:changed', 'bike:bell', 'hide:enter'].forEach(log);
+    ['goal:reached', 'turf:enter', 'turf:leave', 'chase:level', 'player:caught', 'player:respawn', 'tool:fire', 'prop:hit', 'weather:changed', 'bike:bell', 'hide:enter', 'npc:react'].forEach(log);
     const count = n => events.filter(e => e[0] === n).length;
     const pools = () => [...ctx.pools.byName].map(([name, p]) => ({ name, live: p.live(), cap: p.cap }));
     const live = name => ctx.pools.byName.get(name).live();
@@ -123,6 +125,24 @@ export async function runSmoke(game, h) {
     check('caught frame hidden again', !ui.caughtFrame.items[0].visible);
     step(30);
 
+    // ---- pedestrians (AD-15) ----
+    const crowd = ctx.crowd;
+    step(120);
+    check('pedestrians fill the town up to the Medium cap', crowd.liveCount >= 6 && crowd.liveCount <= ctx.quality.tier.maxNPCs && live('npcs') === crowd.liveCount, `${crowd.liveCount}/${ctx.quality.tier.maxNPCs}`);
+    const victims = crowd.list.filter(n => n.active && !n.sitting).slice(0, 3);
+    for (const [i, n] of victims.entries()) { n.cool = 0; gs.matter.body.setPosition(n.body, { x: player.x + 26 + i * 12, y: player.y - 8 + i * 12 }); }
+    step(2);
+    const reacts = count('npc:react');
+    ctx.events.emit('bike:bell', { x: player.x, y: player.y });
+    step(8);
+    check('a bell near pedestrians makes them step aside with a bubble', count('npc:react') >= reacts + victims.length && victims.every(n => n.state === 'REACT') && live('bubbles') > 0 && live('bubbles') <= 3, `${count('npc:react') - reacts} reacted, ${live('bubbles')} bubbles`);
+    const line = crowd.bubbles.items.find(b => b.owner)?.text.text;
+    check('the shout is a translated line', ctx.i18n.lang === 'de' ? /[A-Za-z]/.test(line) && line !== 'npc.react.1' : true, line);
+    step(150);
+    check('pedestrians resume and the bubbles go away', victims.every(n => n.state === 'WALK' || n.state === 'STAND') && live('bubbles') === 0, victims.map(n => n.state).join(','));
+    const crowdBodies = [...crowd.list.map(n => n.body), ...crowd.dogs.map(d => d.body)];
+    check('pedestrian and dog bodies never meet projectiles', crowdBodies.every(b => !(b.collisionFilter.mask & CAT.PROJECTILE) && !(b.collisionFilter.category & CAT.PROJECTILE)));
+
     // ---- slingshot ----
     const sling = ctx.toolbelt.current;
     sling.ammo = 5;
@@ -169,6 +189,7 @@ export async function runSmoke(game, h) {
       step(20);
       const bad = pools().filter(p => p.live > p.cap);
       check(`pools within cap at ${tier}`, bad.length === 0, JSON.stringify(bad));
+      check(`pedestrians within the ${tier} cap`, live('npcs') <= ctx.quality.tier.maxNPCs, `${live('npcs')}/${ctx.quality.tier.maxNPCs}`);
     }
 
     // ---- pause ----
@@ -183,6 +204,10 @@ export async function runSmoke(game, h) {
     step(30);
     intent.move.x = 0;
     check('resumed', !gs.paused && player.x !== px, `paused ${gs.paused}, x ${px.toFixed(1)} -> ${player.x.toFixed(1)}, world ${gs.matter.world.enabled}, frozen ${ctx.frozen}`);
+
+    // ---- crowd cleanup ----
+    crowd.clear();
+    check('crowd pools return to zero on cleanup', live('npcs') === 0 && live('dogs') === 0 && live('bubbles') === 0, `${live('npcs')}/${live('dogs')}/${live('bubbles')}`);
 
     // ---- back to menu, second run ----
     ctx.events.emit('game:quit');

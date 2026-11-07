@@ -272,6 +272,8 @@ export class UIScene extends Phaser.Scene {
 render: ${res.renderW}x${res.renderH}  textures: x${res.scale}  zoom: ${this.scene.get('Game').cameras.main.zoom.toFixed(2)}
 chase: level ${chase.level}  seen: ${chase.seen}
 weather: ${weather.state}  wind: ${wind.vector.x.toFixed(2)}, ${wind.vector.y.toFixed(2)}`;
+    if (this.ctx.crowd) s += `
+${this.ctx.crowd.debugText()}`;
     for (const [name, p] of pools.byName) s += `
 ${name}: ${p.live()}/${p.cap}`;
     this.debug.setText(s);

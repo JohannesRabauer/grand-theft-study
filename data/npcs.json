@@ -1,0 +1,41 @@
+{
+  "radius": 4,
+  "mass": 0.01,
+  "maxDogs": 2,
+  "maxBubbles": 3,
+  "lines": 6,
+  "spawn": { "interval": 0.12, "attempts": 3, "margin": 10, "ring": 70, "playerClear": 36, "falloff": 50, "separation": 22, "prefillFill": 1 },
+  "despawnDistance": 100,
+  "districts": { "road": 0.8, "park": 1.2, "oldtown": 1.1, "plaza": 1.4, "school": 1.0, "skate": 0.4, "home": 0.7 },
+  "roles": {
+    "walk": { "weight": 1, "slots": 1, "kinds": { "adult": 5, "kid": 2, "elder": 1.5 } },
+    "stand": { "weight": 0.7, "slots": 1, "kinds": { "adult": 4, "kid": 1, "elder": 1 } },
+    "bench": { "weight": 0.5, "slots": 1, "kinds": { "elder": 1 } },
+    "duck": { "weight": 0.4, "slots": 1, "kinds": { "adult": 1, "kid": 1, "elder": 1 } },
+    "dogwalk": { "weight": 0.5, "slots": 1, "kinds": { "adult": 1 } },
+    "ballkids": { "weight": 0.5, "slots": 2, "kinds": { "kid": 1 } }
+  },
+  "speed": { "adult": [24, 34], "kid": [34, 46], "elder": [13, 19] },
+  "walk": { "arrive": 3, "accel": 6, "pauseChance": 0.12, "pauseSeconds": [2, 5], "stuckSeconds": 1.2, "stepRate": 2.2 },
+  "dog": { "radius": 3, "leash": 15, "maxSpeed": 70, "pull": 4 },
+  "ball": { "interval": 2.6, "flight": 1.1, "arc": 9 },
+  "react": {
+    "bellRadius": 85, "closeRadius": 34, "closeSpeed": 85, "fleeSpeed": 125, "fleeRadius": 24,
+    "stepSpeed": 78, "stepSeconds": 0.35, "seconds": 0.9, "fleeSpeedPx": 105, "fleeSeconds": 0.7,
+    "cooldown": 4, "bubbleSeconds": 1.6, "bubbleRadius": 140, "hop": 4
+  },
+  "outfits": [
+    { "id": "a-red", "kind": "adult", "jacket": "#c8433a", "pants": "#2e3a55", "hair": "#3a2a1a", "skin": "#f2c9a0", "accessory": "bag" },
+    { "id": "a-green", "kind": "adult", "jacket": "#3f8f5a", "pants": "#4a4036", "hair": "#c9a24a", "skin": "#f2c9a0", "accessory": "none" },
+    { "id": "a-blue", "kind": "adult", "jacket": "#3a6bc4", "pants": "#26262e", "hair": "#1a1a1a", "skin": "#c98f66", "accessory": "bag" },
+    { "id": "a-yellow", "kind": "adult", "jacket": "#e0b23a", "pants": "#3a4a6a", "hair": "#6a3a1e", "skin": "#e8b98e", "accessory": "hat" },
+    { "id": "a-purple", "kind": "adult", "jacket": "#8a4fb0", "pants": "#30303a", "hair": "#2a1a2a", "skin": "#8a5a3a", "accessory": "none" },
+    { "id": "a-orange", "kind": "adult", "jacket": "#e07a3a", "pants": "#5a5a64", "hair": "#a0522d", "skin": "#f2c9a0", "accessory": "hat" },
+    { "id": "k-pink", "kind": "kid", "jacket": "#e86a9a", "pants": "#3a5a9a", "hair": "#5a3a1e", "skin": "#f2c9a0", "accessory": "pack" },
+    { "id": "k-cyan", "kind": "kid", "jacket": "#3ab0c4", "pants": "#4a3a6a", "hair": "#e0b23a", "skin": "#e8b98e", "accessory": "pack" },
+    { "id": "k-lime", "kind": "kid", "jacket": "#8ac43a", "pants": "#2e3a55", "hair": "#1a1a1a", "skin": "#c98f66", "accessory": "none" },
+    { "id": "e-grey", "kind": "elder", "jacket": "#7a8a9a", "pants": "#4a4a54", "hair": "#d8d8d8", "skin": "#f2c9a0", "accessory": "cane" },
+    { "id": "e-brown", "kind": "elder", "jacket": "#8a6a4a", "pants": "#3a3a3a", "hair": "#eeeeee", "skin": "#e8b98e", "accessory": "cane" },
+    { "id": "e-rose", "kind": "elder", "jacket": "#b05a7a", "pants": "#5a4a5a", "hair": "#cfcfcf", "skin": "#f2c9a0", "accessory": "none" }
+  ]
+}

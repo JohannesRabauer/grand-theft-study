@@ -49,5 +49,11 @@
   "hud.tool": "{name}: {n}/{max}",
   "tool.slingshot": "Slingshot",
   "hud.wind": "Wind {n}%",
-  "quality.restart": "Restart needed …"
+  "quality.restart": "Restart needed …",
+  "npc.react.1": "Watch out!",
+  "npc.react.2": "Easy there!",
+  "npc.react.3": "Whoa!",
+  "npc.react.4": "Oops!",
+  "npc.react.5": "Slow down, rider!",
+  "npc.react.6": "Phew, that was close!"
 }

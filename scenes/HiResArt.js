@@ -12,15 +12,15 @@ function mix(a, b, t) {
   const y = rgb(b);
   return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
 }
-const lighten = (c, t) => mix(c, '#ffffff', t);
-const darken = (c, t) => mix(c, '#000000', t);
+export const lighten = (c, t) => mix(c, '#ffffff', t);
+export const darken = (c, t) => mix(c, '#000000', t);
 
 function rng(seed) {
   let s = (seed * 2654435761 + 12345) % 2147483647 || 1;
   return () => (s = (s * 16807) % 2147483647) / 2147483647;
 }
 
-class Pen {
+export class Pen {
   constructor(scene, key, w, h) {
     this.tex = scene.textures.createCanvas(key, w, h);
     this.c = this.tex.getContext();

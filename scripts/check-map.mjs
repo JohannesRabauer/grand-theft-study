@@ -128,5 +128,39 @@ for (const [name, p] of [['main road', A], ['park/old town', B]]) {
   assert.ok(s < 180, `${name} takes ${s}s on foot`);
   lines.push(`${name}: about ${s}s on foot`);
 }
+// Crowd markers (AD-15): spawns and nodes stand on walkable ground clear of walls, every link is a
+// straight corridor a pedestrian (radius 4) can walk, and the graph is one connected piece.
+{
+  const nodes = of('npc-node');
+  const spawns = of('npc-spawn');
+  const roles = load('npcs.json').roles;
+  assert.ok(nodes.length >= 20 && spawns.length >= 20, `crowd markers: ${nodes.length} nodes, ${spawns.length} spawns`);
+  const byId = new Map(nodes.map(n => [n.id, n]));
+  const ts = map.tileSize;
+  const free = (px, py, r = 4) => [-r, 0, r].every(ox => [-r, 0, r].every(oy => walkable(Math.floor((px + ox) / ts), Math.floor((py + oy) / ts))));
+  for (const n of nodes) {
+    assert.ok(free((n.x + 0.5) * ts, (n.y + 0.5) * ts), `node ${n.id} is inside or against a wall`);
+    for (const l of n.links) {
+      const m = byId.get(l);
+      assert.ok(m && m.links.includes(n.id), `link ${n.id} -> ${l} is missing or one-way`);
+      const steps = Math.ceil((Math.hypot(m.x - n.x, m.y - n.y) * ts) / 2);
+      for (let i = 0; i <= steps; i++) {
+        const u = i / steps;
+        assert.ok(free((n.x + 0.5 + (m.x - n.x) * u) * ts, (n.y + 0.5 + (m.y - n.y) * u) * ts), `link ${n.id} -> ${l} crosses a wall`);
+      }
+    }
+  }
+  for (const s of spawns) {
+    assert.ok(roles[s.role], `spawn ${s.id}: unknown role ${s.role}`);
+    assert.ok(byId.has(s.node), `spawn ${s.id}: unknown node ${s.node}`);
+    assert.ok(free((s.x + 0.5) * ts, (s.y + 0.5) * ts), `spawn ${s.id} is inside or against a wall`);
+    if (s.role === 'ballkids') assert.ok(free((s.x + s.gap + 0.5) * ts, (s.y + 0.5) * ts), `spawn ${s.id}: partner position blocked`);
+  }
+  const seen = new Set([nodes[0].id]);
+  for (const queue = [nodes[0]]; queue.length;) for (const l of queue.shift().links) if (!seen.has(l)) { seen.add(l); queue.push(byId.get(l)); }
+  assert.equal(seen.size, nodes.length, 'the pedestrian graph must be connected');
+  for (const r of Object.keys(roles)) assert.ok(spawns.some(s => s.role === r), `a ${r} spawn exists`);
+  lines.push(`crowd: ${nodes.length} nodes, ${spawns.length} spawns, graph connected`);
+}
 console.log(lines.join('\n'));
 console.log('check-map ok');

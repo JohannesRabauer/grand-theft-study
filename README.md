@@ -58,11 +58,12 @@ An FPS counter shows at the top left.
 ## Check scripts and benchmark
 
 ```powershell
-node scripts/check-all.mjs        # runs the four checks below, exits non-zero on failure
+node scripts/check-all.mjs        # runs the checks below, exits non-zero on failure
 node scripts/check-collisions.mjs # collision category table
 node scripts/check-i18n.mjs       # DE/EN keys identical, every t('...') key exists
 node scripts/check-map.mjs        # town map shape, objects, two routes to school
 node scripts/check-chase.mjs      # pathfinding, level rules, escape rules
+node scripts/check-crowd.mjs      # crowd spawn rules, caps, reaction geometry
 node scripts/bench-cdp.mjs --url http://localhost:8080          # CPU cost per update, all scenarios and tiers (headless Edge/Chrome)
 node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke  # scripted whole-game smoke test
 ```
@@ -124,13 +125,24 @@ Hold the left mouse button (touch: hold the tool button and drag from it to aim;
 - Ammo: start with 5, magazine cap 12 (`data/tool.json`). Pebbles, chestnuts and acorns lie around (`ammo` map objects); walk over one to pick it up, it reappears after 40 s. The aim-dot count scales with the quality tier (`aimDots`).
 - `node scripts/check-collisions.mjs` asserts that projectiles never collide with player, bully, NPC or animal masks.
 
+## Pedestrians and crowd
+
+The town is full of people so it looks lively wherever you are (`ai/CrowdDirector.js`, `entities/Npc.js`, tuning in `data/npcs.json`, art in `scenes/NpcArt.js`).
+
+- **Population**: up to `maxNPCs` of the quality tier (Low 6, Medium 12, High 20) from the pool `npcs`, re-applied live on a tier switch. They appear on `npc-spawn` map markers (about 125, with district and role) in a ring just outside the camera view and are removed again once they are far outside it, so the crowd follows you through the districts; the density per district (`districts` in `data/npcs.json`) steers where they gather (plaza and park busiest, skatepark quietest). The level is filled on start.
+- **Walking**: `npc-node` markers form a graph of sidewalk, park path, alley and schoolyard waypoints; walkers go node to node along straight corridors (checked by `scripts/check-map.mjs`), sometimes stopping to chat. No pathfinding is used, bullies ignore pedestrians.
+- **Roles**: walkers (adults, kids, slower grandparents with canes), standers (bus stop, plaza, school gate), a grandparent on a bench, someone feeding the ducks, dog walkers (the dog is a pooled `ANIMAL` body on a leash) and two kids kicking a ball back and forth in the park. 12 outfits, three frames each, drawn procedurally at the render scale.
+- **Reactions**: ringing the bell (`bike:bell`) within 85 px, or riding at them quickly from the front, makes them hop, step aside perpendicular to your heading and shout a kid-safe line (`npc.react.N`, six per language, at most 3 speech bubbles at once); very fast and very close they dash away. Event `npc:react` `{ x, y, state }`.
+- **Physics**: pedestrians are `NPC` bodies (feather-light, so you push them aside instead of getting stuck), they collide with walls, props and the player, never with bullies, each other or tools; dogs only with walls and props. The slingshot passes through all of them (AD-3).
+- `?debug` shows the crowd state counts, a label per pedestrian and the pools `npcs`, `dogs`, `bubbles`. `node scripts/check-crowd.mjs` checks the spawn rules, caps and reaction geometry.
+
 ## Folder map
 
 | Path | Purpose |
 | --- | --- |
 | `index.html`, `main.js` | Entry point, Phaser config (960x540, or 480x270 on Low; pixel art, Matter with zero gravity) |
 | `scenes/` | Boot (load + 1x procedural textures), `HiResArt.js` (2x textures), Menu, Game (owns `ctx`), UI (overlay HUD) |
-| `entities/` | Player, caught/respawn flow (`Caught.js`), bikes (+ skid, smoke, bell effects), `pools.js` (pool registry, fade pool), `Prop.js`, `Flag.js` and later bully, NPC |
+| `entities/` | Player, caught/respawn flow (`Caught.js`), bikes (+ skid, smoke, bell effects), `pools.js` (pool registry, fade pool), `Prop.js`, `Flag.js`, `Bully.js`, `Npc.js` (pedestrians and dogs), `SpeechBubbles.js` |
 | `vehicles/` | `MovementController.js`: drives any actor from a profile in `data/vehicles.json` |
 | `tools/` | Slingshot and other tools |
 | `ai/` | Chase director and level rules, bully state machine, perception, pathfinding |

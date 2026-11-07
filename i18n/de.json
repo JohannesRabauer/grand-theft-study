@@ -49,5 +49,11 @@
   "hud.tool": "{name}: {n}/{max}",
   "tool.slingshot": "Steinschleuder",
   "hud.wind": "Wind {n}%",
-  "quality.restart": "Neustart nötig …"
+  "quality.restart": "Neustart nötig …",
+  "npc.react.1": "Pass doch auf!",
+  "npc.react.2": "Hey, Vorsicht!",
+  "npc.react.3": "Na, na, na!",
+  "npc.react.4": "Huch!",
+  "npc.react.5": "Langsam, Radfahrer!",
+  "npc.react.6": "Puh, das war knapp!"
 }

@@ -164,6 +164,26 @@ Caps in `data/quality.json` were left as they are (Medium is exactly the AD-14 b
 - No shadows or filters anywhere except the pebble's blob shadow, which is off when the tier has `shadows: false` (Low). No FX pipelines are used.
 - Phaser culls images against the camera automatically; props, pebbles, puddles and flags are additionally hidden when off screen or unused, and emitters only spawn inside the view. The weather overlay is one rectangle sized to the camera.
 
+## Story 1.14: pedestrians and crowd
+
+The crowd (`ai/CrowdDirector.js`, pools `npcs`, `dogs`, `bubbles`) runs with the full Medium cap of 12 (Low 6, High 20)
+in every scenario, spawning and despawning around the player as it moves; scenario e therefore now includes the whole crowd.
+Costs: one pass over at most 12 to 20 pedestrians per frame (steering toward the next graph node, no pathfinding), a spawn
+attempt (3 weighted marker picks over about 125 markers) every 0.12 s, Matter bodies only for active pedestrians, sprite and
+animation work only for those within 24 px of the view (the rest are hidden), no per-frame allocation in the crowd code.
+
+| Scenario | Tier | Before (1.13) | With crowd | Alloc KB/step |
+| --- | --- | --- | --- | --- |
+| a idle walking | Medium | 0.04 / 0.10 / 1.2 | 0.11 / 0.2 / 3.7 | 17 |
+| e everything | Low (6 NPCs) | 0.16 / 0.30 / 1.4 | 0.37 / 0.9 / 6.5 | 25 |
+| **e everything** | **Medium (12 NPCs)** | 0.21 / 0.50 / 1.7 | **0.47 / 1.0 / 7.0** | 30 |
+| e everything | High (20 NPCs) | 0.20 / 0.40 / 1.9 | 0.65 / 1.6 / 6.5 | 33 |
+
+avg / p95 / max ms per update, desktop headless Edge, 1200 steps (single run; noise about +-50%). The crowd roughly doubles the
+logic cost but Medium worst case stays at about 0.5 ms, six times below the 3 ms budget (about 3 ms on a mid-range phone at the
+assumed 6x). Heap retained after GC did not grow. The scenario drives a bike through skatepark and old town, so the crowd
+there is the one around a moving player (despawn and respawn included).
+
 ## Manual phone test protocol (for the user)
 
 Needs: the PC and the phone on the same Wi-Fi.
@@ -180,5 +200,5 @@ Needs: the PC and the phone on the same Wi-Fi.
 - **Rendering FPS on a real phone was not measured.** All numbers are desktop CPU cost of logic, physics and draw-call building. GPU fill rate, texture upload, thermal throttling, touch-input latency and mobile browser compositing are unknown. The "4 to 6 times slower" phone factor is an assumption, not a measurement.
 - The reference phone has not been chosen (open question in the ticket), so the story's verify step ("holds 60 FPS on the reference phone") is still open and needs the manual protocol above.
 - The measuring browser is headless Edge with software GL; the built-in preview pane runs at about 2 FPS and could not be used for FPS.
-- Worst cases are scripted, not played: bullies are never allowed to catch the player in the benchmark, and the map has only 20 props and no NPCs, so the 60-prop and 12-NPC budget is not exercised.
+- Worst cases are scripted, not played: bullies are never allowed to catch the player in the benchmark, and the map has only 20 props, so the 60-prop budget is not exercised (the 12-NPC budget is, since story 1.14).
 - Timer resolution (0.1 ms) and a shared machine make small differences (below about 0.05 ms) unreliable; `max` values are single samples.

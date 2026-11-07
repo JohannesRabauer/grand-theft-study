@@ -15,6 +15,7 @@ import { ChaseDirector } from '../ai/ChaseDirector.js';
 import { Caught } from '../entities/Caught.js';
 import { ToolBelt } from '../tools/ToolBelt.js';
 import { AmmoPickups } from '../entities/AmmoPickups.js';
+import { CrowdDirector } from '../ai/CrowdDirector.js';
 import { tileKey } from './HiResArt.js';
 
 const STEP_MS = 1000 / 60; // Matter's fixed timestep (AD-14); MovementController assumes it too
@@ -90,6 +91,7 @@ export class GameScene extends Phaser.Scene {
     this.camX = this.camOutX = this.player.x;
     this.camY = this.camOutY = this.player.y;
     this.followCamera(1);
+    this.crowd = new CrowdDirector(this, ctx, cache.get('npcs')); // after the camera: it prefills the view
 
     // UIScene asks for pause / quit through events; the world is only changed here.
     this.paused = false;
@@ -244,6 +246,7 @@ export class GameScene extends Phaser.Scene {
     this.chase.update(dt);
     this.updateZoom(dt);
     this.followCamera(dt);
+    this.crowd.update(dt);
     this.props.update(dt);
     this.flags.update(dt);
     this.ctx.particles.update(dt);

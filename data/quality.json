@@ -15,7 +15,7 @@
     },
     "high": {
       "renderScale": 2,
-      "particleMul": 1.5, "maxParticles": 500, "maxProps": 100, "maxNPCs": 16, "maxBullies": 4,
+      "particleMul": 1.5, "maxParticles": 500, "maxProps": 100, "maxNPCs": 20, "maxBullies": 4,
       "rainDensity": 1.6, "skidPool": 240, "smokePool": 48, "bellPool": 4, "shadows": true, "aimDots": 20
     }
   }
