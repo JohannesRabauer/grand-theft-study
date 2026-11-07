@@ -19,9 +19,7 @@ export class ParticleHub {
       this.emitters[name] = { emitter, cfg: e, gravityY: e.config.gravityY ?? 0, tint: null };
     }
     this.list = Object.values(this.emitters);
-    this.spots = ctx.map.objects.filter(o => o.type === 'ambient')
-      .map(o => ({ x: (o.x + 0.5) * ctx.map.tileSize, y: (o.y + 0.5) * ctx.map.tileSize, chimney: o.kind === 'chimney', in: 0 }));
-    this.water = this.findWater();
+    this.readMap();
     this.fxIn = new Float64Array(ctx.maxPlayers); // per player emit timers
     this.ringIn = new Float64Array(ctx.maxPlayers);
     this.rainAcc = 0;
@@ -32,7 +30,23 @@ export class ParticleHub {
     ctx.events.on('quality:changed', () => this.applyCaps());
     const self = this;
     ctx.pools.register('particles', { live: () => self.live(), get cap() { return ctx.quality.tier.maxParticles; } });
+    ctx.world.register(this);
   }
+
+  // Ambient emitter spots and water tiles of the current map.
+  readMap() {
+    const { ctx } = this;
+    const ts = ctx.map.tileSize;
+    this.spots = ctx.map.objects.filter(o => o.type === 'ambient')
+      .map(o => ({ x: (o.x + 0.5) * ts, y: (o.y + 0.5) * ts, chimney: o.kind === 'chimney', in: 0 }));
+    this.water = this.findWater();
+  }
+
+  unloadMap() {
+    for (const e of this.list) e.emitter.killAll();
+  }
+
+  loadMap() { this.readMap(); }
 
   applyCaps() {
     const max = this.ctx.quality.tier.maxParticles;

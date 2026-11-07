@@ -7,6 +7,7 @@ import { pedestrians, crowdCleanup } from './crowd.js';
 import { dayClock } from './day.js';
 import { screenStack } from './screens.js';
 import { twoPlayers } from './players.js';
+import { worldDoors } from './world.js';
 import { quitAndSecondRun } from './state.js';
 
-export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, twoPlayers, crowdCleanup, quitAndSecondRun];
+export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, twoPlayers, crowdCleanup, worldDoors, quitAndSecondRun];

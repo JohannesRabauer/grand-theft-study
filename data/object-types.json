@@ -1,0 +1,70 @@
+{
+  "_doc": "Catalog of every allowed map object type (AD-28). scripts/check-map.mjs validates each map in data/maps/ against it. Positions are tile coordinates. shape: point (x,y), rect (x,y,w,h) or path (points). inWall: false = objects must stand on walkable tiles, true = may overlap solid tiles (facades, ramps), 'perch' = may sit on a fence tile when the object has perch:true. reach: must be walkable-reachable from the map's first entry or spawn. Field types: string, int, number, bool, enum (values), color (#rrggbb), i18n (key in i18n/*.json), mapId, ids (array of object ids), points (array of [x, y]).",
+  "common": {
+    "id": { "type": "string", "required": true },
+    "debug": { "type": "bool", "doc": "only present in debug sessions (?debug, ?bench), skipped in gameplay" }
+  },
+  "types": {
+    "spawn": { "shape": "point", "inWall": false, "reach": true, "fields": {} },
+    "entry": { "shape": "point", "inWall": false, "reach": true, "fields": { "facing": { "type": "enum", "values": ["up", "down", "left", "right"], "required": true } } },
+    "door": { "shape": "rect", "inWall": true, "reach": true, "fields": {
+      "to": { "type": "mapId", "required": true },
+      "entry": { "type": "string", "required": true },
+      "label": { "type": "i18n", "required": true },
+      "auto": { "type": "bool", "doc": "true: enter on touch, otherwise walk in and press interact" }
+    } },
+    "goal": { "shape": "rect", "inWall": false, "reach": true, "fields": {} },
+    "bike": { "shape": "point", "inWall": false, "fields": {} },
+    "hiding": { "shape": "rect", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["hedge", "dumpster", "phone-booth"], "required": true } } },
+    "turf": { "shape": "rect", "inWall": true, "fields": {} },
+    "bully-spawn": { "shape": "point", "inWall": false, "fields": {} },
+    "prop": { "shape": "point", "inWall": "perch", "fields": {
+      "kind": { "type": "enum", "values": ["cone", "can", "crate", "ball", "trashcan"], "required": true },
+      "perch": { "type": "bool" }
+    } },
+    "ammo": { "shape": "point", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["pebble", "chestnut", "acorn"], "required": true } } },
+    "flag": { "shape": "point", "inWall": false, "fields": { "color": { "type": "color", "required": true } } },
+    "ambient": { "shape": "point", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["steam", "chimney"], "required": true } } },
+    "npc-node": { "shape": "point", "inWall": false, "fields": {
+      "district": { "type": "string", "required": true },
+      "links": { "type": "ids", "required": true }
+    } },
+    "npc-spawn": { "shape": "point", "inWall": false, "fields": {
+      "district": { "type": "string", "required": true },
+      "role": { "type": "string", "required": true },
+      "node": { "type": "string", "required": true },
+      "face": { "type": "int" },
+      "gap": { "type": "number" }
+    } },
+    "rail": { "shape": "path", "inWall": false, "fields": {
+      "points": { "type": "points", "required": true },
+      "width": { "type": "number", "required": true, "min": 0 }
+    } },
+    "ramp": { "shape": "rect", "inWall": true, "fields": {
+      "dir": { "type": "enum", "values": ["up", "down", "left", "right"], "required": true },
+      "height": { "type": "number", "required": true, "min": 0 }
+    } },
+    "stairs": { "shape": "rect", "inWall": false, "fields": {
+      "dir": { "type": "enum", "values": ["up", "down", "left", "right"], "required": true },
+      "steps": { "type": "int", "required": true, "min": 1 }
+    } },
+    "bench": { "shape": "rect", "inWall": false, "fields": {} },
+    "dojo": { "shape": "rect", "inWall": false, "fields": {} },
+    "shop": { "shape": "rect", "inWall": false, "fields": { "shopId": { "type": "string", "required": true } } },
+    "bakery": { "shape": "rect", "inWall": false, "fields": {} },
+    "pfand-machine": { "shape": "point", "inWall": false, "fields": {} },
+    "bike-rack": { "shape": "point", "inWall": false, "fields": {} },
+    "tram-stop": { "shape": "point", "inWall": false, "fields": {} },
+    "sign": { "shape": "point", "inWall": true, "fields": {
+      "text": { "type": "i18n", "required": true },
+      "lang": { "type": "enum", "values": ["de", "en"] }
+    } },
+    "mission-trigger": { "shape": "point", "inWall": false, "fields": {
+      "missionId": { "type": "string", "required": true },
+      "r": { "type": "number", "required": true, "min": 0 }
+    } },
+    "grab-target": { "shape": "point", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["bus", "tram"], "required": true } } },
+    "home-spot": { "shape": "point", "inWall": false, "reach": true, "fields": {} },
+    "school-spot": { "shape": "point", "inWall": false, "reach": true, "fields": {} }
+  }
+}

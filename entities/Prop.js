@@ -18,19 +18,38 @@ export class Props {
     this.cfg = cfg;
     this.matter = scene.matter;
     this.sleeping = Phaser.Physics.Matter.Matter.Sleeping;
-    const ts = ctx.map.tileSize;
-    this.props = ctx.map.objects.filter(o => o.type === 'prop').map(o => this.create(o, (o.x + 0.5) * ts, (o.y + 0.5) * ts));
-    ctx.props = this;
-    this.byBody = new Map(this.props.map(p => [p.body.id, p]));
-    this.order = this.props.slice(); // scratch list for the nearest-first wake-up
+    this.props = [];
+    this.byBody = new Map();
+    this.order = []; // scratch list for the nearest-first wake-up
     this.force = { x: 0, y: 0 };
     this.awake = 0;
     this.cullIn = 0;
-    this.cull();
+    ctx.props = this;
+    this.loadMap();
+    ctx.world.register(this);
     scene.matter.world.on('collisionstart', ev => this.onCollide(ev));
     ctx.events.on('quality:changed', () => this.cull());
     const self = this;
     ctx.pools.register('props', { live: () => self.awake, get cap() { return ctx.quality.tier.maxProps; } });
+  }
+
+  loadMap() {
+    const ts = this.ctx.map.tileSize;
+    this.props = this.ctx.map.objects.filter(o => o.type === 'prop').map(o => this.create(o, (o.x + 0.5) * ts, (o.y + 0.5) * ts));
+    this.byBody = new Map(this.props.map(p => [p.body.id, p]));
+    this.order = this.props.slice();
+    this.cull();
+  }
+
+  unloadMap() {
+    for (const p of this.props) {
+      if (p.alive) this.matter.world.remove(p.body);
+      p.sprite.destroy();
+    }
+    this.props = [];
+    this.byBody.clear();
+    this.order = [];
+    this.awake = 0;
   }
 
   create(o, x, y) {

@@ -8,6 +8,7 @@ import { MovementController } from '../vehicles/MovementController.js';
 export class Player {
   constructor(scene, ctx, index, x, y, profiles, profileId) {
     this.ctx = ctx;
+    this.matter = scene.matter;
     this.index = index;
     this.alive = true;
     this.toolbelt = null; // set by GameScene right after creation (the belt needs the player)
@@ -31,6 +32,16 @@ export class Player {
     this.sprite.setTexture(profile.texture).setOrigin(0.5, profile.faceHeading ? 0.5 : 0.8);
     this.sprite.setFlipX(false).setRotation(0);
     this.ctx.events.emit('player:vehicle', { player: this.index, id });
+  }
+
+  // Puts the player at (x, y) standing still, optionally facing `heading` (radians).
+  teleport(x, y, heading) {
+    this.matter.body.setPosition(this.body, { x, y });
+    this.matter.body.setVelocity(this.body, { x: 0, y: 0 });
+    this.move.speed = 0;
+    this.move.vel.x = this.move.vel.y = 0;
+    if (heading !== undefined) this.move.heading = heading;
+    this.sprite.setPosition(x, y);
   }
 
   get x() { return this.body.position.x; }

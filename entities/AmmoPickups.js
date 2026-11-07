@@ -3,8 +3,18 @@
 // are made once. The player who walks over one fills their own magazine; emits `ammo:pickup` { player, kind, amount }.
 export class AmmoPickups {
   constructor(scene, ctx, cfg) {
+    this.scene = scene;
     this.ctx = ctx;
     this.cfg = cfg;
+    this.items = [];
+    this.loadMap();
+    ctx.world.register(this);
+    const self = this;
+    ctx.pools.register('ammo', { live: () => self.items.filter(i => i.back === 0).length, get cap() { return self.items.length; } });
+  }
+
+  loadMap() {
+    const { ctx, cfg, scene } = this;
     const ts = ctx.map.tileSize;
     this.items = ctx.map.objects.filter(o => o.type === 'ammo').map(o => ({
       kind: o.kind,
@@ -13,8 +23,11 @@ export class AmmoPickups {
       back: 0, // seconds until it is back, 0 = on the ground
       sprite: scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, cfg.ammo[o.kind].texture).setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts - 2)
     }));
-    const self = this;
-    ctx.pools.register('ammo', { live: () => self.items.filter(i => i.back === 0).length, cap: this.items.length });
+  }
+
+  unloadMap() {
+    for (const it of this.items) it.sprite.destroy();
+    this.items = [];
   }
 
   update(dt) {

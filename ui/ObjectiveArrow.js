@@ -7,11 +7,6 @@ export class ObjectiveArrow {
     this.ctx = ctx;
     this.playerIndex = playerIndex;
     this.cam = game.cameras.main;
-    this.ts = ctx.map.tileSize;
-    this.mpt = ctx.map.metersPerTile;
-    const goal = ctx.map.objects.find(o => o.type === 'goal');
-    this.gx = (goal.x + goal.w / 2) * this.ts;
-    this.gy = (goal.y + goal.h / 2) * this.ts;
     this.arrow = scene.add.image(0, 0, 'arrow').setScale(ctx.res.inv).setDepth(10);
     this.text = uiText(scene, 0, 0, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d', stroke: '#000000', strokeThickness: 2 })
       .setOrigin(0.5).setDepth(10);
@@ -29,17 +24,37 @@ export class ObjectiveArrow {
       scene.time.delayedCall(4000, () => this.msg.setVisible(false));
     };
     ctx.events.on('goal:reached', this.onReached);
+    this.onWorld = () => this.retarget();
+    ctx.events.on('world:enter', this.onWorld);
+    this.retarget();
+  }
+
+  // Points at the goal of the current map; a map without one (an interior) shows no arrow.
+  retarget() {
+    const { ctx } = this;
+    this.ts = ctx.map.tileSize;
+    this.mpt = ctx.map.metersPerTile;
+    const goal = ctx.map.objects.find(o => o.type === 'goal');
+    this.hasGoal = !!goal;
+    if (goal) {
+      this.gx = (goal.x + goal.w / 2) * this.ts;
+      this.gy = (goal.y + goal.h / 2) * this.ts;
+    }
+    const show = this.hasGoal && !this.done;
+    this.arrow.setVisible(show);
+    this.text.setVisible(show);
   }
 
   destroy() {
     this.ctx.events.off('goal:reached', this.onReached);
+    this.ctx.events.off('world:enter', this.onWorld);
     this.arrow.destroy();
     this.text.destroy();
     this.msg.destroy();
   }
 
   update() {
-    if (this.done) return;
+    if (this.done || !this.hasGoal) return;
     const player = this.ctx.players[this.playerIndex];
     const cam = this.cam;
     // player on screen in UI units: from the live scroll (worldView is only refreshed at render time)

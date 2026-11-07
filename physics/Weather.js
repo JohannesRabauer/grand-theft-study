@@ -25,6 +25,18 @@ export class Weather {
     this.count = 0; // wet tiles in use, oldest first in a ring starting at `head`
     this.head = 0;
     this.timer = 0;
+    ctx.world.register(this);
+  }
+
+  // Puddles belong to the map they dried on; indoors there is no rain and no daylight tint.
+  unloadMap() {
+    for (let i = 0; i < this.cfg.maxWet; i++) this.wet[i].setVisible(false);
+    this.count = 0;
+    this.head = 0;
+  }
+
+  loadMap() {
+    if (this.ctx.map.indoor) this.intensity = 0;
   }
 
   get raining() { return this.state === 'rain'; }
@@ -52,12 +64,13 @@ export class Weather {
   update(dt) {
     const c = this.cfg;
     const amb = this.ambient;
-    amb.setVisible(this.ambientAlpha > 0.005);
+    const outdoor = !this.ctx.map.indoor;
+    amb.setVisible(outdoor && this.ambientAlpha > 0.005);
     if (amb.visible) {
       const v = this.scene.cameras.main.worldView;
       amb.setPosition(v.x, v.y).setSize(v.width, v.height).setAlpha(this.ambientAlpha);
     }
-    const target = this.raining ? 1 : 0;
+    const target = this.raining && outdoor ? 1 : 0;
     this.intensity += Math.max(-dt / c.fade, Math.min(dt / c.fade, target - this.intensity));
     const ov = this.overlay;
     ov.setVisible(this.intensity > 0);
@@ -67,7 +80,7 @@ export class Weather {
     }
     this.timer -= dt;
     if (this.timer > 0) return;
-    if (this.raining) {
+    if (this.raining && outdoor) {
       this.timer = c.puddleEvery;
       this.addPuddle();
     } else if (this.count > 0) {

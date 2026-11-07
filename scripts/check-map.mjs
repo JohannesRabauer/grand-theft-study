@@ -1,13 +1,30 @@
-// Validates data/maps/town.json (AD-5): grid shape, legend, objects, and that the school is
-// reachable from home by two clearly different, bike-friendly routes.
+// Validates every map in data/maps/ (AD-5, AD-28) against data/object-types.json: grid shape, legend,
+// object types and fields, nothing inside walls (unless the type allows it), door targets and
+// entries, walkable reachability. The town additionally has to offer two clearly different,
+// bike-friendly routes from home to school.
 // Run: node scripts/check-map.mjs
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { validateWorld } from '../services/worldLogic.js';
 
 const load = (p) => JSON.parse(readFileSync(new URL(`../data/${p}`, import.meta.url), 'utf8'));
-const map = load('maps/town.json');
 const surfaces = load('surfaces.json');
 const tiles = load('tiles.json');
+
+// ---- every map file: listed in the index, valid against the catalog, linked consistently
+const index = load('maps/index.json');
+const files = readdirSync(new URL('../data/maps/', import.meta.url)).filter(f => f.endsWith('.json') && f !== 'index.json').sort();
+assert.deepEqual(index.maps.map(m => m.file).sort(), files, 'data/maps/index.json must list exactly the map files');
+assert.equal(new Set(index.maps.map(m => m.id)).size, index.maps.length, 'map ids must be unique');
+assert.ok(index.maps.some(m => m.id === index.start && !m.debug), 'the start map exists and is not a debug map');
+const world = { maps: Object.fromEntries(index.maps.map(m => [m.id, { data: load(`maps/${m.file}`), debug: !!m.debug }])) };
+const i18n = new Set(Object.keys(load('../i18n/de.json')));
+const problems = validateWorld(world, { catalog: load('object-types.json'), surfaces, tiles, i18n });
+assert.deepEqual(problems, [], `map validation failed:\n${problems.join('\n')}`);
+console.log(`maps: ${index.maps.map(m => `${m.id}${m.debug ? ' (debug)' : ''}`).join(', ')} valid against the object catalog`);
+
+// ---- the town (route checks below)
+const map = world.maps.town.data;
 const { rows, legend, objects } = map;
 const H = rows.length;
 const W = rows[0].length;

@@ -1,0 +1,23 @@
+{
+  "tileSize": 16,
+  "metersPerTile": 2,
+  "indoor": true,
+  "legend": { "#": "wall", ".": "concrete" },
+  "rows": [
+    "############",
+    "#..........#",
+    "#..........#",
+    "#..........#",
+    "#..........#",
+    "#..........#",
+    "#..........#",
+    "#..........#",
+    "############"
+  ],
+  "objects": [
+    { "type":"entry", "id":"from-town", "x":6, "y":5, "facing":"up" },
+    { "type":"door", "id":"door-exit", "x":5, "y":7, "w":3, "h":1, "to":"town", "entry":"from-test-room", "label":"world.door.exit", "auto":true },
+    { "type":"bench", "id":"bench-1", "x":2, "y":2, "w":3, "h":1 },
+    { "type":"sign", "id":"sign-1", "x":6, "y":0, "text":"world.sign.test", "lang":"de" }
+  ]
+}

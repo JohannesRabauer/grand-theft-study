@@ -6,11 +6,15 @@ import { installScaling } from './ui/scaling.js';
 import { resolveRes } from './services/quality.js';
 
 window.SCHULWEG_DEBUG = new URLSearchParams(location.search).has('debug');
+// debug maps and doors (data/maps/index.json) exist only in sessions meant for checking
+window.SCHULWEG_TESTMAPS = window.SCHULWEG_DEBUG || new URLSearchParams(location.search).has('bench');
 
 // AD-14: the render resolution follows the quality tier and is fixed at load, so the tier is read
 // before the game exists (services/quality.js); BootScene reads the result from the registry.
 const quality = await fetch('data/quality.json').then(r => r.json());
 const res = resolveRes(quality);
+// The list of map files (AD-28) is needed to queue them in BootScene's preload, so it is read here too.
+const mapIndex = await fetch('data/maps/index.json').then(r => r.json());
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -30,7 +34,7 @@ const game = new Phaser.Game({
     }
   },
   scene: [BootScene, MenuScene, GameScene, UIScene],
-  callbacks: { preBoot: g => g.registry.set('res', res) }
+  callbacks: { preBoot: g => { g.registry.set('res', res); g.registry.set('mapIndex', mapIndex); } }
 });
 installScaling(game, res.renderW, res.renderH);
 if (window.SCHULWEG_DEBUG) window.SCHULWEG_GAME = game; // for console inspection

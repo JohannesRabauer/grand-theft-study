@@ -25,28 +25,7 @@ export class CrowdDirector {
     this.scene = scene;
     this.ctx = ctx;
     this.cfg = cfg;
-    const ts = ctx.map.tileSize;
-
-    // graph of waypoints
-    const nodeObjs = ctx.map.objects.filter(o => o.type === 'npc-node');
-    const index = new Map(nodeObjs.map((o, i) => [o.id, i]));
-    this.nx = Float32Array.from(nodeObjs, o => (o.x + 0.5) * ts);
-    this.ny = Float32Array.from(nodeObjs, o => (o.y + 0.5) * ts);
-    this.links = nodeObjs.map(o => Int16Array.from(o.links, id => index.get(id)));
-
-    // spawn markers as parallel arrays (CrowdLogic.pickSpawn)
-    const spawnObjs = ctx.map.objects.filter(o => o.type === 'npc-spawn');
-    this.spawns = {
-      count: spawnObjs.length,
-      xs: Float32Array.from(spawnObjs, o => (o.x + 0.5) * ts),
-      ys: Float32Array.from(spawnObjs, o => (o.y + 0.5) * ts),
-      weight: Float32Array.from(spawnObjs, o => (cfg.districts[o.district] ?? 1) * cfg.roles[o.role].weight),
-      role: spawnObjs.map(o => o.role),
-      node: Int16Array.from(spawnObjs, o => index.get(o.node)),
-      face: Int8Array.from(spawnObjs, o => o.face ?? 1),
-      gap: Float32Array.from(spawnObjs, o => (o.gap ?? 0) * ts)
-    };
-    this.taken = new Uint8Array(spawnObjs.length);
+    this.readMap();
 
     // outfits grouped by kind, with texture keys built once
     this.byKind = { adult: [], kid: [], elder: [] };
@@ -82,7 +61,41 @@ export class CrowdDirector {
     ctx.pools.register('dogs', { live: () => self.dogs.filter(d => d.active).length, cap: cfg.maxDogs });
     ctx.events.on('bike:bell', ev => this.onBell(ev));
     ctx.events.on('quality:changed', () => this.trim());
+    ctx.world.register(this);
     if (window.SCHULWEG_DEBUG) this.makeDebug();
+    this.updateView();
+    this.fill(true);
+  }
+
+  // The waypoint graph and the spawn markers of the current map (an interior without markers has no crowd).
+  readMap() {
+    const { ctx, cfg } = this;
+    const ts = ctx.map.tileSize;
+    const nodeObjs = ctx.map.objects.filter(o => o.type === 'npc-node');
+    const index = new Map(nodeObjs.map((o, i) => [o.id, i]));
+    this.nx = Float32Array.from(nodeObjs, o => (o.x + 0.5) * ts);
+    this.ny = Float32Array.from(nodeObjs, o => (o.y + 0.5) * ts);
+    this.links = nodeObjs.map(o => Int16Array.from(o.links, id => index.get(id)));
+
+    // spawn markers as parallel arrays (CrowdLogic.pickSpawn)
+    const spawnObjs = ctx.map.objects.filter(o => o.type === 'npc-spawn');
+    this.spawns = {
+      count: spawnObjs.length,
+      xs: Float32Array.from(spawnObjs, o => (o.x + 0.5) * ts),
+      ys: Float32Array.from(spawnObjs, o => (o.y + 0.5) * ts),
+      weight: Float32Array.from(spawnObjs, o => (cfg.districts[o.district] ?? 1) * cfg.roles[o.role].weight),
+      role: spawnObjs.map(o => o.role),
+      node: Int16Array.from(spawnObjs, o => index.get(o.node)),
+      face: Int8Array.from(spawnObjs, o => o.face ?? 1),
+      gap: Float32Array.from(spawnObjs, o => (o.gap ?? 0) * ts)
+    };
+    this.taken = new Uint8Array(spawnObjs.length);
+  }
+
+  unloadMap() { this.clear(); }
+
+  loadMap() {
+    this.readMap();
     this.updateView();
     this.fill(true);
   }

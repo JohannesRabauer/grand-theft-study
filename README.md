@@ -76,7 +76,8 @@ node scripts/check-all.mjs        # runs the checks below, exits non-zero on fai
 node scripts/check-collisions.mjs # collision category table
 node scripts/check-i18n.mjs       # DE/EN keys identical, every t('...') key exists
 node scripts/check-content.mjs    # kid-safe text: blocklist lint of i18n and learning text, de/en parity (see docs/TESTING.md)
-node scripts/check-map.mjs        # town map shape, objects, two routes to school
+node scripts/check-map.mjs        # every map in data/maps/ against the object catalog (types, fields, walls, doors, reachability), plus the town's two routes to school
+node scripts/check-world.mjs      # map logic without Phaser: catalog validation, door and entry resolution, reachability
 node scripts/check-chase.mjs      # pathfinding, level rules, escape rules
 node scripts/check-crowd.mjs      # crowd spawn rules, caps, reaction geometry
 node scripts/check-state.mjs      # state store, actions, save slots, migrations
@@ -103,7 +104,9 @@ A bike is parked near the start. Walk up to it and press F to mount; press F aga
 
 `data/maps/town.json` is a 96x64 tile town (16 px tiles): a main road with a bike lane, a park with a canal, pond and bridge, an old town with cobbled alleys, a skatepark, and the school with a fenced yard. Walking from home to the school takes about 30 seconds by either of two routes: along the main road, or through the park and over the canal bridge into the old town. The yellow arrow around the player points to the school and shows the distance in meters (`metersPerTile` in the map); arriving emits `goal:reached` and shows a short message. Legend chars map to surface ids; surfaces with `"solid": true` in `data/surfaces.json` (walls, water, trees, fences, hedges, dumpsters, phone booths) become static bodies. Map objects: `spawn`, `goal`, `bike`, `hiding` (hedge, dumpster, phone-booth sensor zones), `turf` (skatepark, schoolyard-back sensor zones), `bully-spawn`, and `prop` markers (cone, can, crate, ball), `flag` and `ambient` (steam, chimney) spots. Each player entering or leaving zones emits `hide:enter|leave` and `turf:enter|leave` (`{ id, kind, player }`) on `ctx.events`; `goal:reached` is `{ id, player }`. Player events carry the player index: `player:surface` `{ player, id }`, `player:stamina` `{ player, value }`, `player:vehicle` `{ player, id }`, `tool:*` and `ammo:pickup` `{ player, ... }`. With `?debug`, hiding zones are outlined green, turf zones red and the goal yellow.
 
-`node scripts/check-map.mjs` validates the map: grid shape, legend, objects (none inside walls), and that the school is reachable by two different, bike-friendly routes, even when the middle of either one is blocked.
+**Maps and interiors (AD-28).** Every map, interiors included, is one file in `data/maps/` (listed in `data/maps/index.json`; the town is map id `town`). `ctx.world.load(mapId, entryId)` is the only way to switch maps: it unloads everything map-specific (ground texture, wall bodies, zones, doors, props, pickups, bikes, flags, ambient emitters, pedestrians, bullies, puddles), builds the new map, moves every player to the entry (an `entry` or `spawn` object) with a quick fade-in and updates camera bounds, objective arrow, path grid and surfaces. Pools and players persist; a ridden bike travels along. It emits `world:leave` `{ map }` and `world:enter` `{ map, entry }`. A `door` object (`to`, `entry`, `label`, optional `auto`) emits `world:enter-request` when a player stands in it and presses interact (or, with `auto: true`, just touches it); the switch happens at the start of the next frame. Maps may set `"indoor": true` (no rain, no daylight tint). Systems that depend on the map register with `ctx.world.register(system)` and implement `loadMap()` / `unloadMap()`. `data/object-types.json` lists every object type with fields, required flags and wall rules (door, entry, rail, ramp, stairs, bench, dojo, shop, bakery, pfand-machine, bike-rack, tram-stop, sign, mission-trigger, grab-target, home-spot, school-spot are defined for later stories). `test-room` and the town's `door-test` are flagged `debug` and exist only with `?debug` or `?bench`: stand on the doormat next to the house at the start and press F.
+
+`node scripts/check-map.mjs` validates the maps: grid shape, legend, objects (none inside walls), and that the school is reachable by two different, bike-friendly routes, even when the middle of either one is blocked.
 
 ## Menu, language and quality
 
@@ -189,9 +192,9 @@ ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tr
 | `particles/` | `ParticleHub.js`: pooled emitters, surface effects, rain, ambient life |
 | `state/` | `GameState.js` (store), `actions.js`, `migrations.js`, `SaveSlots.js` (AD-16) |
 | `learning/`, `minigames/`, `missions/` | Empty in the prototype |
-| `services/` | `DayClock.js` + `dayTime.js` (day clock, AD-17); `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
+| `services/` | `World.js` (`ctx.world`, map switching, AD-28) + `worldLogic.js` (pure catalog validation, door resolution); `DayClock.js` + `dayTime.js` (day clock, AD-17); `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |
-| `data/` | Tuning JSON, `maps/town.json` (ASCII grid, objects in tile coordinates) |
+| `data/` | Tuning JSON, `maps/` (`index.json` lists the map files; `town.json`, `test-room.json`: ASCII grid, objects in tile coordinates), `object-types.json` (catalog of every allowed map object type) |
 | `ui/` | `input.js` (device reading, per-player intents) + `inputBindings.js` (pure bindings -> intent), `hud/` (HUD modules, listed per mode in `data/hud.json`, registered in `hud/index.js`), `ScreenStack.js` + `screens/` (overlays; `data/screens.json` says which freeze the world), `scaling.js` (integer scaling), `uiKit.js` (UI camera, crisp text) |
 | `scripts/` | `check-*.mjs` and `check-all.mjs`, `bench.js` / `smoke.js` (loaded by `?bench`), `bench-cdp.mjs` (headless runner) |
 | `docs/` | `PERFORMANCE.md`: benchmark results, optimizations, manual phone test |

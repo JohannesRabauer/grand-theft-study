@@ -1,12 +1,13 @@
 import { Pools } from '../entities/pools.js';
 import { Surfaces } from '../physics/surfaces.js';
-import { addStaticWall } from '../physics/bodies.js';
 import { WallStreamer } from '../physics/WallStreamer.js';
 import { Input } from '../ui/input.js';
 import { Bikes } from '../entities/Bike.js';
 import { Player } from '../entities/Player.js';
 import { installPlayers } from '../entities/players.js';
 import { Zones } from '../entities/Zones.js';
+import { Doors } from '../entities/Doors.js';
+import { World } from '../services/World.js';
 import { Wind } from '../physics/Wind.js';
 import { DayClock } from '../services/DayClock.js';
 import { Weather } from '../physics/Weather.js';
@@ -18,7 +19,6 @@ import { Caught } from '../entities/Caught.js';
 import { ToolBelt } from '../tools/ToolBelt.js';
 import { AmmoPickups } from '../entities/AmmoPickups.js';
 import { CrowdDirector } from '../ai/CrowdDirector.js';
-import { tileKey } from './HiResArt.js';
 
 const STEP_MS = 1000 / 60; // Matter's fixed timestep (AD-14); MovementController assumes it too
 const STEP_SLACK = 0.95; // a frame that arrives a hair early (vsync jitter) still gets its step
@@ -30,7 +30,9 @@ export class GameScene extends Phaser.Scene {
 
   create() {
     const cache = this.cache.json;
-    const map = cache.get('town');
+    const index = this.registry.get('mapIndex');
+    const maps = Object.fromEntries(index.maps.map(m => [m.id, cache.get(`map-${m.id}`)]));
+    const map = maps[index.start];
     const ts = map.tileSize;
 
     // AD-2: one ctx, created once, handed to every system.
@@ -52,8 +54,7 @@ export class GameScene extends Phaser.Scene {
     ctx.input = new Input(this, events, inputCfg, ctx.players);
     this.ctx = ctx;
 
-    this.renderGrid(map, res);
-    const walls = this.buildWalls(map);
+    new World(this, ctx, index, maps).start(index.start); // AD-28: ground, walls and ctx.map of the first map
 
     // map objects are in tile coordinates
     const spawn = map.objects.find(o => o.type === 'spawn' && o.id === 'player');
@@ -64,23 +65,22 @@ export class GameScene extends Phaser.Scene {
     this.caughtFrozen = false;
     this.zones = new Zones(this, ctx);
     ctx.zones = this.zones;
+    this.doors = new Doors(this, ctx);
     const wcfg = cache.get('weather');
     ctx.wind = new Wind(wcfg.wind);
     ctx.day = new DayClock(ctx, cache.get('day')); // AD-17: before Weather, which reads its schedule
     ctx.weather = new Weather(this, ctx, wcfg.weather);
     ctx.particles = new ParticleHub(this, ctx, cache.get('particles'));
     this.props = new Props(this, ctx, cache.get('props'));
-        this.ammo = new AmmoPickups(this, ctx, cache.get('tool'));
+    this.ammo = new AmmoPickups(this, ctx, cache.get('tool'));
     this.flags = new Flags(this, ctx, wcfg.flag);
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
     this.caught = new Caught(this, ctx, cache.get('chase').caught, this.bikes);
     this.zoomCfg = cache.get('camera');
-    this.streamer = new WallStreamer(this, ctx, walls, cache.get('quality').wallRadius);
+    this.streamer = new WallStreamer(this, ctx, cache.get('quality').wallRadius);
 
     // Own camera follow (see followCamera). The base zoom is the render scale, so the view still
     // covers the same world area as at 480x270; the speed zoom (camera.json) multiplies it.
-    this.worldW = map.rows[0].length * ts;
-    this.worldH = map.rows.length * ts;
     const cam = this.cameras.main;
     cam.setZoom(res.scale * this.zoomCfg.max);
     // Phaser floors the scroll of a roundPixels camera to whole world pixels in preRender (2 screen pixels
@@ -96,10 +96,7 @@ export class GameScene extends Phaser.Scene {
     this.zoomGoal = cam.zoom;
     this.zoomVel = 0;
     this.focus = { x: 0, y: 0, speed: 0 };
-    this.updateFocus();
-    this.camX = this.camOutX = this.focus.x;
-    this.camY = this.camOutY = this.focus.y;
-    this.followCamera(1);
+    this.snapCamera();
     this.crowd = new CrowdDirector(this, ctx, cache.get('npcs')); // after the camera: it prefills the view
 
     // UIScene asks for pause (a freezing screen is open) / quit through events; the world is only changed here.
@@ -148,6 +145,15 @@ export class GameScene extends Phaser.Scene {
     }
     f.x /= players.length;
     f.y /= players.length;
+  }
+
+  // Puts the camera on the players at once (start, map switch) instead of easing towards them.
+  snapCamera() {
+    this.updateFocus();
+    this.camX = this.camOutX = this.focus.x;
+    this.camY = this.camOutY = this.focus.y;
+    this.followCamera(1);
+    this.cameras.main.preRender(); // worldView, which prop culling and the crowd's first fill read
   }
 
   // Zoom follows real speed continuously (1.0 standing .. 0.6 at top speed) times the render scale.
@@ -209,38 +215,6 @@ export class GameScene extends Phaser.Scene {
     cam.setScroll(this.camOutX - hw, this.camOutY - hh);
   }
 
-  // Static ground: all tiles drawn once into a single RenderTexture, `res.scale` times as fine as
-  // the world (3072x2048 texture at 2x) and displayed at 1/scale, so one texture pixel is one screen pixel.
-  renderGrid(map, res) {
-    const ts = map.tileSize * res.scale;
-    const rt = this.add.renderTexture(0, 0, map.rows[0].length * ts, map.rows.length * ts).setOrigin(0).setScale(res.inv).setDepth(-1);
-    rt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
-    rt.beginDraw();
-    map.rows.forEach((row, ty) => {
-      for (let tx = 0; tx < row.length; tx++) rt.batchDraw(res.scale > 1 ? tileKey(map, tx, ty) : `tile-${map.legend[row[tx]]}`, tx * ts, ty * ts);
-    });
-    rt.endDraw();
-  }
-
-  // Wall bodies merged into horizontal runs per row to keep the body count low.
-  buildWalls(map) {
-    const ts = map.tileSize;
-    const walls = [];
-    map.rows.forEach((row, ty) => {
-      let start = -1;
-      for (let tx = 0; tx <= row.length; tx++) {
-        const wall = tx < row.length && this.ctx.surfaces.solid(map.legend[row[tx]]);
-        if (wall && start < 0) start = tx;
-        if (!wall && start >= 0) {
-          const body = addStaticWall(this, ((start + tx) / 2) * ts, (ty + 0.5) * ts, (tx - start) * ts, ts);
-          walls.push({ body, x0: start * ts, x1: tx * ts, y0: ty * ts, y1: (ty + 1) * ts });
-          start = -1;
-        }
-      }
-    });
-    return walls;
-  }
-
   setPaused(on) {
     this.paused = on;
     this.syncWorld();
@@ -272,6 +246,7 @@ export class GameScene extends Phaser.Scene {
     const dt = Math.min(delta, 50) / 1000;
     this.ctx.input.update();
     if (this.paused) return;
+    this.ctx.world.update();
     this.stepPhysics(delta);
     if (this.ctx.input.intent.weather) this.ctx.weather.toggle(); // global intents come from P1 only
     this.ctx.day.update(dt);
@@ -288,6 +263,7 @@ export class GameScene extends Phaser.Scene {
     this.ammo.update(dt);
     this.bikes.update(dt);
     this.zones.update();
+    this.doors.update();
     this.chase.update(dt);
     this.updateFocus();
     this.updateZoom(dt);

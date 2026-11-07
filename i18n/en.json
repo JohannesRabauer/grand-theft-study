@@ -81,5 +81,8 @@
   "menu.confirm.delete": "Really delete slot {n}? This can't be undone.",
   "menu.confirm.deleteYes": "Yes, delete",
   "menu.confirm.deleteNo": "Keep it",
-  "pause.slot": "Slot {n}"
+  "pause.slot": "Slot {n}",
+  "world.door.test": "Test door",
+  "world.door.exit": "Exit",
+  "world.sign.test": "Test room: this is only for checking."
 }

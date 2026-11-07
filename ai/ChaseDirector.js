@@ -26,8 +26,7 @@ export class ChaseDirector {
     this.pool = new BullyPool(scene, ctx, this);
     this.escape = new Escape(cfg.escape);
     this.lvl = new ChaseLevel(cfg.level, cfg.chaseEnabled, (level, reason) => this.onLevel(level, reason));
-    const ts = ctx.map.tileSize;
-    this.spawns = ctx.map.objects.filter(o => o.type === 'bully-spawn').map(o => ({ x: (o.x + 0.5) * ts, y: (o.y + 0.5) * ts }));
+    this.spawns = this.readSpawns();
     this.seen = false;
     this.inTurf = new Uint8Array(ctx.maxPlayers); // per player: standing in bully turf
     ctx.chase = this;
@@ -38,7 +37,21 @@ export class ChaseDirector {
     events.on('bully:bump', () => this.lvl.bump());
     events.on('prop:hit', ev => this.onPropHit(ev));
     events.on('quality:changed', () => this.trim());
+    ctx.world.register(this);
     if (window.SCHULWEG_DEBUG) this.makeDebug();
+  }
+
+  readSpawns() {
+    const ts = this.ctx.map.tileSize;
+    return this.ctx.map.objects.filter(o => o.type === 'bully-spawn').map(o => ({ x: (o.x + 0.5) * ts, y: (o.y + 0.5) * ts }));
+  }
+
+  // Leaving a map ends the chase; the next map brings its own grid and spawn points (AD-28).
+  unloadMap() { this.reset(); }
+
+  loadMap() {
+    this.nav.setMap(this.ctx.map, this.ctx.surfaces.data);
+    this.spawns = this.readSpawns();
   }
 
   get level() { return this.lvl.level; }
@@ -88,6 +101,7 @@ export class ChaseDirector {
   // A bully appears at the nearest spawn point that is outside the camera view and runs for the player.
   spawn(kind) {
     const p = this.pickSpawn();
+    if (!p) return null; // a map without bully spawns (an interior) has no chase
     const b = this.pool.get(kind, this.cfg.kinds[kind], p.x, p.y);
     if (!b) return null;
     const player = this.ctx.nearestPlayer(b.x, b.y);

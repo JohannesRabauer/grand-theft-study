@@ -10,13 +10,13 @@ export class Caught {
     this.ctx = ctx;
     this.cfg = cfg;
     this.bikes = bikes;
-    const ts = ctx.map.tileSize;
-    const home = ctx.map.objects.find(o => o.type === 'spawn' && o.id === 'player');
-    this.home = { x: (home.x + 0.5) * ts, y: (home.y + 0.5) * ts };
     this.slots = Array.from({ length: ctx.maxPlayers }, () => ({ active: false, t: 0, jumpPrev: false }));
     this.count = 0; // players currently caught
     ctx.events.on('bully:caught-contact', ev => this.trigger(ev.player ?? 0));
   }
+
+  // Where a caught player goes: the player spawn of the current map.
+  get home() { return this.ctx.world.spawnPoint(); }
 
   trigger(index) {
     const slot = this.slots[index];
@@ -51,11 +51,7 @@ export class Caught {
     const player = ctx.players[index];
     if (this.bikes.isMounted(index)) this.bikes.dismount(player); // the bike stays where the player was caught
     const { x, y } = this.home;
-    scene.matter.body.setPosition(player.body, { x, y });
-    scene.matter.body.setVelocity(player.body, { x: 0, y: 0 });
-    player.move.speed = 0;
-    player.move.vel.x = player.move.vel.y = 0;
-    player.sprite.setPosition(x, y);
+    player.teleport(x, y);
     if (index === 0) scene.cameras.main.centerOn(x, y);
     ctx.particles.emit('dust', x, y, { count: 14 });
     this.slots[index].active = false;

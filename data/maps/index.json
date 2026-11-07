@@ -1,0 +1,7 @@
+{
+  "start": "town",
+  "maps": [
+    { "id": "town", "file": "town.json" },
+    { "id": "test-room", "file": "test-room.json", "debug": true }
+  ]
+}

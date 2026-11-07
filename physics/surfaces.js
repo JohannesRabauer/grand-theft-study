@@ -1,12 +1,17 @@
 // Surface service (AD-6): ctx.surfaces.at(x, y) -> surface id, O(1) grid lookup.
 export class Surfaces {
   constructor(map, data) {
+    this.data = data;
+    this.setMap(map);
+  }
+
+  // The same service serves every map (AD-28), so references to it stay valid across a switch; overrides are dropped.
+  setMap(map) {
     this.tileSize = map.tileSize;
     this.cols = map.rows[0].length;
     this.rowCount = map.rows.length;
     this.rows = map.rows;
     this.legend = map.legend;
-    this.data = data;
     this.over = new Map(); // weather overrides: tile index -> surface id
   }
 

@@ -8,6 +8,13 @@ export class Flags {
     this.ctx = ctx;
     this.cfg = cfg;
     this.t = 0;
+    this.flags = [];
+    this.loadMap();
+    ctx.world.register(this);
+  }
+
+  loadMap() {
+    const { scene, ctx, cfg } = this;
     const ts = ctx.map.tileSize;
     this.flags = ctx.map.objects.filter(o => o.type === 'flag').map(o => {
       const x = (o.x + 0.5) * ts;
@@ -23,6 +30,11 @@ export class Flags {
       }
       return { x, y, top, segs, objs, dir: 1 };
     });
+  }
+
+  unloadMap() {
+    for (const f of this.flags) for (const o of f.objs) o.destroy();
+    this.flags = [];
   }
 
   update(dt) {

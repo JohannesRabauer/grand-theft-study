@@ -8,12 +8,22 @@ const CELL = 48; // an actor must cross this much before walls are re-evaluated 
 const CHUNK = 128; // walls are indexed by chunk so a re-evaluation only looks at walls near an actor
 
 export class WallStreamer {
-  constructor(scene, ctx, walls, radius) {
+  constructor(scene, ctx, radius) {
     this.world = scene.matter.world;
     this.ctx = ctx;
     this.radius = radius;
-    // walls: [{ body, x0, y0, x1, y1 }]; they start outside the world
-    this.walls = walls.map(w => ({ ...w, inWorld: false }));
+    this.walls = [];
+    this.live = 0;
+    const self = this;
+    ctx.pools.register('walls', { live: () => self.live, get cap() { return self.walls.length; } });
+    this.loadMap();
+    ctx.world.register(this);
+  }
+
+  // Takes over the wall bodies ctx.world built for the current map; they start outside the physics world.
+  loadMap() {
+    const { ctx } = this;
+    this.walls = ctx.world.walls.map(w => ({ ...w, inWorld: false }));
     for (const w of this.walls) this.world.remove(w.body);
     this.want = new Uint8Array(this.walls.length);
     this.chunkCols = Math.ceil(ctx.map.rows[0].length * ctx.map.tileSize / CHUNK);
@@ -30,8 +40,13 @@ export class WallStreamer {
     this.cells = new Int32Array(maxActors * 2).fill(-1e9);
     this.n = 0;
     this.live = 0;
-    ctx.pools.register('walls', { live: () => this.live, cap: this.walls.length });
     this.update();
+  }
+
+  unloadMap() {
+    for (const w of this.walls) if (w.inWorld) this.world.remove(w.body);
+    this.walls = [];
+    this.live = 0;
   }
 
   collect() {

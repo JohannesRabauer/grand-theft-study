@@ -9,7 +9,8 @@ export class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
 
   preload() {
-    this.load.json('town', 'data/maps/town.json');
+    for (const m of this.registry.get('mapIndex').maps) this.load.json(`map-${m.id}`, `data/maps/${m.file}`); // listed in data/maps/index.json
+    this.load.json('object-types', 'data/object-types.json');
     this.load.json('surfaces', 'data/surfaces.json');
     this.load.json('vehicles', 'data/vehicles.json');
     this.load.json('tiles', 'data/tiles.json');
@@ -45,7 +46,7 @@ export class BootScene extends Phaser.Scene {
     if (res.scale > 1) {
       makeHiResArt(this, tiles); // Medium and High: textures drawn on a 2x grid (AD-14)
     } else {
-      this.makeTiles(tiles, this.cache.json.get('town').tileSize);
+      this.makeTiles(tiles, this.cache.json.get('map-town').tileSize);
       this.makePlayer();
       this.makeBike();
       this.makeBully();

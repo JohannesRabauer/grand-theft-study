@@ -9,13 +9,26 @@ const SQRT2 = Math.SQRT2;
 
 export class Pathfinder {
   constructor(map, surfaceData, cfg) {
+    this.cfg = cfg;
+    this.queue = new Array(cfg.queueSize).fill(null);
+    this.n = 0;
+    this.gen = 0;
+    this.setMap(map, surfaceData);
+  }
+
+  // Rebuilds the grid for another map (AD-28); the buffers are only reallocated when the size changes.
+  setMap(map, surfaceData) {
+    const { cfg } = this;
     this.ts = map.tileSize;
     this.cols = map.rows[0].length;
     this.rowCount = map.rows.length;
-    this.cfg = cfg;
     const n = this.cols * this.rowCount;
-    this.solid = new Uint8Array(n);
-    this.cost = new Float32Array(n);
+    this.qHead = 0;
+    this.qCount = 0;
+    this.queue.fill(null);
+    this.size = 0;
+    this.solvedLastUpdate = 0;
+    if (n !== this.n) this.allocate(n);
     for (let ty = 0; ty < this.rowCount; ty++) {
       for (let tx = 0; tx < this.cols; tx++) {
         const s = surfaceData[map.legend[map.rows[ty][tx]]];
@@ -31,6 +44,12 @@ export class Pathfinder {
         }
       }
     }
+  }
+
+  allocate(n) {
+    this.n = n;
+    this.solid = new Uint8Array(n);
+    this.cost = new Float32Array(n);
     this.g = new Float32Array(n);
     this.f = new Float32Array(n);
     this.from = new Int32Array(n);
@@ -38,12 +57,7 @@ export class Pathfinder {
     this.closedGen = new Uint32Array(n);
     this.hpos = new Int32Array(n);
     this.heap = new Int32Array(n);
-    this.size = 0;
     this.gen = 0;
-    this.queue = new Array(cfg.queueSize).fill(null);
-    this.qHead = 0;
-    this.qCount = 0;
-    this.solvedLastUpdate = 0;
   }
 
   isSolid(tx, ty) {

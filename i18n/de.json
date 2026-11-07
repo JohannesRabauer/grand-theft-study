@@ -81,5 +81,8 @@
   "menu.confirm.delete": "Spielstand {n} wirklich löschen? Das geht nicht rückgängig.",
   "menu.confirm.deleteYes": "Ja, löschen",
   "menu.confirm.deleteNo": "Behalten",
-  "pause.slot": "Spielstand {n}"
+  "pause.slot": "Spielstand {n}",
+  "world.door.test": "Testtür",
+  "world.door.exit": "Ausgang",
+  "world.sign.test": "Testraum: Hier wird nur geprüft."
 }

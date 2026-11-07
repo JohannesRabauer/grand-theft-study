@@ -8,11 +8,10 @@ const DEG = Math.PI / 180;
 
 export class Bikes {
   constructor(scene, ctx) {
+    this.scene = scene;
     this.ctx = ctx;
     this.fx = ctx.players[0].profiles.bike.fx;
-    const ts = ctx.map.tileSize;
-    this.parked = ctx.map.objects.filter(o => o.type === 'bike')
-      .map(o => scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, 'bike').setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts));
+    this.parked = []; // sprites of bikes standing around, plus those being ridden (hidden)
     // per player: the sprite being ridden (hidden while mounted) and the effect timers
     this.riders = Array.from({ length: ctx.maxPlayers }, () => ({ mounted: null, lastX: 0, lastY: 0, puffIn: 0, bellIn: 0, jumpPrev: false, skidding: false }));
     this.skids = new FadePool(scene, ctx, 'skid', -0.5, 'skidPool');
@@ -21,6 +20,23 @@ export class Bikes {
     ctx.pools.register('skids', this.skids);
     ctx.pools.register('smoke', this.puffs);
     ctx.pools.register('bell', this.rings);
+    this.loadMap();
+    ctx.world.register(this);
+  }
+
+  loadMap() {
+    const { ctx } = this;
+    const ts = ctx.map.tileSize;
+    for (const o of ctx.map.objects) {
+      if (o.type === 'bike') this.parked.push(this.scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, 'bike').setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts));
+    }
+  }
+
+  // A bike being ridden travels with its rider; the parked ones stay behind.
+  unloadMap() {
+    const ridden = this.riders.map(r => r.mounted).filter(Boolean);
+    for (const b of this.parked) if (!ridden.includes(b)) b.destroy();
+    this.parked = ridden;
   }
 
   isMounted(index) { return this.riders[index].mounted !== null; }
