@@ -43,7 +43,7 @@ Every player has an intent snapshot, `ctx.input.intents[i]`; all devices produce
 | Weather (clear / rain) | T | - | - |
 | Pause | Esc | pause button (top right) | Start |
 
-**Two players** (AD-18; the number of active players is `ctx.players.length`, the game starts with one, `SCHULWEG_GAME.addPlayer()` with `?debug` adds a second until co-op joins in epic 2). Bindings live in `data/input.json` (KeyboardEvent codes); with a single player the arrow keys and Right Shift also steer P1, so one-player controls are unchanged.
+**Two players** (AD-18; the number of active players is `ctx.players.length`; the game starts with one, or with two in co-op, see below; `SCHULWEG_GAME.addPlayer()` with `?debug` adds a second to a running one-player game). Bindings live in `data/input.json` (KeyboardEvent codes); with a single player the arrow keys and Right Shift also steer P1, so one-player controls are unchanged.
 
 | Action | P1 | P2 |
 | --- | --- | --- |
@@ -56,6 +56,14 @@ Every player has an intent snapshot, `ctx.input.intents[i]`; all devices produce
 | Map, weather, pause | M, T, Esc / Start | - (global intents come from P1 only) |
 
 Gamepads bind to the next free player: with one player the first pad is P1; with two players the first pad drives P2 and the second drives P1. Touch controls always drive P1.
+
+### Co-op (local, two players on one screen)
+
+The `coop` flag in `state.shared.flags` (action `coop.set { on }`) decides at game start: on, `GameScene` creates two players from `state.players[0..1]`, each with its own character look, attributes, tool belt and start vehicle, bound to `intents[0]` / `intents[1]`, standing 24 px apart at the spawn (`data/camera.json` `coop.spawnOffsets`). Switching it on creates player 2 as another character than P1. Until the co-op menu exists (story 2.4), try it with `?debug`: `SCHULWEG_GAME.setCoop(true)` restarts the run with two players (`setCoop(false)` back to one). `GameScene` also accepts a start config `{ players: [{ character, vehicle }] }` for tests.
+
+- **Camera** (`camera/CameraRig.js`, maths in `camera/rigMath.js`): follows the midpoint (a pinned player, see below, counts 60 %) and zooms out to keep both players 48 / 40 UI px inside the view. The existing speed zoom still applies; the smaller of speed zoom and fit zoom wins, and the same critically damped spring and sub-pixel handling smooth it. One player: identical to before.
+- **Tether** (`camera/tetherMath.js`, `data/camera.json` `tether`): max distance 480 world px (vertical counts times the 16:9 aspect), well inside the view at the smallest zoom (0.6). From half of it the player walking away is slowed smoothly down to a stop at the limit, the one walking towards the other gets up to 12 % extra speed, and past the limit a gentle pull (capped) brings both back. A player held by a caught frame or screen (`player.pinned`) never blocks the other: the free one keeps at least 25 % speed and is pulled gently. `ctx.coop` is `{ active, distance, tetherRatio }`.
+- **HUD**: P1's status (stamina, ground, vehicle) and tool/ammo at the left, P2's mirrored at the right (below the shared Ärger meter), money, clock and Ärger once, no touch layout for P2. One shared objective arrow orbits the camera centre. Each player has a coloured ring under the feet (P1 cyan, P2 orange; `?debug` adds a P1/P2 tag) and a small edge chevron appears when one is far from the screen centre.
 
 Touch controls appear on touch devices and hide as soon as a key or mouse is used. In portrait on a touch device a rotate hint covers the game and input is ignored.
 Resolution (AD-14): Medium and High render at 960x540, Low at 480x270. The picture is scaled by a whole number of device pixels (letterboxed, pixelated, so a 1920x1080 window shows 960x540 at 2x); only windows smaller than the render size get a fractional fit.
@@ -86,6 +94,7 @@ node scripts/check-ui.mjs         # screen stack (top-only input, counted world 
 node scripts/check-players.mjs    # players array helpers; fails on any remaining use of the deprecated ctx.player
 node scripts/check-characters.mjs # characters data, attribute modifiers, growth hooks, bully weights, start vehicle fallback
 node scripts/check-input.mjs      # P1/P2 key and gamepad bindings -> intents, edge and global intents
+node scripts/check-coop.mjs       # co-op camera rig maths, tether, start players, coop.set, HUD slices
 node scripts/bench-cdp.mjs --url http://localhost:8080          # CPU cost per update, all scenarios and tiers (headless Edge/Chrome)
 node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke  # scripted whole-game smoke test
 ```

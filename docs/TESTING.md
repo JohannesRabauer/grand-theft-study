@@ -52,7 +52,9 @@ Add a scenario for new player-visible behavior:
    from what the previous one left (teleport via `env.h.teleport` when you need a place) and leave it quiet.
 3. Run the smoke test; the total check count must not drop.
 
-Areas so far: `prototype-core` (bike ride, slingshot, weather, language, quality, pause), `chase`, `crowd`, `screens`, `players`, `day`, `state`.
+Areas so far: `prototype-core` (bike ride, slingshot, weather, language, quality, pause), `chase`, `crowd`, `screens`, `players`, `characters`, `world`, `day`, `state`, `coop`.
+
+The `coop` scenario (last, it restarts the game) starts a real two-player run through the `coop` flag, sends both players along the commute route (`h.makeRouteRunner(ctx, reach, clearance, playerIndex)` drives any player) and asserts that the tether keeps the distance within the limit, the camera keeps both in view on every frame and zooms out, and that a pinned partner never blocks the other. `h.teleport` moves every player, so a second player is never left behind at the tether.
 
 ## Benchmarks
 

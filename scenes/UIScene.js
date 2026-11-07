@@ -15,7 +15,7 @@ export class UIScene extends Phaser.Scene {
     const events = ctx.events;
     setupUiCamera(this, ctx.res);
     const cache = this.cache.json;
-    this.hud = createHud(this, ctx, cache.get('hud'), 'play', { players: 1, debug: !!window.SCHULWEG_DEBUG });
+    this.hud = createHud(this, ctx, cache.get('hud'), 'play', { players: ctx.players.length, debug: !!window.SCHULWEG_DEBUG });
     this.hudList = [...this.hud.values()];
     this.screens = new ScreenStack(cache.get('screens'), (on) => events.emit(on ? 'game:pause' : 'game:resume'));
     ctx.screens = this.screens;

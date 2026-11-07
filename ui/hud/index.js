@@ -11,6 +11,7 @@ import { RestartNoteModule } from './RestartNoteModule.js';
 import { ObjectiveModule } from './ObjectiveModule.js';
 import { CaughtModule } from './CaughtModule.js';
 import { TouchModule } from './TouchModule.js';
+import { CoopModule } from './CoopModule.js';
 
 // Module id -> class. Later stories add a line here and an entry in data/hud.json; UIScene stays untouched.
 export const HUD_REGISTRY = {
@@ -25,7 +26,8 @@ export const HUD_REGISTRY = {
   touch: TouchModule,
   rotateHint: RotateHintModule,
   restartNote: RestartNoteModule,
-  debug: DebugModule
+  debug: DebugModule,
+  coop: CoopModule
 };
 
 // Builds the modules of `mode` and returns them as a Map id -> module (insertion order = creation order).

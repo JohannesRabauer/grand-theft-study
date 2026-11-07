@@ -1,3 +1,5 @@
+import { createPlayer } from './GameState.js';
+
 // Registered state actions (AD-16). Each gets a mutable draft copy, the payload and the config and
 // returns { path } (the changed path(s)) or { reject: reason }. New systems add their actions here.
 const reject = (reason) => ({ reject: reason });
@@ -29,6 +31,20 @@ export const ACTIONS = {
     if (!positiveInt(day) || !Number.isInteger(minute) || minute < 0 || minute >= 1440 || !phase) return reject('bad-payload');
     s.shared.clock = { day, minute, phase };
     return { path: 'shared.clock' };
+  },
+
+  // Co-op on or off (flag `coop`). Switching it on makes sure a second player exists: a different kid than player 1
+  // with that kid's base attributes. The second player's progress stays when co-op is switched off again.
+  'coop.set'(s, { on }, cfg) {
+    if (typeof on !== 'boolean') return reject('bad-payload');
+    if (on && s.players.length < 2) {
+      const p = createPlayer(cfg);
+      const id = Object.keys(cfg.characters ?? {}).find(c => c !== s.players[0].character);
+      if (id) { p.character = id; p.attributes = { ...cfg.characters[id] }; }
+      s.players.push(p);
+    }
+    s.shared.flags.coop = on;
+    return { path: ['shared.flags.coop', 'players'] };
   },
 
   // Choosing a character (cfg.characters: id -> base attributes, when known) also resets the attributes to its base values.

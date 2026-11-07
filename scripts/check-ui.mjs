@@ -94,8 +94,8 @@ assert.ok(ids(resolveHud(hud, 'play', HUD_REGISTRY, { debug: true })).includes('
 for (const id of ['fps', 'status', 'anger', 'money', 'clock', 'tool', 'caught', 'objective', 'touch', 'rotateHint', 'restartNote']) {
   assert.ok(ids(play).includes(id), `${id} is in the play HUD`);
 }
-assert.deepEqual(play.find(m => m.id === 'status').opts, { playerIndex: 0 });
-assert.deepEqual(play.find(m => m.id === 'money').opts, { shared: true });
+assert.deepEqual(play.find(m => m.id === 'status').opts, { playerIndex: 0, players: 1 });
+assert.deepEqual(play.find(m => m.id === 'money').opts, { shared: true, players: 1 });
 const two = resolveHud(hud, 'play', HUD_REGISTRY, { players: 2 });
 assert.deepEqual(ids(two).filter(i => i.startsWith('status')), ['status.0', 'status.1'], 'player modules repeat per player');
 assert.equal(ids(two).filter(i => i === 'money').length, 1, 'shared modules exist once');

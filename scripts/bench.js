@@ -35,16 +35,16 @@ async function startGame(game, tier) {
   return { gs, ui, ctx, game };
 }
 
-// Steers ctx.input.intent.move along an A* route (the bullies' pathfinder on the real map).
-function makeDriver(ctx) {
+// Steers a player's intent (default player 1) along an A* route (the bullies' pathfinder on the real map).
+function makeDriver(ctx, index = 0) {
   const nav = ctx.chase.nav;
   const { ts, cols } = nav;
   const path = new Int32Array(800);
   const d = { len: 0, idx: 0, gx: 0, gy: 0, age: 0, dist: 0, sx: 0, sy: 0, still: 0 };
   d.goal = (x, y) => { d.gx = x; d.gy = y; d.age = 1e9; };
   d.tick = (reach = 10, clearance = 5) => {
-    const p = ctx.players[0];
-    const i = ctx.input.intent;
+    const p = ctx.players[index];
+    const i = ctx.input.intents[index];
     if (++d.age > 120) { // replan now and then (also after teleports or being shoved)
       d.age = 0;
       d.len = nav.findPath(p.x, p.y, d.gx, d.gy, path);
@@ -83,8 +83,8 @@ function makeDriver(ctx) {
 // Home -> school along the main road and the street east of the skatepark (avoids bully turf).
 // Returns tick(): steers along it, restarts from home at the end; `done` says the last point was reached.
 const ROUTE = [[7, 55], [80, 55], [82, 40], [82, 29], [79, 24], [78, 14]];
-function makeRouteRunner(ctx, reach, clearance) {
-  const d = makeDriver(ctx);
+function makeRouteRunner(ctx, reach, clearance, index = 0) {
+  const d = makeDriver(ctx, index);
   let k = 0;
   const go = () => d.goal(tilePx(ctx, ROUTE[k][0]), tilePx(ctx, ROUTE[k][1]));
   go();
@@ -104,10 +104,12 @@ function teleport(gs, ctx, tx, ty) {
   const ts = ctx.map.tileSize;
   const x = (tx + 0.5) * ts;
   const y = (ty + 0.5) * ts;
-  gs.matter.body.setPosition(ctx.players[0].body, { x, y });
-  gs.matter.body.setVelocity(ctx.players[0].body, { x: 0, y: 0 });
-  ctx.players[0].move.speed = 0;
-  ctx.players[0].sprite.setPosition(x, y);
+  for (const p of ctx.players) { // every player, so a co-op partner is not left behind at the tether
+    gs.matter.body.setPosition(p.body, { x, y });
+    gs.matter.body.setVelocity(p.body, { x: 0, y: 0 });
+    p.move.speed = 0;
+    p.sprite.setPosition(x, y);
+  }
   gs.cameras.main.centerOn(x, y);
 }
 

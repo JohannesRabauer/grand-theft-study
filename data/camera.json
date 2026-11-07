@@ -5,5 +5,24 @@
   "smooth": 4,
   "maxRate": 0.45,
   "deadband": 0.004,
-  "follow": 0.15
+  "follow": 0.15,
+  "coop": {
+    "_doc": "spawnOffsets: start offsets (world px) per player from the map spawn; fitMargin: UI px every player stays inside the view edge; pinnedWeight: centre weight of a pinned player; edgeIndicator: fraction of the half view beyond which a chevron shows at the edge",
+    "spawnOffsets": [[-12, 0], [12, 0]],
+    "fitMargin": { "x": 48, "y": 40 },
+    "pinnedWeight": 0.6,
+    "edgeIndicator": 0.7,
+    "ringColors": ["#4dd2ff", "#ffb347"]
+  },
+  "tether": {
+    "_doc": "maxDistance in world px (box norm, vertical scaled by the view aspect); soft: fraction of it where the leader slows; minLead: leader speed factor at the limit; frozenFloor: same when the other is pinned; trailBonus: extra speed of the trailing player; response: smoothing per second; pullGain/pullMax: gentle pull (px/s per ratio unit, cap) beyond the limit",
+    "maxDistance": 480,
+    "soft": 0.5,
+    "minLead": 0,
+    "frozenFloor": 0.25,
+    "trailBonus": 0.12,
+    "response": 10,
+    "pullGain": 240,
+    "pullMax": 90
+  }
 }

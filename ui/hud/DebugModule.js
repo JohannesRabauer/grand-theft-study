@@ -25,6 +25,8 @@ render: ${res.renderW}x${res.renderH}  textures: x${res.scale}  zoom: ${this.sce
 chase: level ${chase.level}  seen: ${chase.seen}
 day: ${day.mode} ${day.time} ${day.phase} ${day.season}
 weather: ${weather.state}  wind: ${wind.vector.x.toFixed(2)}, ${wind.vector.y.toFixed(2)}`;
+    if (this.ctx.coop.active) s += `
+coop: distance ${this.ctx.coop.distance.toFixed(0)}  tether ${this.ctx.coop.tetherRatio.toFixed(2)}`;
     if (this.ctx.crowd) s += `
 ${this.ctx.crowd.debugText()}`;
     for (const [name, p] of pools.byName) s += `

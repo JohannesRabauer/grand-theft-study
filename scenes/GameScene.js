@@ -4,7 +4,9 @@ import { WallStreamer } from '../physics/WallStreamer.js';
 import { Input } from '../ui/input.js';
 import { Bikes } from '../entities/Bike.js';
 import { Player } from '../entities/Player.js';
-import { installPlayers } from '../entities/players.js';
+import { installPlayers, startPlayers } from '../entities/players.js';
+import { PlayerMarkers } from '../entities/PlayerMarkers.js';
+import { CameraRig } from '../camera/CameraRig.js';
 import { Zones } from '../entities/Zones.js';
 import { Doors } from '../entities/Doors.js';
 import { World } from '../services/World.js';
@@ -28,6 +30,9 @@ const SNAP_RANGE = 0.03; // zoom distance from an integer over which the camera 
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
+
+  // Optional start config { players: [{ character, vehicle }] } (tests, menu); without it the saved state decides (coop flag).
+  init(data) { this.startOverride = data?.players ?? null; }
 
   create() {
     const cache = this.cache.json;
@@ -61,7 +66,14 @@ export class GameScene extends Phaser.Scene {
     // map objects are in tile coordinates
     const spawn = map.objects.find(o => o.type === 'spawn' && o.id === 'player');
     this.toolCfg = cache.get('tool');
-    this.addPlayer((spawn.x + 0.5) * ts, (spawn.y + 0.5) * ts);
+    this.zoomCfg = cache.get('camera');
+    const starters = startPlayers(state.shared, state.players, ctx.maxPlayers, this.startOverride);
+    const offsets = starters.length > 1 ? this.zoomCfg.coop.spawnOffsets : [[0, 0]];
+    for (const s of starters) {
+      if (s.character !== state.players[s.index].character) state.dispatch('player.setCharacter', { player: s.index, character: s.character });
+      const p = this.addPlayer((spawn.x + 0.5) * ts + offsets[s.index][0], (spawn.y + 0.5) * ts + offsets[s.index][1]);
+      if (s.vehicle) p.startVehicle = s.vehicle;
+    }
     this.bikes = new Bikes(this, ctx);
     for (const p of ctx.players) this.mountStartVehicle(p);
     ctx.frozen = false; // true while the caught frame or a freezing screen is up: the world stands still, UIScene keeps running
@@ -79,7 +91,8 @@ export class GameScene extends Phaser.Scene {
     this.flags = new Flags(this, ctx, wcfg.flag);
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
     this.caught = new Caught(this, ctx, cache.get('chase').caught, this.bikes);
-    this.zoomCfg = cache.get('camera');
+    this.rig = new CameraRig(ctx, this.zoomCfg); // AD-18: focus, fit zoom and tether of all players
+    this.markers = new PlayerMarkers(this, ctx, this.zoomCfg.coop);
     this.streamer = new WallStreamer(this, ctx, cache.get('quality').wallRadius);
 
     // Own camera follow (see followCamera). The base zoom is the render scale, so the view still
@@ -98,7 +111,7 @@ export class GameScene extends Phaser.Scene {
     };
     this.zoomGoal = cam.zoom;
     this.zoomVel = 0;
-    this.focus = { x: 0, y: 0, speed: 0 };
+    this.focus = this.rig.focus;
     this.snapCamera();
     this.crowd = new CrowdDirector(this, ctx, cache.get('npcs')); // after the camera: it prefills the view
 
@@ -109,7 +122,10 @@ export class GameScene extends Phaser.Scene {
     events.on('game:resume', () => this.setPaused(false));
     events.on('game:quit', () => this.scene.start('Menu'));
     ctx.day.start();
-    if (window.SCHULWEG_GAME) window.SCHULWEG_GAME.addPlayer = () => this.addDebugPlayer(); // ?debug and ?bench
+    if (window.SCHULWEG_GAME) { // ?debug and ?bench
+      window.SCHULWEG_GAME.addPlayer = () => this.addDebugPlayer();
+      window.SCHULWEG_GAME.setCoop = (on) => { state.dispatch('coop.set', { on }); this.scene.restart(); }; // restarts the run with or without the second player
+    }
     this.scene.launch('UI', { ctx });
     this.events.once('shutdown', () => {
       this.scene.stop('UI');
@@ -118,7 +134,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   // Creates the next player (ctx.players[index], its intent is ctx.input.intents[index]) with its own tool belt.
-  // The game starts with one; SCHULWEG_GAME.addPlayer() (?debug) adds a second until co-op joins (epic 2).
+  // The game starts with the players of the state (one unless co-op is on); SCHULWEG_GAME.addPlayer() (?debug) adds a second to a running one-player game.
   addPlayer(x, y) {
     const { ctx } = this;
     const index = ctx.players.length;
@@ -144,23 +160,9 @@ export class GameScene extends Phaser.Scene {
     return p;
   }
 
-  // What the camera follows until the CameraRig (epic 2): the centre of all players, at the speed of the fastest.
-  updateFocus() {
-    const f = this.focus;
-    const players = this.ctx.players;
-    f.x = f.y = f.speed = 0;
-    for (const p of players) {
-      f.x += p.x;
-      f.y += p.y;
-      f.speed = Math.max(f.speed, p.move.velSpeed);
-    }
-    f.x /= players.length;
-    f.y /= players.length;
-  }
-
   // Puts the camera on the players at once (start, map switch) instead of easing towards them.
   snapCamera() {
-    this.updateFocus();
+    this.rig.update(0);
     this.camX = this.camOutX = this.focus.x;
     this.camY = this.camOutY = this.focus.y;
     this.followCamera(1);
@@ -176,7 +178,7 @@ export class GameScene extends Phaser.Scene {
     const z = this.zoomCfg;
     const scale = this.ctx.res.scale;
     const t = Math.min(1, this.focus.speed / z.speedForMin);
-    const raw = (z.max + (z.min - z.max) * t) * scale;
+    const raw = Math.min(z.max + (z.min - z.max) * t, this.focus.zoomCap) * scale; // the fit zoom of the rig also has to hold (one player: no cap)
     if (raw >= z.max * scale || raw <= z.min * scale || Math.abs(raw - this.zoomGoal) > z.deadband * scale) this.zoomGoal = raw;
     const cam = this.cameras.main;
     const err = this.zoomGoal - cam.zoom;
@@ -276,7 +278,7 @@ export class GameScene extends Phaser.Scene {
     this.zones.update();
     this.doors.update();
     this.chase.update(dt);
-    this.updateFocus();
+    this.rig.update(dt);
     this.updateZoom(dt);
     this.followCamera(dt);
     this.crowd.update(dt);
@@ -284,5 +286,6 @@ export class GameScene extends Phaser.Scene {
     this.flags.update(dt);
     this.ctx.particles.update(dt);
     this.streamer.update();
+    this.markers.update();
   }
 }

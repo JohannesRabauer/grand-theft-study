@@ -5,7 +5,9 @@ import { uiText } from '../uiKit.js';
 export class MoneyModule extends HudModule {
   constructor(scene, ctx, opts) {
     super(scene, ctx, opts);
-    this.text = this.track(uiText(scene, 4, 50, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d' }));
+    const style = { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d' };
+    // shared, so with two players it sits once under the clock instead of under P1's status
+    this.text = this.track(this.players > 1 ? uiText(scene, ctx.res.w / 2, 25, '', style).setOrigin(0.5, 0) : uiText(scene, 4, 50, '', style));
     this.on('state:changed', (e) => { if (!e || e.path === '' || e.path === 'shared.money') this.show(); });
     this.show();
   }

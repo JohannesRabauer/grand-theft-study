@@ -1,4 +1,4 @@
-// GTA-style objective arrow for one player: orbits that player on screen and points at the school goal, with the
+// GTA-style objective arrow for one player (or, with playerIndex null, for the camera centre of a co-op game): orbits it on screen and points at the school goal, with the
 // distance in meters. Drawn in UIScene space (480x270, whatever the render size); reads the game camera, never the world state mutably.
 import { uiText } from './uiKit.js';
 
@@ -6,6 +6,7 @@ export class ObjectiveArrow {
   constructor(scene, ctx, game, playerIndex = 0) {
     this.ctx = ctx;
     this.playerIndex = playerIndex;
+    this.game = game;
     this.cam = game.cameras.main;
     this.arrow = scene.add.image(0, 0, 'arrow').setScale(ctx.res.inv).setDepth(10);
     this.text = uiText(scene, 0, 0, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d', stroke: '#000000', strokeThickness: 2 })
@@ -16,7 +17,7 @@ export class ObjectiveArrow {
     this.msg = uiText(scene, sw / 2, 60, ctx.t('msg.arrived'), { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 })
       .setOrigin(0.5).setDepth(10).setVisible(false);
     this.onReached = (ev) => {
-      if (ev.player !== this.playerIndex) return;
+      if (this.playerIndex !== null && ev.player !== this.playerIndex) return;
       this.done = true;
       this.arrow.setVisible(false);
       this.text.setVisible(false);
@@ -55,7 +56,7 @@ export class ObjectiveArrow {
 
   update() {
     if (this.done || !this.hasGoal) return;
-    const player = this.ctx.players[this.playerIndex];
+    const player = this.playerIndex === null ? this.game.focus : this.ctx.players[this.playerIndex];
     const cam = this.cam;
     // player on screen in UI units: from the live scroll (worldView is only refreshed at render time)
     const { zoom } = cam;

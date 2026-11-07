@@ -10,5 +10,6 @@ import { twoPlayers } from './players.js';
 import { characters } from './characters.js';
 import { worldDoors } from './world.js';
 import { quitAndSecondRun } from './state.js';
+import { coopCommute } from './coop.js';
 
-export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, twoPlayers, characters, crowdCleanup, worldDoors, quitAndSecondRun];
+export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, twoPlayers, characters, crowdCleanup, worldDoors, quitAndSecondRun, coopCommute];

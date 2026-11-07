@@ -13,6 +13,7 @@ export class Player {
     this.matter = scene.matter;
     this.index = index;
     this.alive = true;
+    this.pinned = false; // held by a caught frame or a screen: the co-op tether lets the other player go on
     this.toolbelt = null; // set by GameScene right after creation (the belt needs the player)
     this.profiles = profiles;
     const profile = profiles[profileId];

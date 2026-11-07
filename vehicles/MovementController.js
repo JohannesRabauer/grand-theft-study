@@ -7,6 +7,7 @@
 // A profile with a `stamina` block can sprint until it runs dry and then gets slower.
 // The character's attribute multipliers (speedMult, accelMult, staminaSize, staminaRegen; characters/Characters.js)
 // scale top speed, acceleration, the stamina tank (drain time) and its refill rate; all are 1 for a neutral kid.
+// In co-op the tether scales the target speed (tetherMult) and adds a small pull velocity (nudgeX/Y).
 const DEG = Math.PI / 180;
 
 export class MovementController {
@@ -31,6 +32,9 @@ export class MovementController {
     this.accelMult = 1;
     this.staminaSize = 1;
     this.staminaRegen = 1;
+    this.tetherMult = 1; // co-op tether (camera/CameraRig.js): speed factor and gentle pull in px/s; 1 and 0 for one player
+    this.nudgeX = 0;
+    this.nudgeY = 0;
   }
 
   // Switch profile (mount/dismount) keeping heading, speed and velocity so the change is seamless.
@@ -49,7 +53,7 @@ export class MovementController {
     const moving = mag > 0.01;
     const speedMult = this.updateStamina(dt, moving && sprintWanted);
 
-    const target = moving ? mag * p.maxSpeed * this.speedMult * (surf.speed[this.profileId] ?? 1) * speedMult : 0;
+    const target = moving ? mag * p.maxSpeed * this.speedMult * (surf.speed[this.profileId] ?? 1) * speedMult * this.tetherMult : 0;
     const step = p.accel * this.accelMult * surf.grip * dt;
     this.speed = this.speed < target ? Math.min(this.speed + step, target) : Math.max(this.speed - step, target);
 
@@ -68,8 +72,8 @@ export class MovementController {
     const vx = body.velocity.x * 60;
     const vy = body.velocity.y * 60;
     const k = 1 - Math.exp(-p.grip * surf.grip * (1 - p.drift) * dt);
-    this.vel.x = vx + (Math.cos(this.heading) * this.speed - vx) * k;
-    this.vel.y = vy + (Math.sin(this.heading) * this.speed - vy) * k;
+    this.vel.x = vx + (Math.cos(this.heading) * this.speed + this.nudgeX - vx) * k;
+    this.vel.y = vy + (Math.sin(this.heading) * this.speed + this.nudgeY - vy) * k;
     this.velSpeed = Math.hypot(this.vel.x, this.vel.y);
     let slip = Math.atan2(this.vel.y, this.vel.x) - this.heading;
     slip -= Math.round(slip / (2 * Math.PI)) * 2 * Math.PI;

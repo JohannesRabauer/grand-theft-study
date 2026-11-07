@@ -35,3 +35,16 @@ export function installPlayers(ctx, maxPlayers) {
   };
   return players;
 }
+
+// Who starts the game (AD-18): from the saved state, or from an explicit config [{ character, vehicle }] (tests, menu).
+// One player unless the `coop` flag is set (or the config lists two); never more than the state has or maxPlayers.
+// Returns [{ index, character, vehicle }]; `vehicle` null means the character's own start vehicle.
+export function startPlayers(shared, players, maxPlayers, override = null) {
+  const want = override ? override.length : shared.flags.coop ? players.length : 1;
+  const n = Math.max(1, Math.min(maxPlayers, players.length, want));
+  return Array.from({ length: n }, (_, i) => ({
+    index: i,
+    character: override?.[i]?.character ?? players[i].character,
+    vehicle: override?.[i]?.vehicle ?? null
+  }));
+}

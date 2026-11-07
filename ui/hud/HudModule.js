@@ -6,6 +6,7 @@ export class HudModule {
     this.scene = scene;
     this.ctx = ctx;
     this.playerIndex = opts.playerIndex ?? null;
+    this.players = opts.players ?? 1; // number of players in the game: two means the co-op layout (ui/hud/layout.js)
     this.subs = [];
     this.objects = [];
   }

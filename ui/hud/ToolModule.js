@@ -1,16 +1,20 @@
 import { HudModule } from './HudModule.js';
 import { uiText } from '../uiKit.js';
+import { sliceOf } from './layout.js';
 
 // The bound player's current tool and ammo (bottom centre); a wind arrow with strength appears above it while charging.
 export class ToolModule extends HudModule {
   constructor(scene, ctx, opts) {
     super(scene, ctx, opts);
     const { w: width, h: height } = ctx.res;
-    this.width = width;
     this.height = height;
+    // one player: bottom centre; two: P1 bottom left, P2 bottom right (wind arrow beside the text)
+    const { right } = sliceOf(this.playerIndex ?? 0, this.players, width);
+    const x = this.players > 1 ? (right ? width - 4 : 4) : width / 2;
+    this.ax = this.players > 1 ? (right ? width - 60 : 60) : width / 2;
     const style = { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff', stroke: '#000000', strokeThickness: 2 };
-    this.tool = this.track(uiText(scene, width / 2, height - 3, '', style).setOrigin(0.5, 1));
-    this.windText = this.track(uiText(scene, width / 2 + 14, height - 17, '', { ...style, color: '#9fe0ff' }).setOrigin(0, 1).setVisible(false));
+    this.tool = this.track(uiText(scene, x, height - 3, '', style).setOrigin(this.players > 1 ? (right ? 1 : 0) : 0.5, 1));
+    this.windText = this.track(uiText(scene, this.ax + 14, height - 17, '', { ...style, color: '#9fe0ff' }).setOrigin(0, 1).setVisible(false));
     this.windGfx = this.track(scene.add.graphics().setVisible(false));
     this.windKey = -1;
     this.on('tool:ammo', (ev) => { if (this.mine(ev)) this.show(); });
@@ -44,7 +48,7 @@ export class ToolModule extends HudModule {
     const key = Math.round(Math.atan2(v.y, v.x) * 20) * 1000 + Math.round(ctx.wind.strength * 50);
     if (key === this.windKey) return;
     this.windKey = key;
-    const cx = this.width / 2 - 14;
+    const cx = this.ax - 14;
     const cy = this.height - 22;
     const a = Math.atan2(v.y, v.x);
     const len = 3 + ctx.wind.strength * 14;
