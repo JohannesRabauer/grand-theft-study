@@ -57,14 +57,21 @@ export class UIScene extends Phaser.Scene {
     this.arrow.retext();
     this.hintText.textContent = ctx.t('ui.rotate');
     this.pauseTitle.setText(ctx.t('pause.title'));
+    this.showSlot();
     this.pauseMenu.refresh();
   }
 
   togglePause() {
     const on = !this.pauseMenu.active;
+    if (on) this.showSlot();
     this.pauseUi.forEach(o => o.setVisible(on));
     this.pauseMenu.setActive(on);
     this.ctx.events.emit(on ? 'game:pause' : 'game:resume');
+  }
+
+  showSlot() {
+    const slot = this.ctx.saves.activeSlot;
+    this.pauseSlot.setText(slot ? this.ctx.t('pause.slot', { n: slot }) : '');
   }
 
   makePause() {
@@ -72,6 +79,7 @@ export class UIScene extends Phaser.Scene {
     const { w: width, h: height } = this.ctx.res;
     const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0).setDepth(20).setInteractive(); // swallows clicks
     this.pauseTitle = uiText(this, width / 2, 60, ctx.t('pause.title'), { fontFamily: 'monospace', fontSize: '20px', color: '#ffe14d', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(21);
+    this.pauseSlot = uiText(this, width / 2, 80, '', { fontFamily: 'monospace', fontSize: '10px', color: '#cccccc' }).setOrigin(0.5).setDepth(21);
     const rows = [
       { items: [{ label: () => ctx.t('pause.resume'), on: () => this.togglePause() }] },
       ...settingsRows(ctx),
@@ -79,7 +87,7 @@ export class UIScene extends Phaser.Scene {
     ];
     this.pauseMenu = new ButtonMenu(this, ctx.t, rows, width / 2, 100, 28);
     this.pauseMenu.objects.forEach(o => o.setDepth(21));
-    this.pauseUi = [dim, this.pauseTitle];
+    this.pauseUi = [dim, this.pauseTitle, this.pauseSlot];
     this.pauseUi.forEach(o => o.setVisible(false));
     this.pauseMenu.setActive(false);
   }

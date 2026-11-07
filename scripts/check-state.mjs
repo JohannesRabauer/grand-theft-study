@@ -7,6 +7,7 @@ import { EventEmitter } from 'node:events';
 import { GameState, createDefaultState, STATE_VERSION } from '../state/GameState.js';
 import { SaveSlots } from '../state/SaveSlots.js';
 import { migrate } from '../state/migrations.js';
+import { slotSummary, formatMoney } from '../ui/slotSummary.js';
 
 const cfg = JSON.parse(readFileSync(new URL('../data/state.json', import.meta.url), 'utf8'));
 // the tiny localStorage shim
@@ -163,6 +164,30 @@ const fresh = (c = { ...cfg, startMoneyCents: 0 }) => {
   saves.delete(1);
   events.emit('phase:ended', {});
   assert.equal(storage.m.size, 0, 'deleting the active slot stops autosave');
+}
+
+// slot screen: startNew, backup flag, summary text
+{
+  const { saves, state, storage } = fresh(cfg);
+  state.dispatch('wallet.earn', { cents: 99, reason: 'a' });
+  assert.equal(saves.startNew(2), true);
+  assert.equal(saves.activeSlot, 2, 'a new game binds its slot');
+  assert.equal(state.shared.money, 500, 'new game resets the state to defaults');
+  assert.ok(storage.m.has('schulweg.save.2'), 'and writes it right away');
+  storage.setItem('schulweg.save.1', '{broken');
+  assert.equal(saves.hasBackup(1), false);
+  saves.load(1);
+  assert.equal(saves.hasBackup(1), true);
+  const t = (k, p = {}) => `${k}${Object.values(p).join(',')}`;
+  assert.equal(formatMoney(1234, 'de'), '12,34');
+  assert.equal(formatMoney(5, 'en'), '0.05');
+  const rows = saves.list();
+  assert.equal(slotSummary(rows[0], t, 'de', true), 'menu.slot.emptyBackup');
+  assert.equal(slotSummary(rows[2], t, 'de'), 'menu.slot.empty');
+  assert.equal(slotSummary({ status: 'corrupt' }, t, 'de'), 'menu.slot.corrupt');
+  assert.equal(slotSummary(rows[1], t, 'de'), 'menu.slot.player1 menu.slot.level1 | menu.slot.day1 | € 5,00');
+  assert.equal(slotSummary({ ...rows[1], players: [{ character: 'kid-a', level: 3 }, { character: null, level: 1 }] }, t, 'en').split(' | ')[0],
+    'kid-a menu.slot.level3 + menu.slot.player2 menu.slot.level1');
 }
 
 console.log('check-state: ok');

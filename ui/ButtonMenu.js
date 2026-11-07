@@ -36,6 +36,12 @@ export class ButtonMenu {
     return this.rows.flatMap(r => [r.cap, ...r.items.map(i => i.text)]).filter(Boolean);
   }
 
+  destroy() {
+    this.active = false;
+    this.scene.input.keyboard.off('keydown', this.onKey);
+    for (const o of this.objects) o.destroy();
+  }
+
   setActive(on) {
     this.active = on;
     for (const o of this.objects) o.setVisible(on);

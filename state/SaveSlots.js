@@ -1,6 +1,6 @@
 // Save slots in localStorage (AD-16): keys schulweg.save.1..N. Pure module; storage is injectable.
 // Saves happen on `phase:ended` (autosave) and on explicit save(), never mid-phase.
-import { STATE_VERSION } from './GameState.js';
+import { STATE_VERSION, createDefaultState } from './GameState.js';
 import { migrate } from './migrations.js';
 
 const KEY = (n) => `schulweg.save.${n}`;
@@ -48,6 +48,18 @@ export class SaveSlots {
     this.state.replace(data);
     this.activeSlot = n;
     return true;
+  }
+
+  // Fresh game in slot n: replaces the live state with the defaults and writes it, binding the slot.
+  startNew(n) {
+    this.#checkSlot(n);
+    this.state.replace(createDefaultState(this.state.cfg));
+    return this.save(n);
+  }
+
+  hasBackup(n) {
+    this.#checkSlot(n);
+    return this.storage.getItem(`${KEY(n)}.bak`) !== null;
   }
 
   delete(n) {
