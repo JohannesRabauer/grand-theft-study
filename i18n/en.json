@@ -388,5 +388,14 @@
   "grab.hint": "Bus ahead! Hold F while you are in the yellow zone at its back.",
   "grab.fail": "Oops! Lost your grip, bro!",
   "grab.tired": "Arms tired! You let go.",
-  "grab.lost": "The rope snagged."
+  "grab.lost": "The rope snagged.",
+  "vehicle.locked": "That isn't yours yet - unlock it in the shop or by winning races!",
+  "vehicle.unlocked": "New in the garage: {name}!",
+  "bike.locked": "Bike locked up. Better safe than sorry!",
+  "bike.stolen": "Your bike was borrowed!",
+  "bike.recovered": "Bike is back! That was close, bro.",
+  "garage.found": "Hidden behind the garage door: {name}!",
+  "garage.old": "Just junk. You already have your {name}.",
+  "garage.empty": "The garage is empty. Except for cobwebs.",
+  "hud.bike": "Bike: {m} m"
 }

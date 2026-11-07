@@ -1,0 +1,17 @@
+{
+  "_doc": "Bike racks and the bully-borrows-bike loop (story 5.5, CAP-16). Distances in px, times in seconds. A bike parked away from every rack stays unlocked; once every player has been further than awayDistance for awaySeconds, each checkInterval a bully may borrow it (chance) when there is a motive: Aerger >= 1, an active bully, or a bully spawn within motiveRadius. The thief starts at the nearest off-view bully spawn within originRadius, walks to the bike (and gives up when a player gets within scareRadius), rides it to the nearest bike-hideout and the family has to fetch it back.",
+  "rackRadius": 44,
+  "awayDistance": 400,
+  "awaySeconds": 20,
+  "checkInterval": 1,
+  "chance": 0.3,
+  "motiveRadius": 450,
+  "originRadius": 900,
+  "viewMargin": 48,
+  "scareRadius": 70,
+  "walkSpeed": 85,
+  "rideSpeed": 125,
+  "cooldownSeconds": 90,
+  "guardRadius": 110,
+  "iconOffsetY": -13
+}

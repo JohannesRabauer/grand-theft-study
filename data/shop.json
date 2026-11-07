@@ -1,0 +1,8 @@
+{
+  "_doc": "Prices of the shop (AD-22), in integer cents. type 'vehicle' entries unlock the vehicle `vehicle` through the action shop.buyVehicle; the shop screens come in epic 10.",
+  "items": [
+    { "id": "vehicle-skateboard", "type": "vehicle", "vehicle": "skateboard", "price": 4500 },
+    { "id": "vehicle-skates", "type": "vehicle", "vehicle": "skates", "price": 5500 },
+    { "id": "vehicle-bike", "type": "vehicle", "vehicle": "bike", "price": 6000 }
+  ]
+}

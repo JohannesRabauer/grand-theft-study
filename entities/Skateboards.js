@@ -79,7 +79,7 @@ export class Skateboards {
 
   tryMount(player) {
     const { item, dist } = this.nearest(player);
-    if (!item || this.rivals.some(r => r.nearest(player).dist < dist)) return;
+    if (!item || this.rivals.some(r => r.nearest(player).dist < dist) || !player.mayUse(this.id)) return;
     item.setVisible(false);
     this.riders[player.index].mounted = item;
     player.setVehicle(this.id);

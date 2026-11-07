@@ -12,7 +12,7 @@ const env = { catalog, surfaces: load('surfaces.json'), tiles: load('tiles.json'
 // ---- the catalog covers everything the game uses and everything later stories need
 const town = load('maps/town.json');
 for (const t of new Set(town.objects.map(o => o.type))) assert.ok(catalog.types[t], `town uses '${t}', missing in the catalog`);
-const later = ['door', 'entry', 'rail', 'ramp', 'stairs', 'bench', 'dojo', 'shop', 'bakery', 'pfand-machine', 'bike-rack', 'tram-stop', 'sign', 'mission-trigger', 'grab-target', 'home-spot', 'school-spot'];
+const later = ['door', 'entry', 'rail', 'ramp', 'stairs', 'bench', 'dojo', 'shop', 'bakery', 'pfand-machine', 'bike-rack', 'bike-hideout', 'garage', 'tram-stop', 'sign', 'mission-trigger', 'grab-target', 'home-spot', 'school-spot'];
 for (const t of [...later, 'spawn', 'goal', 'bike', 'hiding', 'turf', 'bully-spawn', 'prop', 'ammo', 'flag', 'ambient', 'npc-node', 'npc-spawn']) assert.ok(catalog.types[t], `catalog lacks '${t}'`);
 for (const [t, def] of Object.entries(catalog.types)) {
   assert.ok(['point', 'rect', 'path'].includes(def.shape), `${t}: shape`);

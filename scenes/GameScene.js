@@ -6,6 +6,10 @@ import { Bikes } from '../entities/Bike.js';
 import { Skateboards } from '../entities/Skateboards.js';
 import { Skates } from '../entities/Skates.js';
 import { GrabTargets } from '../entities/GrabTargets.js';
+import { Ownership } from '../vehicles/Ownership.js';
+import { Parking } from '../entities/Parking.js';
+import { BikeTheft } from '../entities/BikeTheft.js';
+import { Garage } from '../entities/Garage.js';
 import { TrickSystem } from '../vehicles/TrickSystem.js';
 import { Player } from '../entities/Player.js';
 import { installPlayers, startPlayers } from '../entities/players.js';
@@ -66,6 +70,7 @@ export class GameScene extends Phaser.Scene {
     const inputCfg = cache.get('input');
     installPlayers(ctx, inputCfg.maxPlayers); // AD-18: ctx.players, helpers and the deprecated ctx.player alias
     ctx.input = new Input(this, events, inputCfg, ctx.players);
+    ctx.ownership = new Ownership(ctx); // CAP-16: owned vehicles; Player.setVehicle asks it
     ctx.characters = new Characters(ctx, cache.get('characters'), cache.get('attr-growth'), cache.get('vehicles')); // CAP-12
     const topicFiles = cache.get('learning-index').topics.map(({ grade, topic }) => cache.get(`learning-${grade}-${topic}`));
     ctx.learning = new LearningEngine(ctx, cache.get('learning'), topicFiles, cache.get('learning-reactions')); // AD-19
@@ -93,6 +98,7 @@ export class GameScene extends Phaser.Scene {
     this.skates = new Skates(this, ctx, this.bikes);
     this.skateboards.rivals.push(this.skates);
     this.skates.rivals.push(this.skateboards);
+    this.parking = new Parking(this, ctx, cache.get('theft'), [this.bikes, this.skateboards, this.skates]); // story 5.5: racks, locks, padlocks
     this.grabs = new GrabTargets(this, ctx, cache.get('routes'), cache.get('grab')); // AD-23: before the first mount, Skates asks it
     this.tricks = new TrickSystem(this, ctx, cache.get('tricks'), [this.skateboards, this.skates]); // AD-23
     for (const p of ctx.players) this.mountStartVehicle(p);
@@ -111,7 +117,9 @@ export class GameScene extends Phaser.Scene {
     this.flags = new Flags(this, ctx, wcfg.flag);
     this.park = new Park(this, ctx, cache.get('park')); // story 5.4: skatepark art and hint signs
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
+    this.garage = new Garage(this, ctx);
     this.caught = new Caught(this, ctx, cache.get('chase').caught, [this.bikes, this.skateboards, this.skates]);
+    this.theft = new BikeTheft(this, ctx, cache.get('theft'), this.bikes, this.parking, cache.get('vehicles')); // needs the chase director's spawns and paths
     this.rig = new CameraRig(ctx, this.zoomCfg); // AD-18: focus, fit zoom and tether of all players
     this.markers = new PlayerMarkers(this, ctx, this.zoomCfg.coop);
     this.streamer = new WallStreamer(this, ctx, cache.get('quality').wallRadius);
@@ -167,8 +175,9 @@ export class GameScene extends Phaser.Scene {
     return player;
   }
 
-  // The character's start vehicle; anything but the bike, the skateboard and the skates means on foot.
+  // The character's start vehicle (it is always owned); anything but the bike, the skateboard and the skates means on foot.
   mountStartVehicle(player) {
+    this.ctx.ownership.unlock(player.startVehicle, 'start');
     if (player.startVehicle === 'bike') this.bikes.giveBike(player);
     else if (player.startVehicle === 'skateboard') this.skateboards.giveBoard(player);
     else if (player.startVehicle === 'skates') this.skates.giveBoard(player);
@@ -304,6 +313,8 @@ export class GameScene extends Phaser.Scene {
     this.skates.update(dt);
     this.tricks.update(dt);
     this.bikes.update(dt);
+    this.garage.update();
+    this.theft.update(dt);
     this.zones.update();
     this.park.update();
     this.doors.update();

@@ -67,7 +67,12 @@
     "shop": { "shape": "rect", "inWall": false, "fields": { "shopId": { "type": "string", "required": true } } },
     "bakery": { "shape": "rect", "inWall": false, "fields": {} },
     "pfand-machine": { "shape": "point", "inWall": false, "fields": {} },
-    "bike-rack": { "shape": "point", "inWall": false, "fields": {} },
+    "bike-rack": { "shape": "point", "inWall": false, "fields": {}, "doc": "a bike let go of within data/theft.json rackRadius is chained here (locked, safe from borrowing)" },
+    "bike-hideout": { "shape": "point", "inWall": false, "reach": true, "fields": {}, "doc": "where a bully hides a borrowed bike; the family fetches it back from here (entities/BikeTheft.js)" },
+    "garage": { "shape": "rect", "inWall": false, "reach": true, "fields": {
+      "vehicle": { "type": "string", "required": true, "doc": "id of the vehicle found behind the door on the first interact (a data/vehicles.json profile)" },
+      "hiddenFlag": { "type": "string", "required": true, "doc": "key in state.shared.flags that is set once the garage has been opened" }
+    }, "doc": "a garage door; its rect is drawn as the door and is where the interact press counts (entities/Garage.js)" },
     "tram-stop": { "shape": "point", "inWall": false, "fields": {} },
     "sign": { "shape": "point", "inWall": true, "fields": {
       "text": { "type": "i18n", "required": true },

@@ -45,8 +45,18 @@ export class Player {
     this.sprite.setTexture(this.textureFor(this.profiles[this.vehicle]));
   }
 
-  // Swap movement profile and look (data-driven: `texture`, `lookSlot`, `faceHeading`).
+  // Walking is always allowed, anything else must be owned (AD-23, vehicles/Ownership.js). A refused mount toasts and
+  // uses up this frame's interact press (vehicleSwapped), so a nearer locked item does not pass it on to the next one.
+  mayUse(id) {
+    if (this.ctx.ownership.owns(id)) return true;
+    this.vehicleSwapped = true;
+    this.ctx.ownership.refuse(id);
+    return false;
+  }
+
+  // Swap movement profile and look (data-driven: `texture`, `lookSlot`, `faceHeading`). Returns false when the vehicle is not owned.
   setVehicle(id) {
+    if (!this.mayUse(id)) return false;
     const profile = this.profiles[id];
     this.vehicle = id;
     this.vehicleSwapped = true;
@@ -55,6 +65,7 @@ export class Player {
     this.sprite.setTexture(this.textureFor(profile)).setOrigin(0.5, profile.faceHeading ? 0.5 : 0.8);
     this.sprite.setFlipX(false).setRotation(0);
     this.ctx.events.emit('player:vehicle', { player: this.index, id });
+    return true;
   }
 
   // Puts the player at (x, y) standing still, optionally facing `heading` (radians).

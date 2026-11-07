@@ -4,7 +4,7 @@ import { uiText } from '../uiKit.js';
 const SHOW_MS = 3000;
 
 // A small message at the top centre for a few seconds ("Controller disconnected"). Anything can ask for one with
-// the `ui:toast` event { key, params? }; a newer toast replaces the one showing.
+// the `ui:toast` event { key, params?, style? }; a newer toast replaces the one showing. Style 'phone' is the blue text-message look.
 export class ToastModule extends HudModule {
   constructor(scene, ctx, opts) {
     super(scene, ctx, opts);
@@ -15,6 +15,7 @@ export class ToastModule extends HudModule {
     }).setOrigin(0.5).setDepth(90).setVisible(false));
     this.on('ui:toast', req => {
       this.req = req;
+      this.text.setBackgroundColor(req.style === 'phone' ? '#1f4e8c' : '#2b2f3a');
       this.until = this.scene.time.now + SHOW_MS;
       this.retext();
       this.text.setVisible(true);

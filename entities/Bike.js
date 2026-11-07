@@ -1,5 +1,7 @@
 // Parked bikes from map objects (type "bike"), mounting with the interact intent, and the
-// bike effects: skid marks, smoke puffs, bell. Mounting is per player (a `rider` record each; one bike is
+// bike effects: skid marks, smoke puffs, bell. Each bike image has a `bikeId` (its map object id, or `own-<player>` for a
+// character's own). Mounting needs ownership (Player.mayUse) and emits `bike:mounted` { bike, player }; letting go emits
+// `bike:dropped` { bike, player } (entities/Parking.js decides locked or not). Mounting is per player (a `rider` record each; one bike is
 // ridden by one player at a time). The ridden bike is the player's `bike` profile (see Player.setVehicle);
 // this class only owns the parked entities and effects. `bike:bell` carries { x, y, player }.
 import { FadePool } from './pools.js';
@@ -10,6 +12,7 @@ export class Bikes {
   constructor(scene, ctx) {
     this.scene = scene;
     this.ctx = ctx;
+    this.id = 'bike';
     this.fx = ctx.players[0].profiles.bike.fx;
     this.parked = []; // sprites of bikes standing around, plus those being ridden (hidden)
     // per player: the sprite being ridden (hidden while mounted) and the effect timers
@@ -27,9 +30,21 @@ export class Bikes {
   loadMap() {
     const { ctx } = this;
     const ts = ctx.map.tileSize;
+    const stolen = ctx.state.shared.flags.stolenBike?.bikeId; // a bike that is at a hideout is not at home too
     for (const o of ctx.map.objects) {
-      if (o.type === 'bike') this.parked.push(this.scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, 'bike').setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts));
+      if (o.type !== 'bike' || o.id === stolen) continue;
+      const bike = this.scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, 'bike').setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts);
+      bike.bikeId = o.id;
+      this.parked.push(bike);
     }
+  }
+
+  // A bike standing at (x, y) that is not a map object (one fetched back from a hideout or restored from a save).
+  place(x, y, bikeId) {
+    const bike = this.scene.add.image(x, y, 'bike').setScale(this.ctx.res.inv).setDepth(y);
+    bike.bikeId = bikeId;
+    this.parked.push(bike);
+    return bike;
   }
 
   // A bike being ridden travels with its rider; the parked ones stay behind.
@@ -69,15 +84,17 @@ export class Bikes {
 
   tryMount(player) {
     const best = this.nearest(player).bike;
-    if (!best) return;
+    if (!best || !player.mayUse('bike')) return;
     best.setVisible(false);
     this.riders[player.index].mounted = best;
     player.setVehicle('bike');
+    this.ctx.events.emit('bike:mounted', { bike: best, player: player.index });
   }
 
   // The player starts the game already on a bike of their own (a character's start vehicle).
   giveBike(player) {
     const bike = this.scene.add.image(player.x, player.y, 'bike').setScale(this.ctx.res.inv).setVisible(false);
+    bike.bikeId = `own-${player.index}`;
     this.parked.push(bike);
     this.riders[player.index].mounted = bike;
     player.setVehicle('bike');
@@ -91,6 +108,7 @@ export class Bikes {
     r.mounted = null;
     r.skidding = false;
     player.setVehicle('foot');
+    this.ctx.events.emit('bike:dropped', { bike: b, player: player.index });
   }
 
   rideEffects(dt, player, r, i) {

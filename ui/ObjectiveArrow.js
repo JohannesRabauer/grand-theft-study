@@ -1,5 +1,6 @@
 // GTA-style objective arrow for one player (or, with playerIndex null, for the camera centre of a co-op game): orbits it on screen and points at the school goal, with the
-// distance in meters. Drawn in UIScene space (480x270, whatever the render size); reads the game camera, never the world state mutably.
+// distance in meters. While a bike is stolen (flag `stolenBike`, entities/BikeTheft.js) it points at the hideout instead,
+// until the epic 9 quest runner takes the objective over. Drawn in UIScene space (480x270, whatever the render size); reads the game camera, never the world state mutably.
 import { uiText } from './uiKit.js';
 
 export class ObjectiveArrow {
@@ -27,23 +28,31 @@ export class ObjectiveArrow {
     ctx.events.on('goal:reached', this.onReached);
     this.onWorld = () => this.retarget();
     ctx.events.on('world:enter', this.onWorld);
+    this.onState = (ev) => { if (ev.path === 'shared.flags.stolenBike' || ev.path === '') this.retarget(); };
+    ctx.events.on('state:changed', this.onState);
     this.retarget();
   }
 
-  // Points at the goal of the current map; a map without one (an interior) shows no arrow.
+  // Points at the hideout of a stolen bike on this map, else at the goal of the current map; a map without one (an interior) shows no arrow.
   retarget() {
     const { ctx } = this;
     this.ts = ctx.map.tileSize;
     this.mpt = ctx.map.metersPerTile;
     const goal = ctx.map.objects.find(o => o.type === 'goal');
-    this.hasGoal = !!goal;
-    if (goal) {
+    const bike = ctx.state.shared.flags.stolenBike;
+    this.bike = !!bike && bike.map === ctx.world.id;
+    this.hasGoal = this.bike || !!goal;
+    if (this.bike) {
+      this.gx = bike.x;
+      this.gy = bike.y;
+    } else if (goal) {
       this.gx = (goal.x + goal.w / 2) * this.ts;
       this.gy = (goal.y + goal.h / 2) * this.ts;
     }
-    const show = this.hasGoal && !this.done;
+    const show = this.hasGoal && (this.bike || !this.done);
     this.arrow.setVisible(show);
     this.text.setVisible(show);
+    this.lastMeters = -1;
   }
 
   destroy() {
@@ -55,7 +64,7 @@ export class ObjectiveArrow {
   }
 
   update() {
-    if (this.done || !this.hasGoal) return;
+    if (!this.hasGoal || (this.done && !this.bike)) return;
     const player = this.playerIndex === null ? this.game.focus : this.ctx.players[this.playerIndex];
     const cam = this.cam;
     // player on screen in UI units: from the live scroll (worldView is only refreshed at render time)
@@ -74,7 +83,7 @@ export class ObjectiveArrow {
     const m = Math.round((dist / this.ts) * this.mpt / 5) * 5; // 5 m steps, so the text rarely changes
     if (m !== this.lastMeters) {
       this.lastMeters = m;
-      this.text.setText(this.ctx.t('hud.goal', { m }));
+      this.text.setText(this.ctx.t(this.bike ? 'hud.bike' : 'hud.goal', { m }));
     }
   }
 

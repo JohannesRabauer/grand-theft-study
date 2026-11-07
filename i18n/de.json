@@ -388,5 +388,14 @@
   "grab.hint": "Bus voraus! Halte F gedrückt, wenn du hinten im gelben Feld bist.",
   "grab.fail": "Hoppla! Griff verloren, Digga!",
   "grab.tired": "Arme müde! Du lässt los.",
-  "grab.lost": "Das Seil hat sich verhakt."
+  "grab.lost": "Das Seil hat sich verhakt.",
+  "vehicle.locked": "Das gehört dir noch nicht – im Laden oder bei Rennen freischalten!",
+  "vehicle.unlocked": "Neu in der Garage: {name}!",
+  "bike.locked": "Fahrrad angeschlossen. Sicher ist sicher!",
+  "bike.stolen": "Dein Fahrrad wurde geborgt!",
+  "bike.recovered": "Fahrrad zurück! Das war knapp, bro.",
+  "garage.found": "Hinterm Garagentor versteckt: {name}!",
+  "garage.old": "Nur Gerümpel. Dein {name} hast du ja schon.",
+  "garage.empty": "Die Garage ist leer. Außer Spinnweben.",
+  "hud.bike": "Fahrrad: {m} m"
 }

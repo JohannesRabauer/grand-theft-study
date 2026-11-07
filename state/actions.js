@@ -6,6 +6,14 @@ import { applyRecord, validEntry, moveKopfnote } from '../grading/gradeCore.js';
 const reject = (reason) => ({ reject: reason });
 const positiveInt = (n) => Number.isInteger(n) && n > 0;
 
+// Marks a vehicle as owned (the family's, shared by all players). Returns a rejection reason or null.
+function unlockVehicle(s, id, reason, cfg) {
+  if (!cfg.vehicleIds?.includes(id) || !cfg.unlockReasons?.includes(reason)) return 'bad-payload';
+  if (s.shared.ownedVehicles.includes(id)) return 'already-owned';
+  s.shared.ownedVehicles.push(id);
+  return null;
+}
+
 export const ACTIONS = {
   'wallet.earn'(s, { cents, reason }) {
     if (!positiveInt(cents) || !reason) return reject('bad-payload');
@@ -19,6 +27,23 @@ export const ACTIONS = {
     if (cents > s.shared.money) return reject('insufficient-funds');
     s.shared.money -= cents;
     return { path: 'shared.money' };
+  },
+
+  // Unlock path of a vehicle (CAP-16): reason is 'start' (a character's own), 'bought', 'race' or 'garage'. Owning twice is rejected.
+  'vehicles.unlock'(s, { id, reason }, cfg) {
+    const why = unlockVehicle(s, id, reason, cfg);
+    return why ? reject(why) : { path: 'shared.ownedVehicles' };
+  },
+
+  // Buys a vehicle at the price of its data/shop.json entry (cfg.shop): the money and the unlock change together or not at all.
+  'shop.buyVehicle'(s, { id }, cfg) {
+    const item = cfg.shop?.items.find(i => i.type === 'vehicle' && i.vehicle === id);
+    if (!item) return reject('not-for-sale');
+    if (s.shared.ownedVehicles.includes(id)) return reject('already-owned');
+    if (item.price > s.shared.money) return reject('insufficient-funds');
+    unlockVehicle(s, id, 'bought', cfg);
+    s.shared.money -= item.price;
+    return { path: ['shared.money', 'shared.ownedVehicles'] };
   },
 
   'flags.set'(s, { key, value = true }) {

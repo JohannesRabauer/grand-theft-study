@@ -5,6 +5,8 @@
   "startFamilienfrieden": 50,
   "familienfriedenMax": 100,
   "startVehicles": ["foot"],
+  "vehicleIds": ["bike", "skateboard", "skates"],
+  "unlockReasons": ["start", "bought", "race", "garage"],
   "xpPerLevel": 100,
   "maxLevel": 20,
   "attributes": { "wissen": 5, "tempo": 5, "ausdauer": 5, "charme": 5, "ordnung": 5, "zielen": 5 },

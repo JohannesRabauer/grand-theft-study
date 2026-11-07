@@ -4,6 +4,7 @@ import { makeHiResArt } from './HiResArt.js';
 import { makeNpcArt } from './NpcArt.js';
 import { makeCharacterArt } from './CharacterArt.js';
 import { makeBusArt } from './SkatesArt.js';
+import { makeVehicleArt } from './VehicleArt.js';
 import { GameState } from '../state/GameState.js';
 import { SaveSlots } from '../state/SaveSlots.js';
 
@@ -31,6 +32,8 @@ export class BootScene extends Phaser.Scene {
     this.load.json('tricks', 'data/tricks.json');
     this.load.json('park', 'data/park.json');
     this.load.json('grab', 'data/grab.json');
+    this.load.json('shop', 'data/shop.json');
+    this.load.json('theft', 'data/theft.json');
     this.load.json('routes', 'data/routes.json');
     this.load.json('day', 'data/day.json');
     this.load.json('hud', 'data/hud.json');
@@ -64,7 +67,7 @@ export class BootScene extends Phaser.Scene {
     // AD-16: one state store for the whole app; without a chosen slot it is a plain in-memory game.
     const characters = this.cache.json.get('characters');
     // the state config also knows each character's base attributes (player.setCharacter resets to them)
-    const stateCfg = { ...this.cache.json.get('state'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])), kopfnoten: this.cache.json.get('kopfnoten') };
+    const stateCfg = { ...this.cache.json.get('state'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])), kopfnoten: this.cache.json.get('kopfnoten'), shop: this.cache.json.get('shop') };
     const state = new GameState(events, stateCfg);
     const saves = new SaveSlots(state, events, window.localStorage);
     this.registry.set('app', { events, i18n, t: i18n.t, quality, res, state, saves, characters });
@@ -84,6 +87,7 @@ export class BootScene extends Phaser.Scene {
     makeNpcArt(this, this.cache.json.get('npcs'), res.scale);
     makeCharacterArt(this, characters, res.scale);
     makeBusArt(this, res.scale);
+    makeVehicleArt(this, res.scale);
     // The speed zoom scales the world by non-integer factors, where nearest-neighbour sampling makes
     // texels land on uneven screen pixels (shimmer). World textures are filtered bilinear instead; at
     // an exact integer zoom texels map 1:1 to pixels, so the result stays crisp. UI textures stay sharp.

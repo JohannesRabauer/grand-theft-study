@@ -17,6 +17,7 @@ export function createEnv(game, h, assert, savedLang) {
   const ctx = gs.ctx;
   const hud = (id) => ui.hud.get(id);
   assert('game and UI scenes running', game.scene.isActive('Game') && game.scene.isActive('UI') && !!ctx);
+  for (const id of ctx.state.cfg.vehicleIds) ctx.ownership.unlock(id, 'garage'); // the earlier scenarios mount whatever lies around; scenario `vehicles` tests the locks
   ctx.input.update = () => {};
   const intent = ctx.input.intent;
   intent.aim = null;
