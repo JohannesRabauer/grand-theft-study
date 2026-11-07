@@ -65,6 +65,12 @@ export function padFor(index, count) {
   return index;
 }
 
+// The player a pad index drives (inverse of padFor), -1 when it drives nobody.
+export function padOwner(padIndex, count) {
+  for (let i = 0; i < count; i++) if (padFor(i, count) === padIndex) return i;
+  return -1;
+}
+
 function anyDown(down, codes) {
   for (let i = 0; i < codes.length; i++) if (down.has(codes[i])) return true;
   return false;

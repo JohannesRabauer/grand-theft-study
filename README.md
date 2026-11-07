@@ -59,7 +59,13 @@ Gamepads bind to the next free player: with one player the first pad is P1; with
 
 ### Co-op (local, two players on one screen)
 
-The `coop` flag in `state.shared.flags` (action `coop.set { on }`) decides at game start: on, `GameScene` creates two players from `state.players[0..1]`, each with its own character look, attributes, tool belt and start vehicle, bound to `intents[0]` / `intents[1]`, standing 24 px apart at the spawn (`data/camera.json` `coop.spawnOffsets`). Switching it on creates player 2 as another character than P1. Until the co-op menu exists (story 2.4), try it with `?debug`: `SCHULWEG_GAME.setCoop(true)` restarts the run with two players (`setCoop(false)` back to one). `GameScene` also accepts a start config `{ players: [{ character, vehicle }] }` for tests.
+**Menu flow** (`ui/menuFlow.js`, Phaser-free): Play, slot, New game, then the mode screen "Allein / Solo" or "Zu zweit / Co-op" (with the control hint: P1 WASD + Space, P2 arrow keys or gamepad), then the character select for P1 and, in co-op, a second one for P2 (the same kid twice is fine). In co-op P1 steers the select with A/D + Space (or mouse/touch) and P2 with the arrow keys + Enter or its gamepad; alone, every key and any pad works. The picks are stored through the actions `coop.set` and `player.setCharacter` per player and saved at once, so Continue restores the mode and both characters; the pause menu shows them ("Zu zweit: Lena + Jonas"). On a touch-only device (finger primary, no gamepad) co-op is not offered and the mode screen says why.
+
+**Gamepads**: a pad connected on the mode screen shows "press A to join", and A picks co-op. In game the pads follow `data/input.json`: with two players the first pad drives P2, a second pad drives P1. If a pad that drives a player disconnects, a toast ("Controller getrennt" / "Controller disconnected", `ui:toast` event, `ui/hud/ToastModule.js`) shows for three seconds; the player stays in the game and steers with its keyboard bindings (P2: arrow keys). Joining a running one-player game with a pad is not offered (with one player the pad drives P1); start a co-op game instead.
+
+**Start vehicles**: every player starts on its character's `startVehicle` (Lena the bike); the skateboard and the skates fall back to walking until skating exists (`characters/Characters.js`). There are no start items yet.
+
+The `coop` flag in `state.shared.flags` (action `coop.set { on }`) decides at game start: on, `GameScene` creates two players from `state.players[0..1]`, each with its own character look, attributes, tool belt and start vehicle, bound to `intents[0]` / `intents[1]`, standing 24 px apart at the spawn (`data/camera.json` `coop.spawnOffsets`). Switching it on creates player 2 as another character than P1. The menu sets it (see below); with `?debug`, `SCHULWEG_GAME.setCoop(true)` also restarts the run with two players (`setCoop(false)` back to one). `GameScene` also accepts a start config `{ players: [{ character, vehicle }] }` for tests.
 
 - **Camera** (`camera/CameraRig.js`, maths in `camera/rigMath.js`): follows the midpoint (a pinned player, see below, counts 60 %) and zooms out to keep both players 48 / 40 UI px inside the view. The existing speed zoom still applies; the smaller of speed zoom and fit zoom wins, and the same critically damped spring and sub-pixel handling smooth it. One player: identical to before.
 - **Tether** (`camera/tetherMath.js`, `data/camera.json` `tether`): max distance 480 world px (vertical counts times the 16:9 aspect), well inside the view at the smallest zoom (0.6). From half of it the player walking away is slowed smoothly down to a stop at the limit, the one walking towards the other gets up to 12 % extra speed, and past the limit a gentle pull (capped) brings both back. A player held by a caught frame or screen (`player.pinned`) never blocks the other: the free one keeps at least 25 % speed and is pulled gently. `ctx.coop` is `{ active, distance, tetherRatio }`.
@@ -95,6 +101,7 @@ node scripts/check-players.mjs    # players array helpers; fails on any remainin
 node scripts/check-characters.mjs # characters data, attribute modifiers, growth hooks, bully weights, start vehicle fallback
 node scripts/check-input.mjs      # P1/P2 key and gamepad bindings -> intents, edge and global intents
 node scripts/check-coop.mjs       # co-op camera rig maths, tether, start players, coop.set, HUD slices
+node scripts/check-menu.mjs       # new-game flow (modes, who picks what), menu keys and pads, start actions
 node scripts/bench-cdp.mjs --url http://localhost:8080          # CPU cost per update, all scenarios and tiers (headless Edge/Chrome)
 node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke  # scripted whole-game smoke test
 ```
@@ -120,7 +127,7 @@ A bike is parked near the start. Walk up to it and press F to mount; press F aga
 
 ## Menu, language and quality
 
-The main menu has Play (opens the save slot screen), a language toggle (Deutsch / English) and a quality selector (Low / Medium / High); use the mouse, touch, or arrow keys + Enter. Esc (or the pause button, or Start on a gamepad) opens the pause overlay in the game with Resume, the same two toggles, and Back to menu; it shows the active slot.
+The main menu has Play (opens the save slot screen), a language toggle (Deutsch / English) and a quality selector (Low / Medium / High); use the mouse, touch, or arrow keys + Enter. Esc (or the pause button, or Start on a gamepad) opens the pause overlay in the game with Resume, the same two toggles, and Back to menu; it shows the active slot and the mode with the characters. A new game asks Solo or Co-op first (see Co-op).
 
 Save slot screen: three slots with a summary line (player(s), level, day, money). Per slot: New game (asks before overwriting an occupied slot), Continue, Delete (asks too); Esc or Back goes one screen up. Starting or continuing a slot binds it as the active slot, so autosave on `phase:ended` writes to it. An unreadable save is copied to `.bak` when the screen opens and shown as empty with a note. New game continues to the character select (below); day phase/playtime in the summary come with later stories.
 

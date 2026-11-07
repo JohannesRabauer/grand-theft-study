@@ -11,6 +11,7 @@
       { "id": "objective", "scope": "shared" },
       { "id": "touch", "scope": "shared" },
       { "id": "coop", "scope": "shared" },
+      { "id": "toast", "scope": "shared" },
       { "id": "rotateHint", "scope": "shared" },
       { "id": "restartNote", "scope": "shared" },
       { "id": "debug", "scope": "shared", "debug": true }

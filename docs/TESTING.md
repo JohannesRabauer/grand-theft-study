@@ -56,6 +56,22 @@ Areas so far: `prototype-core` (bike ride, slingshot, weather, language, quality
 
 The `coop` scenario (last, it restarts the game) starts a real two-player run through the `coop` flag, sends both players along the commute route (`h.makeRouteRunner(ctx, reach, clearance, playerIndex)` drives any player) and asserts that the tether keeps the distance within the limit, the camera keeps both in view on every frame and zooms out, and that a pinned partner never blocks the other. `h.teleport` moves every player, so a second player is never left behind at the tether.
 
+### Co-op scenarios
+
+`coop.js` holds three scenarios that run last: `coopMenu`, `coopCommute` and `coopChase`. They start every game through the real menu path
+with the `SCHULWEG_GAME.menuNav` debug API (`play()`, `newGame(slot)`, `mode('solo'|'coop')`, `pick(id)` per player, `continueSlot(slot)`,
+`state()`), the same handlers the buttons call. The save slots are swapped for an in-memory store during the run, so no real save is touched.
+
+```powershell
+node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke   # whole run; look for the coop* checks in the JSON
+```
+
+- `coopMenu`: mode screen, one select per player, the same kid twice, per-player start vehicles, the pause menu line, save and Continue with both characters, pad disconnect (toast, keyboard fallback), A to join on the mode screen, and the solo path unchanged.
+- `coopCommute`: both players ride the commute route to school; tether and camera hold.
+- `coopChase`: shared Ärger level, caught per player.
+
+The menu logic itself (modes, picks, validation, keys and pads) is `node scripts/check-menu.mjs`. In a browser with `?debug`, drive the same API from the console to try a flow by hand.
+
 ## Benchmarks
 
 `node scripts/bench-cdp.mjs --url http://localhost:8080` and `node scripts/zoom-sweep.mjs`; see docs/PERFORMANCE.md.

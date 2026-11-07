@@ -111,5 +111,19 @@
   "character.jonas.perks": "Erwischt jeden Bus. Redet sich raus. Boni bei Musik und Kunst.",
   "character.jonas.quip1": "Bus weg? Nicht, wenn ich ihn mit Charme überrede.",
   "character.jonas.quip2": "Ich hab da einen Beat im Kopf. Und eine gute Ausrede.",
-  "character.jonas.quip3": "Rollschuhe an, Kopfhörer auf, Welt bunt. Passt."
+  "character.jonas.quip3": "Rollschuhe an, Kopfhörer auf, Welt bunt. Passt.",
+  "menu.mode.title": "Wie spielst du?",
+  "menu.mode.solo": "Allein",
+  "menu.mode.coop": "Zu zweit",
+  "menu.mode.controls": "Spieler 1: WASD + Leertaste  |  Spieler 2: Pfeiltasten oder Controller",
+  "menu.mode.padJoin": "Controller erkannt! Drück A, um als Spieler 2 mitzuspielen.",
+  "menu.mode.touchOnly": "Zu zweit braucht Tastatur oder Controller. Auf dem Handy geht es allein los!",
+  "menu.mode.hint": "Pfeile + Enter, A am Controller, Maus oder Touch",
+  "menu.character.titleP1": "Spieler 1: Wer willst du sein?",
+  "menu.character.titleP2": "Spieler 2: Und wer bist du?",
+  "menu.character.hintP1": "A/D + Leertaste, Maus oder Touch",
+  "menu.character.hintP2": "Pfeile links/rechts + Enter, Controller oder Maus",
+  "pause.mode.solo": "Allein: {who}",
+  "pause.mode.coop": "Zu zweit: {who}",
+  "toast.padLost": "Controller getrennt"
 }

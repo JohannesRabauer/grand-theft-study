@@ -1,19 +1,141 @@
 // Smoke scenarios: coop. Each export is { name, run(game, assert, env) }; registered in scripts/smoke/index.js.
 
-// Restarts the game as a co-op run from the menu (Jonas on foot, Lena on her bike); the intents are driven by hand.
-function startCoop(game, env) {
-  const { step } = env;
-  const old = game.scene.getScene('Game').ctx;
-  old.state.dispatch('player.setCharacter', { player: 0, character: 'jonas' });
-  old.state.dispatch('coop.set', { on: true });
-  old.events.emit('game:quit');
-  step(4);
-  game.scene.getScene('Menu').scene.start('Game');
-  step(4);
-  const ctx = game.scene.getScene('Game').ctx;
-  ctx.input.update = () => {};
-  return { gs: game.scene.getScene('Game'), ui: game.scene.getScene('UI'), ctx };
+const memoryStorage = () => {
+  const m = new Map();
+  return { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k) };
+};
+
+// Quits to the menu and starts a game through the real menu path (SCHULWEG_GAME.menuNav: Play, New game in the slot, mode, one
+// pick per player), exactly the steps of the buttons. The slots live in memory for the rest of the run, so a smoke run never
+// overwrites a real save. Returns the new game's scenes and ctx; its input is driven by hand.
+function menuStart(game, env, { coop, characters, slot = 1 }) {
+  const app = game.registry.get('app');
+  if (!app.saves.storage.isSmoke) app.saves.storage = Object.assign(memoryStorage(), { isSmoke: true });
+  const old = game.scene.getScene('Game')?.ctx;
+  if (old) { old.events.emit('game:quit'); env.step(4); }
+  const nav = game.menuNav;
+  nav.play();
+  nav.newGame(slot);
+  nav.mode(coop ? 'coop' : 'solo');
+  for (const id of characters) nav.pick(id);
+  env.step(4);
+  return bootGame(game);
 }
+
+// Continue in `slot` from the menu (Play -> Continue).
+function menuContinue(game, env, slot = 1) {
+  game.scene.getScene('Game').ctx.events.emit('game:quit');
+  env.step(4);
+  game.menuNav.play();
+  game.menuNav.continueSlot(slot);
+  env.step(4);
+  return bootGame(game);
+}
+
+function bootGame(game) {
+  const gs = game.scene.getScene('Game');
+  gs.ctx.input.update = () => {};
+  return { gs, ui: game.scene.getScene('UI'), ctx: gs.ctx };
+}
+
+const startCoop = (game, env) => menuStart(game, env, { coop: true, characters: ['jonas', 'lena'] });
+
+// CAP-23: the menu flow (mode, one character select per player), the stored mode and characters, Continue, the pause menu
+// line, the solo path, and the pad join and disconnect handling.
+export const coopMenu = {
+  name: 'coopMenu',
+  run(game, assert, env) {
+    const { step } = env;
+    const app = game.registry.get('app');
+    const t = app.t;
+    const nav = () => game.menuNav.state();
+    const menuTexts = () => game.scene.getScene('Menu').children.list.filter(o => o.text !== undefined).map(o => o.text);
+    const pad = (a = false) => ({ buttons: Array.from({ length: 16 }, (_, i) => ({ pressed: i === 0 && a })), leftStick: { x: 0, y: 0 } });
+    app.saves.storage = Object.assign(memoryStorage(), { isSmoke: true });
+
+    // ---- the flow screen by screen
+    game.scene.getScene('Game').ctx.events.emit('game:quit');
+    step(4);
+    game.menuNav.play();
+    game.menuNav.newGame(2);
+    step(2);
+    assert('New game opens the mode screen with Solo, Co-op and the control hint', nav().screen === 'mode' && menuTexts().includes(t('menu.mode.solo')) && menuTexts().includes(t('menu.mode.coop')) && menuTexts().includes(t('menu.mode.controls')), JSON.stringify(nav()));
+    game.menuNav.mode('coop');
+    step(2);
+    assert('Co-op leads to the select for player 1, then player 2', nav().screen === 'character' && nav().picker === 0 && menuTexts().includes(t('menu.character.titleP1')));
+    game.menuNav.pick('mehmet');
+    step(2);
+    assert('player 2 picks next, in its own select', nav().picker === 1 && menuTexts().includes(t('menu.character.titleP2')) && nav().picks[0] === 'mehmet');
+    game.menuNav.pick('mehmet'); // the same kid twice is allowed
+    step(4);
+    const same = bootGame(game).ctx;
+    assert('both may pick the same character', same.players.length === 2 && same.players.every(p => p.character.id === 'mehmet'));
+    assert('co-op with two characters starts from the menu and is saved in slot 2', same.state.shared.flags.coop === true && app.saves.list()[1].players.map(p => p.character).join() === 'mehmet,mehmet');
+
+    // ---- two different kids: per-player start vehicles (the skateboard falls back to walking until skating exists)
+    const { gs, ui, ctx } = menuStart(game, env, { coop: true, characters: ['mehmet', 'lena'], slot: 1 });
+    const [p1, p2] = ctx.players;
+    assert('P1 Mehmet starts on foot (skateboard fallback), P2 Lena on her bike', p1.character.id === 'mehmet' && p2.character.id === 'lena' && !gs.bikes.isMounted(0) && gs.bikes.isMounted(1) && p1.sprite.texture.key === 'player-mehmet' && p2.sprite.texture.key === 'player-lena-bike', `${p1.sprite.texture.key} ${p2.sprite.texture.key}`);
+    assert('the HUD shows one slice per player', ui.hud.has('status.1') && !ui.hud.has('status'));
+
+    // ---- the pause menu shows the mode
+    ui.togglePause();
+    step(2);
+    const line = ctx.screens.top().mode.text;
+    assert('the pause menu names the mode and both characters', line === t('pause.mode.coop', { who: 'Mehmet + Lena' }), line);
+    ui.togglePause();
+    step(2);
+
+    // ---- growth of the second player, save, Continue restores the mode and both characters
+    ctx.state.dispatch('attr.grow', { player: 1, attr: 'tempo', amount: 0.5, reason: 'smoke' });
+    const tempo = ctx.state.players[1].attributes.tempo;
+    app.saves.save(1);
+    const again = menuContinue(game, env, 1);
+    const [q1, q2] = again.ctx.players;
+    assert('Continue restores co-op with both characters', again.ctx.players.length === 2 && again.ctx.state.shared.flags.coop === true && q1.character.id === 'mehmet' && q2.character.id === 'lena');
+    assert('Continue keeps player 2 progress and start vehicles', again.ctx.state.players[1].attributes.tempo === tempo && again.gs.bikes.isMounted(1));
+
+    // ---- a pad that drives a player drops out: toast, the player stays, the keyboard bindings take over
+    const toast = again.ui.hud.get('toast');
+    const log = [];
+    again.ctx.events.on('pad:disconnected', e => log.push(e));
+    const input = again.ctx.input;
+    again.gs.input.gamepad.emit('disconnected', { index: 0 }); // with two players the first pad is P2's
+    step(2);
+    assert('the disconnect names player 2 and shows a toast', log.length === 1 && log[0].player === 1 && toast.text.visible && toast.text.text === t('toast.padLost'), `${log.length} ${toast.text.text}`);
+    assert('player 2 is still in the game', again.ctx.players.length === 2 && again.ctx.players[1].alive !== false);
+    again.gs.input.gamepad.emit('disconnected', { index: 5 }); // a pad that drives nobody
+    assert('a pad nobody uses raises no event', log.length === 1);
+    const realUpdate = Object.getPrototypeOf(input).update;
+    input.src.down.add('ArrowRight');
+    realUpdate.call(input);
+    const steered = input.intents[1].move.x > 0 && input.intents[0].move.x === 0;
+    input.src.down.clear();
+    realUpdate.call(input);
+    assert('without a pad player 2 steers with the arrow keys', steered);
+    step(200);
+    assert('the toast fades again', !toast.text.visible);
+
+    // ---- press A to join: a pad is connected, A on the mode screen picks co-op
+    const gp = game.scene.getScene('Menu').input.gamepad;
+    again.ctx.events.emit('game:quit');
+    step(4);
+    gp.gamepads[0] = pad();
+    game.menuNav.play();
+    game.menuNav.newGame(3);
+    step(2);
+    assert('a connected pad shows the join hint on the mode screen', menuTexts().includes(t('menu.mode.padJoin')));
+    gp.gamepads[0] = pad(true);
+    step(2);
+    assert('A on the pad joins: co-op is chosen', nav().screen === 'character' && nav().coop === true, JSON.stringify(nav()));
+    gp.gamepads.length = 0;
+
+    // ---- the solo path is unchanged: one player, no co-op flag, single HUD slice
+    const solo = menuStart(game, env, { coop: false, characters: ['jonas'], slot: 1 });
+    assert('solo from the menu: one player, co-op off, the single-player HUD', solo.ctx.players.length === 1 && !solo.ctx.state.shared.flags.coop && solo.ctx.state.players.length === 1 && solo.ui.hud.has('status') && !solo.ctx.coop.active);
+    assert('a solo save restores solo', menuContinue(game, env, 1).ctx.players.length === 1);
+  }
+};
 
 // AD-18: a real two-player start (coop flag), the tether and the camera rig on the commute route.
 export const coopCommute = {

@@ -3,7 +3,7 @@
 // through the `input:touch-bind` event. Gameplay reads ctx.input.intents[i] (player i) only;
 // ctx.input.intent aliases intents[0]. Bindings come from data/input.json, the device -> intent
 // mapping itself is the Phaser-free ui/inputBindings.js.
-import { NO_TOUCH, bindingFor, clearIntent, createIntent, createSlot, createTouchState, mapIntent, padFor, PAD } from './inputBindings.js';
+import { NO_TOUCH, bindingFor, clearIntent, createIntent, createSlot, createTouchState, mapIntent, padFor, padOwner, PAD } from './inputBindings.js';
 
 // Keys the browser would otherwise scroll or act on (captured by Phaser so the page stays still).
 const CAPTURE = 'W,A,S,D,UP,LEFT,DOWN,RIGHT,SHIFT,SPACE,F,Q,E,M,T,ESC,ENTER,COMMA,PERIOD,NUMPAD_ZERO';
@@ -38,6 +38,13 @@ export class Input {
     events.on('input:touch-bind', state => { this.touch = state; });
     scene.input.on('pointerdown', p => this.onPointer(p));
     scene.input.on('pointermove', p => this.onPointer(p));
+    // A pad that drives a player and drops out: that player keeps going on the keyboard bindings, a toast says so.
+    scene.input.gamepad?.on('disconnected', pad => {
+      const player = padOwner(pad.index, Math.max(1, Math.min(this.players.length, this.intents.length)));
+      if (player < 0) return;
+      events.emit('pad:disconnected', { player });
+      events.emit('ui:toast', { key: 'toast.padLost' });
+    });
   }
 
   get intent() { return this.intents[0]; }

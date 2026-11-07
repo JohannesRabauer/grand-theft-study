@@ -2,13 +2,16 @@ import { ButtonMenu } from '../ui/ButtonMenu.js';
 import { settingsRows } from '../ui/settingsRows.js';
 import { CharacterSelect } from '../ui/CharacterSelect.js';
 import { slotSummary } from '../ui/slotSummary.js';
+import { NewGameFlow, coopAvailable, padJoinHint, startActions } from '../ui/menuFlow.js';
+import { PadNav } from '../ui/PadNav.js';
 import { uiText, setupUiCamera, bindRestartNote } from '../ui/uiKit.js';
 
 const NOTE = { fontFamily: 'monospace', fontSize: '8px', color: '#dddddd', align: 'center' };
 
 // Screens: title (Play + toggles) -> slots (three slots, each New game / Continue / Delete) ->
-// confirm (overwrite or delete); New game continues to the character select, whose pick starts the game. Esc or Back steps one screen up. Every screen is rebuilt on
-// show(), which also re-resolves the text after a language change.
+// confirm (overwrite or delete); New game continues to the mode screen (solo or co-op), then to the character select
+// (once per player in co-op), whose last pick starts the game (ui/menuFlow.js holds that flow). Esc or Back steps one
+// screen up. Every screen is rebuilt on show(), which also re-resolves the text after a language change.
 export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
 
@@ -26,21 +29,42 @@ export class MenuScene extends Phaser.Scene {
     let extras = [];
     let screen = 'title';
     let back = null;
+    let flow = null; // the new-game flow of the open slot
+    let joinPad = null; // the mode screen's A-to-join listener
 
     const clear = () => {
       menu?.destroy();
+      joinPad?.destroy();
+      joinPad = null;
       extras.forEach(o => o.destroy());
       extras = [];
     };
     const note = (x, y, str, style = NOTE) => { const o = uiText(this, x, y, str, style).setOrigin(0.5); extras.push(o); return o; };
 
     const play = (action) => { action(); this.scene.start('Game'); };
-    // a new game in `slot` with the chosen character (saved at once, so Continue brings the same kid back)
-    const startNew = (slot, character) => play(() => {
+    // a new game in `slot` with the chosen mode and characters (saved at once, so Continue brings the same kids back)
+    const startNew = (slot, result) => play(() => {
       saves.startNew(slot);
-      app.state.dispatch('player.setCharacter', { player: 0, character });
+      for (const { action, payload } of startActions(result)) app.state.dispatch(action, payload);
       saves.save(slot);
     });
+    const padCount = () => this.input.gamepad?.gamepads.filter(Boolean).length ?? 0;
+    const newGame = (slot) => {
+      flow = new NewGameFlow(app.characters.characters.map(c => c.id), {
+        coopAllowed: coopAvailable({ coarse: window.matchMedia('(pointer: coarse)').matches, pads: padCount() })
+      });
+      show('mode', { slot });
+    };
+    const chooseMode = (slot, mode) => { if (flow.chooseMode(mode)) show('character', { slot }); };
+    const pickCharacter = (slot, id) => {
+      if (!flow.pick(id)) return;
+      if (flow.result) startNew(slot, flow.result);
+      else show('character', { slot });
+    };
+    const stepBack = (slot) => {
+      const to = flow.back();
+      show(to === 'exit' ? 'slots' : to === 'mode' ? 'mode' : 'character', { slot });
+    };
 
     const showTitle = () => {
       title.setPosition(cx, 52); tag.setVisible(true);
@@ -57,7 +81,7 @@ export class MenuScene extends Phaser.Scene {
       for (const r of saves.list()) if (r.status === 'corrupt') { saves.load(r.slot); brokenSlots.add(r.slot); }
       const rows = saves.list().map(r => {
         const items = r.status === 'ok' ? [{ label: () => t('menu.slot.continue'), on: () => play(() => saves.load(r.slot)) }] : [];
-        items.push({ label: () => t('menu.slot.new'), on: () => (r.status === 'ok' ? show('confirm', { kind: 'new', slot: r.slot }) : show('character', { slot: r.slot })) });
+        items.push({ label: () => t('menu.slot.new'), on: () => (r.status === 'ok' ? show('confirm', { kind: 'new', slot: r.slot }) : newGame(r.slot)) });
         if (r.status === 'ok') items.push({ label: () => t('menu.slot.delete'), on: () => show('confirm', { kind: 'delete', slot: r.slot }) });
         return { items, row: r };
       });
@@ -75,7 +99,7 @@ export class MenuScene extends Phaser.Scene {
     const showConfirm = ({ kind, slot }) => {
       title.setPosition(cx, 28); tag.setVisible(false);
       back = () => show('slots');
-      const yes = kind === 'new' ? () => show('character', { slot }) : () => { saves.delete(slot); show('slots'); };
+      const yes = kind === 'new' ? () => newGame(slot) : () => { saves.delete(slot); show('slots'); };
       menu = new ButtonMenu(this, t, [{ items: [
         { label: () => t(`menu.confirm.${kind}Yes`), on: yes },
         { label: () => t(`menu.confirm.${kind}No`), on: back }
@@ -84,10 +108,36 @@ export class MenuScene extends Phaser.Scene {
       note(cx, 110, t(`menu.confirm.${kind}`, { n: slot }), { ...NOTE, fontSize: '10px', color: '#ffffff', wordWrap: { width: width - 60 } });
     };
 
+    const showMode = ({ slot }) => {
+      title.setPosition(cx, 28); tag.setVisible(false);
+      back = () => stepBack(slot);
+      const items = [{ label: () => t('menu.mode.solo'), on: () => chooseMode(slot, 'solo') }];
+      if (flow.coopAllowed) items.push({ label: () => t('menu.mode.coop'), on: () => chooseMode(slot, 'coop') });
+      items.push({ label: () => t('menu.back'), on: back });
+      menu = new ButtonMenu(this, t, [{ items }], cx, 120, 28);
+      note(cx, 70, t('menu.mode.title'), { ...NOTE, fontSize: '10px', color: '#ffffff' });
+      if (flow.coopAllowed) {
+        note(cx, 160, t('menu.mode.controls'), { ...NOTE, color: '#ffe14d' });
+        if (padJoinHint({ pads: padCount(), coopAllowed: true })) {
+          note(cx, 176, t('menu.mode.padJoin'), { ...NOTE, color: '#6fd08a' });
+          // A on any connected pad joins as player 2
+          joinPad = new PadNav(this, n => Array.from({ length: n }, (_, i) => i), a => { if (a === 'confirm') chooseMode(slot, 'coop'); });
+        }
+      } else {
+        note(cx, 160, t('menu.mode.touchOnly'), { ...NOTE, color: '#ffe14d', wordWrap: { width: width - 60 } });
+      }
+    };
+
     const showCharacter = ({ slot }) => {
       title.setPosition(cx, 22); tag.setVisible(false);
-      back = () => show('slots');
-      menu = new CharacterSelect(this, app, id => startNew(slot, id), back);
+      back = () => stepBack(slot);
+      menu = new CharacterSelect(this, app, id => pickCharacter(slot, id), back, { player: flow.picker, coop: flow.coop });
+    };
+
+    const hintKey = (name) => {
+      if (name === 'mode') return 'menu.mode.hint';
+      if (name !== 'character') return 'menu.hint';
+      return flow.coop ? `menu.character.hintP${flow.picker + 1}` : 'menu.character.hint';
     };
 
     const show = (name, arg) => {
@@ -95,11 +145,21 @@ export class MenuScene extends Phaser.Scene {
       screen = [name, arg];
       title.setText(t('menu.title'));
       tag.setText(t('menu.tagline'));
-      hint.setText(t(name === 'character' ? 'menu.character.hint' : 'menu.hint'));
-      ({ slots: showSlots, confirm: showConfirm, character: showCharacter }[name] ?? showTitle)(arg);
+      hint.setText(t(hintKey(name)));
+      ({ slots: showSlots, confirm: showConfirm, mode: showMode, character: showCharacter }[name] ?? showTitle)(arg);
     };
 
     show('title');
+    if (window.SCHULWEG_GAME) { // ?debug: the same steps as the buttons, for the smoke test (scripts/smoke/coop.js)
+      window.SCHULWEG_GAME.menuNav = {
+        play: () => show('slots'),
+        newGame,
+        mode: (mode) => chooseMode(screen[1].slot, mode),
+        pick: (id) => pickCharacter(screen[1].slot, id),
+        continueSlot: (slot) => play(() => saves.load(slot)),
+        state: () => ({ screen: screen[0], step: flow?.step, coop: flow?.coop, picker: flow?.picker, picks: flow ? [...flow.picks] : [] })
+      };
+    }
     bindRestartNote(this, events, t, app.res);
     const onLang = () => show(...screen);
     const onEsc = () => back?.();

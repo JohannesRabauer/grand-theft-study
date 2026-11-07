@@ -1,6 +1,7 @@
 import { ButtonMenu } from '../ButtonMenu.js';
 import { settingsRows } from '../settingsRows.js';
 import { uiText } from '../uiKit.js';
+import { modeSummary } from '../menuFlow.js';
 
 // The pause overlay: Resume, language, quality and back to the menu. Esc / the touch pause button close it.
 export class PauseScreen {
@@ -16,14 +17,15 @@ export class PauseScreen {
     const { w: width, h: height } = ctx.res;
     const dim = scene.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0).setDepth(20).setInteractive(); // swallows clicks
     this.title = uiText(scene, width / 2, 60, ctx.t('pause.title'), { fontFamily: 'monospace', fontSize: '20px', color: '#ffe14d', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(21);
-    this.slot = uiText(scene, width / 2, 80, '', { fontFamily: 'monospace', fontSize: '10px', color: '#cccccc' }).setOrigin(0.5).setDepth(21);
-    this.objects = [dim, this.title, this.slot];
+    this.slot = uiText(scene, width / 2, 78, '', { fontFamily: 'monospace', fontSize: '10px', color: '#cccccc' }).setOrigin(0.5).setDepth(21);
+    this.mode = uiText(scene, width / 2, 90, '', { fontFamily: 'monospace', fontSize: '10px', color: '#ffe14d' }).setOrigin(0.5).setDepth(21);
+    this.objects = [dim, this.title, this.slot, this.mode];
     const rows = [
       { items: [{ label: () => ctx.t('pause.resume'), on: () => this.close() }] },
       ...settingsRows(ctx),
       { items: [{ label: () => ctx.t('pause.menu'), on: () => ctx.events.emit('game:quit') }] }
     ];
-    this.menu = new ButtonMenu(scene, ctx.t, rows, width / 2, 100, 28);
+    this.menu = new ButtonMenu(scene, ctx.t, rows, width / 2, 108, 28);
     this.menu.objects.forEach(o => o.setDepth(21));
     this.retext();
   }
@@ -41,6 +43,7 @@ export class PauseScreen {
     this.title.setText(ctx.t('pause.title'));
     const slot = ctx.saves.activeSlot;
     this.slot.setText(slot ? ctx.t('pause.slot', { n: slot }) : '');
+    this.mode.setText(modeSummary(ctx.players.map(p => p.character?.name ?? ctx.t('menu.slot.player', { n: p.index + 1 })), ctx.t));
     this.menu.refresh();
   }
 

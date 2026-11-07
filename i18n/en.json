@@ -111,5 +111,19 @@
   "character.jonas.perks": "Catches any bus. Talks his way out. Bonuses in music and art.",
   "character.jonas.quip1": "Bus gone? Not if I sweet-talk it into waiting.",
   "character.jonas.quip2": "Got a beat in my head. And a good excuse.",
-  "character.jonas.quip3": "Skates on, headphones on, world in colour. Perfect."
+  "character.jonas.quip3": "Skates on, headphones on, world in colour. Perfect.",
+  "menu.mode.title": "How do you want to play?",
+  "menu.mode.solo": "Solo",
+  "menu.mode.coop": "Co-op",
+  "menu.mode.controls": "Player 1: WASD + Space  |  Player 2: arrow keys or gamepad",
+  "menu.mode.padJoin": "Controller found! Press A to join as player 2.",
+  "menu.mode.touchOnly": "Co-op needs a keyboard or a gamepad. On a phone you ride solo!",
+  "menu.mode.hint": "Arrows + Enter, A on the pad, mouse or touch",
+  "menu.character.titleP1": "Player 1: Who do you want to be?",
+  "menu.character.titleP2": "Player 2: And who are you?",
+  "menu.character.hintP1": "A/D + Space, mouse or touch",
+  "menu.character.hintP2": "Left/right arrows + Enter, gamepad or mouse",
+  "pause.mode.solo": "Solo: {who}",
+  "pause.mode.coop": "Co-op: {who}",
+  "toast.padLost": "Controller disconnected"
 }

@@ -1,5 +1,5 @@
 ---
 title: "Co-op menu, gamepad join and smoke test"
 ticket: 4
-status: in-progress
+status: built
 ---
