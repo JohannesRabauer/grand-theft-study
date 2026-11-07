@@ -41,6 +41,12 @@ export class BootScene extends Phaser.Scene {
       this.makeWorldFx();
       this.makeArrow();
     }
+    // The speed zoom scales the world by non-integer factors, where nearest-neighbour sampling makes
+    // texels land on uneven screen pixels (shimmer). World textures are filtered bilinear instead; at
+    // an exact integer zoom texels map 1:1 to pixels, so the result stays crisp. UI textures stay sharp.
+    for (const key of this.textures.getTextureKeys()) {
+      if (!key.startsWith('__') && key !== 'arrow') this.textures.get(key).setFilter(Phaser.Textures.FilterMode.LINEAR);
+    }
     this.scene.start('Menu');
   }
 

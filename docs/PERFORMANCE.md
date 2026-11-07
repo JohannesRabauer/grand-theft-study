@@ -108,11 +108,32 @@ So a whole frame costs about 45% more CPU time to build (more draw calls for the
 logic); nothing near the 16.7 ms budget on the desktop. GPU fill rate on a phone for 4x the pixels is **not measured**; if the phone
 protocol (below) shows a problem, Low is the fallback and `q=low` boots at 480x270.
 
-Observations for story 1.13 (smooth zoom): Phaser's WebGL renderer only rounds sprite vertices to whole pixels when the camera zoom
-is an integer (`renderRoundPixels`), so at the eased, non-integer zooms between 1.2 and 2.0 sprites sit at sub-pixel positions with
-nearest-neighbour sampling, and the tile layer is a texture scaled by a non-integer factor. That is the existing behaviour (it was
-the same at zoom 0.6 to 1.0), not made worse here; at the base zoom 2 everything is pixel aligned. Camera scroll is quantized to
-screen pixels at every zoom.
+## Story 1.13: smooth zoom
+
+Playtest: the GTA-style speed zoom made pixels "jump around". Causes found: (1) between the integer zooms the nearest-neighbour
+textures (one texel = 0.6 to 1.0 screen pixels) map to uneven pixels, so tile edges and speckle swim; (2) the camera was snapped to
+whole screen pixels at every zoom while sprites were not, so ground and sprites shifted against each other by up to half a pixel;
+(3) the exponential zoom ease never reached the integer base zoom, so sprite pixel rounding (`renderRoundPixels`) stayed off after
+stopping. Seams were not an issue (the ground is one RenderTexture; the magenta-background gap check found 0 pixels at every zoom).
+
+Fix: all world textures and the ground are bilinear (BootScene; texel-to-pixel 1:1 at the integer zoom keeps it crisp, UI and the
+comic frame keep NEAREST); the camera is sub-pixel between integers and blends to pixel-snapped within 0.03 of an integer zoom;
+the zoom is a critically damped spring on a low-passed target (dead band, max rate, exact landing: 2.0 / 1.0 when standing; see
+`data/camera.json`). Not done: mipmaps (WebGL1 and non power of two textures), so Low (1x textures at zoom 0.6 to 1.0) still has some
+speckle beating.
+
+`node scripts/zoom-sweep.mjs --tier medium|low|high` (headless Edge) sweeps the zoom range with the world frozen and compares frames:
+
+| Tier | Metric | Before | After |
+| --- | --- | --- | --- |
+| Medium | frame-diff roughness (lower = smoother) | 0.33 | 0.055 |
+| Medium | fixed point off the ideal projection | 0.40 px | 0 px |
+| High | roughness / offset | not run | 0.055 / 0 px |
+| Low | roughness / offset | 0.53 / 0.40 px | 0.43 / 0.07 px |
+| all | gap pixels, zoom 2.0 to 1.2 step 0.05 | 0 | 0 |
+
+Update cost: the extra work is a few flops per frame; the benchmark was too noisy to resolve it (other processes were running,
+Medium "e everything" varied 0.28 to 0.55 ms between identical runs; before 0.18 in the 1.12 table), no regression visible.
 
 ## What was optimized
 

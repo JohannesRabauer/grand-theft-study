@@ -49,13 +49,14 @@ export class CaughtFrame {
     for (let i = 0; i < 4; i++) g.lineBetween(62, 78 + i * 5, 126, 78 + i * 5);
     g.fillStyle(0x1d2a3a).fillRect(62, 104, 64, 126);
     const big = 6 * ctx.res.inv; // the 2x textures are shown at half scale
-    this.player = add(scene.add.image(94, 178, 'player').setScale(big).setAngle(10));
+    this.playerTex = this.sharpCopy('player');
+    this.player = add(scene.add.image(94, 178, this.playerTex).setScale(big).setAngle(10));
     g.fillStyle(0x7aa0cc).lineStyle(3, 0x000000).fillPoints([{ x: 62, y: 104 }, { x: 36, y: 114 }, { x: 36, y: 222 }, { x: 62, y: 230 }], true).strokePoints([{ x: 62, y: 104 }, { x: 36, y: 114 }, { x: 36, y: 222 }, { x: 62, y: 230 }], true);
     g.lineStyle(2, 0x2b3f58).lineBetween(40, 140, 58, 134).lineBetween(40, 160, 58, 155);
     g.fillStyle(0xffe14d).fillCircle(42, 190, 3);
 
     // bully with the lunchbox, and the speech bubble pointing at him
-    add(scene.add.image(352, 188, 'bully').setScale(big).setFlipX(true));
+    add(scene.add.image(352, 188, this.sharpCopy('bully')).setScale(big).setFlipX(true));
     g.fillStyle(0xb06a2c).lineStyle(3, 0x000000).fillRect(262, 176, 34, 24).strokeRect(262, 176, 34, 24);
     g.fillStyle(0xffe14d).fillRect(276, 184, 6, 5).lineStyle(3, 0x000000).strokeRect(272, 168, 14, 8);
     g.lineStyle(2, 0x000000).lineBetween(250, 182, 258, 184).lineBetween(248, 192, 258, 192).lineBetween(250, 202, 258, 200);
@@ -74,8 +75,22 @@ export class CaughtFrame {
     scene.tweens.add({ targets: this.prompt, alpha: 0.35, duration: 450, yoyo: true, repeat: -1 });
   }
 
+  // World textures are bilinear filtered (BootScene); the enlarged comic figures keep hard pixels.
+  sharpCopy(key) {
+    const name = `caught-${key}`;
+    const { textures } = this.scene;
+    if (!textures.exists(name)) {
+      const src = textures.get(key).getSourceImage();
+      const tex = textures.createCanvas(name, src.width, src.height);
+      tex.getContext().drawImage(src, 0, 0);
+      tex.refresh();
+    }
+    return name;
+  }
+
   // Halftone dots (bigger towards the edges) on a warm background, baked once into a texture.
   makeHalftone() {
+    if (this.scene.textures.exists('caught-halftone')) return; // baked by an earlier run
     const k = this.ctx.res.scale; // drawn on the render grid so the dots stay round and sharp
     const tex = this.scene.textures.createCanvas('caught-halftone', PW * k, PH * k);
     const c = tex.getContext();
@@ -103,7 +118,7 @@ export class CaughtFrame {
     this.line.setText(ctx.t(`caught.line${Phaser.Math.Between(1, 3)}`));
     this.lost.setText(lost > 0 ? ctx.t('caught.lost', { v: `${v(lost)} €` }) : ctx.t('caught.nothing'));
     this.prompt.setText(ctx.t(`caught.continue.${ctx.input.type}`));
-    this.player.setTexture('player');
+    this.player.setTexture(this.playerTex);
     for (const o of this.items) o.setVisible(true);
   }
 

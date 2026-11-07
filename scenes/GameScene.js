@@ -20,6 +20,7 @@ import { tileKey } from './HiResArt.js';
 const STEP_MS = 1000 / 60; // Matter's fixed timestep (AD-14); MovementController assumes it too
 const STEP_SLACK = 0.95; // a frame that arrives a hair early (vsync jitter) still gets its step
 const MAX_BACKLOG = 3 * STEP_MS;
+const SNAP_RANGE = 0.03; // zoom distance from an integer over which the camera blends from sub-pixel to pixel-snapped
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -75,8 +76,8 @@ export class GameScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setZoom(res.scale * this.zoomCfg.max);
     // Phaser floors the scroll of a roundPixels camera to whole world pixels in preRender (2 screen pixels
-    // at zoom 2). followCamera snaps to screen pixels itself, so that floor is skipped here; the
-    // sprite rounding that roundPixels also controls stays as Phaser sets it (integer zoom only).
+    // at zoom 2). followCamera snaps to screen pixels itself, so that floor is skipped here; sprites are
+    // rounded to pixels only at an exactly integer zoom.
     const preRender = cam.preRender;
     cam.preRender = function () {
       this.roundPixels = false;
@@ -84,6 +85,8 @@ export class GameScene extends Phaser.Scene {
       this.roundPixels = true;
       this.renderRoundPixels = Number.isInteger(this.zoomX) && Number.isInteger(this.zoomY);
     };
+    this.zoomGoal = cam.zoom;
+    this.zoomVel = 0;
     this.camX = this.camOutX = this.player.x;
     this.camY = this.camOutY = this.player.y;
     this.followCamera(1);
@@ -101,19 +104,42 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  // Zoom follows real speed continuously (1.0 standing .. 0.6 at top speed) times the render
-  // scale, smoothed. Only the main camera zooms; UIScene has its own camera.
+  // Zoom follows real speed continuously (1.0 standing .. 0.6 at top speed) times the render scale.
+  // The speed is low-passed with a small dead band (hysteresis, so noise in the speed never moves the
+  // target), the zoom itself is a critically damped spring with a maximum rate, so it neither pops nor
+  // overshoots, and it lands exactly on its target (an exact integer at the base zoom, where the
+  // renderer rounds sprites to pixels). Only the main camera zooms; UIScene has its own camera.
   updateZoom(dt) {
     const z = this.zoomCfg;
+    const scale = this.ctx.res.scale;
     const t = Math.min(1, this.player.move.velSpeed / z.speedForMin);
-    const target = (z.max + (z.min - z.max) * t) * this.ctx.res.scale;
+    const raw = (z.max + (z.min - z.max) * t) * scale;
+    if (raw >= z.max * scale || raw <= z.min * scale || Math.abs(raw - this.zoomGoal) > z.deadband * scale) this.zoomGoal = raw;
     const cam = this.cameras.main;
-    cam.setZoom(cam.zoom + (target - cam.zoom) * (1 - Math.exp(-z.smooth * dt)));
+    const err = this.zoomGoal - cam.zoom;
+    if (Math.abs(err) < 1e-4 * scale && Math.abs(this.zoomVel) < 1e-3 * scale) {
+      this.zoomVel = 0;
+      if (err) cam.setZoom(this.zoomGoal);
+      return;
+    }
+    const w = z.smooth;
+    const max = z.maxRate * scale;
+    const n = Math.ceil(dt / 0.01); // substeps keep the spring stable on slow frames
+    const h = dt / n;
+    let zoom = cam.zoom;
+    for (let i = 0; i < n; i++) {
+      this.zoomVel += (w * w * (this.zoomGoal - zoom) - 2 * w * this.zoomVel) * h;
+      this.zoomVel = Phaser.Math.Clamp(this.zoomVel, -max, max);
+      zoom += this.zoomVel * h;
+    }
+    cam.setZoom(zoom);
   }
 
   // Eased follow of the player, in place of Phaser's startFollow: that one floors the scroll to whole
-  // *world* pixels, which at a base zoom of 2 would move the view in 2-screen-pixel jumps. Here the
-  // view centre is snapped to whole *screen* pixels instead (story 1.13 refines this for smooth zoom).
+  // *world* pixels, which at a base zoom of 2 would move the view in 2-screen-pixel jumps. The view
+  // centre is snapped to whole *screen* pixels only while the zoom is (almost) an integer, where
+  // sprites are rounded too and pixel art has to stay crisp; between integers it is left sub-pixel so
+  // nothing jumps against the filtered textures, and the two blend over a small zoom range.
   // Something else moving the camera (respawn, test teleports) is picked up instead of eased towards.
   followCamera(dt) {
     const cam = this.cameras.main;
@@ -131,8 +157,9 @@ export class GameScene extends Phaser.Scene {
     const vh = cam.height / z / 2;
     const cx = this.worldW > vw * 2 ? Phaser.Math.Clamp(this.camX, vw, this.worldW - vw) : this.worldW / 2;
     const cy = this.worldH > vh * 2 ? Phaser.Math.Clamp(this.camY, vh, this.worldH - vh) : this.worldH / 2;
-    this.camOutX = Math.round(cx * z) / z;
-    this.camOutY = Math.round(cy * z) / z;
+    const snap = Phaser.Math.Clamp(1 - Math.abs(z - Math.round(z)) / SNAP_RANGE, 0, 1);
+    this.camOutX = cx + (Math.round(cx * z) / z - cx) * snap;
+    this.camOutY = cy + (Math.round(cy * z) / z - cy) * snap;
     cam.setScroll(this.camOutX - hw, this.camOutY - hh);
   }
 
@@ -141,6 +168,7 @@ export class GameScene extends Phaser.Scene {
   renderGrid(map, res) {
     const ts = map.tileSize * res.scale;
     const rt = this.add.renderTexture(0, 0, map.rows[0].length * ts, map.rows.length * ts).setOrigin(0).setScale(res.inv).setDepth(-1);
+    rt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
     rt.beginDraw();
     map.rows.forEach((row, ty) => {
       for (let tx = 0; tx < row.length; tx++) rt.batchDraw(res.scale > 1 ? tileKey(map, tx, ty) : `tile-${map.legend[row[tx]]}`, tx * ts, ty * ts);

@@ -3,5 +3,7 @@
   "max": 1.0,
   "speedForMin": 150,
   "smooth": 4,
+  "maxRate": 0.45,
+  "deadband": 0.004,
   "follow": 0.15
 }
