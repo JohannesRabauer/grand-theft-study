@@ -3,6 +3,7 @@ import { ObjectiveArrow } from '../ui/ObjectiveArrow.js';
 import { ButtonMenu } from '../ui/ButtonMenu.js';
 import { settingsRows } from '../ui/settingsRows.js';
 import { CaughtFrame } from '../ui/CaughtFrame.js';
+import { drawSeasonIcon } from '../ui/seasonIcon.js';
 import { uiText, setupUiCamera, bindRestartNote } from '../ui/uiKit.js';
 
 // Overlay HUD, touch controls and rotate hint. Reads only; never mutates the world (AD-13).
@@ -18,6 +19,7 @@ export class UIScene extends Phaser.Scene {
     this.makeStatus();
     this.makeAnger();
     this.makeMoney();
+    this.makeClock();
     this.makeTool();
     this.caughtFrame = new CaughtFrame(this, this.ctx);
     this.arrow = new ObjectiveArrow(this, this.ctx, this.scene.get('Game'));
@@ -51,6 +53,7 @@ export class UIScene extends Phaser.Scene {
     this.spotted.setText(ctx.t('hud.spotted'));
     this.hidden.setText(ctx.t('hud.hidden'));
     this.showMoney();
+    this.showClock();
     this.showTool();
     this.showSurface(ctx.player.surface);
     this.showVehicle(ctx.player.vehicle);
@@ -161,6 +164,29 @@ export class UIScene extends Phaser.Scene {
     ctx.events.on('state:changed', this.showMoney);
     this.events.once('shutdown', () => ctx.events.off('state:changed', this.showMoney));
     this.showMoney();
+  }
+
+  // Top centre: season icon, "HH:MM" and "Day n - phase", refreshed on `clock:tick` (read-only).
+  makeClock() {
+    const { ctx } = this;
+    const cx = ctx.res.w / 2;
+    const style = { fontFamily: 'monospace', fontSize: '10px', color: '#ffffff', stroke: '#000000', strokeThickness: 2 };
+    this.clockIcon = this.add.graphics().setPosition(cx - 30, 9);
+    this.clockTime = uiText(this, cx - 20, 2, '', style);
+    this.clockPhase = uiText(this, cx, 15, '', { ...style, fontSize: '8px', color: '#cfe7ff' }).setOrigin(0.5, 0);
+    let season = null;
+    this.showClock = () => {
+      const { day } = ctx;
+      this.clockTime.setText(day.time);
+      this.clockPhase.setText(`${ctx.t('hud.day', { n: day.day })} - ${ctx.t(`day.phase.${day.phase}`)}`);
+      if (day.season !== season) {
+        season = day.season;
+        drawSeasonIcon(this.clockIcon, season);
+      }
+    };
+    ctx.events.on('clock:tick', this.showClock);
+    this.events.once('shutdown', () => ctx.events.off('clock:tick', this.showClock));
+    this.showClock();
   }
 
   // Current tool and ammo (bottom centre); a wind arrow with strength appears above it while charging.
@@ -279,6 +305,7 @@ export class UIScene extends Phaser.Scene {
     let s = `quality: ${quality.id}
 render: ${res.renderW}x${res.renderH}  textures: x${res.scale}  zoom: ${this.scene.get('Game').cameras.main.zoom.toFixed(2)}
 chase: level ${chase.level}  seen: ${chase.seen}
+day: ${this.ctx.day.mode} ${this.ctx.day.time} ${this.ctx.day.phase} ${this.ctx.day.season}
 weather: ${weather.state}  wind: ${wind.vector.x.toFixed(2)}, ${wind.vector.y.toFixed(2)}`;
     if (this.ctx.crowd) s += `
 ${this.ctx.crowd.debugText()}`;

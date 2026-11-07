@@ -7,6 +7,7 @@ import { Bikes } from '../entities/Bike.js';
 import { Player } from '../entities/Player.js';
 import { Zones } from '../entities/Zones.js';
 import { Wind } from '../physics/Wind.js';
+import { DayClock } from '../services/DayClock.js';
 import { Weather } from '../physics/Weather.js';
 import { ParticleHub } from '../particles/ParticleHub.js';
 import { Props } from '../entities/Prop.js';
@@ -61,6 +62,7 @@ export class GameScene extends Phaser.Scene {
     ctx.zones = this.zones;
     const wcfg = cache.get('weather');
     ctx.wind = new Wind(wcfg.wind);
+    ctx.day = new DayClock(ctx, cache.get('day')); // AD-17: before Weather, which reads its schedule
     ctx.weather = new Weather(this, ctx, wcfg.weather);
     ctx.particles = new ParticleHub(this, ctx, cache.get('particles'));
     this.props = new Props(this, ctx, cache.get('props'));
@@ -101,6 +103,7 @@ export class GameScene extends Phaser.Scene {
     events.on('game:pause', () => this.setPaused(true));
     events.on('game:resume', () => this.setPaused(false));
     events.on('game:quit', () => this.scene.start('Menu'));
+    ctx.day.start();
     this.scene.launch('UI', { ctx });
     this.events.once('shutdown', () => {
       this.scene.stop('UI');
@@ -232,6 +235,7 @@ export class GameScene extends Phaser.Scene {
     if (this.paused) return;
     this.stepPhysics(delta);
     if (this.ctx.input.intent.weather) this.ctx.weather.toggle();
+    this.ctx.day.update(dt);
     this.ctx.wind.update(dt);
     this.ctx.weather.update(dt);
     this.caught.update(dt);

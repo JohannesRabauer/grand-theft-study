@@ -26,7 +26,7 @@ export function createShared(cfg) {
     familienfrieden: cfg.startFamilienfrieden,
     ownedVehicles: [...cfg.startVehicles],
     quests: { active: [], done: [] },
-    clock: { day: 1, minute: 0 },
+    clock: { day: 1, minute: 0, phase: null }, // DayClock moves a fresh clock to the start of the day
     flags: {}
   };
 }

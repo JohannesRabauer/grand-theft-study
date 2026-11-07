@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const dir = dirname(fileURLToPath(import.meta.url));
-const checks = ['check-collisions.mjs', 'check-i18n.mjs', 'check-map.mjs', 'check-chase.mjs', 'check-crowd.mjs', 'check-state.mjs'];
+const checks = ['check-collisions.mjs', 'check-i18n.mjs', 'check-map.mjs', 'check-chase.mjs', 'check-crowd.mjs', 'check-state.mjs', 'check-day.mjs'];
 let failed = 0;
 for (const c of checks) {
   console.log(`\n== ${c}`);

@@ -1,0 +1,28 @@
+{
+  "secondsPerGameMinute": 1.6,
+  "runWhileFrozen": false,
+  "start": "06:30",
+  "end": "22:00",
+  "freeplay": { "phase": "commute", "time": "07:45", "running": false },
+  "phases": [
+    { "id": "morning", "start": "06:30", "end": "07:30", "season": "autumn",
+      "weather": [{ "state": "rain", "chance": 0.15, "from": "06:30", "to": "07:30" }] },
+    { "id": "commute", "start": "07:30", "end": "08:00", "season": "autumn",
+      "weather": [{ "state": "rain", "chance": 0.2, "from": "07:30", "to": "08:00" }] },
+    { "id": "school", "start": "08:00", "end": "13:15", "season": "winter", "weather": [] },
+    { "id": "afternoon", "start": "13:15", "end": "20:00", "season": "spring",
+      "weather": [
+        { "state": "rain", "chance": 0.4, "from": "14:30", "to": "16:00" },
+        { "state": "rain", "chance": 0.2, "from": "17:30", "to": "18:30" }
+      ] },
+    { "id": "evening", "start": "20:00", "end": "22:00", "season": "summer", "weather": [] }
+  ],
+  "tint": [
+    { "time": "06:30", "color": "#ff9a55", "alpha": 0.18 },
+    { "time": "08:00", "color": "#ffd9a0", "alpha": 0 },
+    { "time": "17:30", "color": "#ffd9a0", "alpha": 0 },
+    { "time": "19:30", "color": "#ff7a30", "alpha": 0.2 },
+    { "time": "21:00", "color": "#0a1038", "alpha": 0.38 },
+    { "time": "22:00", "color": "#050a28", "alpha": 0.5 }
+  ]
+}

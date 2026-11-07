@@ -64,6 +64,8 @@ node scripts/check-i18n.mjs       # DE/EN keys identical, every t('...') key exi
 node scripts/check-map.mjs        # town map shape, objects, two routes to school
 node scripts/check-chase.mjs      # pathfinding, level rules, escape rules
 node scripts/check-crowd.mjs      # crowd spawn rules, caps, reaction geometry
+node scripts/check-state.mjs      # state store, actions, save slots, migrations
+node scripts/check-day.mjs        # day clock: phases, events, autosave, restore, weather schedule, tint
 node scripts/bench-cdp.mjs --url http://localhost:8080          # CPU cost per update, all scenarios and tiers (headless Edge/Chrome)
 node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke  # scripted whole-game smoke test
 ```
@@ -146,6 +148,15 @@ ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tr
 - Older saves are upgraded by the `state/migrations.js` chain. An unreadable slot is copied to `schulweg.save.<n>.bak`, removed, and reported with `state:slot-corrupt`.
 - With `?debug`, `SCHULWEG_GAME.state` is the store and `SCHULWEG_GAME.registry.get('app').saves` the slots.
 
+## Day clock
+
+`ctx.day` (`services/DayClock.js`, pure time math in `services/dayTime.js`, all tuning in `data/day.json`) owns game time 06:30 to 22:00 and the phase machine morning, commute, school (from the 08:00 deadline), afternoon, evening, then the next day. One game minute takes `secondsPerGameMinute` real seconds (1.6, so a day is about 25 minutes). The time is `ctx.state.shared.clock` (`{ day, minute, phase }`), changed only by the `clock.set` action and restored with a loaded slot.
+
+- Phases change only through `ctx.day.advance(reason)` (`'time'` when the clock runs out). Events: `clock:tick` (per game minute), `phase:ended` / `phase:started` (`{ phase, reason, day }`). When `phase:ended` fires the state already holds the next phase, so the autosave stores where to continue.
+- Each phase has a season (autumn morning and commute, winter school, spring afternoon, summer evening) and weather hints (rain chance per time window, rolled once per day). `Weather` follows them; **T** is only a debug override until the schedule changes. A soft time-of-day tint (dawn warm, day neutral, evening orange, bedtime dark) sits in the weather overlay.
+- Without a save slot (for example a quick start from the debug console) the clock is in freeplay: it shows the `freeplay` time from the data and never ends a phase. `ctx.frozen` stops the clock unless `runWhileFrozen` is set.
+- The HUD shows a season icon, `HH:MM` and the phase at the top centre.
+
 ## Folder map
 
 | Path | Purpose |
@@ -160,7 +171,7 @@ ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tr
 | `particles/` | `ParticleHub.js`: pooled emitters, surface effects, rain, ambient life |
 | `state/` | `GameState.js` (store), `actions.js`, `migrations.js`, `SaveSlots.js` (AD-16) |
 | `learning/`, `minigames/`, `missions/` | Empty in the prototype |
-| `services/` | `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
+| `services/` | `DayClock.js` + `dayTime.js` (day clock, AD-17); `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |
 | `data/` | Tuning JSON, `maps/town.json` (ASCII grid, objects in tile coordinates) |
 | `ui/` | `input.js` (intent snapshot), HUD, `scaling.js` (integer scaling), `uiKit.js` (UI camera, crisp text) |

@@ -175,6 +175,10 @@ export async function runSmoke(game, h) {
     check('rain off', ctx.weather.state === 'clear');
     step(180);
 
+    // ---- day clock (no slot: freeplay) ----
+    check('freeplay clock stands at its data time', ctx.day.mode === 'freeplay' && ctx.day.time === '07:45' && ctx.day.phase === 'commute', `${ctx.day.mode} ${ctx.day.time}`);
+    check('HUD shows the time and the phase', ui.clockTime.text === '07:45' && ui.clockPhase.text.includes(ctx.t('day.phase.commute')), `${ui.clockTime.text} / ${ui.clockPhase.text}`);
+
     // ---- language ----
     const before = ui.stamina.text;
     ctx.i18n.set(savedLang === 'de' ? 'en' : 'de');

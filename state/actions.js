@@ -24,6 +24,13 @@ export const ACTIONS = {
     return { path: `shared.flags.${key}` };
   },
 
+  // Only DayClock dispatches this (AD-17); `minute` is game minutes since midnight.
+  'clock.set'(s, { day, minute, phase }) {
+    if (!positiveInt(day) || !Number.isInteger(minute) || minute < 0 || minute >= 1440 || !phase) return reject('bad-payload');
+    s.shared.clock = { day, minute, phase };
+    return { path: 'shared.clock' };
+  },
+
   'player.setCharacter'(s, { player, character }) {
     if (!s.players[player] || !character) return reject('bad-payload');
     s.players[player].character = character;
