@@ -29,6 +29,8 @@ One capability area of the game, following the spec. Not other epics' areas; see
 
 ## References
 
+- Entry 8.3 implemented: `data/maps/school.json`, `data/timetable.json`, `services/SchoolDay.js`, `entities/School.js` and `ui/screens/TimetableScreen.js`. At the school entrance, interact to enter; inside, interact at the golden classroom circle to read the timetable and attend the next lesson. Attendance skips waiting through the day clock; completing the last lesson starts the afternoon. Grades are recorded per child with day-specific lesson IDs, saved after lessons and restored by Continue. Quitting a lesson allows a retry without a recorded grade.
+
 - parent — _bmad-output/initiative-schulweg-game/initiative-schulweg-game.md
 - spec — _bmad-output/initiative-schulweg-game/spec-schulweg-game/spec-schulweg-game.md, section Capabilities
 - constraint — _bmad-output/initiative-schulweg-game/architecture-schulweg-game/architecture-schulweg-game.md, the ADs cited on each story

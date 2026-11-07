@@ -61,6 +61,17 @@ export class DayClock {
     this.ctx.events.emit('clock:tick', this.snapshot());
   }
 
+  // A completed lesson or an explicit wait can skip time within this phase; only advance() crosses a phase boundary.
+  skipTo(minute, reason) {
+    const phase = this.cfg.phases[this.phaseIndex];
+    if (!reason || !Number.isInteger(minute) || minute < this.minute || minute >= phase.end) {
+      throw new Error('day: skipTo needs a forward time inside the current phase and a reason');
+    }
+    this.ctx.state.dispatch('clock.set', { day: this.day, minute, phase: this.phase });
+    this.acc = 0;
+    this.ctx.events.emit('clock:tick', this.snapshot());
+  }
+
   // The only way a phase changes: jumps to the start of the next one (evening leads to the next
   // morning). `reason` says why: 'time' for the clock running out, otherwise what the caller names.
   advance(reason) {

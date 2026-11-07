@@ -2,6 +2,7 @@
   "pause": { "freezesWorld": true },
   "minigame": { "freezesWorld": true },
   "minigameResult": { "freezesWorld": true },
+  "timetable": { "freezesWorld": true },
   "test": { "freezesWorld": true },
   "testHint": { "freezesWorld": false }
 }

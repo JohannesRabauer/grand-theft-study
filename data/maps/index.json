@@ -3,6 +3,7 @@
   "maps": [
     { "id": "town", "file": "town.json" },
     { "id": "dojo", "file": "dojo.json" },
+    { "id": "school", "file": "school.json" },
     { "id": "test-room", "file": "test-room.json", "debug": true }
   ]
 }

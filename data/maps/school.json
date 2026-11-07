@@ -1,0 +1,33 @@
+{
+  "tileSize": 16,
+  "metersPerTile": 2,
+  "indoor": true,
+  "legend": { "#": "wall", "w": "wood", "s": "concrete" },
+  "rows": [
+    "################################",
+    "#wwwwwwwwwwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwwwwwwwwwww#",
+    "##############ssss##############",
+    "#ssssssssssssssssssssssssssssss#",
+    "#ssssssssssssssssssssssssssssss#",
+    "#ssssssssssssssssssssssssssssss#",
+    "#ssssssssssssssssssssssssssssss#",
+    "#ssssssssssssssssssssssssssssss#",
+    "#ssssssssssssssssssssssssssssss#",
+    "#ssssssssssssssssssssssssssssss#",
+    "################################"
+  ],
+  "objects": [
+    { "type": "entry", "id": "from-town", "x": 16, "y": 16, "facing": "up" },
+    { "type": "door", "id": "school-exit", "x": 15, "y": 18, "w": 3, "h": 1, "to": "town", "entry": "from-school", "label": "world.door.exit", "auto": true },
+    { "type": "school-spot", "id": "classroom", "x": 16, "y": 4 }
+  ]
+}

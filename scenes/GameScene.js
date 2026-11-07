@@ -45,6 +45,7 @@ import { Characters } from '../characters/Characters.js';
 import { LearningEngine } from '../learning/LearningEngine.js';
 import { Grades } from '../grading/Grades.js';
 import { Minigames } from '../minigames/Minigames.js';
+import { School } from '../entities/School.js';
 
 const STEP_MS = 1000 / 60; // Matter's fixed timestep (AD-14); MovementController assumes it too
 const STEP_SLACK = 0.95; // a frame that arrives a hair early (vsync jitter) still gets its step
@@ -140,6 +141,7 @@ export class GameScene extends Phaser.Scene {
     this.defense = new DefenseController(this, ctx, cache.get('karate')); // story 6.3: block, dodge, Kiai; the chase director asks it before a catch
     this.karate = new Karate(ctx, cache.get('karate')); // story 6.4: belts, training points and the daily limit (ctx.karate)
     this.dojo = new Dojo(this, ctx, cache.get('karate')); // the dojo building in the town, the sensei and the belt rack inside
+    this.school = new School(this, ctx, cache.get('timetable'), cache.get('minigames').minigames);
     this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
     this.garage = new Garage(this, ctx);
     this.caught = new Caught(this, ctx, cache.get('chase').caught, [this.bikes, this.skateboards, this.skates]);
@@ -334,6 +336,7 @@ export class GameScene extends Phaser.Scene {
     this.defense.update(dt);
     this.karate.update(dt);
     this.dojo.update(dt);
+    this.school.update();
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.grabs.update(dt);

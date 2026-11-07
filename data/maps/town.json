@@ -73,6 +73,8 @@
     { "type":"entry", "id":"from-test-room", "x":7, "y":50, "facing":"down" },
     { "type":"door", "id":"door-test", "debug":true, "x":6, "y":49, "w":3, "h":1, "to":"test-room", "entry":"from-town", "label":"world.door.test" },
     { "type":"goal", "id":"school", "x":77, "y":11, "w":3, "h":3 },
+    { "type":"door", "id":"door-school", "x":77, "y":11, "w":3, "h":1, "to":"school", "entry":"from-town", "label":"school.entrance" },
+    { "type":"entry", "id":"from-school", "x":78, "y":13, "facing":"down" },
     { "type":"bike", "id":"bike1", "x":9, "y":51 },
     { "type":"skateboard", "id":"board1", "x":10, "y":52 },
     { "type":"skateboard", "id":"board2", "x":51, "y":32 },
