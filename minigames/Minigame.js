@@ -107,9 +107,14 @@ export class Minigame extends Phaser.Scene {
   // engine's feedback data for the QuestionPanel.
   record(slot, question, ok, ms, hintsUsed) {
     const feedback = this.ctx.learning.answer(question, ok, ms, { player: slot.index, hintsUsed });
-    slot.tally.record(ok, ms, hintsUsed, question.meta?.topic ?? question.topic);
-    this.showScore(slot);
+    this.countResult(slot, ok, ms, question.meta?.topic ?? question.topic, hintsUsed);
     return feedback;
+  }
+
+  // Counts one result without a learning-engine question (the Musik and Kunst minigames have none): a hit note, a right cell.
+  countResult(slot, ok, ms, topic, hints = 0) {
+    slot.tally.record(ok, ms, hints, topic);
+    this.showScore(slot);
   }
 
   update(time, delta) {

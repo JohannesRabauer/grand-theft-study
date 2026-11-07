@@ -145,7 +145,7 @@ export const minigames = {
     const rt = await timed;
     assert('a timed round is graded and restored', rt.total >= 5 && rt.grade >= 1 && rt.grade <= 6 && rt.quit === false && ctx.frozen === false);
     assert('unknown ids and players are refused', await MG.start('nope').then(() => false, () => true) && await MG.start('quiz-demo', { players: [0, 5] }).then(() => false, () => true));
-    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 7 : 5) && ['mathe', 'deutsch', 'englisch', 'erdkunde', 'science'].every(id => MG.list().some(d => d.id === id)));
+    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 9 : 7) && ['mathe', 'deutsch', 'englisch', 'erdkunde', 'science', 'musik', 'kunst'].every(id => MG.list().some(d => d.id === id)));
 
     // ---- Mathe: both modes in one run, one player ----
     // Answers every open question of the Mathe scene through the inputs a player has: number keys (answer buttons,
@@ -862,5 +862,232 @@ export const minigames = {
     assert('the world is restored after two-player Science', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_science'));
     step(5);
     assert('two-player Science leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeS), `${JSON.stringify(beforeS)} -> ${JSON.stringify(snapshot())}`);
+    // ---- Musik: the rhythm game, played silently with the beat from the round clock ----
+    const perks0 = ctx.players[0].perks;
+    ctx.players[0].perks = { ...perks0, musicArtBonus: 0 }; // an earlier scenario may have left a Jonas player
+    const beforeMu = snapshot();
+    const noteEvents = [];
+    const beatEvents = [];
+    const sfxEvents = [];
+    ctx.events.on('music:note', e => noteEvents.push(e));
+    ctx.events.on('music:beat', e => beatEvents.push(e));
+    ctx.events.on('sfx:play', e => sfxEvents.push(e));
+    const nextNote = slot => {
+      let best = -1;
+      for (let l = 0; l < slot.track.queue.length; l++) {
+        const i = slot.track.queue[l][slot.track.head[l]];
+        if (i !== undefined && (best < 0 || i < best)) best = i;
+      }
+      return best;
+    };
+    // Plays the notes like a player through the intents: the number key of the lane when the note is due (`late(p)` ms
+    // after its time); notes for which skip(p, i) is true are left out. Runs until the round is over or stop() is true.
+    const playMusik = (scene, { skip = () => false, late = () => 0, stop = () => false } = {}) => {
+      for (let f = 0; f < 4200 && ctx.screens.top()?.id === 'minigame' && !scene.over && !stop(); f++) {
+        const now = scene.clock.elapsedMs;
+        for (const slot of scene.slots) {
+          const { track } = slot;
+          for (let l = 0; l < track.queue.length; l++) {
+            const i = track.queue[l][track.head[l]];
+            if (i !== undefined && !skip(slot.index, i) && now >= track.t[i] + late(slot.index)) { intents[slot.index].answer = l + 1; break; }
+          }
+        }
+        step(1);
+        for (const slot of scene.slots) intents[slot.index].answer = 0;
+      }
+    };
+    const xpMu = state.players[0].xp;
+    const moneyMu = state.shared.money;
+    const runMu = MG.start('musik', { players: [0], difficulty: 3 });
+    step(1);
+    const ms = game.scene.getScene('MG_musik');
+    assert('the Musik scene shows its title and instructions during the countdown', ms.title.text === ctx.t('minigame.musik.title') && ms.help.visible && ms.help.text.includes('A S W D'));
+    env.until(() => ms.clock.phase === 'play', 400);
+    const m0 = ms.slots[0];
+    assert('difficulty 3 plays the medium chart: four lanes, notes spread over the round, ring and pads on the stage', m0.tier === 'medium' && m0.track.queue.length === 4 && m0.track.n >= 80 && m0.track.t.at(-1) <= 59100 && m0.stage.pad.length === 4 && m0.stage.ring.visible);
+    assert('the stage shows the registry song and no bonus for a kid without the perk', ms.songs.songs.includes(ms.song) && m0.stage.songText.text === ctx.t(`minigame.musik.song.${ms.song.id}`) && m0.bonus === 0 && m0.stage.bonusText.text === '');
+    const ringScales = new Set();
+    let maxVisible = 0;
+    const sample = () => {
+      ringScales.add(Math.round(m0.stage.ring.scale * 100));
+      maxVisible = Math.max(maxVisible, m0.stage.notes.filter(n => n.box.visible).length);
+      return ms.clock.elapsedMs > 12000;
+    };
+    playMusik(ms, { skip: (p, i) => i % 5 === 4, stop: sample });
+    assert('good play hits notes, builds a combo and shows it', m0.track.counts.perfect > 10 && m0.scorer.best >= 3 && m0.stage.comboText.text === (m0.scorer.combo >= 3 ? ctx.t('minigame.musik.combo', { n: m0.scorer.combo }) : '') && m0.scorer.points > 1000, `${m0.scorer.best} ${m0.scorer.combo} ${m0.scorer.points}`);
+    assert('every hit counts as a right answer in the tally, every missed note as a wrong one', m0.tally.correct === m0.track.counts.perfect + m0.track.counts.good && m0.tally.total === m0.track.judged && m0.track.counts.miss > 0 && m0.tally.total - m0.tally.correct === m0.track.counts.miss);
+    assert('the score text shows the points', m0.score.text === ctx.t('minigame.musik.points', { n: m0.scorer.points }));
+    assert('the visual metronome pulses with the beat and the notes stay within the pool', ringScales.size >= 8 && maxVisible >= 3 && maxVisible <= 16, `${ringScales.size} ${maxVisible}`);
+    assert('hooks for the audio epic: music:note per judged note, music:beat per beat, sfx:play names',
+      noteEvents.length === m0.tally.total && noteEvents.every(e => e.pitch >= 40 && ['perfect', 'good', 'miss'].includes(e.grade) && e.song === ms.song.id && e.tier === 'medium')
+      && beatEvents.length >= 12 * ms.song.bpm / 60 - 2 && beatEvents.every((e, i) => e.beat === beatEvents[0].beat + i) && ['musik.perfect', 'musik.miss'].every(n => sfxEvents.some(e => e.name === n)), `${noteEvents.length} ${m0.tally.total} ${beatEvents.length}`);
+    // pause: the song stands still
+    const tMu = ms.clock.elapsedMs;
+    const pointsMu = m0.scorer.points;
+    press(0, 'pause');
+    step(40);
+    assert('pausing stops the beat and the notes', ctx.screens.top()?.id === 'pause' && ms.clock.elapsedMs === tMu && m0.scorer.points === pointsMu);
+    press(0, 'pause');
+    // a tap on a lane plays it too
+    let tapped = false;
+    for (let f = 0; f < 600 && !tapped; f++) {
+      const i = nextNote(m0);
+      if (ms.clock.elapsedMs >= m0.track.t[i]) {
+        const before = m0.track.counts.perfect + m0.track.counts.good;
+        m0.stage.onTap(m0.track.lane[i]);
+        tapped = m0.track.counts.perfect + m0.track.counts.good === before + 1;
+      } else step(1);
+    }
+    assert('tapping the lane in time hits the note', tapped);
+    ctx.i18n.set('en');
+    step(2);
+    assert('a language switch re-translates the Musik texts', m0.score.text.startsWith('Points') && m0.stage.songText.text === ctx.t(`minigame.musik.song.${ms.song.id}`));
+    ctx.i18n.set('de');
+    playMusik(ms, { skip: (p, i) => i % 5 === 4 });
+    step(2);
+    assert('the round ends on the timer at 60 s and shows the result', ctx.screens.top()?.id === 'minigameResult' && ms.clock.phase === 'done' && ms.clock.elapsedMs >= 59000, `${ctx.screens.top()?.id} ${ms.clock.elapsedMs}`);
+    press(0, 'jump');
+    const rmu = await runMu;
+    assert('Musik result: graded, rewarded and counted like any minigame (share of notes hit)', rmu.id === 'musik' && rmu.subject === 'musik' && rmu.total >= 60 && rmu.score > 0.6 && rmu.score < 0.95 && rmu.effort === 1 && rmu.stats.bestStreak >= 3
+      && rmu.grade >= 1 && rmu.grade <= 6 && rmu.xp > 0 && rmu.moneyCents > 0 && rmu.ms >= 59000 && rmu.quit === false, JSON.stringify(rmu));
+    assert('the grade comes from ctx.grades', rmu.grade === ctx.grades.preview(0, 'musik', { score: rmu.score, effort: rmu.effort, difficulty: 3 }).grade);
+    assert('Musik rewards were applied', state.players[0].xp === xpMu + rmu.xp && state.shared.money === moneyMu + rmu.moneyCents);
+    assert('the world is back after Musik', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_musik'));
+    step(5);
+    assert('a whole Musik run leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeMu), `${JSON.stringify(beforeMu)} -> ${JSON.stringify(snapshot())}`);
+
+    // two players, the second with the Jonas perk: the same slightly late timing hits more for her and she is cheered
+    const perks1 = ctx.players[1].perks;
+    ctx.players[1].perks = { ...perks1, musicArtBonus: 0.3 };
+    const duoMu = MG.start('musik', { players: [0, 1], difficulty: 4 });
+    step(1);
+    const md = game.scene.getScene('MG_musik');
+    env.until(() => md.clock.phase === 'play', 400);
+    const [a, b] = md.slots;
+    assert('two players get two stages side by side with their own charts', md.slots.length === 2 && a.stage.rect.x < b.stage.rect.x && a.track !== b.track && a.tier === 'hard' && b.tier === 'hard');
+    assert('the Jonas perk widens the hit windows and shows the talent bonus', a.track.win.good < b.track.win.good && Math.abs(b.track.win.good / a.track.win.good - 1.3) < 1e-9 && b.stage.bonusText.text === ctx.t('minigame.musicart.bonus', { n: 30 }) && a.stage.bonusText.text === '');
+    playMusik(md, { late: () => 150 });
+    assert('the same timing: more hits with the wider windows, then the leader is cheered', b.tally.correct > a.tally.correct && md.over && md.banner.visible && md.bannerKey.key === 'minigame.musik.winner' && ctx.screens.top()?.id === 'minigame', `${a.tally.correct} ${b.tally.correct}`);
+    assert('the perk also multiplies the points', b.scorer.bonus === 0.3 && b.scorer.points > a.scorer.points);
+    env.until(() => ctx.screens.top()?.id === 'minigameResult', 200);
+    step(2);
+    press(1, 'interact');
+    const r2mu = await duoMu;
+    ctx.players[1].perks = perks1;
+    assert('both players get a full, own result; the perk shows in the better score', r2mu.perPlayer.length === 2 && r2mu.perPlayer[1].score > r2mu.perPlayer[0].score && r2mu.perPlayer.every(p => p.xp > 0 && p.effort === 1));
+    assert('the world is restored after two-player Musik', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_musik'));
+    step(5);
+    assert('two-player Musik leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeMu), `${JSON.stringify(beforeMu)} -> ${JSON.stringify(snapshot())}`);
+
+    // ---- Kunst: Pixel-Muster merken ----
+    const beforeKu = snapshot();
+    const swatchOf = (slot, color) => slot.palette.indexOf(color);
+    // Paints cells through the mouse path: `wrong` cells get another colour, cells from `until` on stay empty.
+    const paintCopy = (slot, { wrong = [], until = Infinity } = {}) => {
+      const n = slot.pattern.size;
+      for (let i = 0; i < slot.pattern.cells.length && i < until; i++) {
+        const want = slot.pattern.cells[i];
+        const color = wrong.includes(i) ? slot.palette.find(c => c !== want) : want;
+        slot.easel.onSwatch(swatchOf(slot, color));
+        slot.easel.onCell(i % n, Math.floor(i / n), false);
+      }
+    };
+    const untilPhase = (slot, phase) => env.until(() => slot.phase === phase, 900);
+    const xpKu = state.players[0].xp;
+    const runKu = MG.start('kunst', { players: [0], difficulty: 1 });
+    step(1);
+    const ks = game.scene.getScene('MG_kunst');
+    assert('the Kunst scene shows its title and instructions during the countdown', ks.title.text === ctx.t('minigame.kunst.title') && ks.help.visible && ks.help.text.length > 20);
+    env.until(() => ks.clock.phase === 'play', 400);
+    const ku0 = ks.slots[0];
+    assert('difficulty 1: a 4x4 pattern is shown with a time bar for about 6.5 s', ku0.phase === 'show' && ku0.pattern.size === 4 && ku0.pattern.colors.length === 2 && ku0.showMs === 6500 && ku0.easel.barFill.visible && ku0.easel.msg.text === ctx.t('minigame.kunst.memorize') && ku0.model === null);
+    step(60);
+    assert('the memorize bar shrinks with the round clock', ku0.easel.barFill.scaleX < 0.95 && ku0.easel.barFill.scaleX > 0.5 && ku0.t > 900);
+    ctx.i18n.set('en');
+    step(1);
+    assert('a language switch re-translates the line above the easel', ku0.easel.msg.text === ctx.t('minigame.kunst.memorize') && ku0.easel.sub.text === ctx.t('minigame.kunst.skip'));
+    ctx.i18n.set('de');
+    untilPhase(ku0, 'paint');
+    assert('the pattern is hidden for painting: an empty canvas, the palette offers its colours', ku0.phase === 'paint' && ku0.model.cells.every(c => c === -1) && ku0.pattern.colors.every(c => ku0.palette.includes(c)) && !ku0.easel.barFill.visible && ku0.easel.canvasZone.visible && ku0.easel.zones.filter(z => z.visible).length === ku0.palette.length);
+    // the keyboard: pick a colour with the number key, paint with confirm, a stroke by holding confirm while moving
+    const patK = ku0.pattern;
+    intents[0].answer = swatchOf(ku0, patK.cells[0]) + 1; step(1); intents[0].answer = 0; step(1);
+    press(0, 'jump');
+    assert('number key picks the colour and confirm paints the cell under the cursor', ku0.model.color === swatchOf(ku0, patK.cells[0]) && ku0.model.cells[0] === patK.cells[0]);
+    intents[0].jump = true; step(1);
+    for (let i = 0; i < 2; i++) { intents[0].move.x = 1; step(1); intents[0].move.x = 0; step(1); }
+    intents[0].jump = false; step(1);
+    assert('holding confirm while moving draws a stroke', ku0.model.cells[1] === ku0.palette[ku0.model.color] && ku0.model.cells[2] === ku0.palette[ku0.model.color] && ku0.model.cx === 2);
+    // mouse path for the rest, leaving the last cell empty and cell 5 wrong
+    paintCopy(ku0, { wrong: [5], until: ku0.pattern.cells.length - 1 });
+    assert('mouse painting fills the canvas', ku0.model.painted === ku0.pattern.cells.length - 1);
+    // finish through the keyboard: down to the palette, right to the Fertig button, confirm
+    ku0.model.cx = 0;
+    ku0.model.cy = 3;
+    intents[0].move.y = 1; step(1); intents[0].move.y = 0; step(1);
+    assert('arrow down from the last row enters the palette row', ku0.model.focus === 'palette');
+    for (let i = 0; i < ku0.palette.length + 1; i++) { intents[0].move.x = 1; step(1); intents[0].move.x = 0; step(1); }
+    assert('the cursor reaches the Fertig button', ku0.model.item === ku0.palette.length);
+    press(0, 'jump');
+    const wrongSet = new Set([5, ku0.pattern.cells.length - 1, ...[0, 1, 2].filter(i => ku0.model.cells[i] !== patK.cells[i])]);
+    assert('Fertig judges the copy cell by cell: partial credit, a friendly line, the result view', ku0.phase === 'result' && ku0.tally.total === 16 && ku0.tally.correct === 16 - wrongSet.size && ku0.tally.correct >= 12 && ku0.easel.msg.text.includes(`${ku0.tally.correct} `) && ku0.easel.labels[0].visible && ku0.easel.mode === 'result', `${ku0.tally.correct}/${ku0.tally.total} ${ku0.easel.msg.text}`);
+    assert('the score line counts the right cells and the level stays', ku0.score.text === ctx.t('minigame.kunst.score', { n: ku0.tally.correct }) && ku0.level === 1);
+    untilPhase(ku0, 'show');
+    assert('after the result the next pattern is shown', ku0.phase === 'show' && ku0.n === 2 && ku0.easel.mode === 'show');
+    untilPhase(ku0, 'paint');
+    // a perfect copy celebrates and the next pattern is harder
+    paintCopy(ku0);
+    ku0.easel.onDone();
+    assert('a perfect copy: the celebration line, sparkles, level up', ku0.phase === 'result' && ku0.msg.key === 'minigame.kunst.result.perfect' && ku0.level === 2 && ks.pop.fx.emitter.getAliveParticleCount() > 5 && ku0.tally.correct === 16 - wrongSet.size + 16 && ku0.tally.total === 32);
+    untilPhase(ku0, 'show');
+    assert('the next pattern is a level-2 one (4x4, up to three colours)', ku0.pattern.size === 4 && ku0.pattern.colors.length >= 2 && ku0.pattern.colors.length <= 3);
+    untilPhase(ku0, 'paint');
+    paintCopy(ku0, { until: 8 });
+    ks.clock.elapsedMs = ks.clock.durationMs - 100;
+    step(12);
+    assert('when the timer ends mid-painting the copy still counts as it is', ks.finished && ku0.tally.total === 48 && ku0.tally.correct < 48 && ku0.tally.correct >= 16 - wrongSet.size + 16 + 8, `${ku0.tally.correct}/${ku0.tally.total}`);
+    env.until(() => ctx.screens.top()?.id === 'minigameResult', 100);
+    step(2);
+    press(0, 'jump');
+    const rku = await runKu;
+    assert('Kunst result: graded, rewarded, cell accuracy as score', rku.id === 'kunst' && rku.subject === 'kunst' && rku.correct === ku0.tally.correct && rku.total === 48 && rku.score === Math.round(ku0.tally.correct / 48 * 100) / 100 && rku.grade >= 1 && rku.grade <= 6 && rku.xp > 0 && state.players[0].xp === xpKu + rku.xp);
+    assert('the grade comes from ctx.grades', rku.grade === ctx.grades.preview(0, 'kunst', { score: rku.score, effort: rku.effort, difficulty: 1 }).grade);
+    assert('the world is back after Kunst', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_kunst'));
+    step(5);
+    assert('a Kunst run leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeKu), `${JSON.stringify(beforeKu)} -> ${JSON.stringify(snapshot())}`);
+
+    // two players side by side, the second with the Jonas perk (longer memorize time), top difficulty
+    ctx.players[1].perks = { ...perks1, musicArtBonus: 0.3 };
+    const duoKu = MG.start('kunst', { players: [0, 1], difficulty: 5 });
+    step(1);
+    const kd = game.scene.getScene('MG_kunst');
+    env.until(() => kd.clock.phase === 'play', 400);
+    const [p1, p2] = kd.slots;
+    assert('two players get their own easels and 7x7 patterns', kd.slots.length === 2 && p1.easel !== p2.easel && p1.easel.rect.x < p2.easel.rect.x && p1.pattern.size === 7 && p2.pattern.size === 7);
+    assert('Jonas gets longer to memorize (+30%) and the talent bonus label', p1.showMs === 4500 && p2.showMs === Math.round(4500 * 1.3) && p2.bonusText.text === ctx.t('minigame.musicart.bonus', { n: 30 }) && p1.bonusText === null);
+    assert('the palette has the pattern colours plus at most a decoy', p1.palette.length <= 6 && p1.pattern.colors.every(c => p1.palette.includes(c)));
+    step(40);
+    press(0, 'jump');
+    assert('confirm ends the memorize phase early', p1.phase === 'paint' && p2.phase === 'show');
+    paintCopy(p1);
+    p1.easel.onDone();
+    assert('player 1 finished a perfect copy while player 2 still memorizes', p1.phase === 'result' && p1.tally.correct === 49 && p2.phase === 'show' && p2.tally.total === 0);
+    untilPhase(p2, 'paint');
+    paintCopy(p2, { wrong: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] });
+    p2.easel.onDone();
+    assert('player 2 gets partial credit for 39 of 49 cells', p2.tally.correct === 39 && p2.tally.total === 49, `${p2.tally.correct}`);
+    kd.clock.elapsedMs = kd.clock.durationMs - 100;
+    step(12);
+    assert('the leader is cheered before the result screen', kd.over && kd.banner.visible && kd.bannerKey.key === 'minigame.kunst.winner' && ctx.screens.top()?.id === 'minigame');
+    env.until(() => ctx.screens.top()?.id === 'minigameResult', 200);
+    step(2);
+    press(1, 'interact');
+    const r2ku = await duoKu;
+    ctx.players[1].perks = perks1;
+    ctx.players[0].perks = perks0;
+    assert('both players get a full, own result', r2ku.perPlayer.length === 2 && r2ku.perPlayer[0].score > r2ku.perPlayer[1].score && r2ku.perPlayer.every(p => p.xp > 0) && r2ku.total === p1.tally.total + p2.tally.total);
+    assert('the world is restored after two-player Kunst', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_kunst'));
+    step(5);
+    assert('two-player Kunst leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeKu), `${JSON.stringify(beforeKu)} -> ${JSON.stringify(snapshot())}`);
   }
 };

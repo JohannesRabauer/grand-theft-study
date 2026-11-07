@@ -30,7 +30,7 @@ for (const m of minigames) {
   assert.ok(classes.includes(`'${m.id}':`), `${m.id}: a scene class is registered in minigames/index.js`);
   assert.ok(m.durationSeconds >= 30 && m.durationSeconds <= 90, `${m.id}: duration 30-90 s`);
   assert.ok(Number.isInteger(m.rewards.xp) && m.rewards.xp > 0 && Number.isInteger(m.rewards.moneyCents) && m.rewards.moneyCents >= 0, `${m.id}: integer rewards`);
-  assert.ok(m.topics.length > 0 && m.topics.every(t => topics.includes(t)), `${m.id}: known topics`);
+  assert.ok(m.learning === false ? m.topics.length === 0 : m.topics.length > 0 && m.topics.every(t => topics.includes(t)), `${m.id}: known topics (none for learning:false)`);
   assert.ok(m.maxPlayers === 1 || m.maxPlayers === 2, `${m.id}: one or two players`);
   assert.ok(m.difficultyRange[0] >= 1 && m.difficultyRange[1] <= 5 && m.difficultyRange[0] <= m.difficultyRange[1], `${m.id}: difficulty range`);
   assert.ok(m.expectedQuestions > 0 && typeof m.subject === 'string', `${m.id}: expected questions and subject`);

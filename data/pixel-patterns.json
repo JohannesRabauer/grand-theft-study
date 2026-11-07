@@ -1,0 +1,31 @@
+{
+  "_doc": "Palette and hand-authored icons of the Kunst minigame (story 4.6). palette: every colour a pattern may use (id, hex). icons: small pixel pictures; rows are size strings of slot digits, colors[slot] names the palette id of that slot (the generator may recolour an icon with options.recolor in data/minigames.json). Procedural kinds (mirrored noise, stripes, checker) need no data. An icon is only dealt at the level whose grid size matches and whose colour count it does not exceed.",
+  "palette": [
+    { "id": "red", "hex": "#e5484d" },
+    { "id": "orange", "hex": "#f08c2a" },
+    { "id": "yellow", "hex": "#ffd43b" },
+    { "id": "green", "hex": "#4cc26b" },
+    { "id": "blue", "hex": "#3b82f6" },
+    { "id": "purple", "hex": "#9b5de5" },
+    { "id": "pink", "hex": "#ff8fc7" },
+    { "id": "brown", "hex": "#8b5a2b" },
+    { "id": "ink", "hex": "#2b2d42" },
+    { "id": "sky", "hex": "#9ad8ff" }
+  ],
+  "icons": [
+    { "id": "diamond4", "size": 4, "rows": ["0110", "1111", "1111", "0110"], "colors": ["sky", "yellow"] },
+    { "id": "cross4", "size": 4, "rows": ["1001", "0110", "0110", "1001"], "colors": ["yellow", "purple"] },
+    { "id": "window4", "size": 4, "rows": ["1111", "1001", "1001", "1111"], "colors": ["sky", "brown"] },
+    { "id": "house4", "size": 4, "rows": ["0110", "1111", "1221", "1221"], "colors": ["sky", "red", "yellow"] },
+    { "id": "heart5", "size": 5, "rows": ["01010", "11111", "11111", "01110", "00100"], "colors": ["sky", "red"] },
+    { "id": "star5", "size": 5, "rows": ["00100", "11111", "01110", "01110", "10001"], "colors": ["ink", "yellow"] },
+    { "id": "house5", "size": 5, "rows": ["00100", "01110", "11111", "22222", "22022"], "colors": ["sky", "red", "yellow"] },
+    { "id": "smiley5", "size": 5, "rows": ["01010", "00000", "10001", "01110", "00000"], "colors": ["yellow", "ink"] },
+    { "id": "tree6", "size": 6, "rows": ["001100", "011110", "111111", "011110", "002200", "002200"], "colors": ["sky", "green", "brown"] },
+    { "id": "mushroom6", "size": 6, "rows": ["011110", "121121", "111111", "003300", "003300", "003300"], "colors": ["sky", "red", "yellow", "orange"] },
+    { "id": "heart7", "size": 7, "rows": ["0110110", "1111111", "1111111", "1111111", "0111110", "0011100", "0001000"], "colors": ["sky", "pink"] },
+    { "id": "star7", "size": 7, "rows": ["0001000", "0001000", "1111111", "0111110", "0011100", "0110110", "1100011"], "colors": ["blue", "yellow"] },
+    { "id": "house7", "size": 7, "rows": ["0001000", "0011100", "0111110", "1111111", "2222222", "2422242", "2223222"], "colors": ["sky", "red", "yellow", "brown", "blue"] },
+    { "id": "smiley7", "size": 7, "rows": ["0111110", "1111111", "1211121", "1111111", "1211121", "1122211", "0111110"], "colors": ["sky", "yellow", "ink"] }
+  ]
+}

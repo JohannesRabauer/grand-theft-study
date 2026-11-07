@@ -5,6 +5,8 @@ import { DeutschGame } from './DeutschGame.js';
 import { EnglischGame } from './EnglischGame.js';
 import { ErdkundeGame } from './ErdkundeGame.js';
 import { ScienceGame } from './ScienceGame.js';
+import { MusikGame } from './MusikGame.js';
+import { KunstGame } from './KunstGame.js';
 
 // Minigame id -> scene class. A new minigame adds its class here and an entry in data/minigames.json (scene MG_<id>).
 export const MINIGAME_CLASSES = {
@@ -14,5 +16,7 @@ export const MINIGAME_CLASSES = {
   'deutsch': DeutschGame,
   'englisch': EnglischGame,
   'erdkunde': ErdkundeGame,
-  'science': ScienceGame
+  'science': ScienceGame,
+  'musik': MusikGame,
+  'kunst': KunstGame
 };
