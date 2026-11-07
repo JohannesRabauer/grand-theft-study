@@ -4,7 +4,12 @@
 import { ACTIONS } from './actions.js';
 import { emptyGrades, defaultKopfnoten } from '../grading/gradeCore.js';
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
+
+// Belt progress (story 6.4): points = training points earned in all sessions, sessions = sessions ever started, trainDay /
+// trainedToday = the game day of the last session and how many sessions that day had (the daily limit), lastExamDay = the
+// day of the last promotion (one belt per day).
+export const createKarate = cfg => ({ belt: cfg.startBelt, points: 0, sessions: 0, lastExamDay: 0, trainDay: 0, trainedToday: 0 });
 
 export function createPlayer(cfg) {
   return {
@@ -15,7 +20,7 @@ export function createPlayer(cfg) {
     grades: emptyGrades(),
     kopfnoten: cfg.kopfnoten ? defaultKopfnoten(cfg.kopfnoten) : {}, // cfg.kopfnoten is data/kopfnoten.json, merged in at boot
     learning: {},
-    karate: { belt: cfg.startBelt },
+    karate: createKarate(cfg),
     cosmetics: { owned: [], equipped: {} },
     stickers: [],
     bag: []

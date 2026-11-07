@@ -59,7 +59,7 @@ export function drawPark(scene, ctx, cfg) {
     const cx = (o.x + 0.5) * ts;
     const cy = (o.y + 0.5) * ts + 3;
     const { w, h } = sprite;
-    const img = make(`park-${ctx.world.id}-${o.id}`, cx, cy, w, h, c => sprite.draw(c, w, h)).setOrigin(0.5, (h - 3) / h).setDepth(cy);
+    const img = make(`park-${ctx.world.id}-${o.id}`, cx, cy, w, h, c => sprite.draw(c, w, h, o)).setOrigin(0.5, (h - 3) / h).setDepth(cy);
     out.images.push(img);
   }
   return out;
@@ -448,7 +448,7 @@ const SPRITE = {
   },
   sign: {
     w: 30, h: 38,
-    draw(c, w, h) {
+    draw(c, w, h, o) {
       const cx = w / 2;
       const base = h - 3;
       c.fillStyle = 'rgba(0,0,0,0.28)';
@@ -468,7 +468,7 @@ const SPRITE = {
       c.font = 'bold 6px monospace';
       c.textAlign = 'center';
       c.textBaseline = 'middle';
-      c.fillText('LINES', cx - 1, 8.5);
+      c.fillText(o.board ?? 'LINES', cx - 1, 8.5);
       c.strokeStyle = '#ffd23f';
       c.lineWidth = 1.2;
       c.beginPath();

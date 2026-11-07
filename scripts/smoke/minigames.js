@@ -146,7 +146,7 @@ export const minigames = {
     const rt = await timed;
     assert('a timed round is graded and restored', rt.total >= 5 && rt.grade >= 1 && rt.grade <= 6 && rt.quit === false && ctx.frozen === false);
     assert('unknown ids and players are refused', await MG.start('nope').then(() => false, () => true) && await MG.start('quiz-demo', { players: [0, 5] }).then(() => false, () => true));
-    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 10 : 8) && ['mathe', 'deutsch', 'englisch', 'erdkunde', 'science', 'musik', 'kunst', 'sport'].every(id => MG.list().some(d => d.id === id)));
+    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 11 : 9) && ['mathe', 'deutsch', 'englisch', 'erdkunde', 'science', 'musik', 'kunst', 'sport', 'karate'].every(id => MG.list().some(d => d.id === id)));
 
     // ---- Mathe: both modes in one run, one player ----
     // Answers every open question of the Mathe scene through the inputs a player has: number keys (answer buttons,

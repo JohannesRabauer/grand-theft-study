@@ -58,3 +58,15 @@ hitl = false
 risk = "low"
 references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-22", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-23"]
 
+[[entry]]
+id = 6
+type = "story"
+title = "Buses hit the player comically"
+description = "Makes buses solid for players on the road: a bus moving into a player gives a cartoon tumble with items scattering, a short time and stamina loss and a funny line, never injury visuals, while grabbing the rear handle with skates stays safe."
+verify = "A bus driving into a standing or riding player triggers the tumble and slowdown once, the grab still works from the rear zone, and pedestrians and animals are unaffected."
+covers = ["CAP-31", "CAP-4", "CAP-14"]
+after = [3]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-23"]
+

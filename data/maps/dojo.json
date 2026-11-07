@@ -1,0 +1,30 @@
+{
+  "tileSize": 16,
+  "metersPerTile": 2,
+  "indoor": true,
+  "legend": { "#": "wall", "w": "wood", "m": "tatami" },
+  "rows": [
+    "########################",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwmmmmmmmmmmmmmmmmwww#",
+    "#wwwmmmmmmmmmmmmmmmmwww#",
+    "#wwwmmmmmmmmmmmmmmmmwww#",
+    "#wwwmmmmmmmmmmmmmmmmwww#",
+    "#wwwmmmmmmmmmmmmmmmmwww#",
+    "#wwwmmmmmmmmmmmmmmmmwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "########################"
+  ],
+  "objects": [
+    { "type":"entry", "id":"from-town", "x":12, "y":11, "facing":"up" },
+    { "type":"door", "id":"door-exit", "x":11, "y":13, "w":3, "h":1, "to":"town", "entry":"from-dojo", "label":"world.door.exit", "auto":true },
+    { "type":"dojo", "id":"dojo-sensei", "role":"sensei", "x":12, "y":2, "w":1, "h":1 },
+    { "type":"dojo", "id":"dojo-mats", "role":"mats", "x":4, "y":4, "w":16, "h":6 },
+    { "type":"dojo", "id":"dojo-rack", "role":"rack", "x":3, "y":0, "w":5, "h":1 }
+  ]
+}

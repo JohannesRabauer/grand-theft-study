@@ -29,6 +29,9 @@ import { Park } from '../entities/Park.js';
 import { ChaseDirector } from '../ai/ChaseDirector.js';
 import { Caught } from '../entities/Caught.js';
 import { DefenseController } from '../defense/DefenseController.js';
+import { Karate } from '../defense/Karate.js';
+import { Dojo } from '../entities/Dojo.js';
+import { BeltTags } from '../entities/BeltTags.js';
 import { ToolBelt } from '../tools/ToolBelt.js';
 import { AmmoPickups } from '../entities/AmmoPickups.js';
 import { LootDrops } from '../entities/LootDrops.js';
@@ -133,6 +136,9 @@ export class GameScene extends Phaser.Scene {
     this.park = new Park(this, ctx, cache.get('park')); // story 5.4: skatepark art and hint signs
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
     this.defense = new DefenseController(this, ctx, cache.get('karate')); // story 6.3: block, dodge, Kiai; the chase director asks it before a catch
+    this.karate = new Karate(ctx, cache.get('karate')); // story 6.4: belts, training points and the daily limit (ctx.karate)
+    this.dojo = new Dojo(this, ctx, cache.get('karate')); // the dojo building in the town, the sensei and the belt rack inside
+    this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
     this.garage = new Garage(this, ctx);
     this.caught = new Caught(this, ctx, cache.get('chase').caught, [this.bikes, this.skateboards, this.skates]);
     this.theft = new BikeTheft(this, ctx, cache.get('theft'), this.bikes, this.parking, cache.get('vehicles')); // needs the chase director's spawns and paths
@@ -324,6 +330,8 @@ export class GameScene extends Phaser.Scene {
     for (const p of this.ctx.players) if (p.pinned) p.hold(); else p.update(dt);
     for (const p of this.ctx.players) p.toolbelt.update(dt);
     this.defense.update(dt);
+    this.karate.update(dt);
+    this.dojo.update(dt);
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.grabs.update(dt);
@@ -352,5 +360,6 @@ export class GameScene extends Phaser.Scene {
     this.ctx.particles.update(dt);
     this.streamer.update();
     this.markers.update();
+    this.beltTags.update();
   }
 }

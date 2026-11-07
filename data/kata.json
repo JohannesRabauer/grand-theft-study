@@ -1,0 +1,151 @@
+{
+ "_doc": "Kata of the karate training minigame (story 6.4, AD-20). lanes = the five tracks left to right; moves maps a kata token to its lane: L dodge left, R dodge right, H block high (up), D block low (down), K Kiai (. = a quiet step). belts.<id> = the kata set of that belt: stepsPerMinute = tempo of one step, windowScale scales the hit windows (higher belts are a little tighter, never harsh), kata = the three kata of a session in order (warm-up, kata, exam): steps = space separated tokens, speed = tempo factor of that kata. The last kata is the belt exam. windows = base hit windows in ms (perfect / good, linger = how long a missed note stays visible). fokus = the calm meter: a hit within steadyMs of the beat fills it by gain, a miss only drains missLoss, at the full level the hit windows widen by widen (share). scoring = points per grade with the combo multiplier (the minigame score is the share of notes hit; the exam uses grade weights: perfect 1, good goodWeight). play = leadInMs before the first step, gapSteps quiet steps between two kata, tailMs after the last one, fallMs = how long a note travels, resultMs = how long the exam banner stays before the result screen.",
+ "lanes": [
+  "dodgeLeft",
+  "blockHigh",
+  "kiai",
+  "blockLow",
+  "dodgeRight"
+ ],
+ "moves": {
+  "L": "dodgeLeft",
+  "R": "dodgeRight",
+  "H": "blockHigh",
+  "D": "blockLow",
+  "K": "kiai"
+ },
+ "windows": {
+  "perfectMs": 90,
+  "goodMs": 200,
+  "lingerMs": 350
+ },
+ "fokus": {
+  "steadyMs": 60,
+  "gain": 0.08,
+  "missLoss": 0.12,
+  "full": 0.8,
+  "widen": 0.2
+ },
+ "scoring": {
+  "perfect": 100,
+  "good": 60,
+  "goodWeight": 0.75,
+  "comboStep": 5,
+  "multStep": 0.1,
+  "maxMult": 1.5
+ },
+ "play": {
+  "leadInMs": 2500,
+  "gapSteps": 3,
+  "tailMs": 1500,
+  "fallMs": 1700,
+  "resultMs": 3200
+ },
+ "belts": {
+  "white": {
+   "stepsPerMinute": 72,
+   "windowScale": 1,
+   "kata": [
+    {
+     "id": "white-1",
+     "speed": 1,
+     "steps": "L . . D . R R H D H D D"
+    },
+    {
+     "id": "white-2",
+     "speed": 1.08,
+     "steps": "R D H H . . R . K L D . K H R D"
+    },
+    {
+     "id": "white-3",
+     "speed": 1.16,
+     "steps": "H L L D . L H . L . D D H L R . K . D R"
+    }
+   ]
+  },
+  "yellow": {
+   "stepsPerMinute": 80,
+   "windowScale": 0.97,
+   "kata": [
+    {
+     "id": "yellow-1",
+     "speed": 1,
+     "steps": "H K L . H L . K . L R H L H"
+    },
+    {
+     "id": "yellow-2",
+     "speed": 1.08,
+     "steps": "L D R H L R . R D R K D H L K D R R"
+    },
+    {
+     "id": "yellow-3",
+     "speed": 1.16,
+     "steps": "L R . . . L K H K L H . . H . K . R L K . L K K"
+    }
+   ]
+  },
+  "orange": {
+   "stepsPerMinute": 88,
+   "windowScale": 0.94,
+   "kata": [
+    {
+     "id": "orange-1",
+     "speed": 1,
+     "steps": "H H L R . . K . . R . . . R D H"
+    },
+    {
+     "id": "orange-2",
+     "speed": 1.08,
+     "steps": "H H R L . L R R H L R D L . H L D H K D D R"
+    },
+    {
+     "id": "orange-3",
+     "speed": 1.16,
+     "steps": "R K H K . . R H K H D . . K . R L D L R D . D L K D D H"
+    }
+   ]
+  },
+  "green": {
+   "stepsPerMinute": 96,
+   "windowScale": 0.91,
+   "kata": [
+    {
+     "id": "green-1",
+     "speed": 1,
+     "steps": "K L H L . . K D R D K . . . L K R L"
+    },
+    {
+     "id": "green-2",
+     "speed": 1.08,
+     "steps": "D K D . R . R . H H L . . H D K . H D . R D . R"
+    },
+    {
+     "id": "green-3",
+     "speed": 1.16,
+     "steps": "L . D R . L R R L H . L L . K L . R K K D . . . D K . . D K K H"
+    }
+   ]
+  },
+  "blue": {
+   "stepsPerMinute": 104,
+   "windowScale": 0.88,
+   "kata": [
+    {
+     "id": "blue-1",
+     "speed": 1,
+     "steps": "R R . . . D . H R D H . . R D . D L . D"
+    },
+    {
+     "id": "blue-2",
+     "speed": 1.08,
+     "steps": "L . H R . R D D . K . L K K D H . . D . L L D H H . . L"
+    },
+    {
+     "id": "blue-3",
+     "speed": 1.16,
+     "steps": "R . L . . D R L . . L R L L K L K L H H D L L R R D R R L L . R H L L H"
+    }
+   ]
+  }
+ }
+}

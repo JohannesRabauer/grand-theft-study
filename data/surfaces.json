@@ -228,5 +228,31 @@
     "rattle": 0.0,
     "particle": null,
     "solid": true
+  },
+  "wood": {
+    "grip": 1.0,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0,
+      "skateboard": 1.05,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0,
+      "skates": 1.05
+    },
+    "rattle": 0.0,
+    "particle": null
+  },
+  "tatami": {
+    "grip": 0.9,
+    "speed": {
+      "foot": 1.0,
+      "bike": 1.0,
+      "skateboard": 0.8,
+      "bully-foot": 1.0,
+      "bully-bike": 1.0,
+      "skates": 0.8
+    },
+    "rattle": 0.0,
+    "particle": null
   }
 }

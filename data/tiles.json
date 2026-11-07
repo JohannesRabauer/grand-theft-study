@@ -12,5 +12,7 @@
   "fence": { "base": "#9a9ea6", "speck": "#85898f", "count": 8 },
   "hedge": { "base": "#2e7a34", "speck": "#256a2b", "count": 16 },
   "dumpster": { "base": "#9a9ea6", "speck": "#85898f", "count": 8 },
-  "booth": { "base": "#9a9ea6", "speck": "#85898f", "count": 8 }
+  "booth": { "base": "#9a9ea6", "speck": "#85898f", "count": 8 },
+  "wood": { "base": "#a9783f", "speck": "#8c5f2e", "count": 8 },
+  "tatami": { "base": "#c8b878", "speck": "#b2a263", "count": 8 }
 }

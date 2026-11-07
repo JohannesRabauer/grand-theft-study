@@ -6,6 +6,7 @@ import { makeHiResArt } from './HiResArt.js';
 import { makeNpcArt } from './NpcArt.js';
 import { makeCharacterArt } from './CharacterArt.js';
 import { makeDefenseArt } from './DefenseArt.js';
+import { makeDojoArt } from './DojoArt.js';
 import { makeBusArt } from './SkatesArt.js';
 import { makeVehicleArt } from './VehicleArt.js';
 import { GameState } from '../state/GameState.js';
@@ -29,6 +30,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('chase', 'data/chase.json');
     this.load.json('tool', 'data/tool.json');
     this.load.json('karate', 'data/karate.json');
+    this.load.json('kata', 'data/kata.json'); // the karate training minigame's kata
     this.load.json('npcs', 'data/npcs.json');
     this.load.json('dogs', 'data/dogs.json');
     this.load.json('stick-world', 'data/stick-world.json');
@@ -74,7 +76,7 @@ export class BootScene extends Phaser.Scene {
     // AD-16: one state store for the whole app; without a chosen slot it is a plain in-memory game.
     const characters = this.cache.json.get('characters');
     // the state config also knows each character's base attributes (player.setCharacter resets to them)
-    const stateCfg = { ...this.cache.json.get('state'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])), kopfnoten: this.cache.json.get('kopfnoten'), shop: this.cache.json.get('shop') };
+    const stateCfg = { ...this.cache.json.get('state'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])), karateBelts: this.cache.json.get('karate').belts.map(b => b.id), kopfnoten: this.cache.json.get('kopfnoten'), shop: this.cache.json.get('shop') };
     const state = new GameState(events, stateCfg);
     const saves = new SaveSlots(state, events, window.localStorage);
     this.registry.set('app', { events, i18n, t: i18n.t, quality, res, state, saves, characters });
@@ -96,6 +98,7 @@ export class BootScene extends Phaser.Scene {
     makeStickArt(this, res.scale, this.cache.json.get('stick-world'), this.cache.json.get('neighbors'));
     makeCharacterArt(this, characters, res.scale);
     makeDefenseArt(this, characters, res.scale);
+    makeDojoArt(this, this.cache.json.get('karate'), res.scale);
     makeBusArt(this, res.scale);
     makeVehicleArt(this, res.scale);
     // The speed zoom scales the world by non-integer factors, where nearest-neighbour sampling makes

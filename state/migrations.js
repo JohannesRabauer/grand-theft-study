@@ -1,6 +1,6 @@
 // Save upgrades (AD-16). MIGRATIONS[n] turns a version-n save into version n+1; migrate() chains them.
 // v0 was the pre-release shape: money as a float `euros` and a single flat `player`.
-import { createPlayer, createShared } from './GameState.js';
+import { createKarate, createPlayer, createShared } from './GameState.js';
 import { emptyGrades, defaultKopfnoten } from '../grading/gradeCore.js';
 
 export const MIGRATIONS = {
@@ -34,6 +34,11 @@ export const MIGRATIONS = {
         kopfnoten: p.kopfnoten ?? (cfg.kopfnoten ? defaultKopfnoten(cfg.kopfnoten) : {})
       }))
     };
+  },
+
+  // v4: belt progress next to the belt (points, sessions, the day of the last session and exam).
+  3(d, cfg) {
+    return { ...d, v: 4, players: d.players.map(p => ({ ...p, karate: { ...createKarate(cfg), ...p.karate } })) };
   }
 };
 

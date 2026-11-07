@@ -116,6 +116,29 @@ export const ACTIONS = {
     return { path: `players.${player}.kopfnoten.${category}` };
   },
 
+  // A finished karate training session (story 6.4): points and the session count, and the day's session counter for the daily limit.
+  'karate.addPoints'(s, { player, amount, day }) {
+    const k = s.players[player]?.karate;
+    if (!k || !Number.isInteger(amount) || amount < 0 || !positiveInt(day)) return reject('bad-payload');
+    k.points += amount;
+    k.sessions += 1;
+    if (k.trainDay !== day) { k.trainDay = day; k.trainedToday = 0; }
+    k.trainedToday += 1;
+    return { path: `players.${player}.karate` };
+  },
+
+  // The belt exam was passed: only the next belt of cfg.karateBelts (data/karate.json order) can be earned, one per day.
+  'karate.promote'(s, { player, belt, day }, cfg) {
+    const k = s.players[player]?.karate;
+    const order = cfg.karateBelts;
+    if (!k || !order || !positiveInt(day)) return reject('bad-payload');
+    if (order[order.indexOf(k.belt) + 1] !== belt) return reject('not-next-belt');
+    if (k.lastExamDay === day) return reject('exam-done-today');
+    k.belt = belt;
+    k.lastExamDay = day;
+    return { path: `players.${player}.karate.belt` };
+  },
+
   'xp.add'(s, { player, amount }, cfg) {
     const p = s.players[player];
     if (!p || !positiveInt(amount)) return reject('bad-payload');

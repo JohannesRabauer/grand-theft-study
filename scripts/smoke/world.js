@@ -16,7 +16,7 @@ export const worldDoors = {
     ctx.events.on('world:enter', e => log.push(['enter', e.map, e.entry]));
     for (const p of ctx.players) if (gs.bikes.isMounted(p.index)) gs.bikes.dismount(p);
     const door = ctx.map.objects.find(o => o.id === 'door-test');
-    assert('the debug door exists in a ?bench session and the town is the current map', !!door && world.id === 'town' && gs.doors.list.length === 1 && world.playable().includes('test-room'));
+    assert('the debug door exists in a ?bench session and the town is the current map', !!door && world.id === 'town' && gs.doors.list.length === 2 && world.playable().includes('test-room'));
 
     // ---- town -> test room through the door (walk in + interact)
     player.teleport(T(door.x + 1), T(door.y));

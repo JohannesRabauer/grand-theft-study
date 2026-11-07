@@ -4,7 +4,7 @@
 // one screen pixel. Same keys as the 1x set. Everything is deterministic (seeded), nothing is
 // loaded. Sprites get a dark outline pass; tiles get seeded variants so the ground is not a grid.
 const TILE = 32;
-const VARIANTS = { asphalt: 4, cobble: 3, grass: 4, path: 3, concrete: 4, water: 3, lane: 2, hedge: 3, puddle: 1 };
+const VARIANTS = { asphalt: 4, cobble: 3, grass: 4, path: 3, concrete: 4, water: 3, lane: 2, hedge: 3, puddle: 1, wood: 3, tatami: 2 };
 
 function rgb(c) { const n = parseInt(c.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
 function mix(a, b, t) {
@@ -142,6 +142,21 @@ const GROUND = {
         p.px('#e8b830', x, y, 1, 1);
       }
     }
+  },
+  // Dojo floors (story 6.4): planks with staggered seams, and straw mats with a fine weave (the mat edges are drawn by entities/Dojo.js).
+  wood(p, d, r, v) {
+    for (let row = 0; row < 4; row++) {
+      const y = row * 8;
+      p.px(mix(d.base, d.speck, r() * 0.45), 0, y, TILE, 8);
+      p.px(darken(d.base, 0.35), 0, y + 7, TILE, 1);
+      p.px(lighten(d.base, 0.16), 0, y, TILE, 1);
+      p.px(darken(d.base, 0.3), (row * 11 + v * 7) % TILE, y, 1, 7);
+    }
+    speckle(p, r, [d.speck, darken(d.base, 0.15)], 40);
+  },
+  tatami(p, d, r) {
+    for (let x = 0; x < TILE; x += 2) p.px(x % 4 ? lighten(d.base, 0.07) : darken(d.base, 0.06), x, 0, 1, TILE);
+    speckle(p, r, [d.speck, lighten(d.base, 0.1)], 36);
   },
   path(p, d, r, v) {
     speckle(p, r, [d.speck, darken(d.base, 0.1), lighten(d.base, 0.1)], 100);

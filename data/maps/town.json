@@ -4,8 +4,8 @@
   "legend": { "A":"asphalt", "L":"lane", "C":"cobble", "G":"grass", "P":"puddle", "p":"path", "S":"concrete", "W":"water", "T":"tree", "F":"fence", "H":"hedge", "D":"dumpster", "B":"booth", "#":"wall" },
   "rows": [
     "################################################################################################",
-    "#GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
-    "#GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+    "#GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG######GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
+    "#GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG######GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#",
     "#GGGGTGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGFFFFFFFFFFFFFFFFFFFFFFFFFFFFGGG#",
     "#GGGGGTGGTGG############################################CCCCCCCCFSSS####################SSSFGGG#",
     "#GTGGGGGGGTGCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCFSTS####################SSSFGGG#",
@@ -422,6 +422,10 @@
     { "type":"prop", "id":"p28", "x":40, "y":15, "kind":"box" },
     { "type":"prop", "id":"p29", "x":12, "y":15, "kind":"box" },
     { "type":"prop", "id":"p30", "x":61, "y":15, "kind":"crate" },
-    { "type":"prop", "id":"p31", "x":80, "y":56, "kind":"crate" }
+    { "type":"prop", "id":"p31", "x":80, "y":56, "kind":"crate" },
+    { "type":"dojo", "id":"dojo-building", "role":"building", "x":57, "y":1, "w":6, "h":2 },
+    { "type":"door", "id":"door-dojo", "x":59, "y":3, "w":2, "h":1, "to":"dojo", "entry":"from-town", "label":"world.door.dojo", "auto":true },
+    { "type":"entry", "id":"from-dojo", "x":60, "y":4, "facing":"down" },
+    { "type":"sign", "id":"dojo-sign", "x":58, "y":3, "text":"dojo.sign", "board":"DOJO" }
   ]
 }

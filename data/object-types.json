@@ -80,7 +80,9 @@
       "steps": { "type": "ids", "required": true, "doc": "ids of the trick objects the line chains, in order" }
     } },
     "lamp": { "shape": "point", "inWall": false, "fields": {} },
-    "dojo": { "shape": "rect", "inWall": false, "fields": {} },
+    "dojo": { "shape": "rect", "inWall": true, "fields": {
+      "role": { "type": "enum", "values": ["building", "sensei", "mats", "rack"], "required": true, "doc": "building: the facade of the dojo in the town (art over wall tiles, entities/Dojo.js); sensei: the 1x1 spot where the master stands (interact starts the training); mats: the training area (edges and emblem); rack: the belt rack on the north wall" }
+    }, "doc": "the karate dojo (story 6.4): its building outside, its master, mats and belt rack inside" },
     "shop": { "shape": "rect", "inWall": false, "fields": { "shopId": { "type": "string", "required": true } } },
     "bakery": { "shape": "rect", "inWall": false, "fields": {} },
     "pfand-machine": { "shape": "point", "inWall": false, "fields": {} },
@@ -93,6 +95,7 @@
     "tram-stop": { "shape": "point", "inWall": false, "fields": {} },
     "sign": { "shape": "point", "inWall": true, "fields": {
       "text": { "type": "i18n", "required": true },
+      "board": { "type": "string", "doc": "the short word painted on the signpost board (default LINES, the skatepark hint)" },
       "lang": { "type": "enum", "values": ["de", "en"] }
     } },
     "mission-trigger": { "shape": "point", "inWall": false, "fields": {

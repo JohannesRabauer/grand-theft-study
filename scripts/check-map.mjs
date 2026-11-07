@@ -81,6 +81,7 @@ for (const o of objects) {
   for (const [x, y] of cells(o)) {
     assert.ok(x >= 0 && y >= 0 && x < W && y < H, `${o.id} out of bounds`);
     if (o.type === 'turf') continue; // the skatepark contains ramps (walls) by design
+    if (o.type === 'dojo') continue; // the dojo facade stands on wall tiles (the catalog allows it; check-karate.mjs checks the footprint)
     if (o.perch) { assert.equal(surf(x, y), perchSurface(o), `perched ${o.id} must sit on a ${perchSurface(o)}`); continue; } // cans on a fence, frisbees and kites in a tree
     assert.ok(walkable(x, y), `${o.type} ${o.id} lies in a wall at ${x},${y}`);
   }
