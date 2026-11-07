@@ -1,0 +1,96 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Quest runner and phone booth triggers"
+description = "Adds QuestRunner with data/missions, event triggers, objective exposure and phone-booth mission starts."
+verify = "A sample mission starts at a phone booth, advances on events and shows its objective on the arrow."
+covers = ["CAP-11", "CAP-10"]
+after = ["1.3", "1.4"]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-21"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Pfand machine and bakery"
+description = "Adds the Pfand coin-counting activity and the bakery ordering and paying activity in German or English."
+verify = "Both reward the player and record learning results."
+covers = ["CAP-9"]
+after = ["3.1"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-19", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-21"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Sign scanning and newspaper route"
+description = "Adds English sign scanning bonus points and the newspaper route with number patterns, thrown from a vehicle."
+verify = "Scanning awards bonus points and the route completes with correct doorstep hits."
+covers = ["CAP-9", "CAP-11"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-21"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Tram map quiz and fast travel"
+description = "Adds the geography quiz that unlocks fast travel between tram stations."
+verify = "A correct quiz unlocks a station and fast travel works between unlocked stations."
+covers = ["CAP-9"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-19", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-21"]
+
+[[entry]]
+id = 5
+type = "story"
+title = "Chores A: instrument, reading, clean room"
+description = "Adds practising the instrument (rhythm), the reading quiz in DE or EN, and clean-your-room with physics."
+verify = "Each chore completes, rewards and registers for Familienfrieden."
+covers = ["CAP-10"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-20", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-21"]
+
+[[entry]]
+id = 6
+type = "story"
+title = "Chores B: dishes, trash sorting, cooking, Familienfrieden"
+description = "Adds washing dishes, sorting trash (Gelber Sack, Papier, Bio, Restmüll), cooking with fractions, and the Familienfrieden to pocket money rule."
+verify = "All three complete, and unfinished chores reduce the next pocket money."
+covers = ["CAP-10"]
+after = [5]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-21", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-22"]
+
+[[entry]]
+id = 7
+type = "story"
+title = "Missions A: stolen bike, grandma, lost homework"
+description = "Adds the stolen-bike rescue, grandma's groceries with fragile eggs, and the lost-homework hunt."
+verify = "Each mission plays start to finish with its reward."
+covers = ["CAP-11"]
+after = [1, "5.5"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-21"]
+
+[[entry]]
+id = 8
+type = "story"
+title = "Missions B: races, Kirmes range, friendship arc"
+description = "Adds skate and bike races, the Kirmes slingshot range and the bully friendship missions."
+verify = "Each plays start to finish and a friendship mission measurably changes a bully."
+covers = ["CAP-11", "CAP-22"]
+after = [1, "7.3"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-21", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-25"]
+

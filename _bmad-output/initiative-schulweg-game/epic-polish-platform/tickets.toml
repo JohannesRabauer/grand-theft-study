@@ -1,0 +1,48 @@
+[[entry]]
+id = 1
+type = "story"
+title = "PWA and offline play"
+description = "Adds the manifest and service worker for offline play."
+verify = "The game loads offline after the first visit."
+covers = ["CAP-33"]
+after = []
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-1"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Gamepad support and input prompts"
+description = "Completes gamepad support and shows button prompts matching the active input type."
+verify = "Prompts switch with the input type and a gamepad completes a commute."
+covers = ["CAP-33"]
+after = []
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-10", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-18"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Language and tone review"
+description = "Reviews all text for tone, localization and disallowed content and fixes findings."
+verify = "The content check passes and a review pass finds nothing disallowed."
+covers = ["CAP-32"]
+after = []
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-29"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Full-day smoke test, balance and cross-browser pass"
+description = "Adds the full-day scripted scenario in solo and co-op, a balance pass, a cross-browser checklist and refreshed performance docs with the real-phone protocol."
+verify = "The full-day scenario passes, Medium holds the update budget, and the checklist is complete."
+covers = ["CAP-2", "CAP-1", "CAP-33"]
+after = []
+hitl = true
+risk = "high"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-29"]
+

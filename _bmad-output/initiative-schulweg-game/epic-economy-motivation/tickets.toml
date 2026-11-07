@@ -1,0 +1,60 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Shops, items and cosmetics"
+description = "Adds data-driven shops (bike and skate shops, snacks, tram ticket, slingshot upgrades) and cosmetics applied through ctx.cosmetics."
+verify = "Purchases change state and cosmetics visibly change the player; prices come from data."
+covers = ["CAP-24", "CAP-25"]
+after = ["1.1", "1.4"]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-22"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "XP, levels and attribute growth hooks"
+description = "Adds XP and level-ups from actions and wires the attribute growth hooks."
+verify = "Activities award XP, levels trigger a celebration, and attributes grow."
+covers = ["CAP-25", "CAP-12"]
+after = ["2.1"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-16", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-22"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Sticker collection with fun facts"
+description = "Adds the Panini-style stickers with fun facts in German and English and the album screen."
+verify = "Stickers drop from defined sources, persist, and each shows a fun fact in both languages."
+covers = ["CAP-25"]
+after = ["1.4"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-22", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Streaks and achievements"
+description = "Adds daily streaks and funny achievements with unlock celebration."
+verify = "A streak and an achievement unlock from scripted events and persist."
+covers = ["CAP-25"]
+after = []
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-16"]
+
+[[entry]]
+id = 5
+type = "story"
+title = "Lernbuch"
+description = "Adds the learning-book screen with per-subject bars and badges from real accuracy data."
+verify = "After scripted play the bars and badges reflect the stored accuracy per subject."
+covers = ["CAP-25", "CAP-6"]
+after = ["3.1", "1.4"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-19", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
+

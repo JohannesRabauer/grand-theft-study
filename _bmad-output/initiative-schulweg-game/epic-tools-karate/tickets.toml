@@ -1,0 +1,60 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Throwing stick and dog fetch"
+description = "Adds the throwing stick tool (arc, retrieve, topples balls and kites, distractions) and the dog fetch hook."
+verify = "A throw topples a ball, can be picked up again, and never affects people or animals."
+covers = ["CAP-17"]
+after = []
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-24"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Stick: bushes, crates, doorbells, piñata, balloons"
+description = "Adds the close-range stick (bushes, crates with debris, cones, doorbell ding-dong-run, piñata) and the slingshot balloon target."
+verify = "Each target reacts correctly and the collision tests still pass."
+covers = ["CAP-17"]
+after = []
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-24"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Defense controller and bully stumble"
+description = "Adds DefenseController (block, dodge, Kiai with cooldown), the defend and kiai intents, and the bully STUMBLE state."
+verify = "A timed Kiai near a bully makes it stumble back and lowers Ärger at levels 1–2, with no force applied."
+covers = ["CAP-19"]
+after = ["1.5"]
+hitl = false
+risk = "high"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-24"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Dojo and belt training"
+description = "Adds the dojo map, a timing-based training minigame, belt progression in state and unlocks."
+verify = "Training sessions award belt progress that persists in saves and unlocks each defense option."
+covers = ["CAP-18"]
+after = ["1.7", "4.1"]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-24"]
+
+[[entry]]
+id = 5
+type = "story"
+title = "Belt effects and karate tuning"
+description = "Applies belt data to defense range, cooldown and effect, adds Ordnung growth, and adds unit checks."
+verify = "Higher belts measurably widen the effect and the checks pass."
+covers = ["CAP-19", "CAP-18"]
+after = [3, 4]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-24"]
+

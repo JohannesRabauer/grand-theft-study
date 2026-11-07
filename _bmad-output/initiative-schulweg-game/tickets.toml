@@ -1,0 +1,96 @@
+[[epic]]
+id = 1
+slug = "epic-foundation"
+title = "Game foundation: state, day clock, players, screens, maps"
+covers = ["CAP-2", "CAP-26", "CAP-27", "CAP-32", "CAP-4", "CAP-1"]
+
+[[epic]]
+id = 2
+slug = "epic-characters-coop"
+title = "Three characters and local two-player co-op"
+covers = ["CAP-12", "CAP-23", "CAP-1", "CAP-33"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 3
+slug = "epic-learning-engine"
+title = "Learning engine and Klasse 3 content"
+covers = ["CAP-6", "CAP-8", "CAP-32"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 4
+slug = "epic-minigames"
+title = "Lesson minigames"
+covers = ["CAP-7", "CAP-5", "CAP-12"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epic = 3, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 5
+slug = "epic-skating"
+title = "Skateboard, roller skates and the skatepark"
+covers = ["CAP-13", "CAP-14", "CAP-15", "CAP-16"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 6
+slug = "epic-tools-karate"
+title = "Tools and karate"
+covers = ["CAP-17", "CAP-18", "CAP-19"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epic = 4, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 7
+slug = "epic-chase-full"
+title = "Full chase system: levels 3–5, boss and other chasers"
+covers = ["CAP-20", "CAP-21", "CAP-22"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epic = 3, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 8
+slug = "epic-day-flow"
+title = "The school day: morning to Zeugnis"
+covers = ["CAP-2", "CAP-3", "CAP-4", "CAP-5", "CAP-8"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epic = 3, needs = "the stories pinned in its entries' after" }, { epic = 4, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 9
+slug = "epic-world-activities"
+title = "In-world learning, chores and missions"
+covers = ["CAP-9", "CAP-10", "CAP-11", "CAP-22", "CAP-26"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epic = 3, needs = "the stories pinned in its entries' after" }, { epic = 5, needs = "the stories pinned in its entries' after" }, { epic = 7, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 10
+slug = "epic-economy-motivation"
+title = "Economy, progress and rewards"
+covers = ["CAP-24", "CAP-25", "CAP-12", "CAP-16"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epic = 2, needs = "the stories pinned in its entries' after" }, { epic = 3, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 11
+slug = "epic-hud-settings"
+title = "HUD, minimap, phone and parent settings"
+covers = ["CAP-26", "CAP-28", "CAP-20"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epic = 3, needs = "the stories pinned in its entries' after" }, { epic = 9, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 12
+slug = "epic-living-world"
+title = "Seasons, weather and a living town"
+covers = ["CAP-30", "CAP-31", "CAP-4"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 13
+slug = "epic-audio"
+title = "Chiptune music and sound effects"
+covers = ["CAP-29", "CAP-33"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }]
+
+[[epic]]
+id = 14
+slug = "epic-polish-platform"
+title = "Polish, platform and release readiness"
+covers = ["CAP-32", "CAP-33", "CAP-2", "CAP-1"]
+

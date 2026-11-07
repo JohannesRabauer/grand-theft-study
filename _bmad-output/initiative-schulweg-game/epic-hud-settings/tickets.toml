@@ -1,0 +1,48 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Full HUD modules"
+description = "Completes the HUD: clock and season, energy and stamina, Ärger, money, grade average, year, XP, vehicle, tool, ammo and wind."
+verify = "Each element shows correct values in one and two player modes."
+covers = ["CAP-26"]
+after = ["1.4", "1.5"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Minimap with spotted radius"
+description = "Adds the toggleable minimap with objective and the lookouts' spotted radius."
+verify = "The minimap toggles, shows the player, objective and spotted radius."
+covers = ["CAP-26", "CAP-20"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Phone with messages"
+description = "Adds the phone screen with messages from mom, friends and bully taunts."
+verify = "Scripted events produce messages that show in the phone and the HUD hint."
+covers = ["CAP-26"]
+after = ["9.1", "1.4"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Parent settings and play-time reminder"
+description = "Adds the math gate, play-time reminder, learning difficulty and chases on/off settings."
+verify = "Wrong answers keep the gate shut, and each setting changes behaviour and persists."
+covers = ["CAP-28"]
+after = ["1.4", "3.1"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
+

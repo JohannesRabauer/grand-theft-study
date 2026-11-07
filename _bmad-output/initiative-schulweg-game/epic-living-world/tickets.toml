@@ -1,0 +1,60 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Season and weather cycle with snow and ice"
+description = "Drives seasons and weather from the clock and adds snow and ice surface behaviour."
+verify = "Each season looks and plays differently and transitions are smooth."
+covers = ["CAP-30"]
+after = ["1.3"]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-17"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Particle set: nature and town"
+description = "Adds snow footprints, leaf piles, pollen, fog, fireflies, butterflies, canal fish, exhaust, chimney smoke, sprinklers, fountain, coin sparkles, confetti and the trick fire trail."
+verify = "Each effect triggers from its cause within the particle cap."
+covers = ["CAP-31"]
+after = []
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-8", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-9"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Physics objects: swings, signs, bridge, kites, carts, dominoes, flotsam"
+description = "Adds linked-segment swings, signs, a rope bridge, kites and flags, shopping carts on slopes, crate dominoes and canal floating objects."
+verify = "Each reacts to the player, wind or impacts within the prop cap."
+covers = ["CAP-31"]
+after = []
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-7", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-8"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Traffic: cars, buses, tram and vans"
+description = "Adds pooled cars, buses, the tram with its bell and delivery vans with comic non-violent hits."
+verify = "Traffic moves and a hit gives a cartoon tumble with item scatter and time loss."
+covers = ["CAP-31", "CAP-4"]
+after = []
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-8"]
+
+[[entry]]
+id = 5
+type = "story"
+title = "Pigeons, cats and crowd extras"
+description = "Adds pigeons that scatter and are never hittable, cats on walls, duck-feeding and phone-filming reactions."
+verify = "Pigeons scatter on approach and no tool or vehicle can hit them."
+covers = ["CAP-31"]
+after = []
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-8", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-15"]
+

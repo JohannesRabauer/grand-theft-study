@@ -1,0 +1,48 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Characters and attribute growth"
+description = "Adds data-driven Lena, Mehmet and Jonas with six attributes, start vehicles and perks, character select, and growth hooks via actions."
+verify = "Each character moves, aims and tricks according to its attributes, and a matching activity raises the matching attribute."
+covers = ["CAP-12"]
+after = ["1.1", "1.5"]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-16", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-18"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Co-op core: second player and camera rig"
+description = "Adds a second player entity controlled by P2 intents, per-player HUD slices, and a CameraRig that zooms to fit both players with a tether."
+verify = "Two players move independently, the camera keeps both in view, and the tether stops them separating beyond the configured distance."
+covers = ["CAP-23"]
+after = [1, "1.4", "1.5"]
+hitl = false
+risk = "high"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-18"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Co-op chase, zones, pickups and caught"
+description = "Makes bullies, crowd, hiding, turf zones, pickups, objective and caught frame work for two players with a shared Ärger level."
+verify = "A bully chases the nearest visible player, each player hides and gets caught independently, and pickups and zones respect the player index."
+covers = ["CAP-23", "CAP-1"]
+after = [2]
+hitl = false
+risk = "high"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-18"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Co-op menu, gamepad join and smoke test"
+description = "Adds the mode and second-character choice to the menu, gamepad join, and a scripted two-player smoke scenario."
+verify = "From the menu a two-player game starts with two characters, and the two-player smoke scenario passes alongside the single-player one."
+covers = ["CAP-23", "CAP-33"]
+after = [3, "1.2"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-18", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-29"]
+

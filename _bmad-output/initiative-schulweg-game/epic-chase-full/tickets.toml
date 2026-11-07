@@ -1,0 +1,60 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Levels 3–5 and gang tactics"
+description = "Extends ChaseDirector to five levels with the gang splitting to cut corners."
+verify = "Each level spawns its configured chasers and level 3 chasers pick different intercept points."
+covers = ["CAP-20"]
+after = ["1.5"]
+hitl = false
+risk = "high"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-25"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "E-scooter bullies and phone lookouts"
+description = "Adds e-scooter chasers and lookouts whose spotted radius raises and exposes the chase."
+verify = "Lookouts emit spotted events and e-scooters are faster than foot bullies."
+covers = ["CAP-20"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-25"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Boss bully framework and Klasse 3 boss"
+description = "Adds boss definitions with unique trait flags and the year-3 boss with its trait."
+verify = "The boss joins at level 5 and its trait measurably changes the chase."
+covers = ["CAP-20"]
+after = [1]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-25"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Hausmeister, ticket inspector, dog and neighbor"
+description = "Adds the four other chasers with their triggers and exits."
+verify = "Each chaser triggers from its cause, can be escaped, and then calms down."
+covers = ["CAP-21"]
+after = [1]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-25"]
+
+[[entry]]
+id = 5
+type = "story"
+title = "Charme talk-down and question back-off"
+description = "Adds the Charme check and the learning-question back-off at levels 1–2, gentle on mistakes."
+verify = "A successful check or correct answer ends the chase and a wrong answer is gentle."
+covers = ["CAP-22"]
+after = ["3.1", 1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-19", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-25"]
+

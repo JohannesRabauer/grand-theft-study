@@ -1,0 +1,48 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Learning engine with adaptivity and repetition"
+description = "Adds LearningEngine (next, answer, due), adaptive difficulty toward 75–85%, spaced repetition, stats in state, and a simulation check with weak and strong learners."
+verify = "The simulation converges both learner types into the target band and wrong questions return later."
+covers = ["CAP-6"]
+after = ["1.1"]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-19"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Klasse 3 content: Mathe and Deutsch"
+description = "Writes the bilingual question JSON for the times table up to 10x10 and number work, and for der/die/das, spelling and word types, with explanations and hints."
+verify = "Each topic has enough items across difficulties 1–5, every item has de and en text, and the content check passes."
+covers = ["CAP-6", "CAP-32"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-19"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Klasse 3 content: Englisch, Sachkunde, Science"
+description = "Writes the bilingual question JSON for basic English vocabulary, Sachkunde/Erdkunde (German states, capitals, rivers) and Science (water cycle, plants and animals, healthy food)."
+verify = "Each topic has enough items across difficulties, every item has de and en text with a fun fact where fitting, and the content check passes."
+covers = ["CAP-6", "CAP-32"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-19"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Grades module and Kopfnoten model"
+description = "Adds Grades (score to grade 1–6, averages, effort and improvement weighting) and the Kopfnoten conduct tracker with actions."
+verify = "Unit checks cover grade boundaries, improvement weighting and the promotion inputs for both outcomes."
+covers = ["CAP-8"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-20"]
+

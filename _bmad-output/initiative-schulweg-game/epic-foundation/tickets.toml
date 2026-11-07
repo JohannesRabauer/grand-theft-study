@@ -1,0 +1,84 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Game state store and save slots"
+description = "Adds ctx.state with the versioned schema, actions-only mutation, three save slots, migration chain, corrupt-slot backup and autosave hooks on phase:ended."
+verify = "A scripted run dispatches actions, saves, reloads and finds the same state; a corrupted slot is backed up and reported without a crash."
+covers = ["CAP-27"]
+after = []
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-16"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Save slot menu and continue flow"
+description = "Adds the menu screens to start a new game, continue or delete one of three slots, with slot summaries via ctx.t."
+verify = "From the menu a new game in slot 2 can be created, left, and continued after a page reload."
+covers = ["CAP-27", "CAP-32"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-16"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Day clock and phase machine"
+description = "Adds DayClock with data/day.json: game time, five phases, season and weather schedule, phase events, advance(reason) and the HUD clock with season icon."
+verify = "A full day steps through all phases in the configured real time, emits phase events, and the clock and season show in the HUD."
+covers = ["CAP-2"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-17"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Screen stack and HUD modules"
+description = "Refactors UIScene into HUD modules per player or shared and adds ScreenStack with per-screen world-freeze rules."
+verify = "Existing HUD elements still show, and pushing a test screen freezes the world and gives it exclusive input."
+covers = ["CAP-26"]
+after = []
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
+
+[[entry]]
+id = 5
+type = "story"
+title = "Players array and per-player intents"
+description = "Replaces the singular player with ctx.players, adds a compatibility ctx.player, per-player intent snapshots and the P1/P2 bindings in data/input.json."
+verify = "Single-player plays as before; a test creates two intents driven by different keys and a gamepad and each moves only its player."
+covers = ["CAP-1", "CAP-23"]
+after = []
+hitl = false
+risk = "high"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-18"]
+
+[[entry]]
+id = 6
+type = "story"
+title = "Content safety and check infrastructure"
+description = "Adds scripts/check-content.mjs for i18n and learning text, per-epic smoke scaffolding and registers everything in check-all."
+verify = "check-content flags a planted disallowed word and passes the current text; check-all runs it."
+covers = ["CAP-32"]
+after = []
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-29"]
+
+[[entry]]
+id = 7
+type = "story"
+title = "Map framework and interiors"
+description = "Adds ctx.world.load(mapId, entry), the object-types catalog, door objects with world:enter and check-map validation per map."
+verify = "A test door moves the player between two maps and back, and check-map validates both against the catalog."
+covers = ["CAP-4"]
+after = []
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-28"]
+

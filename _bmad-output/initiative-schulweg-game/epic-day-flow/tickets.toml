@@ -1,0 +1,72 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Home and morning: breakfast and bag packing"
+description = "Adds the home interior map, breakfast and the drag-and-drop schoolbag packing checked against the timetable."
+verify = "Packing validates against the day, and a forgotten item is stored for later consequences."
+covers = ["CAP-3"]
+after = ["1.3", "1.7"]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-17", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-28"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Commute: routes, deadline and tram"
+description = "Adds the 08:00 deadline with gentle lateness penalty, at least three routes with their risks (traffic, turf, cobbles, tram with ticket check) and pickups."
+verify = "Each route works, lateness is penalised gently, and tram riding without a ticket triggers the inspector hook."
+covers = ["CAP-4"]
+after = [1]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-17"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "School interior, timetable and lessons"
+description = "Adds the school interior map, the timetable data and lesson scheduling that launches minigames and records grades."
+verify = "A day schedules 4–6 lessons from the timetable, each launching a minigame and storing the grade."
+covers = ["CAP-5", "CAP-8"]
+after = ["4.1", "3.4"]
+hitl = false
+risk = "high"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-17", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-20", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-28"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Surprise events"
+description = "Adds pop quiz, homework check (using packed items) and substitute teacher events."
+verify = "Each event can fire in a day and the homework check reacts to a forgotten item."
+covers = ["CAP-5", "CAP-3"]
+after = [3, 1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-20"]
+
+[[entry]]
+id = 5
+type = "story"
+title = "Afternoon, ride home and evening"
+description = "Adds the afternoon free roam with school-gate danger, the evening and bedtime transition."
+verify = "Phases flow from school to home to bed with autosave at each end."
+covers = ["CAP-2"]
+after = [3]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-17"]
+
+[[entry]]
+id = 6
+type = "story"
+title = "Zeugnis, promotion and end screen"
+description = "Adds the report card with grades, Kopfnoten, funny teacher comments, confetti and parent scene, the promotion rule, Comeback bonus and the \"Klasse 4 coming soon\" end screen."
+verify = "Both promotion outcomes are produced by test cases and the repeat path is encouraging, never shaming."
+covers = ["CAP-8"]
+after = [3, "3.4"]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
+

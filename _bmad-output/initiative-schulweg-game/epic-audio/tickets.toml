@@ -1,0 +1,36 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Audio service and sound effects"
+description = "Adds ctx.audio with lazy AudioContext, mute-until-tap, voice cap and the event-mapped procedural SFX set."
+verify = "A scripted event plays its sound after a first gesture and the voice cap holds."
+covers = ["CAP-29", "CAP-33"]
+after = []
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-26"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Music themes per phase and season"
+description = "Adds the pattern sequencer and music themes."
+verify = "Theme changes at phase and season boundaries."
+covers = ["CAP-29"]
+after = [1, "1.3"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-26"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Adaptive chase music"
+description = "Adds chase layers that stack with the Ärger level."
+verify = "Layers increase from level 1 to 5 and drop on escape."
+covers = ["CAP-29"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-26", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-25"]
+

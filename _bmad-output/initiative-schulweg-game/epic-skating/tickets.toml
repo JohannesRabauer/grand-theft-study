@@ -1,0 +1,60 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Skateboard profile, ollie and manual"
+description = "Adds the skateboard profile, ollie, manual and surface behaviour with sprites and effects."
+verify = "Riding differs measurably from the bike on each surface, and ollie and manual are triggerable."
+covers = ["CAP-13"]
+after = []
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-23"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Trick system: grinds, stairs, Style combo"
+description = "Adds TrickSystem with grind, stairs, combo multiplier, banking to money and XP, and the fire trail."
+verify = "A combo chain raises the multiplier and banking pays out through wallet and XP actions."
+covers = ["CAP-13"]
+after = [1, "1.1"]
+hitl = false
+risk = "high"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-23"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Roller skates and bus/tram grab"
+description = "Adds the skates profile with surface penalties and the risky grab of slow buses and trams."
+verify = "Skates are the most agile on sidewalks and worst on cobble and grass, and a grab gives speed with a failure chance."
+covers = ["CAP-14"]
+after = [1]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-23"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Skatepark map build"
+description = "Adds ramps, rails, benches, stairs and trick lines to the skatepark map, keeping its turf zone."
+verify = "Every trick type has a line and entering still raises Ärger."
+covers = ["CAP-15"]
+after = ["1.7", 2]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-28"]
+
+[[entry]]
+id = 5
+type = "story"
+title = "Vehicle ownership, racks, theft and rescue"
+description = "Adds owned-vehicle state, unlock paths (buy, race, garage), bike racks and the bully-borrows-bike rescue trigger."
+verify = "Locked vehicles unlock via each path, an unlocked bike left unparked gets borrowed, and the rescue event fires."
+covers = ["CAP-16"]
+after = ["1.1", 2]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-22", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-23"]
+
