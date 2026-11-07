@@ -4,12 +4,22 @@
 import { ACTIONS } from './actions.js';
 import { emptyGrades, defaultKopfnoten } from '../grading/gradeCore.js';
 
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 
 // Belt progress (story 6.4): points = training points earned in all sessions, sessions = sessions ever started, trainDay /
 // trainedToday = the game day of the last session and how many sessions that day had (the daily limit), lastExamDay = the
 // day of the last promotion (one belt per day).
 export const createKarate = cfg => ({ belt: cfg.startBelt, points: 0, sessions: 0, lastExamDay: 0, trainDay: 0, trainedToday: 0 });
+
+// A character that starts with a higher belt (data/characters.json startBelt, as cfg.characterBelts: id -> { belt, points }):
+// raises the belt and its points of `player` (a mutable player object); never lowers what the kid already earned.
+export function grantStartBelt(player, cfg) {
+  const grant = cfg.characterBelts?.[player.character];
+  const order = cfg.karateBelts;
+  if (!grant || !order || order.indexOf(grant.belt) <= order.indexOf(player.karate.belt)) return;
+  player.karate.belt = grant.belt;
+  player.karate.points = Math.max(player.karate.points, grant.points);
+}
 
 export function createPlayer(cfg) {
   return {

@@ -38,7 +38,7 @@ function bootGame(game) {
   return { gs, ui: game.scene.getScene('UI'), ctx: gs.ctx };
 }
 
-const startCoop = (game, env) => menuStart(game, env, { coop: true, characters: ['jonas', 'lena'] });
+const startCoop = (game, env) => menuStart(game, env, { coop: true, characters: ['lorenz', 'helena'] });
 
 // CAP-23: the menu flow (mode, one character select per player), the stored mode and characters, Continue, the pause menu
 // line, the solo path, and the pad join and disconnect handling.
@@ -63,26 +63,26 @@ export const coopMenu = {
     game.menuNav.mode('coop');
     step(2);
     assert('Co-op leads to the select for player 1, then player 2', nav().screen === 'character' && nav().picker === 0 && menuTexts().includes(t('menu.character.titleP1')));
-    game.menuNav.pick('mehmet');
+    game.menuNav.pick('kilian');
     step(2);
-    assert('player 2 picks next, in its own select', nav().picker === 1 && menuTexts().includes(t('menu.character.titleP2')) && nav().picks[0] === 'mehmet');
-    game.menuNav.pick('mehmet'); // the same kid twice is allowed
+    assert('player 2 picks next, in its own select', nav().picker === 1 && menuTexts().includes(t('menu.character.titleP2')) && nav().picks[0] === 'kilian');
+    game.menuNav.pick('kilian'); // the same kid twice is allowed
     step(4);
     const same = bootGame(game).ctx;
-    assert('both may pick the same character', same.players.length === 2 && same.players.every(p => p.character.id === 'mehmet'));
-    assert('co-op with two characters starts from the menu and is saved in slot 2', same.state.shared.flags.coop === true && app.saves.list()[1].players.map(p => p.character).join() === 'mehmet,mehmet');
+    assert('both may pick the same character', same.players.length === 2 && same.players.every(p => p.character.id === 'kilian'));
+    assert('co-op with two characters starts from the menu and is saved in slot 2', same.state.shared.flags.coop === true && app.saves.list()[1].players.map(p => p.character).join() === 'kilian,kilian');
 
-    // ---- two different kids: per-player start vehicles (Mehmet on his skateboard, Lena on her bike)
-    const { gs, ui, ctx } = menuStart(game, env, { coop: true, characters: ['mehmet', 'lena'], slot: 1 });
+    // ---- two different kids: per-player start vehicles (Kilian on his skateboard, Helena on her bike)
+    const { gs, ui, ctx } = menuStart(game, env, { coop: true, characters: ['kilian', 'helena'], slot: 1 });
     const [p1, p2] = ctx.players;
-    assert('P1 Mehmet starts on his skateboard, P2 Lena on her bike', p1.character.id === 'mehmet' && p2.character.id === 'lena' && p1.vehicle === 'skateboard' && gs.skateboards.isMounted(0) && !gs.bikes.isMounted(0) && gs.bikes.isMounted(1) && p1.sprite.texture.key === 'player-mehmet-skate' && p2.sprite.texture.key === 'player-lena-bike', `${p1.sprite.texture.key} ${p2.sprite.texture.key}`);
+    assert('P1 Kilian starts on his skateboard, P2 Helena on her bike', p1.character.id === 'kilian' && p2.character.id === 'helena' && p1.vehicle === 'skateboard' && gs.skateboards.isMounted(0) && !gs.bikes.isMounted(0) && gs.bikes.isMounted(1) && p1.sprite.texture.key === 'player-kilian-skate' && p2.sprite.texture.key === 'player-helena-bike', `${p1.sprite.texture.key} ${p2.sprite.texture.key}`);
     assert('the HUD shows one slice per player', ui.hud.has('status.1') && !ui.hud.has('status'));
 
     // ---- the pause menu shows the mode
     ui.togglePause();
     step(2);
     const line = ctx.screens.top().mode.text;
-    assert('the pause menu names the mode and both characters', line === t('pause.mode.coop', { who: 'Mehmet + Lena' }), line);
+    assert('the pause menu names the mode and both characters', line === t('pause.mode.coop', { who: 'Kilian + Helena' }), line);
     ui.togglePause();
     step(2);
 
@@ -92,7 +92,7 @@ export const coopMenu = {
     app.saves.save(1);
     const again = menuContinue(game, env, 1);
     const [q1, q2] = again.ctx.players;
-    assert('Continue restores co-op with both characters', again.ctx.players.length === 2 && again.ctx.state.shared.flags.coop === true && q1.character.id === 'mehmet' && q2.character.id === 'lena');
+    assert('Continue restores co-op with both characters', again.ctx.players.length === 2 && again.ctx.state.shared.flags.coop === true && q1.character.id === 'kilian' && q2.character.id === 'helena');
     assert('Continue keeps player 2 progress and start vehicles', again.ctx.state.players[1].attributes.tempo === tempo && again.gs.bikes.isMounted(1));
 
     // ---- a pad that drives a player drops out: toast, the player stays, the keyboard bindings take over
@@ -131,7 +131,7 @@ export const coopMenu = {
     gp.gamepads.length = 0;
 
     // ---- the solo path is unchanged: one player, no co-op flag, single HUD slice
-    const solo = menuStart(game, env, { coop: false, characters: ['jonas'], slot: 1 });
+    const solo = menuStart(game, env, { coop: false, characters: ['lorenz'], slot: 1 });
     assert('solo from the menu: one player, co-op off, the single-player HUD', solo.ctx.players.length === 1 && !solo.ctx.state.shared.flags.coop && solo.ctx.state.players.length === 1 && solo.ui.hud.has('status') && !solo.ctx.coop.active);
     assert('a solo save restores solo', menuContinue(game, env, 1).ctx.players.length === 1);
   }
@@ -142,12 +142,12 @@ export const coopCommute = {
   name: 'coopCommute',
   run(game, assert, env) {
     const { h, step } = env;
-    // ---- start a co-op run from the menu: Jonas (his skates) and Lena (her bike) ----
+    // ---- start a co-op run from the menu: Lorenz (his skates) and Helena (her bike) ----
     const { gs, ui, ctx } = startCoop(game, env);
     const [p1, p2] = ctx.players;
     const cam = gs.cameras.main;
     const scale = ctx.res.scale;
-    assert('the coop flag starts two players with their own characters and intents', ctx.players.length === 2 && p1.character.id === 'jonas' && p2.character.id === 'lena' && ctx.input.intents[0] !== ctx.input.intents[1] && ctx.state.shared.flags.coop === true);
+    assert('the coop flag starts two players with their own characters and intents', ctx.players.length === 2 && p1.character.id === 'lorenz' && p2.character.id === 'helena' && ctx.input.intents[0] !== ctx.input.intents[1] && ctx.state.shared.flags.coop === true);
     assert('each starts with its own vehicle: P1 on skates, P2 on the bike', p1.vehicle === 'skates' && p2.vehicle === 'bike' && gs.skates.isMounted(0) && gs.bikes.isMounted(1) && !gs.bikes.isMounted(0));
     const spawn = ctx.map.objects.find(o => o.type === 'spawn' && o.id === 'player');
     const off = gs.zoomCfg.coop.spawnOffsets;
@@ -165,6 +165,7 @@ export const coopCommute = {
     const i1 = ctx.input.intents[0];
     const i2 = ctx.input.intents[1];
     i1.sprint = i2.sprint = true;
+    p1.move.speedMult = 0.8; // a clearly slower kid, so the tether has someone to hold back whatever the characters' Tempo
     let maxRatio = 0;
     let outOfView = 0;
     let minZoom = Infinity;
@@ -191,7 +192,7 @@ export const coopCommute = {
       step(1);
       maxRatio = Math.max(maxRatio, ctx.coop.tetherRatio);
       minZoom = Math.min(minZoom, cam.zoom / scale);
-      slowed = slowed || p1.move.tetherMult < 0.9 || p2.move.tetherMult < 0.9;
+      slowed = slowed || p1.move.tetherMult < 0.97 || p2.move.tetherMult < 0.97;
       const v = cam.worldView;
       for (const p of ctx.players) if (p.x < v.x || p.x > v.right || p.y < v.y || p.y > v.bottom) outOfView++;
     }

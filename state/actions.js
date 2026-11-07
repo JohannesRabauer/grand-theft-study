@@ -1,4 +1,4 @@
-import { createPlayer } from './GameState.js';
+import { createPlayer, grantStartBelt } from './GameState.js';
 import { applyRecord, validEntry, moveKopfnote } from '../grading/gradeCore.js';
 
 // Registered state actions (AD-16). Each gets a mutable draft copy, the payload and the config and
@@ -66,21 +66,23 @@ export const ACTIONS = {
     if (on && s.players.length < 2) {
       const p = createPlayer(cfg);
       const id = Object.keys(cfg.characters ?? {}).find(c => c !== s.players[0].character);
-      if (id) { p.character = id; p.attributes = { ...cfg.characters[id] }; }
+      if (id) { p.character = id; p.attributes = { ...cfg.characters[id] }; grantStartBelt(p, cfg); }
       s.players.push(p);
     }
     s.shared.flags.coop = on;
     return { path: ['shared.flags.coop', 'players'] };
   },
 
-  // Choosing a character (cfg.characters: id -> base attributes, when known) also resets the attributes to its base values.
+  // Choosing a character (cfg.characters: id -> base attributes, when known) also resets the attributes to its base values
+  // and gives it its starting belt (cfg.characterBelts, see grantStartBelt).
   'player.setCharacter'(s, { player, character }, cfg) {
     if (!s.players[player] || !character) return reject('bad-payload');
     const base = cfg.characters?.[character];
     if (cfg.characters && !base) return reject('unknown-character');
     s.players[player].character = character;
     if (base) s.players[player].attributes = { ...base };
-    return { path: [`players.${player}.character`, `players.${player}.attributes`] };
+    grantStartBelt(s.players[player], cfg);
+    return { path: [`players.${player}.character`, `players.${player}.attributes`, `players.${player}.karate`] };
   },
 
   // Attribute growth (CAP-12): fractional points, never past cfg.attrMax; at the cap it is rejected (hooks check first).

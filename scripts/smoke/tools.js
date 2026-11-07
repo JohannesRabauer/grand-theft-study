@@ -1,5 +1,5 @@
 // Smoke scenario: throwing stick and dog fetch (story 6.1, AD-24). Registered in scripts/smoke/index.js.
-// Q/E reaches the throwing stick, a calm-air throw lands at the configured distance (Mehmet's perk stretches it, a crosswind shifts it,
+// Q/E reaches the throwing stick, a calm-air throw lands at the configured distance (Kilian's perk stretches it, a crosswind shifts it,
 // the HUD and aim dots follow), it topples a ball, a frisbee and a kite stuck in trees, makes the trash can's noise carry
 // further, passes bully, pedestrian and dog without touching them (engine contacts are checked), is thrown only once until the
 // owner walks over it again, and a spawned chasing dog fetches it, carries it back and drops it near the thrower.
@@ -75,7 +75,7 @@ export const throwingStick = {
     assert('Q twice goes back to the throwing stick', belt.current === tool);
 
     // ---- a full-power throw in calm air along the open main road
-    become('lena');
+    become('lorenz');
     standAt(T(3), T(55));
     const x0 = player.x;
     const y0 = player.y;
@@ -107,16 +107,16 @@ export const throwingStick = {
     intent.aim = null;
     assert('walking over it picks it up again', fetchBack() && of('stick:pickup').length === 1 && tool.ammo === 1 && live('stick') === 0 && !tool.sprite.visible);
 
-    // ---- Mehmet's perk stretches the throw, a crosswind shifts it
-    become('mehmet');
+    // ---- Kilian's perk stretches the throw, a crosswind shifts it
+    become('kilian');
     const perk = player.perks.stickThrowRange;
     standAt(T(3), T(55));
     throwAt(player.x + 100, player.y, 1);
     landed();
     const d2 = of('stick:landed')[1].dist;
-    assert(`Mehmet's stickThrowRange ${perk} stretches it to ${(cfg.maxRange * perk).toFixed(0)} px`, perk > 1 && Math.abs(d2 - cfg.maxRange * perk) < 5, `${d2.toFixed(1)} px`);
+    assert(`The stickThrowRange perk ${perk} stretches it to ${(cfg.maxRange * perk).toFixed(0)} px`, perk > 1 && Math.abs(d2 - cfg.maxRange * perk) < 5, `${d2.toFixed(1)} px`);
     fetchBack();
-    become('lena');
+    become('lorenz');
     setWind(0, 1);
     standAt(T(3), T(55));
     const wy0 = player.y;

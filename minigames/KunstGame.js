@@ -9,7 +9,7 @@ const MIN_SKIP_MS = 500;
 // an easel for a few seconds, then it disappears and the player paints it again on an empty canvas with a colour
 // palette. Each pattern goes through three phases per player (own timeline, two players play side by side):
 //   show    the pattern and a shrinking bar; confirm skips ahead. The time comes from the level (shorter at higher levels,
-//           longer for struggling kids) and is extended by the musicArtBonus perk (Jonas).
+//           longer for struggling kids) and is extended by the musicArtBonus perk (Lorenz).
 //   paint   cursor + palette: arrows move, confirm paints (hold it and move to draw a stroke), keys 1-4 pick a colour, arrow
 //           down from the last row enters the palette (colours and the Fertig button), or paint with the mouse / a finger.
 //   result  pattern and copy side by side; wrong cells get a dot and a friendly line. A perfect copy celebrates.

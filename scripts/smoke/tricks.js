@@ -1,4 +1,4 @@
-// Smoke scenario: trick system (story 5.2, AD-23). Mehmet rides a test strip of trick objects along the town's road (tile
+// Smoke scenario: trick system (story 5.2, AD-23). Kilian rides a test strip of trick objects along the town's road (tile
 // rows 54..57, x 12..45; the objects are injected here, the real obstacles are the skatepark's, see skatepark.js): a ramp launch, the chain ollie -> grind -> ollie off -> stairs
 // jump raising the multiplier (fire trail, sparks, Style HUD), banking through wallet.earn / xp.add / style:banked with
 // the Tempo growth hook, the comic stair rattle, a wall bail that banks a reduced share, and independent co-op combos.
@@ -46,12 +46,12 @@ export const tricks = {
       { type: 'rail', id: 'practice-rail-2', points: [[38, 54.5], [42, 54.5], [44.5, 56.5]], width: 0.5 }];
     tr.unloadMap();
     tr.loadMap();
-    become('mehmet');
+    become('kilian');
     const tempo0 = ctx.state.players[0].attributes.tempo;
     gs.mountStartVehicle(player);
     step(2);
     ctx.surfaces.at = () => 'asphalt';
-    // stick intent magnitude that holds 110 px/s on the board (Mehmet's Tempo scales the top speed)
+    // stick intent magnitude that holds 110 px/s on the board (Kilian's Tempo scales the top speed)
     const mag = 110 / (sk.maxSpeed * player.move.speedMult * ctx.surfaces.props('asphalt').speed.skateboard);
     const slot = tr.forPlayer(0);
     const skate = board.riders[0].skate;
@@ -161,7 +161,7 @@ export const tricks = {
     i2.jump = false;
     const changed = of('style:changed').filter(e => e.player === 1);
     assert('player 2 ollies on their own: their own chain, player 1 untouched', JSON.stringify(slot2.combo.tricks) === '["ollie"]' && slot.combo.tricks.length === 1 && kinds.has('ollie') && changed.length > 0, `${slot2.combo.tricks} / ${slot.combo.tricks}`);
-    assert('the Mehmet perk grows his multiplier faster than a neutral kid', Math.abs((slot.combo.mult - 1) / (slot2.combo.mult - 1) - player.perks.trickMultiplier) < 1e-6, `${slot.combo.mult.toFixed(2)} vs ${slot2.combo.mult.toFixed(2)}`);
+    assert('the Kilian perk grows his multiplier faster than a neutral kid', Math.abs((slot.combo.mult - 1) / (slot2.combo.mult - 1) - player.perks.trickMultiplier) < 1e-6, `${slot.combo.mult.toFixed(2)} vs ${slot2.combo.mult.toFixed(2)}`);
 
     // ---- back to the neutral kid the later scenarios expect
     ctx.particles.emit = emit;

@@ -174,6 +174,7 @@ export const traffic = {
     for (const [id, ride, give] of [['bike', gs.bikes, p => gs.bikes.giveBike(p)], ['skateboard', gs.skateboards, p => gs.skateboards.giveBoard(p)], ['skates', gs.skates, p => gs.skates.giveBoard(p)]]) {
       calm();
       give(player);
+      player.move.speedMult = 1; // the timing of the crossing is tuned for the plain profile speed, whoever the kid is
       step(2);
       const item = ride.riders[0].mounted;
       setBus(420);

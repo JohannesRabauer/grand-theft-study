@@ -22,8 +22,8 @@ for (const k of ['frisbee', 'kite-stuck']) {
   assert.ok(kind && kind.texture && kind.knock > 0 && kind.perchFly > 0, `${k} is a prop kind that falls off its perch`);
 }
 assert.ok(cfg.maxRange > cfg.minRange && cfg.lifeMax > cfg.lifeMin && cfg.mass > 0 && cfg.drag >= 0 && cfg.drag < 1 && cfg.arcHeight > cfg.clearHeight, 'throw numbers are sane');
-const mehmet = characters.characters.find(c => c.id === 'mehmet');
-assert.ok(mehmet.perks.stickThrowRange > characters.perkDefaults.stickThrowRange, 'Mehmet throws further');
+const kilian = characters.characters.find(c => c.id === 'kilian');
+assert.ok(kilian.perks.stickThrowRange > characters.perkDefaults.stickThrowRange, 'Kilian throws further');
 const dogKind = dogs.kinds['neighbor-dog'];
 assert.ok(dogs.pool >= 1 && dogKind.fetch.range > dogKind.fetch.pickup && dogKind.fetch.dropDistance > cfg.pickupRadius, 'dog data: the drop spot lies just outside the thrower\'s pickup reach');
 
@@ -32,7 +32,7 @@ const calm = { x: 0, y: 0 };
 assert.equal(throwRange(cfg, 0, 1), cfg.minRange);
 assert.equal(throwRange(cfg, 1, 1), cfg.maxRange);
 assert.ok(throwRange(cfg, 0.5, 1) > throwRange(cfg, 0.3, 1), 'more power, more distance');
-assert.equal(throwRange(cfg, 1, mehmet.perks.stickThrowRange), cfg.maxRange * mehmet.perks.stickThrowRange, 'the perk multiplies the distance');
+assert.equal(throwRange(cfg, 1, kilian.perks.stickThrowRange), cfg.maxRange * kilian.perks.stickThrowRange, 'the perk multiplies the distance');
 
 // ---- flight lands where the range says in calm air, and wind pushes it
 const land = (power, perk, wind) => {

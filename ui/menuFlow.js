@@ -103,7 +103,7 @@ export function startActions({ coop, characters }) {
   return out;
 }
 
-// Pause menu line: "Allein: Lena" / "Zu zweit: Lena + Jonas".
+// Pause menu line: "Allein: Helena" / "Zu zweit: Helena + Lorenz".
 export function modeSummary(names, t) {
   return t(names.length > 1 ? 'pause.mode.coop' : 'pause.mode.solo', { who: names.join(' + ') });
 }

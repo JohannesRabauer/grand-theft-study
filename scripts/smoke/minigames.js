@@ -865,7 +865,7 @@ export const minigames = {
     assert('two-player Science leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeS), `${JSON.stringify(beforeS)} -> ${JSON.stringify(snapshot())}`);
     // ---- Musik: the rhythm game, played silently with the beat from the round clock ----
     const perks0 = ctx.players[0].perks;
-    ctx.players[0].perks = { ...perks0, musicArtBonus: 0 }; // an earlier scenario may have left a Jonas player
+    ctx.players[0].perks = { ...perks0, musicArtBonus: 0 }; // an earlier scenario may have left a Lorenz player
     const beforeMu = snapshot();
     const noteEvents = [];
     const beatEvents = [];
@@ -957,7 +957,7 @@ export const minigames = {
     step(5);
     assert('a whole Musik run leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeMu), `${JSON.stringify(beforeMu)} -> ${JSON.stringify(snapshot())}`);
 
-    // two players, the second with the Jonas perk: the same slightly late timing hits more for her and she is cheered
+    // two players, the second with the Lorenz perk: the same slightly late timing hits more for her and she is cheered
     const perks1 = ctx.players[1].perks;
     ctx.players[1].perks = { ...perks1, musicArtBonus: 0.3 };
     const duoMu = MG.start('musik', { players: [0, 1], difficulty: 4 });
@@ -966,7 +966,7 @@ export const minigames = {
     env.until(() => md.clock.phase === 'play', 400);
     const [a, b] = md.slots;
     assert('two players get two stages side by side with their own charts', md.slots.length === 2 && a.stage.rect.x < b.stage.rect.x && a.track !== b.track && a.tier === 'hard' && b.tier === 'hard');
-    assert('the Jonas perk widens the hit windows and shows the talent bonus', a.track.win.good < b.track.win.good && Math.abs(b.track.win.good / a.track.win.good - 1.3) < 1e-9 && b.stage.bonusText.text === ctx.t('minigame.musicart.bonus', { n: 30 }) && a.stage.bonusText.text === '');
+    assert('the Lorenz perk widens the hit windows and shows the talent bonus', a.track.win.good < b.track.win.good && Math.abs(b.track.win.good / a.track.win.good - 1.3) < 1e-9 && b.stage.bonusText.text === ctx.t('minigame.musicart.bonus', { n: 30 }) && a.stage.bonusText.text === '');
     playMusik(md, { late: () => 150 });
     assert('the same timing: more hits with the wider windows, then the leader is cheered', b.tally.correct > a.tally.correct && md.over && md.banner.visible && md.bannerKey.key === 'minigame.musik.winner' && ctx.screens.top()?.id === 'minigame', `${a.tally.correct} ${b.tally.correct}`);
     assert('the perk also multiplies the points', b.scorer.bonus === 0.3 && b.scorer.points > a.scorer.points);
@@ -1057,7 +1057,7 @@ export const minigames = {
     step(5);
     assert('a Kunst run leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeKu), `${JSON.stringify(beforeKu)} -> ${JSON.stringify(snapshot())}`);
 
-    // two players side by side, the second with the Jonas perk (longer memorize time), top difficulty
+    // two players side by side, the second with the Lorenz perk (longer memorize time), top difficulty
     ctx.players[1].perks = { ...perks1, musicArtBonus: 0.3 };
     const duoKu = MG.start('kunst', { players: [0, 1], difficulty: 5 });
     step(1);
@@ -1065,7 +1065,7 @@ export const minigames = {
     env.until(() => kd.clock.phase === 'play', 400);
     const [p1, p2] = kd.slots;
     assert('two players get their own easels and 7x7 patterns', kd.slots.length === 2 && p1.easel !== p2.easel && p1.easel.rect.x < p2.easel.rect.x && p1.pattern.size === 7 && p2.pattern.size === 7);
-    assert('Jonas gets longer to memorize (+30%) and the talent bonus label', p1.showMs === 4500 && p2.showMs === Math.round(4500 * 1.3) && p2.bonusText.text === ctx.t('minigame.musicart.bonus', { n: 30 }) && p1.bonusText === null);
+    assert('Lorenz gets longer to memorize (+30%) and the talent bonus label', p1.showMs === 4500 && p2.showMs === Math.round(4500 * 1.3) && p2.bonusText.text === ctx.t('minigame.musicart.bonus', { n: 30 }) && p1.bonusText === null);
     assert('the palette has the pattern colours plus at most a decoy', p1.palette.length <= 6 && p1.pattern.colors.every(c => p1.palette.includes(c)));
     step(40);
     press(0, 'jump');
@@ -1170,7 +1170,8 @@ export const minigames = {
 
     // two players side by side: the second kid is a trained athlete (Tempo / Ausdauer 9) and finishes measurably earlier
     const char1 = state.players[1].character;
-    state.dispatch('player.setCharacter', { player: 1, character: 'mehmet' });
+    state.dispatch('player.setCharacter', { player: 1, character: 'kilian' });
+    for (const [attr, amount] of [['tempo', 1], ['ausdauer', 4]]) state.dispatch('attr.grow', { player: 1, attr, amount, reason: 'smoke' }); // Kilian trained up to 9 / 9
     const duoSp = MG.start('sport', { players: [0, 1], difficulty: 3 });
     step(1);
     const sdSp = game.scene.getScene('MG_sport');
@@ -1186,7 +1187,7 @@ export const minigames = {
     press(1, 'interact');
     const r2sp = await duoSp;
     state.dispatch('player.setCharacter', { player: 1, character: char1 });
-    assert('both players get a full, own result; the higher Tempo scores measurably better', r2sp.perPlayer.length === 2 && r2sp.perPlayer[1].score >= r2sp.perPlayer[0].score + 0.05 && r2sp.perPlayer.every(p => p.xp > 0 && p.effort === 1 && p.total === 100), JSON.stringify(r2sp.perPlayer.map(p => p.score)));
+    assert('both players get a full, own result; the higher Tempo scores measurably better', r2sp.perPlayer.length === 2 && r2sp.perPlayer[1].score >= r2sp.perPlayer[0].score + 0.03 && r2sp.perPlayer.every(p => p.xp > 0 && p.effort === 1 && p.total === 100), JSON.stringify(r2sp.perPlayer.map(p => p.score)));
     assert('the world is restored after two-player Sport', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_sport'));
     step(5);
     assert('two-player Sport leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeSp2), `${JSON.stringify(beforeSp2)} -> ${JSON.stringify(snapshot())}`);

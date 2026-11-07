@@ -10,14 +10,15 @@
 //  - Contact: the chase director asks `contact(player, bully)` before it catches. A dodge lets the bully pass; a block or parry (first
 //    150 ms) bounces it back with a "Hmpf!" (`defense:blocked` { player, bully, perfect }, a parry also `defense:parry` and a little XP);
 //    the Kiai stance sends it back too. Anything else is a normal catch.
-//  - Kiai: every bully within the belt's kiaiRadius that is after somebody stumbles (`bully:stumble` { bully, x, y, reason }); if at least
-//    one did, the Ärger level drops by the belt's aergerReduction through ctx.chase.defend (only while the level is within
+//  - Kiai: every bully within the belt's kiaiRadius (times the kid's kiaiPower perk) that is after somebody stumbles (`bully:stumble` { bully, x, y, reason }); if at least
+//    one did, the Ärger level drops by the belt's aergerReduction (boosted the same way, defense/beltCore.js boostedKiai) through ctx.chase.defend (only while the level is within
 //    chase.json level.defendMaxLevel; level 0 stays 0). Emits `defense:kiai` { player, radius, affected: [bully ids] }. Pedestrians,
 //    dogs and the like within the radius say "Oha!" and nothing else. The Kiai of either kid reaches bullies chasing either kid.
 // Other events: `defense:state` { player, state } on every change, `defense:dodge` { player, x, y }, `defense:guard-down` { player }.
 import { SpeechBubbles } from '../entities/SpeechBubbles.js';
 import { ST, EV, beltStats, contactResult, createSlot, kiaiReach, resetSlot, tickSlot, walkMult } from './defenseCore.js';
 import { DefenseFx } from './DefenseFx.js';
+import { boostedKiai } from './beltCore.js';
 
 const POSES = { BLOCK: 'block', DODGE: 'dodge', KIAI: 'kiai' };
 const TAU = Math.PI * 2;
@@ -32,6 +33,7 @@ export class DefenseController {
     this.posed = Array.from({ length: ctx.maxPlayers }, () => '');
     this.inp = { defend: false, kiai: false, mx: 0, my: 0 };
     this.reach = { affected: [], gasp: [] };
+    this.shout = { radius: 0, aerger: 0 };
     this.gaspLists = [];
     this.voices = [];
     this.stumbleOpts = { duration: 0, step: cfg.stumble.step, distance: 0, wobbleHz: cfg.stumble.wobbleHz, wobbleRad: cfg.stumble.wobbleRad };
@@ -149,12 +151,13 @@ export class DefenseController {
 
   // The Kiai's effect. Only bullies can stumble; everything else in range gasps.
   kiai(i, p, stats) {
-    const { ctx, cfg, reach } = this;
+    const { ctx, cfg, reach, shout } = this;
+    boostedKiai(stats, p.perks.kiaiPower ?? 1, shout);
     const lists = this.gaspLists;
     lists.length = 0;
     if (ctx.crowd) lists.push(ctx.crowd.list, ctx.crowd.dogs);
     if (ctx.dogs) lists.push(ctx.dogs.list);
-    kiaiReach(p.x, p.y, stats.kiaiRadius, ctx.chase.bullies, lists, reach);
+    kiaiReach(p.x, p.y, shout.radius, ctx.chase.bullies, lists, reach);
     const ids = [];
     for (const b of reach.affected) {
       if (!this.stumble(b, p, stats.stumbleDuration, cfg.stumble.kiaiDistance, 'kiai')) continue;
@@ -162,9 +165,9 @@ export class DefenseController {
       this.say(b, `defense.bullyKiai.${1 + ((this.rand() * 3) | 0)}`);
     }
     for (const o of reach.gasp) this.say(o, 'defense.gasp');
-    this.fx.kiai(i, p, stats.kiaiRadius);
-    ctx.events.emit('defense:kiai', { player: i, radius: stats.kiaiRadius, affected: ids });
-    if (ids.length) ctx.chase.defend('kiai', stats.aergerReduction);
+    this.fx.kiai(i, p, shout.radius);
+    ctx.events.emit('defense:kiai', { player: i, radius: shout.radius, affected: ids });
+    if (ids.length) ctx.chase.defend('kiai', shout.aerger);
   }
 
   stumble(b, p, duration, distance, reason) {

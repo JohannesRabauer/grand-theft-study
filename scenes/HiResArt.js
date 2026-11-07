@@ -432,8 +432,8 @@ export function figure(p, o) {
   p.ell('#f2c9a0', 12, 7, 6, 5.5);                      // head
   p.px('#d9a97e', 16, 6, 2, 4);                         // face shade
   hair(p);
-  p.px('#222222', 9, 8, 2, 2);                          // eyes
-  p.px('#222222', 14, 8, 2, 2);
+  p.px(o.eyes ?? '#222222', 9, 8, 2, 2);                // eyes (o.eyes: the character's eye colour)
+  p.px(o.eyes ?? '#222222', 14, 8, 2, 2);
   p.px('#ffffff', 9, 8, 1, 1);
   p.px('#ffffff', 14, 8, 1, 1);
   brows?.(p);

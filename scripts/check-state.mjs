@@ -116,11 +116,11 @@ const fresh = (c = { ...cfg, startMoneyCents: 0 }) => {
 
 // migration chain
 {
-  const old = { v: 0, euros: 12.34, player: { character: 'kid-c', xp: 40, level: 1 } };
+  const old = { v: 0, euros: 12.34, player: { character: 'kid-c', xp: 40, level: 1 } }; // the old placeholder id maps to Lorenz (migration v5)
   const m = migrate(old, cfg, STATE_VERSION);
   assert.equal(m.v, STATE_VERSION);
   assert.equal(m.shared.money, 1234, 'float euros become integer cents');
-  assert.equal(m.players[0].character, 'kid-c');
+  assert.equal(m.players[0].character, 'lorenz');
   assert.equal(m.players[0].xp, 40);
   assert.deepEqual(m.shared.ownedVehicles, ['foot']);
   assert.throws(() => migrate({ v: STATE_VERSION + 1 }, cfg, STATE_VERSION), /unsupported/);

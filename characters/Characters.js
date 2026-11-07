@@ -2,7 +2,7 @@
 // attribute-derived modifiers current. Phaser-free (it only sets fields on the players), so the node check
 // drives it with plain objects.
 //   apply(player)  reads state.players[i].character, sets player.character / perks / look / bullyWeight,
-//                  computes the modifiers and sets player.startVehicle ('foot', 'bike', 'skateboard' or 'skates'; GameScene mounts it).
+//                  scales the sprite (spriteScale), computes the modifiers and sets player.startVehicle ('foot', 'bike', 'skateboard' or 'skates'; GameScene mounts it).
 //   refresh(player) recomputes player.mods after attributes changed and pushes them into the MovementController.
 // player.mods is { speed, accel, staminaSize, staminaRegen, spread, assist }; player.attrs is the live
 // (fractional) attribute object from the state.
@@ -31,6 +31,7 @@ export class Characters {
     player.bullyWeight = player.perks.bullyTargetWeight;
     player.look = def ? { walk: `player-${def.id}`, bike: `player-${def.id}-bike`, skate: `player-${def.id}-skate`, skates: `player-${def.id}-skates` } : null;
     player.refreshLook();
+    player.sprite.setScale(this.ctx.res.inv * (def?.spriteScale ?? 1)); // the younger kid is a bit smaller
     this.refresh(player);
     player.startVehicle = resolveStartVehicle(def?.startVehicle, this.cfg, this.profiles);
   }

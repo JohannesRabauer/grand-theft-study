@@ -2,7 +2,7 @@
 // after a block or a Kiai, no force and no damage; afterwards the bully goes on in `b.resume`).
 // One stateless instance drives every bully; per-bully data lives on the Bully (state, t, lastX/Y).
 // Numbers come from data/chase.json `bully`. A bully's target is the visible player with the best targetScore
-// (nearest, but a player's bullyWeight makes it count as closer: Lena draws bullies more often) (`b.target`), with hysteresis
+// (nearest, but a player's bullyWeight makes it count as closer: Helena draws bullies more often) (`b.target`), with hysteresis
 // (data `coop.switchRatio`) so it sticks to its target; `b.seenMask` has a bit for every player it sees (not only the target);
 // CAUGHT only stops the bully (the director has already emitted `bully:caught-contact`).
 import { targetScore } from '../characters/attributes.js';

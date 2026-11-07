@@ -20,7 +20,8 @@ export class LearningEngine {
         record: (player, topic, stats) => state.dispatch('learning.record', { player, topic, stats })
       },
       // AD-27 settings stub: the parent gate stores the difficulty modifier as a shared flag (default 1)
-      parentDifficulty: () => state.shared.flags.parentDifficulty ?? 1
+      parentDifficulty: () => state.shared.flags.parentDifficulty ?? 1,
+      startOffset: player => ctx.characters?.def(player)?.learningStartOffset ?? 0
     });
   }
 

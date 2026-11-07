@@ -10,6 +10,14 @@ export const beltIds = cfg => cfg.belts.map(b => b.id);
 // The belt after `id`, or null at the top.
 export const nextBelt = (cfg, id) => cfg.belts[cfg.belts.findIndex(b => b.id === id) + 1] ?? null;
 
+// A belt's Kiai with the kid's kiaiPower perk (Helena's stronger shout): the radius scales, the Ärger taken off is rounded
+// and never below the belt's own. Fills `out` ({ radius, aerger }).
+export function boostedKiai(stats, power, out) {
+  out.radius = stats.kiaiRadius * power;
+  out.aerger = Math.max(stats.aergerReduction, Math.round(stats.aergerReduction * power));
+  return out;
+}
+
 export const sessionsToday = (karate, day) => (karate.trainDay === day ? karate.trainedToday : 0);
 
 export const sessionsLeft = (cfg, karate, day) => Math.max(0, cfg.training.maxSessionsPerDay - sessionsToday(karate, day));

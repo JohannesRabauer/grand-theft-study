@@ -1,9 +1,9 @@
 // Procedural art for the playable characters (CAP-12): the same figure and bike drawers as the default kid
-// (HiResArt.js), parametrised by the palette of each character in data/characters.json, so the three differ in
-// outfit colours, hair style and accessory. Per character it makes `player-<id>` (walking), `player-<id>-bike`
+// (HiResArt.js), parametrised by the palette and look flags of each character in data/characters.json (hair style, glasses, eye colour,
+// freckles), so the three differ in outfit colours, hair, face and accessory. Per character it makes `player-<id>` (walking), `player-<id>-bike`
 // (riding), `player-<id>-skate` plus `-crouch` and `-manual` (skateboard poses), `player-<id>-skates` plus `-pushA`, `-pushB`, `-crouch` and `-grab` (inline skates, scenes/SkatesArt.js) and `portrait-<id>` (character select card). Drawn on the 24x32 / 40x24 authoring grids and scaled to
 // the render class like the pedestrians (NpcArt.js): 2x with outline on Medium/High, 1x on Low.
-import { figure, bike, skate, OUT, lighten } from './HiResArt.js';
+import { figure, bike, skate, OUT } from './HiResArt.js';
 import { ScaledPen } from './NpcArt.js';
 import { skates } from './SkatesArt.js';
 
@@ -11,57 +11,57 @@ const DARK = '#2a2a35';
 
 // Hair behind and around the head on the front-facing figure (head centre 12,7).
 const HAIR = {
-  ponytail(p, o) {
-    p.ell(o.hair, 12, 4.5, 6.5, 3.5); p.px(o.hair, 6, 5, 2, 4); p.px(o.hair, 17, 5, 2, 3);
-    p.px(o.hair, 19, 6, 3, 7); p.px(o.hairLight, 20, 7, 1, 4); p.px(o.straps, 19, 6, 3, 1);
-    p.px(o.hairLight, 9, 2, 5, 1);
-  },
   short(p, o) {
     p.ell(o.hair, 12, 4, 6.3, 3); p.px(o.hair, 6, 5, 1, 3); p.px(o.hair, 18, 5, 1, 3);
     p.px(o.hairLight, 9, 2, 5, 1);
   },
-  curly(p, o) {
-    p.ell(o.hair, 12, 3.6, 7.2, 4); p.ell(o.hair, 6.2, 5, 2.2, 2.6); p.ell(o.hair, 17.8, 5, 2.2, 2.6);
-    p.ell(o.hair, 9, 1.2, 2.6, 2); p.ell(o.hair, 15, 1.2, 2.6, 2); p.px(o.hair, 5, 6, 2, 4); p.px(o.hair, 18, 6, 2, 4);
-    p.px(o.hairLight, 8, 2, 2, 1); p.px(o.hairLight, 14, 1, 2, 1);
+  // down to the shoulders on both sides, a straight fringe
+  shoulder(p, o) {
+    p.ell(o.hair, 12, 4.2, 6.6, 3.6); p.px(o.hair, 5, 4, 3, 5); p.px(o.hair, 17, 4, 3, 5);
+    p.px(o.hair, 5, 9, 2, 5); p.px(o.hair, 18, 9, 2, 5);
+    p.px(o.hairLight, 9, 2, 5, 1); p.px(o.hairLight, 5, 6, 1, 6); p.px(o.hairLight, 18, 6, 1, 4);
+  },
+  // long, big, messy: tufts sticking out in every direction
+  wild(p, o) {
+    p.ell(o.hair, 12, 3.2, 7.6, 4.4); p.ell(o.hair, 6.5, 2, 2.4, 2.6); p.ell(o.hair, 12, 0.8, 2.8, 2.2); p.ell(o.hair, 17.5, 2, 2.4, 2.6);
+    p.px(o.hair, 4, 4, 3, 8); p.px(o.hair, 17, 4, 3, 9); p.px(o.hair, 3, 8, 2, 4); p.px(o.hair, 20, 7, 2, 5); p.px(o.hair, 5, 12, 2, 2);
+    p.px(o.hairLight, 8, 1, 3, 1); p.px(o.hairLight, 14, 0, 2, 1); p.px(o.hairLight, 4, 5, 1, 5); p.px(o.hairLight, 18, 5, 1, 4);
   }
 };
 
-// Drawn after the eyes: things worn on the face and head.
-const WORN = {
-  glasses(p) {
-    for (const x of [8, 13]) { p.px(DARK, x, 7, 4, 1); p.px(DARK, x, 10, 4, 1); p.px(DARK, x, 8, 1, 2); p.px(DARK, x + 3, 8, 1, 2); }
-    p.px(DARK, 12, 8, 1, 1);
-  },
-  headband(p, o) { p.px(o.straps, 6, 3, 12, 2); p.px(lighten(o.straps, 0.4), 7, 3, 5, 1); },
-  headphones(p, o) {
-    p.px(DARK, 6, 1, 12, 1); p.px(DARK, 5, 2, 1, 5); p.px(DARK, 18, 2, 1, 5);
-    p.px(DARK, 3, 6, 3, 5); p.px(DARK, 18, 6, 3, 5); p.px(o.straps, 3, 7, 1, 3); p.px(o.straps, 20, 7, 1, 3);
-  }
+const GLASSES = p => {
+  for (const x of [8, 13]) { p.px(DARK, x, 7, 4, 1); p.px(DARK, x, 10, 4, 1); p.px(DARK, x, 8, 1, 2); p.px(DARK, x + 3, 8, 1, 2); }
+  p.px(DARK, 12, 8, 1, 1);
 };
+
+const FRECKLES = [[7, 9], [17, 9], [8, 11], [10, 11], [14, 11], [16, 11]];
 
 // The same, seen from above for the rider (head centre 17.5,12 on the 40x24 grid, facing right).
 const TOP = {
-  ponytail(p, o) { p.px(o.hair, 8, 11, 5, 3); p.px(o.straps, 12, 11, 1, 3); },
   short() {},
-  curly(p, o) { p.ell(o.hair, 17, 12, 5.6, 5.8); p.px(o.hairLight, 14, 8, 4, 1); p.px(o.hairLight, 13, 12, 2, 1); },
-  glasses() {},
-  headband(p, o) { p.px(o.straps, 17, 7, 2, 10); },
-  headphones(p) { p.px(DARK, 16, 7, 1, 10); p.px(DARK, 15, 5, 4, 3); p.px(DARK, 15, 16, 4, 3); }
+  shoulder(p, o) { p.px(o.hair, 9, 9, 7, 6); p.px(o.hairLight, 10, 10, 4, 1); },
+  wild(p, o) { p.ell(o.hair, 17, 12, 5.8, 6); p.px(o.hair, 10, 8, 4, 3); p.px(o.hair, 9, 13, 5, 3); p.px(o.hairLight, 14, 8, 4, 1); p.px(o.hairLight, 12, 14, 2, 1); }
 };
 
+// The look flags of data/characters.json (hairStyle, glasses, eyes, freckles) turned into figure options.
 export function look(c) {
   const o = c.palette;
+  const l = c.look;
   return {
     ...o,
-    hair: p => HAIR[o.hairStyle](p, o),
-    brows: p => WORN[o.accessory](p, o)
+    eyes: l.eyes,
+    hair: p => HAIR[l.hairStyle](p, o),
+    brows: p => {
+      if (l.freckles) for (const [x, y] of FRECKLES) p.px('#a8532a', x, y, 1, 1);
+      if (l.glasses) GLASSES(p);
+    }
   };
 }
 
 function ride(c) {
   const o = c.palette;
-  return { ...o, rider: true, cap: p => { TOP[o.hairStyle](p, o); TOP[o.accessory](p, o); } };
+  const l = c.look;
+  return { ...o, rider: true, cap: p => { TOP[l.hairStyle](p, o); if (l.glasses) p.px(DARK, 23, 10, 1, 4); } };
 }
 
 const BOARD = { frame: '#e8a33a', frameDark: '#a8701c' };

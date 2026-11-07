@@ -45,12 +45,12 @@ assert.ok(o.bands[0].min === 1 && o.bands.at(-1).min === 0 && o.bands.every((b, 
   assert.equal(profileFor(o.levels, 1), o.levels[0]);
   assert.equal(profileFor(o.levels, 99), o.levels.at(-1), 'clamped');
   assert.equal(profileFor(o.levels, 0), o.levels[0]);
-  const jonas = characters.characters.find(c => c.id === 'jonas').perks.musicArtBonus;
-  assert.ok(jonas > 0);
+  const lorenz = characters.characters.find(c => c.id === 'lorenz').perks.musicArtBonus;
+  assert.ok(lorenz > 0);
   const p = o.levels[2];
   assert.equal(memorizeMs(p, 0), p.showMs);
-  assert.equal(memorizeMs(p, jonas), Math.round(p.showMs * (1 + jonas)), 'Jonas gets longer to memorize');
-  assert.ok(memorizeMs(p, jonas) > memorizeMs(p, 0));
+  assert.equal(memorizeMs(p, lorenz), Math.round(p.showMs * (1 + lorenz)), 'Lorenz gets longer to memorize');
+  assert.ok(memorizeMs(p, lorenz) > memorizeMs(p, 0));
   assert.equal(memorizeMs(p, -1), p.showMs, 'a negative bonus is ignored');
   assert.ok(memorizeMs(o.levels[0], 0) > memorizeMs(o.levels.at(-1), 0), 'a struggling kid (low level) gets longer than a strong one');
   assert.ok(o.levels.every(l => l.showMs >= 3000 && l.showMs <= 9000), 'show times are sensible');

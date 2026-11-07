@@ -1,4 +1,4 @@
-// Attribute maths for the three characters (CAP-12). Pure: no Phaser, no state; the node check
+// Attribute maths for the playable characters (CAP-12). Pure: no Phaser, no state; the node check
 // (scripts/check-characters.mjs) runs it directly. Numbers come from data/characters.json.
 
 export const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -32,7 +32,7 @@ export function resolvePerks(def, cfg) {
 }
 
 // Bully target choice: the nearest player wins, but a player with a higher bullyTargetWeight counts as closer
-// (distance divided by the weight), so Lena is picked more often. Smaller score = preferred target.
+// (distance divided by the weight), so Helena is picked more often. Smaller score = preferred target.
 export const targetScore = (distSq, weight) => distSq / (weight * weight);
 
 // The start vehicle a character really gets: ids without a player profile (or not listed in `playerVehicles`)
@@ -47,6 +47,8 @@ export function ruleMatches(rule, payload) {
   return rule.minDist === undefined || (payload.dist ?? 0) >= rule.minDist;
 }
 
+export const HAIR_STYLES = ['short', 'shoulder', 'wild'];
+
 // Problems in the characters data (empty list when fine); used by the check script and cheap enough to keep honest.
 export function validateCharacters(cfg) {
   const errors = [];
@@ -58,9 +60,12 @@ export function validateCharacters(cfg) {
     }
     for (const a of Object.keys(c.attributes)) if (!order.includes(a)) errors.push(`${c.id}: unknown attribute ${a}`);
     for (const p of Object.keys(c.perks)) if (!(p in cfg.perkDefaults)) errors.push(`${c.id}: unknown perk ${p}`);
-    for (const p of ['jacket', 'jacketDark', 'jacketLight', 'pants', 'hair', 'hairLight', 'hairStyle', 'accessory', 'frame', 'frameDark', 'backdrop']) {
+    for (const p of ['jacket', 'jacketDark', 'jacketLight', 'pants', 'hair', 'hairLight', 'frame', 'frameDark', 'backdrop']) {
       if (!c.palette[p]) errors.push(`${c.id}: palette.${p} missing`);
     }
+    const l = c.look;
+    if (!l || !HAIR_STYLES.includes(l.hairStyle) || typeof l.glasses !== 'boolean' || typeof l.freckles !== 'boolean' || !/^#[0-9a-f]{6}$/i.test(l.eyes ?? '')) errors.push(`${c.id}: look needs hairStyle (${HAIR_STYLES}), glasses, freckles and an eyes colour`);
+    if (!(c.spriteScale > 0 && c.spriteScale <= 1.2)) errors.push(`${c.id}: spriteScale`);
   }
   return errors;
 }

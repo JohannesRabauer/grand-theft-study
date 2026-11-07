@@ -114,11 +114,11 @@ assert.ok(cfg.tiers.easy.fallMs > cfg.tiers.medium.fallMs && cfg.tiers.medium.fa
   assert.equal(judgeOffset(-base.good - 1, base), null);
   const easy = windowsFor(cfg, 'easy', 0);
   assert.ok(easy.good > base.good && easy.perfect > base.perfect, 'easy tiers are more forgiving');
-  const jonas = characters.characters.find(c => c.id === 'jonas').perks.musicArtBonus;
-  assert.ok(jonas > 0 && characters.perkDefaults.musicArtBonus === 0, 'Jonas has the perk, others none');
-  const wide = windowsFor(cfg, 'hard', jonas);
-  assert.ok(Math.abs(wide.good - base.good * (1 + jonas)) < 1e-9 && wide.perfect > base.perfect, 'the perk widens the windows by its share');
-  assert.equal(judgeOffset(base.good + 20, wide), 'good', 'a press that misses for others still counts for Jonas');
+  const lorenz = characters.characters.find(c => c.id === 'lorenz').perks.musicArtBonus;
+  assert.ok(lorenz > 0 && characters.perkDefaults.musicArtBonus === 0, 'Lorenz has the perk, others none');
+  const wide = windowsFor(cfg, 'hard', lorenz);
+  assert.ok(Math.abs(wide.good - base.good * (1 + lorenz)) < 1e-9 && wide.perfect > base.perfect, 'the perk widens the windows by its share');
+  assert.equal(judgeOffset(base.good + 20, wide), 'good', 'a press that misses for others still counts for Lorenz');
   assert.deepEqual(windowsFor(cfg, 'hard', -1), base, 'a negative bonus is ignored');
   assert.equal(wide.linger, cfg.windows.lingerMs);
 }
@@ -165,14 +165,14 @@ const small = { n: 6, t: [1000, 1500, 2000, 2500, 3000, 3500], lane: [0, 1, 0, 2
   const late = new NoteTrack(sched, 4, win);
   late.sweep(sched.t[0] + win.good);
   assert.equal(late.press(sched.lane[0], sched.t[0] + win.good).grade, 'good', 'the edge of the window still counts');
-  // the same sloppy play (every press 110 ms late) misses with the plain windows and hits with Jonas' windows
-  const jonas = characters.characters.find(c => c.id === 'jonas').perks.musicArtBonus;
+  // the same sloppy play (every press 110 ms late) misses with the plain windows and hits with Lorenz' windows
+  const lorenz = characters.characters.find(c => c.id === 'lorenz').perks.musicArtBonus;
   const play = bonus => {
     const t = new NoteTrack(sched, 4, windowsFor(cfg, 'hard', bonus));
     for (let i = 0; i < sched.n; i++) { t.sweep(sched.t[i] + 160); t.press(sched.lane[i], sched.t[i] + 160); }
     return accuracyOf(t.counts);
   };
-  assert.ok(play(jonas) > play(0), 'wider windows hit more of the same timing');
+  assert.ok(play(lorenz) > play(0), 'wider windows hit more of the same timing');
 }
 {
   // range(): spawn ahead, keep behind, moves forward only
@@ -207,15 +207,15 @@ const small = { n: 6, t: [1000, 1500, 2000, 2500, 3000, 3500], lane: [0, 1, 0, 2
   for (let i = 0; i < 100; i++) run.hit('perfect');
   assert.equal(run.best, 100);
   assert.ok(run.points <= 100 * cfg.scoring.perfect * cfg.scoring.maxMult && run.points > 100 * cfg.scoring.perfect, 'points are bounded and the combo pays');
-  const jonas = characters.characters.find(c => c.id === 'jonas').perks.musicArtBonus;
-  const rich = new Scorer(cfg.scoring, jonas);
-  assert.equal(rich.hit('perfect'), Math.round(cfg.scoring.perfect * (1 + jonas)), 'the perk multiplies the points');
+  const lorenz = characters.characters.find(c => c.id === 'lorenz').perks.musicArtBonus;
+  const rich = new Scorer(cfg.scoring, lorenz);
+  assert.equal(rich.hit('perfect'), Math.round(cfg.scoring.perfect * (1 + lorenz)), 'the perk multiplies the points');
   assert.equal(new Scorer(cfg.scoring, -5).hit('perfect'), cfg.scoring.perfect, 'a negative bonus is ignored');
   // a whole ideal round stays within bounds
   const sched = buildSchedule(cfg.songs[2], 'hard', opts);
-  const top = new Scorer(cfg.scoring, jonas);
+  const top = new Scorer(cfg.scoring, lorenz);
   for (let i = 0; i < sched.n; i++) top.hit('perfect');
-  assert.ok(top.points > 0 && top.points <= sched.n * cfg.scoring.perfect * cfg.scoring.maxMult * (1 + jonas));
+  assert.ok(top.points > 0 && top.points <= sched.n * cfg.scoring.perfect * cfg.scoring.maxMult * (1 + lorenz));
 }
 
 // ---- beat cue, positions, input ----

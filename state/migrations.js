@@ -1,7 +1,18 @@
 // Save upgrades (AD-16). MIGRATIONS[n] turns a version-n save into version n+1; migrate() chains them.
 // v0 was the pre-release shape: money as a float `euros` and a single flat `player`.
-import { createKarate, createPlayer, createShared } from './GameState.js';
+import { createKarate, createPlayer, createShared, grantStartBelt } from './GameState.js';
 import { emptyGrades, defaultKopfnoten } from '../grading/gradeCore.js';
+
+// v5: Lena, Mehmet and Jonas became Helena, Kilian and Lorenz (the placeholder ids kid-a/b/c of old test saves map the same
+// way, by position). Earned attribute growth is kept relative to the old base values.
+const LEGACY = {
+  lena: { to: 'helena', base: { wissen: 9, tempo: 5, ausdauer: 5, charme: 5, ordnung: 8, zielen: 8 } },
+  mehmet: { to: 'kilian', base: { wissen: 5, tempo: 9, ausdauer: 9, charme: 6, ordnung: 3, zielen: 5 } },
+  jonas: { to: 'lorenz', base: { wissen: 6, tempo: 6, ausdauer: 5, charme: 9, ordnung: 4, zielen: 6 } },
+  'kid-a': { to: 'helena' },
+  'kid-b': { to: 'kilian' },
+  'kid-c': { to: 'lorenz' }
+};
 
 export const MIGRATIONS = {
   0({ euros = 0, player = {}, ...rest }, cfg) {
@@ -39,6 +50,23 @@ export const MIGRATIONS = {
   // v4: belt progress next to the belt (points, sessions, the day of the last session and exam).
   3(d, cfg) {
     return { ...d, v: 4, players: d.players.map(p => ({ ...p, karate: { ...createKarate(cfg), ...p.karate } })) };
+  },
+
+  4(d, cfg) {
+    return {
+      ...d,
+      v: 5,
+      players: d.players.map(p => {
+        const legacy = LEGACY[p.character];
+        if (!legacy) return p;
+        const from = legacy.base ?? cfg.attributes;
+        const to = cfg.characters?.[legacy.to];
+        const attributes = to ? Object.fromEntries(Object.entries(p.attributes).map(([a, v]) => [a, Math.min(cfg.attrMax ?? 10, Math.max(0, (to[a] ?? v) + v - (from[a] ?? v)))])) : p.attributes;
+        const out = { ...p, character: legacy.to, attributes, karate: { ...p.karate } };
+        grantStartBelt(out, cfg);
+        return out;
+      })
+    };
   }
 };
 

@@ -147,7 +147,7 @@
     "bubbleRadius": 70,
     "interactReach": 30,
     "bubbleSeconds": 3.2,
-    "lines": 7
+    "lines": 8
   },
   "celebrate": {
     "confetti": 36,

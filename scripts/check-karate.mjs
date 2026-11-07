@@ -216,7 +216,7 @@ assert.equal(sessionPoints(t, { score: 5, fokus: -1 }), t.pointsBase + t.pointsM
   const rejected = [];
   events.on('state:rejected', r => rejected.push(r.reason));
   const state = new GameState(events, stateCfg);
-  assert.equal(STATE_VERSION, 4);
+  assert.equal(STATE_VERSION, 5);
   assert.deepEqual(state.players[0].karate, { belt: 'white', points: 0, sessions: 0, lastExamDay: 0, trainDay: 0, trainedToday: 0 });
   assert.ok(state.dispatch('karate.addPoints', { player: 0, amount: 40, day: 2 }));
   assert.ok(state.dispatch('karate.addPoints', { player: 0, amount: 30, day: 2 }));

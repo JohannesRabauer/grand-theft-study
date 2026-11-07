@@ -90,14 +90,14 @@ const run = (result) => {
   for (const { action, payload } of startActions(result)) assert.ok(s.dispatch(action, payload) !== false, action);
   return s;
 };
-const duo = run({ coop: true, characters: ['lena', 'mehmet'] });
+const duo = run({ coop: true, characters: ['helena', 'kilian'] });
 assert.equal(duo.shared.flags.coop, true);
-assert.deepEqual(duo.players.map(p => p.character), ['lena', 'mehmet'], 'each player has the picked character');
-const same = run({ coop: true, characters: ['jonas', 'jonas'] });
-assert.deepEqual(same.players.map(p => p.character), ['jonas', 'jonas']);
-const solo = run({ coop: false, characters: ['mehmet'] });
+assert.deepEqual(duo.players.map(p => p.character), ['helena', 'kilian'], 'each player has the picked character');
+const same = run({ coop: true, characters: ['lorenz', 'lorenz'] });
+assert.deepEqual(same.players.map(p => p.character), ['lorenz', 'lorenz']);
+const solo = run({ coop: false, characters: ['kilian'] });
 assert.equal(!!solo.shared.flags.coop, false);
-assert.equal(solo.players[0].character, 'mehmet');
+assert.equal(solo.players[0].character, 'kilian');
 assert.equal(solo.players.length, 1);
 
 // ---- pad owner: the inverse of padFor
@@ -109,8 +109,8 @@ assert.equal(padOwner(5, 2), -1);
 const de = load('i18n/de.json');
 const en = load('i18n/en.json');
 const t = (d) => (k, p = {}) => d[k].replace(/\{(\w+)\}/g, (_, n) => p[n]);
-assert.equal(modeSummary(['Lena', 'Jonas'], t(en)), 'Co-op: Lena + Jonas');
-assert.equal(modeSummary(['Lena'], t(de)), 'Allein: Lena');
+assert.equal(modeSummary(['Helena', 'Lorenz'], t(en)), 'Co-op: Helena + Lorenz');
+assert.equal(modeSummary(['Helena'], t(de)), 'Allein: Helena');
 for (const k of ['menu.mode.solo', 'menu.mode.coop', 'menu.mode.controls', 'menu.mode.padJoin', 'menu.mode.touchOnly', 'toast.padLost', 'menu.character.titleP1', 'menu.character.titleP2', 'menu.character.hintP1', 'menu.character.hintP2']) {
   assert.ok(de[k] && en[k], `text key ${k}`);
 }

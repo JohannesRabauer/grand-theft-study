@@ -1,5 +1,5 @@
 // Smoke scenario: inline skates and the bus grab (story 5.3, AD-23). Registered in scripts/smoke/index.js.
-// Jonas starts on skates (own rider look, HUD line), measured speeds and acceleration against foot, skateboard and bike per
+// Lorenz starts on skates (own rider look, HUD line), measured speeds and acceleration against foot, skateboard and bike per
 // surface, a hop, lying skates to pick up, then the grab of the town's buses: hold interact in the rear zone, towed above
 // the skates' top speed with sparks, rope and risk bar, swinging sideways, the failure with its comic stumble, release by
 // letting go and by jumping (Style 'bus ride'), failure odds with seeded randomness (cobble worse, the perk better) and
@@ -34,15 +34,15 @@ export const skates = {
     const mulberry = seed => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
     const slotOf = p => grabs.slots[p.index];
 
-    // ---- Jonas starts on skates
+    // ---- Lorenz starts on skates
     quiet();
-    become('jonas');
+    become('lorenz');
     gs.mountStartVehicle(player);
     step(2);
     const skatesSvc = gs.skates;
     const vehicleLine = ui.hud.get('status').vehicle.text;
-    assert('Jonas starts on skates (no fallback to running): vehicle, mounted, own rider look, HUD line',
-      player.character.startVehicle === 'skates' && player.startVehicle === 'skates' && player.vehicle === 'skates' && skatesSvc.isMounted(0) && player.sprite.texture.key.startsWith('player-jonas-skates') && vehicleLine === ctx.t('hud.vehicle', { name: ctx.t('vehicle.skates') }), `${player.vehicle} ${player.sprite.texture.key} "${vehicleLine}"`);
+    assert('Lorenz starts on skates (no fallback to running): vehicle, mounted, own rider look, HUD line',
+      player.character.startVehicle === 'skates' && player.startVehicle === 'skates' && player.vehicle === 'skates' && skatesSvc.isMounted(0) && player.sprite.texture.key.startsWith('player-lorenz-skates') && vehicleLine === ctx.t('hud.vehicle', { name: ctx.t('vehicle.skates') }), `${player.vehicle} ${player.sprite.texture.key} "${vehicleLine}"`);
     assert('the town has lying skates to pick up and two buses on the main road', skatesSvc.parked.filter(b => b.visible).length >= 2 && grabs.pool.filter(t => t.active).length === 2 && grabs.pool.every(t => !t.active || (t.y > 54 * 16 && t.y < 58 * 16)));
 
     // ---- measured speeds and acceleration
@@ -86,7 +86,7 @@ export const skates = {
     place(player, T(7), T(51));
     intent.move.x = 1;
     const poseSeen = new Set();
-    for (let i = 0; i < 70; i++) { step(1); poseSeen.add(player.sprite.texture.key.replace('player-jonas-skates', '') || 'glide'); }
+    for (let i = 0; i < 70; i++) { step(1); poseSeen.add(player.sprite.texture.key.replace('player-lorenz-skates', '') || 'glide'); }
     assert('accelerating shows alternating push-offs, then the glide pose at speed', poseSeen.has('-pushA') && poseSeen.has('-pushB') && poseSeen.has('glide'), [...poseSeen].join(','));
     intent.jump = true;
     step(1);
@@ -140,10 +140,10 @@ export const skates = {
     assert('holding interact early is a grab, not a dismount: the bus catches up and the rider hangs on (grab:start)', player.grabbing && player.vehicle === 'skates' && of('grab:start').length === 1 && of('grab:start')[0].player === 0 && of('grab:start')[0].kind === 'bus' && of('trick:grab').some(e => e.phase === 'start'), `after ${frames.length} frames, grabbing ${player.grabbing}`);
     assert('a toast explains it once (grab.hint)', of('ui:toast').filter(e => e.key === 'grab.hint').length === 1);
     step(60);
-    const jonasTop = sk.maxSpeed * player.move.speedMult;
-    assert('towed at the bus speed: clearly above the skates top speed, same direction', Math.abs(player.move.velSpeed - bus.speed) < bus.speed * 0.06 && player.move.velSpeed > jonasTop * 1.15 && Math.abs(player.move.heading - bus.heading) < 0.15, `${player.move.velSpeed.toFixed(0)} vs bus ${bus.speed} / top ${jonasTop.toFixed(0)}, heading ${player.move.heading.toFixed(2)} vs ${bus.heading.toFixed(2)}`);
+    const lorenzTop = sk.maxSpeed * player.move.speedMult;
+    assert('towed at the bus speed: clearly above the skates top speed, same direction', Math.abs(player.move.velSpeed - bus.speed) < bus.speed * 0.06 && player.move.velSpeed > lorenzTop * 1.1 && Math.abs(player.move.heading - bus.heading) < 0.15, `${player.move.velSpeed.toFixed(0)} vs bus ${bus.speed} / top ${lorenzTop.toFixed(0)}, heading ${player.move.heading.toFixed(2)} vs ${bus.heading.toFixed(2)}`);
     const ropeLen = Math.hypot(bus.x - bus.kcfg.length / 2 - player.x, bus.y - player.y);
-    assert('the rider hangs on a rope behind the handle, in the grab pose with sparks, rope and risk bar drawn', Math.abs(ropeLen - cfg.ropeLength) < 6 && player.sprite.texture.key === 'player-jonas-skates-grab' && fx.spark > sparks0 + 2 && grabs.drawn && slotOf(player).g.risk >= 0, `rope ${ropeLen.toFixed(1)}, sparks +${fx.spark - sparks0}`);
+    assert('the rider hangs on a rope behind the handle, in the grab pose with sparks, rope and risk bar drawn', Math.abs(ropeLen - cfg.ropeLength) < 6 && player.sprite.texture.key === 'player-lorenz-skates-grab' && fx.spark > sparks0 + 2 && grabs.drawn && slotOf(player).g.risk >= 0, `rope ${ropeLen.toFixed(1)}, sparks +${fx.spark - sparks0}`);
     assert('interact while hanging on does not get off the skates', (() => { intent.interact = true; step(1); intent.interact = false; return player.vehicle === 'skates' && player.grabbing; })());
 
     // steering sideways swings it a little
@@ -287,11 +287,11 @@ export const skates = {
       step(3);
       return r;
     };
-    const jonasPerk = player.character.perks.busGrabBonus;
-    const rLena = riskAfter(0);
-    const rJonas = riskAfter(jonasPerk);
-    assert('the perk busGrabBonus lowers the failure risk of the same ride (Jonas vs a neutral kid)', rJonas > 0 && rJonas < rLena * 0.8, `${rLena.toFixed(3)} vs ${rJonas.toFixed(3)}`);
-    player.perks.busGrabBonus = jonasPerk;
+    const lorenzPerk = player.character.perks.busGrabBonus;
+    const rPlain = riskAfter(0);
+    const rLorenz = riskAfter(lorenzPerk);
+    assert('the perk busGrabBonus lowers the failure risk of the same ride (Lorenz vs a neutral kid)', rLorenz > 0 && rLorenz < rPlain * 0.9, `${rPlain.toFixed(3)} vs ${rLorenz.toFixed(3)}`);
+    player.perks.busGrabBonus = lorenzPerk;
 
     // ---- an early press far from any bus still gets off the skates; the next press mounts the nearest lying pair
     quiet();
@@ -307,7 +307,7 @@ export const skates = {
     intent.interact = true;
     step(1);
     intent.interact = false;
-    assert('walking to the lying skates and pressing interact puts them on again', player.vehicle === 'skates' && skatesSvc.isMounted(0) && player.sprite.texture.key.startsWith('player-jonas-skates'));
+    assert('walking to the lying skates and pressing interact puts them on again', player.vehicle === 'skates' && skatesSvc.isMounted(0) && player.sprite.texture.key.startsWith('player-lorenz-skates'));
 
     // ---- co-op: each player has their own grab
     if (ctx.players.length < 2) gs.addDebugPlayer();

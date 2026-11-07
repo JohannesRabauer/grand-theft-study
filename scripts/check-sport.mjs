@@ -120,8 +120,8 @@ const neutral = { tempo: 5, ausdauer: 5 };
 {
   const t = (attrs, style) => simulateRun(course, { ...base, attrs, style }).effectiveSec;
   for (const style of ['walk', 'sprint']) {
-    const times = ['lena', 'jonas', 'mehmet'].map(id => t(attrsOf(id), style));
-    assert.ok(times[2] < times[1] && times[1] < times[0], `${style}: Mehmet (Tempo 9) < Jonas (6) < Lena (5): ${times.map(x => x.toFixed(1))}`);
+    const times = ['helena', 'lorenz', 'kilian'].map(id => t(attrsOf(id), style));
+    assert.ok(times[2] < times[1] && times[1] < times[0], `${style}: Kilian (Tempo 8) < Lorenz (7) < Helena (5): ${times.map(x => x.toFixed(1))}`);
     assert.ok(times[0] - times[2] > 4, `${style}: the difference is measurable, ${(times[0] - times[2]).toFixed(1)} s`);
   }
   assert.ok(t({ tempo: 9, ausdauer: 5 }, 'walk') < t({ tempo: 5, ausdauer: 5 }, 'walk') - 3, 'Tempo alone speeds up the walk');
@@ -133,8 +133,8 @@ const neutral = { tempo: 5, ausdauer: 5 };
   // the scores follow
   const par = parTimes(course, base);
   const score = id => scoreRun(simulateRun(course, { ...base, attrs: attrsOf(id), style: 'sprint' }), course, par, sc).score;
-  assert.ok(score('mehmet') > score('jonas') + 0.05 && score('jonas') > score('lena'), `scores: ${score('mehmet')} > ${score('jonas')} > ${score('lena')}`);
-  assert.ok(score('mehmet') - score('lena') >= 0.1, 'a measurably better score for the higher Tempo');
+  assert.ok(score('kilian') >= score('lorenz') && score('lorenz') > score('helena') + 0.05, `scores: ${score('kilian')} > ${score('lorenz')} > ${score('helena')}`);
+  assert.ok(score('kilian') - score('helena') >= 0.1, 'a measurably better score for the higher Tempo');
 }
 
 // ---- hurdles and jumping ----
@@ -319,7 +319,7 @@ for (let level = 1; level <= 5; level++) {
     for (let i = 0; i < u.total; i++) t.record(i < u.correct, 1, 0, 'sport');
     return { tally: t, s };
   };
-  const full = mk(attrsOf('mehmet'), 'sprint', 150);
+  const full = mk(attrsOf('kilian'), 'sprint', 150);
   const half = mk(neutral, 'sprint', 15);
   const result = buildResult({ def, cfg: data.settings, players: [0, 1], tallies: [full.tally, half.tally], ms: 40000, quit: false, difficulty: 3, gradeFn: () => ({ grade: 2 }) });
   assert.equal(result.perPlayer[0].score, full.s.score, 'the result score is the run score');

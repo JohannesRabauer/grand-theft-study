@@ -206,6 +206,10 @@ export const karate = {
     assert('quitting midway submits nothing: no points, no session, no belt', quit.quit && k(0).sessions === sessions && k(0).points === points && of('karate:trained').length === started && ctx.screens.size === 0 && !game.scene.isActive('MG_karate'));
 
     // ---- two kids train side by side on their own belts
+    const solo = structuredClone(ctx.state.data); // player 1 with Helena (karate rank from an earlier scenario) is dropped: the co-op partner is then a fresh Kilian
+    solo.players = solo.players.slice(0, 1);
+    solo.players[0].character = 'helena';
+    ctx.state.replace(solo);
     game.setCoop(true);
     step(4);
     gs = game.scene.getScene('Game');

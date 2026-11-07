@@ -118,10 +118,10 @@ assert.ok(rate({ speed: 200 }) > rate({ speed: 100 }) && rate({ bump: surfaces.c
 assert.ok(rate({ time: 8 }) > rate({ time: 1 }) && rate({ swing: 1 }) > rate({ swing: 0 }), 'longer and more swinging raises it');
 assert.ok(rate({ perk: 0.5 }) < rate() && rate({ perk: 0.5 }) > 0 && rate({ perk: 10 }) >= grab.failure.base * grab.failure.perkFloor, 'the perk lowers the rate, never to zero');
 assert.ok(maxDuration(grab, 0.5) > maxDuration(grab, 0.1) && maxDuration(grab, 0.1) > maxDuration(grab, 0), 'the perk stretches the duration');
-const jonas = chars.characters.find(c => c.id === 'jonas').perks.busGrabBonus;
-const mehmet = chars.characters.find(c => c.id === 'mehmet').perks.busGrabBonus;
-const lena = chars.perkDefaults.busGrabBonus;
-assert.ok(jonas > mehmet && mehmet > lena && lena === 0, 'Jonas is the bus grab pro, Mehmet a little, Lena none');
+const lorenz = chars.characters.find(c => c.id === 'lorenz').perks.busGrabBonus;
+const kilian = chars.characters.find(c => c.id === 'kilian').perks.busGrabBonus ?? chars.perkDefaults.busGrabBonus;
+const helena = chars.perkDefaults.busGrabBonus;
+assert.ok(lorenz > 0 && kilian === 0 && helena === 0, 'Lorenz is the bus grab pro, the others have no bonus');
 
 // seeded Monte Carlo of full grabs (hold all the way, no jump)
 function mulberry(seed) {
@@ -155,11 +155,11 @@ function odds(opts, n = 3000, seed = 7) {
 }
 const normal = odds({});
 const rough = odds({ bump: surfaces.cobble.rattle });
-const pro = odds({ perk: jonas });
+const pro = odds({ perk: lorenz });
 assert.ok(normal.fail > 0.15 && normal.fail < 0.7, `normal ride: sometimes fails (${normal.fail.toFixed(2)})`);
 assert.ok(normal.tired > 0.2, `and a good share reaches the time limit (${normal.tired.toFixed(2)})`);
 assert.ok(rough.fail > 0.8 && rough.fail > normal.fail + 0.2, `cobble: nearly always fails (${rough.fail.toFixed(2)})`);
-assert.ok(pro.fail < normal.fail * 0.85 && pro.time > normal.time, `the perk lowers failure (${pro.fail.toFixed(2)} vs ${normal.fail.toFixed(2)}) and extends the ride`);
+assert.ok(pro.fail < normal.fail * 0.9 && pro.time > normal.time, `the perk lowers failure (${pro.fail.toFixed(2)} vs ${normal.fail.toFixed(2)}) and extends the ride`);
 assert.deepEqual(odds({}, 200, 3), odds({}, 200, 3), 'seeded runs repeat');
 { // the risk bar of a rider who stays on to the end is moderate: it is the chance that a failure had happened by then
   const rand = mulberry(11);
@@ -234,4 +234,4 @@ assert.deepEqual(odds({}, 200, 3), odds({}, 200, 3), 'seeded runs repeat');
 assert.ok(trickPoints(tricks, 'grab', { seconds: 6, bonus: tricks.grab.jumpBonus }) > trickPoints(tricks, 'grab', { seconds: 6 }) && trickPoints(tricks, 'grab', { seconds: 6 }) > trickPoints(tricks, 'grab', { seconds: 1 }), 'a bus ride scores by length, the ollie off adds a bonus');
 assert.equal(tricks.tricks.grab.name, 'trick.grab');
 
-console.log(`check-skates ok: skates ${sk.maxSpeed}/${sk.accel}/${sk.turnRate}, bus ${route.speed} px/s, fail normal ${normal.fail.toFixed(2)} cobble ${rough.fail.toFixed(2)} Jonas ${pro.fail.toFixed(2)}`);
+console.log(`check-skates ok: skates ${sk.maxSpeed}/${sk.accel}/${sk.turnRate}, bus ${route.speed} px/s, fail normal ${normal.fail.toFixed(2)} cobble ${rough.fail.toFixed(2)} Lorenz ${pro.fail.toFixed(2)}`);

@@ -1,5 +1,5 @@
 // Smoke scenarios: skateboard (story 5.1, AD-23). Each export is { name, run(game, assert, env) }; registered in scripts/smoke/index.js.
-// Mehmet starts on his board, measured top speeds per surface follow the profile and differ from bike and foot,
+// Kilian starts on his board, measured top speeds per surface follow the profile and differ from bike and foot,
 // the ollie clears a cone (no prop contact while airborne), the manual meter runs and ends softly, and the player can
 // switch between board, foot and bike.
 export const skateboard = {
@@ -22,15 +22,15 @@ export const skateboard = {
     const become = id => { ctx.state.dispatch('player.setCharacter', { player: 0, character: id }); ctx.characters.apply(player); };
     const before = ctx.state.data;
 
-    // ---- Mehmet starts on his board
+    // ---- Kilian starts on his board
     quiet();
-    become('mehmet');
+    become('kilian');
     gs.mountStartVehicle(player);
     step(2);
     const board = gs.skateboards;
     const vehicleLine = ui.hud.get('status').vehicle.text;
-    assert('Mehmet starts on the board: vehicle, mounted state, own rider look, HUD line',
-      player.vehicle === 'skateboard' && board.isMounted(0) && player.sprite.texture.key === 'player-mehmet-skate' && vehicleLine === ctx.t('hud.vehicle', { name: ctx.t('vehicle.skateboard') }), `${player.vehicle} ${player.sprite.texture.key} "${vehicleLine}"`);
+    assert('Kilian starts on the board: vehicle, mounted state, own rider look, HUD line',
+      player.vehicle === 'skateboard' && board.isMounted(0) && player.sprite.texture.key === 'player-kilian-skate' && vehicleLine === ctx.t('hud.vehicle', { name: ctx.t('vehicle.skateboard') }), `${player.vehicle} ${player.sprite.texture.key} "${vehicleLine}"`);
     assert('the town has lying boards to pick up', board.parked.filter(b => b.visible).length >= 2);
 
     // ---- measured top speed per surface (the surface lookup is forced, the controller is the real one)
@@ -46,7 +46,7 @@ export const skateboard = {
       step(1);
       return top;
     };
-    const designed = (id, s) => profiles[id].maxSpeed * ctx.surfaces.props(s).speed[id] * (id === 'skateboard' ? player.move.speedMult : 1); // Mehmet's Tempo scales his own top speed
+    const designed = (id, s) => profiles[id].maxSpeed * ctx.surfaces.props(s).speed[id] * (id === 'skateboard' ? player.move.speedMult : 1); // Kilian's Tempo scales his own top speed
     const raw = (id, s) => profiles[id].maxSpeed * ctx.surfaces.props(s).speed[id];
     const rows = [];
     let ok = true;
@@ -123,7 +123,7 @@ export const skateboard = {
     intent.manual = true;
     step(3);
     const rig = board.riders[0].skate;
-    const started = rig.manual && player.sprite.texture.key === 'player-mehmet-skate-manual';
+    const started = rig.manual && player.sprite.texture.key === 'player-kilian-skate-manual';
     const meter0 = rig.meter;
     step(10);
     assert('the manual starts in the sweet spot with the nose-up pose and a speed boost', started && rig.sweetNow && player.move.boostMult === sk.trick.manual.boost && rig.meter > meter0 && manualEvents[0]?.phase === 'start' && manualEvents[0].player === 0, `meter ${rig.meter.toFixed(2)}`);
@@ -131,7 +131,7 @@ export const skateboard = {
     while (rig.manual && n < 200) { step(1); n++; }
     intent.manual = false;
     const end = manualEvents.find(e => e.phase === 'end');
-    assert('held too long it tips over softly: back to rolling, no speed loss, vehicle unchanged', !rig.manual && end?.reason === 'over' && end.sweet > 0.2 && player.move.boostMult === 1 && player.move.velSpeed > 60 && player.vehicle === 'skateboard' && player.sprite.texture.key === 'player-mehmet-skate', `${end?.reason} after ${(end?.time ?? 0).toFixed(2)}s, speed ${player.move.velSpeed.toFixed(0)}`);
+    assert('held too long it tips over softly: back to rolling, no speed loss, vehicle unchanged', !rig.manual && end?.reason === 'over' && end.sweet > 0.2 && player.move.boostMult === 1 && player.move.velSpeed > 60 && player.vehicle === 'skateboard' && player.sprite.texture.key === 'player-kilian-skate', `${end?.reason} after ${(end?.time ?? 0).toFixed(2)}s, speed ${player.move.velSpeed.toFixed(0)}`);
     ctx.events.off('trick:manual', onManual);
     intent.move.x = 0;
     delete ctx.surfaces.at;
@@ -152,12 +152,12 @@ export const skateboard = {
     place(drop.x, drop.y);
     step(2);
     press('interact');
-    assert('walking to a lying board and pressing interact mounts it again', player.vehicle === 'skateboard' && board.isMounted(0) && player.sprite.texture.key === 'player-mehmet-skate');
+    assert('walking to a lying board and pressing interact mounts it again', player.vehicle === 'skateboard' && board.isMounted(0) && player.sprite.texture.key === 'player-kilian-skate');
     press('interact');
     assert('and off again (foot)', player.vehicle === 'foot' && player.move.boostMult === 1);
 
     // ---- a board can be dropped mid-ollie without leaving the player without collisions
-    become('mehmet');
+    become('kilian');
     gs.mountStartVehicle(player);
     step(2);
     press('jump');

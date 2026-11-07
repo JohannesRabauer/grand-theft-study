@@ -25,12 +25,13 @@ export function mulberry32(seed) {
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const mean = a => a.reduce((s, x) => s + x, 0) / a.length;
 
-export const emptyStats = cfg => ({ n: 0, acc: 0.8, recent: [], level: cfg.startLevel, streak: 0, bestStreak: 0, correct: 0, wrong: 0, last: null, items: {} });
+export const emptyStats = (cfg, startOffset = 0) => ({ n: 0, acc: 0.8, recent: [], level: cfg.startLevel + startOffset, streak: 0, bestStreak: 0, correct: 0, wrong: 0, last: null, items: {} });
 
 // Saves may predate fields or come from edited files: fill what is missing, never throw.
-export function normalizeStats(raw, cfg) {
-  const s = { ...emptyStats(cfg), ...(raw ?? {}) };
-  s.level = clamp(Number.isFinite(s.level) ? s.level : cfg.startLevel, cfg.levelMin, cfg.levelMax);
+// `startOffset` shifts the start level of a topic nobody has answered yet (a younger kid starts a bit easier).
+export function normalizeStats(raw, cfg, startOffset = 0) {
+  const s = { ...emptyStats(cfg, startOffset), ...(raw ?? {}) };
+  s.level = clamp(Number.isFinite(s.level) ? s.level : cfg.startLevel + startOffset, cfg.levelMin, cfg.levelMax);
   if (!Array.isArray(s.recent)) s.recent = [];
   if (!s.items || typeof s.items !== 'object') s.items = {};
   return s;
@@ -100,13 +101,14 @@ const norm = v => String(v).trim().toLowerCase().replace(',', '.').replace(/\s+/
 
 export class EngineCore {
   // pools: { topic: { bothLangs, items } }; reactions: { correct: [keys], wrong: [...], streak: [...] }
-  constructor({ pools, cfg, reactions, store, rng = Math.random, parentDifficulty = () => 1 }) {
+  constructor({ pools, cfg, reactions, store, rng = Math.random, parentDifficulty = () => 1, startOffset = () => 0 }) {
     this.pools = pools;
     this.cfg = cfg;
     this.reactions = reactions;
     this.store = store;
     this.rng = rng;
     this.parentDifficulty = parentDifficulty;
+    this.startOffset = startOffset;
     this.byId = {};
     for (const [topic, p] of Object.entries(pools)) this.byId[topic] = Object.fromEntries(p.items.map(i => [i.id, i]));
     this.lastReaction = {};
@@ -114,7 +116,7 @@ export class EngineCore {
 
   topics() { return Object.keys(this.pools); }
 
-  stats(player, topic) { return normalizeStats(this.store.get(player, topic), this.cfg); }
+  stats(player, topic) { return normalizeStats(this.store.get(player, topic), this.cfg, this.startOffset(player)); }
 
   pd() { return clamp(this.parentDifficulty(), this.cfg.parentRange[0], this.cfg.parentRange[1]); }
 

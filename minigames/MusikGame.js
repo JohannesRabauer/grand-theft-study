@@ -15,7 +15,7 @@ import { uiText } from '../ui/uiKit.js';
 //   music:note  { player, lane, grade: 'perfect'|'good'|'miss', pitch (MIDI), song, tier, combo }  every judged note
 //   music:beat  { beat, bpm, song }                                                                   every beat
 //   sfx:play    { name: 'musik.perfect'|'musik.good'|'musik.miss'|'musik.combo', player, lane, pitch }
-// The musicArtBonus perk (Jonas) widens the hit windows and multiplies the points; the graded score is the share of
+// The musicArtBonus perk (Lorenz) widens the hit windows and multiplies the points; the graded score is the share of
 // notes hit (tally), so the wider windows are what lifts his grade.
 export class MusikGame extends DuelMinigame {
   constructor() {

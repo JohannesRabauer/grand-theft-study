@@ -1,4 +1,4 @@
-// Smoke scenario: the skatepark map (story 5.4, AD-28, CAP-15). Mehmet rolls into the park through the west gate: the
+// Smoke scenario: the skatepark map (story 5.4, AD-28, CAP-15). Kilian rolls into the park through the west gate: the
 // turf still raises Ärger and the zone toast shows. With the chase switched off, he then skates the designed main line
 // (data/maps trick-line `park-line-main`): ramp -> ollie onto the long rail -> grind -> ollie off -> stair jump -> U-turn ->
 // manual along the pad -> ollie out -> rolling slowly through the bank spot, which banks the chain cleanly with the
@@ -24,7 +24,7 @@ export const skatepark = {
       player.move.heading = heading;
       player.sprite.setPosition(x, y);
     };
-    ctx.state.dispatch('player.setCharacter', { player: 0, character: 'mehmet' });
+    ctx.state.dispatch('player.setCharacter', { player: 0, character: 'kilian' });
     ctx.characters.apply(player);
     gs.mountStartVehicle(player);
     step(2);

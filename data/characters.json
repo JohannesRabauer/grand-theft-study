@@ -1,8 +1,20 @@
 {
-  "_doc": "The three playable kids (CAP-12). Attributes are 0..10 (growth in data/attr-growth.json); `modifiers` turns attributes into gameplay numbers per point around `pivot`; `perks` are numeric strengths read by their systems (aimPrecision: slingshot spread cut, bullyTargetWeight: how much more bullies prefer this kid, trickMultiplier: Style payout, stickThrowRange: stick tool range, forgetHomeworkChance: school chore roll, busGrabBonus: grab-target window, talkDownBonus: bully talk-down roll, musicArtBonus: music/art minigame score). A start vehicle without a profile in data/vehicles.json or outside `playerVehicles` falls back to foot. `palette` feeds the shared player art in scenes/CharacterArt.js.",
+  "_doc": "The three playable kids Helena (12), Kilian (10) and Lorenz (8) (CAP-12, spec family-characters.md). Attributes are 0..10 (growth in data/attr-growth.json); `modifiers` turns attributes into gameplay numbers per point around `pivot`; `perks` are numeric strengths read by their systems (aimPrecision: slingshot spread cut, bullyTargetWeight: how much more bullies prefer this kid, trickMultiplier: Style payout, stickThrowRange: stick tool range, forgetHomeworkChance: school chore roll, busGrabBonus, talkDownBonus, musicArtBonus: additive shares (0.3 = +30%) on the grab-target window, the bully talk-down roll and the music/art minigame score, kiaiPower: multiplier on the Kiai radius and the Aerger a Kiai takes off, see defense/beltCore.js). Per character: `startBelt` (optional, the karate belt a new game starts with, state action player.setCharacter), `learningStartOffset` (added to the learning start level of topics the kid has not answered yet, learning/engineCore.js), `spriteScale` (1 = normal, the younger kid is a bit smaller). A start vehicle without a profile in data/vehicles.json or outside `playerVehicles` falls back to foot. `palette` (outfit colours) and `look` (hairStyle: short|shoulder|wild, glasses, eyes = eye colour, freckles) feed the shared player art in scenes/CharacterArt.js.",
   "attrMax": 10,
-  "playerVehicles": ["foot", "bike", "skateboard", "skates"],
-  "attributeOrder": ["wissen", "tempo", "ausdauer", "charme", "ordnung", "zielen"],
+  "playerVehicles": [
+    "foot",
+    "bike",
+    "skateboard",
+    "skates"
+  ],
+  "attributeOrder": [
+    "wissen",
+    "tempo",
+    "ausdauer",
+    "charme",
+    "ordnung",
+    "zielen"
+  ],
   "perkDefaults": {
     "aimPrecision": 0,
     "bullyTargetWeight": 1,
@@ -11,56 +23,165 @@
     "forgetHomeworkChance": 0.1,
     "busGrabBonus": 0,
     "talkDownBonus": 0,
-    "musicArtBonus": 0
+    "musicArtBonus": 0,
+    "kiaiPower": 1
   },
   "modifiers": {
     "pivot": 5,
-    "tempo": { "speed": 0.06, "accel": 0.06 },
-    "ausdauer": { "staminaSize": 0.08, "staminaRegen": 0.06 },
-    "zielen": { "spread": -0.15, "assist": 0.12 },
+    "tempo": {
+      "speed": 0.06,
+      "accel": 0.06
+    },
+    "ausdauer": {
+      "staminaSize": 0.08,
+      "staminaRegen": 0.06
+    },
+    "zielen": {
+      "spread": -0.15,
+      "assist": 0.12
+    },
     "minSpread": 0.05
   },
   "characters": [
     {
-      "id": "lena",
-      "name": "Lena",
-      "title": "character.lena.title",
-      "attributes": { "wissen": 9, "tempo": 5, "ausdauer": 5, "charme": 5, "ordnung": 8, "zielen": 8 },
+      "id": "helena",
+      "name": "Helena",
+      "title": "character.helena.title",
+      "age": 12,
+      "attributes": {
+        "wissen": 9,
+        "tempo": 5,
+        "ausdauer": 6,
+        "charme": 5,
+        "ordnung": 8,
+        "zielen": 7
+      },
       "startVehicle": "bike",
-      "perks": { "aimPrecision": 0.35, "bullyTargetWeight": 1.4, "forgetHomeworkChance": 0.02, "talkDownBonus": 0.05 },
-      "perkText": "character.lena.perks",
-      "quips": ["character.lena.quip1", "character.lena.quip2", "character.lena.quip3"],
+      "startBelt": "yellow",
+      "spriteScale": 1,
+      "perks": {
+        "aimPrecision": 0.35,
+        "bullyTargetWeight": 1.25,
+        "kiaiPower": 1.5,
+        "forgetHomeworkChance": 0.02
+      },
+      "perkText": "character.helena.perks",
+      "quips": [
+        "character.helena.quip1",
+        "character.helena.quip2",
+        "character.helena.quip3"
+      ],
       "palette": {
-        "jacket": "#3aa6a0", "jacketDark": "#25777a", "jacketLight": "#6fd0c8", "pants": "#4a3f7a", "straps": "#f2c14e", "zip": "#c9f0eb",
-        "hair": "#7a4a22", "hairLight": "#a8703a", "hairStyle": "ponytail", "accessory": "glasses", "frame": "#8e5bd6", "frameDark": "#5f3b9e", "backdrop": "#cfeeea"
+        "jacket": "#7a63c9",
+        "jacketDark": "#53409a",
+        "jacketLight": "#a79be6",
+        "pants": "#2f3b66",
+        "straps": "#f2c14e",
+        "zip": "#e6e0ff",
+        "frame": "#7a63c9",
+        "frameDark": "#53409a",
+        "hair": "#e6c35a",
+        "hairLight": "#f6e08a",
+        "backdrop": "#e4defa"
+      },
+      "look": {
+        "hairStyle": "shoulder",
+        "glasses": true,
+        "eyes": "#3f86e0",
+        "freckles": false
       }
     },
     {
-      "id": "mehmet",
-      "name": "Mehmet",
-      "title": "character.mehmet.title",
-      "attributes": { "wissen": 5, "tempo": 9, "ausdauer": 9, "charme": 6, "ordnung": 3, "zielen": 5 },
+      "id": "kilian",
+      "name": "Kilian",
+      "title": "character.kilian.title",
+      "age": 10,
+      "attributes": {
+        "wissen": 8,
+        "tempo": 8,
+        "ausdauer": 5,
+        "charme": 6,
+        "ordnung": 2,
+        "zielen": 6
+      },
       "startVehicle": "skateboard",
-      "perks": { "trickMultiplier": 1.35, "stickThrowRange": 1.4, "forgetHomeworkChance": 0.35, "busGrabBonus": 0.1 },
-      "perkText": "character.mehmet.perks",
-      "quips": ["character.mehmet.quip1", "character.mehmet.quip2", "character.mehmet.quip3"],
+      "spriteScale": 1,
+      "perks": {
+        "trickMultiplier": 1.4,
+        "forgetHomeworkChance": 0.35,
+        "stickThrowRange": 1.15
+      },
+      "perkText": "character.kilian.perks",
+      "quips": [
+        "character.kilian.quip1",
+        "character.kilian.quip2",
+        "character.kilian.quip3"
+      ],
       "palette": {
-        "jacket": "#e8e4d8", "jacketDark": "#b9b5a8", "jacketLight": "#ffffff", "pants": "#1f6b43", "straps": "#2f9e63", "zip": "#2f9e63",
-        "hair": "#1c1a1f", "hairLight": "#3d3a46", "hairStyle": "short", "accessory": "headband", "frame": "#2f9e63", "frameDark": "#1f6b43", "backdrop": "#d6efd9"
+        "jacket": "#2f9e9a",
+        "jacketDark": "#1f6f72",
+        "jacketLight": "#6fd0c8",
+        "pants": "#3a3f4a",
+        "straps": "#f2c14e",
+        "zip": "#c9f0eb",
+        "frame": "#e8a33a",
+        "frameDark": "#a8701c",
+        "hair": "#a8481f",
+        "hairLight": "#cf6a32",
+        "backdrop": "#cfeeea"
+      },
+      "look": {
+        "hairStyle": "wild",
+        "glasses": true,
+        "eyes": "#4b2a12",
+        "freckles": true
       }
     },
     {
-      "id": "jonas",
-      "name": "Jonas",
-      "title": "character.jonas.title",
-      "attributes": { "wissen": 6, "tempo": 6, "ausdauer": 5, "charme": 9, "ordnung": 4, "zielen": 6 },
+      "id": "lorenz",
+      "name": "Lorenz",
+      "title": "character.lorenz.title",
+      "age": 8,
+      "attributes": {
+        "wissen": 5,
+        "tempo": 7,
+        "ausdauer": 8,
+        "charme": 9,
+        "ordnung": 4,
+        "zielen": 5
+      },
       "startVehicle": "skates",
-      "perks": { "forgetHomeworkChance": 0.15, "busGrabBonus": 0.5, "talkDownBonus": 0.4, "musicArtBonus": 0.3, "bullyTargetWeight": 0.9 },
-      "perkText": "character.jonas.perks",
-      "quips": ["character.jonas.quip1", "character.jonas.quip2", "character.jonas.quip3"],
+      "learningStartOffset": -0.5,
+      "spriteScale": 0.9,
+      "perks": {
+        "busGrabBonus": 0.3,
+        "talkDownBonus": 0.3,
+        "musicArtBonus": 0.25
+      },
+      "perkText": "character.lorenz.perks",
+      "quips": [
+        "character.lorenz.quip1",
+        "character.lorenz.quip2",
+        "character.lorenz.quip3"
+      ],
       "palette": {
-        "jacket": "#f2b630", "jacketDark": "#c78a14", "jacketLight": "#ffd870", "pants": "#3a5a9a", "straps": "#e04f8a", "zip": "#7a4a14",
-        "hair": "#d8b050", "hairLight": "#f0d27a", "hairStyle": "curly", "accessory": "headphones", "frame": "#e04f8a", "frameDark": "#a0305f", "backdrop": "#fbe6b8"
+        "jacket": "#f28a30",
+        "jacketDark": "#c0621a",
+        "jacketLight": "#ffb36a",
+        "pants": "#3a5a9a",
+        "straps": "#fff2b0",
+        "zip": "#7a4a14",
+        "frame": "#f28a30",
+        "frameDark": "#c0621a",
+        "hair": "#6b4423",
+        "hairLight": "#8c5e34",
+        "backdrop": "#fbe0c4"
+      },
+      "look": {
+        "hairStyle": "short",
+        "glasses": false,
+        "eyes": "#4b2a12",
+        "freckles": false
       }
     }
   ]

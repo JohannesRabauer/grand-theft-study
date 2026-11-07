@@ -39,26 +39,30 @@ export const characters = {
       intent.sprint = false;
     }
     const fmt = o => ids.map(id => `${id} ${o[id].toFixed ? o[id].toFixed(1) : o[id]}`).join(', ');
-    assert('top speed follows Tempo: Mehmet > Jonas > Lena', speed.mehmet > speed.jonas && speed.jonas > speed.lena, fmt(speed));
-    assert('Mehmet is about 24% faster than Lena (Tempo 9 vs 5)', Math.abs(speed.mehmet / speed.lena - 1.24) < 0.06, (speed.mehmet / speed.lena).toFixed(3));
-    assert('stamina lasts with Ausdauer: Mehmet > Lena, Lena = Jonas', frames.mehmet > frames.lena * 1.2 && Math.abs(frames.jonas - frames.lena) < 3, fmt(frames));
+    assert('top speed follows Tempo: Kilian > Lorenz > Helena', speed.kilian > speed.lorenz && speed.lorenz > speed.helena, fmt(speed));
+    assert('Kilian is about 18% faster than Helena (Tempo 8 vs 5)', Math.abs(speed.kilian / speed.helena - 1.18) < 0.06, (speed.kilian / speed.helena).toFixed(3));
+    assert('stamina lasts with Ausdauer: Lorenz (8) > Helena (6) > Kilian (5)', frames.lorenz > frames.helena * 1.1 && frames.helena > frames.kilian * 1.05, fmt(frames));
 
     // ---- identity: distinct looks, start vehicles, bully weights, perks
-    become('lena');
-    assert('Lena looks like Lena and starts on the bike, bullies weight her up', player.sprite.texture.key === 'player-lena' && player.startVehicle === 'bike' && player.bullyWeight > 1 && player.perks.aimPrecision > 0, `${player.sprite.texture.key}/${player.startVehicle}/${player.bullyWeight}`);
-    become('mehmet');
-    assert('Mehmet: own look, starts on his skateboard, trick and stick perks', player.sprite.texture.key === 'player-mehmet' && player.startVehicle === 'skateboard' && player.perks.trickMultiplier > 1 && player.perks.stickThrowRange > 1);
-    become('jonas');
-    assert('Jonas: own look, starts on skates, bus and talk perks', player.sprite.texture.key === 'player-jonas' && player.startVehicle === 'skates' && player.perks.busGrabBonus > 0 && player.perks.talkDownBonus > 0);
+    become('helena');
+    assert('Helena looks like Helena and starts on the bike, bullies weight her up (1.25), precision slingshot, yellow belt, stronger Kiai', player.sprite.texture.key === 'player-helena' && player.startVehicle === 'bike' && player.bullyWeight === 1.25 && player.perks.aimPrecision > 0 && player.perks.kiaiPower > 1 && ctx.state.players[0].karate.belt === 'yellow', `${player.sprite.texture.key}/${player.startVehicle}/${player.bullyWeight}`);
+    become('kilian');
+    assert('Kilian: own look, starts on his skateboard, trick and stick perks', player.sprite.texture.key === 'player-kilian' && player.startVehicle === 'skateboard' && player.perks.trickMultiplier > 1 && player.perks.stickThrowRange > 1);
+    become('lorenz');
+    assert('Lorenz: own look, starts on skates, bus and talk perks', player.sprite.texture.key === 'player-lorenz' && player.startVehicle === 'skates' && player.perks.busGrabBonus > 0 && player.perks.talkDownBonus > 0);
+    assert('Lorenz (8) is drawn a bit smaller than the others', Math.abs(player.sprite.scaleX / ctx.res.inv - 0.9) < 1e-9, String(player.sprite.scaleX));
+    become('kilian');
+    assert('Kilian and Helena are drawn at normal size', Math.abs(player.sprite.scaleX / ctx.res.inv - 1) < 1e-9);
+    become('lorenz');
     player.setVehicle('bike');
-    assert('the bike look is the character own', player.sprite.texture.key === 'player-jonas-bike');
+    assert('the bike look is the character own', player.sprite.texture.key === 'player-lorenz-bike');
     player.setVehicle('foot');
-    const looks = ['player-lena', 'player-mehmet', 'player-jonas', 'player-lena-bike', 'player-mehmet-bike', 'player-jonas-bike', 'player'];
+    const looks = ['player-helena', 'player-kilian', 'player-lorenz', 'player-helena-bike', 'player-kilian-bike', 'player-lorenz-bike', 'player'];
     assert('every walk and bike look is a different picture', new Set(looks.map(hash)).size === looks.length);
-    assert('scatter order Lena < Jonas < Mehmet (Zielen and precision perk)', (become('lena'), player.mods.spread) < (become('jonas'), player.mods.spread) && player.mods.spread < (become('mehmet'), player.mods.spread));
+    assert('scatter order Helena < Kilian < Lorenz (Zielen and precision perk)', (become('helena'), player.mods.spread) < (become('kilian'), player.mods.spread) && player.mods.spread < (become('lorenz'), player.mods.spread));
 
     // ---- growth hooks and persistence
-    become('mehmet');
+    become('kilian');
     const a0 = { ...player.attrs };
     ctx.events.emit('style:banked', { player: 0, points: 90 });
     ctx.events.emit('quiz:correct', { player: 0 });
@@ -75,11 +79,11 @@ export const characters = {
     const store = new SaveSlots(ctx.state, { on() {}, emit() {} }, memoryStorage());
     const grownTempo = a1.tempo;
     assert('saved', store.save(1));
-    become('lena');
-    assert('a different character resets to its base', player.attrs.tempo === 5);
+    become('helena');
+    assert('a different character resets to its base', player.attrs.tempo === 5 && player.move.speedMult === 1);
     assert('loaded', store.load(1));
     ctx.characters.apply(player);
-    assert('growth persists through save and load, modifiers follow', player.attrs.tempo === grownTempo && player.character.id === 'mehmet' && Math.abs(player.move.speedMult - speedAfter) < 1e-9, `${player.attrs.tempo} ${player.move.speedMult.toFixed(3)}`);
+    assert('growth persists through save and load, modifiers follow', player.attrs.tempo === grownTempo && player.character.id === 'kilian' && Math.abs(player.move.speedMult - speedAfter) < 1e-9, `${player.attrs.tempo} ${player.move.speedMult.toFixed(3)}`);
 
     // ---- back to the neutral kid the later scenarios expect
     ctx.state.replace(before);

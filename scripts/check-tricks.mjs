@@ -33,7 +33,7 @@ for (const [id, t] of Object.entries(cfg.tricks)) {
 for (const k of ['hud.style', 'style.banked', 'style.saved', 'trick.rattle']) assert.ok(de[k] && en[k], k);
 assert.ok(cfg.combo.window > 0 && cfg.combo.fireMult > 1 && cfg.combo.multMax > cfg.combo.fireMult, 'combo numbers');
 assert.ok(cfg.combo.repeatPoints < 1 && cfg.combo.varietyPoints > 0 && cfg.bank.bailShare > 0 && cfg.bank.bailShare < 1, 'repeat punishes, variety pays, a bail never loses everything');
-assert.ok(characters.characters.find(c => c.id === 'mehmet').perks.trickMultiplier > 1, 'Mehmet has the trick perk');
+assert.ok(characters.characters.find(c => c.id === 'kilian').perks.trickMultiplier > 1, 'Kilian has the trick perk');
 assert.ok(growth.rules.some(r => r.event === 'style:banked' && r.attr === 'tempo'), 'style:banked raises Tempo');
 assert.ok(hud.modes.play.some(e => e.id === 'style' && e.scope === 'player'), 'a style HUD module per player');
 assert.ok(particles.emitters.fire && particles.emitters.spark, 'fire and spark emitters exist');
@@ -73,9 +73,9 @@ assert.ok(particles.emitters.fire && particles.emitters.spark, 'fire and spark e
 
   const perk = createCombo();
   const plain = createCombo();
-  addTrick(perk, cfg, 'ollie', 100, 1.35);
+  addTrick(perk, cfg, 'ollie', 100, 1.4);
   addTrick(plain, cfg, 'ollie', 100, 1);
-  near(perk.mult - 1, (plain.mult - 1) * 1.35, 1e-9, 'the Mehmet perk multiplies the growth, not the points');
+  near(perk.mult - 1, (plain.mult - 1) * 1.4, 1e-9, 'the Kilian perk multiplies the growth, not the points');
   assert.equal(perk.base, plain.base);
 
   const cap = createCombo();
@@ -353,12 +353,12 @@ const objects = [
 
 // the perk and co-op: independent combos per player
 {
-  const w = world(objects, 2, [1.35, 1]);
+  const w = world(objects, 2, [1.4, 1]);
   const a = w.sys.forPlayer(0);
   const b = w.sys.forPlayer(1);
   for (const id of ['ollie', 'grind']) { w.sys.score(a, id, { air: 0.4, meters: 6 }); w.sys.score(b, id, { air: 0.4, meters: 6 }); }
-  assert.ok(a.combo.mult > b.combo.mult, 'Mehmet’s multiplier grows faster');
-  near(a.combo.mult - 1, (b.combo.mult - 1) * 1.35, 1e-9, 'by the perk');
+  assert.ok(a.combo.mult > b.combo.mult, 'Kilian’s multiplier grows faster');
+  near(a.combo.mult - 1, (b.combo.mult - 1) * 1.4, 1e-9, 'by the perk');
   w.sys.score(a, 'stairs', { steps: 4 });
   assert.equal(b.combo.tricks.length, 2, 'the other player’s chain is untouched');
   w.events.emit('player:caught', { player: 0 });

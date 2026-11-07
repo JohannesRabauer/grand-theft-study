@@ -174,24 +174,24 @@ for (let i = 0; i < 200; i++) rig.update(1 / 60);
 assert.ok(ctx.players[0].move.tetherMult < 0.5, 'player 1 runs away: slowed');
 
 // ---- start players from the state
-const players2 = [{ character: 'lena' }, { character: 'mehmet' }];
+const players2 = [{ character: 'helena' }, { character: 'kilian' }];
 const shared = (coop) => ({ flags: coop ? { coop: true } : {} });
-assert.deepEqual(startPlayers(shared(false), players2, 2).map(p => p.character), ['lena'], 'one player without the coop flag');
-assert.deepEqual(startPlayers(shared(true), players2, 2).map(p => p.character), ['lena', 'mehmet']);
-assert.equal(startPlayers(shared(true), [{ character: 'lena' }], 2).length, 1, 'never more than the state has');
+assert.deepEqual(startPlayers(shared(false), players2, 2).map(p => p.character), ['helena'], 'one player without the coop flag');
+assert.deepEqual(startPlayers(shared(true), players2, 2).map(p => p.character), ['helena', 'kilian']);
+assert.equal(startPlayers(shared(true), [{ character: 'helena' }], 2).length, 1, 'never more than the state has');
 assert.equal(startPlayers(shared(true), [{}, {}, {}], 2).length, 2, 'never more than maxPlayers');
-const over = startPlayers(shared(false), players2, 2, [{ character: 'jonas', vehicle: 'foot' }, { character: 'lena' }]);
-assert.deepEqual(over, [{ index: 0, character: 'jonas', vehicle: 'foot' }, { index: 1, character: 'lena', vehicle: null }], 'an explicit config wins');
+const over = startPlayers(shared(false), players2, 2, [{ character: 'lorenz', vehicle: 'foot' }, { character: 'helena' }]);
+assert.deepEqual(over, [{ index: 0, character: 'lorenz', vehicle: 'foot' }, { index: 1, character: 'helena', vehicle: null }], 'an explicit config wins');
 
 // ---- coop.set action
 const stateCfg = { ...load('data/state.json'), characters: Object.fromEntries(characters.characters.map(ch => [ch.id, ch.attributes])) };
 const st = new GameState(new EventEmitter(), stateCfg);
 assert.equal(st.players.length, 1);
-st.dispatch('player.setCharacter', { player: 0, character: 'lena' });
+st.dispatch('player.setCharacter', { player: 0, character: 'helena' });
 assert.equal(st.dispatch('coop.set', { on: true }), true);
 assert.equal(st.shared.flags.coop, true);
 assert.equal(st.players.length, 2);
-assert.notEqual(st.players[1].character, 'lena');
+assert.notEqual(st.players[1].character, 'helena');
 assert.ok(st.players[1].character, 'the second player is a different, real character');
 assert.deepEqual(st.players[1].attributes, stateCfg.characters[st.players[1].character]);
 st.dispatch('coop.set', { on: false });
