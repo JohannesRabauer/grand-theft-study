@@ -30,6 +30,10 @@ export class BootScene extends Phaser.Scene {
     this.load.json('day', 'data/day.json');
     this.load.json('hud', 'data/hud.json');
     this.load.json('screens', 'data/screens.json');
+    this.load.json('grading', 'data/grading.json');
+    this.load.json('kopfnoten', 'data/kopfnoten.json');
+    this.load.json('teacher-comments', 'data/teacher-comments.json');
+    this.load.json('parent-reactions', 'data/parent-reactions.json');
     this.load.json('learning', 'data/learning.json');
     this.load.json('learning-reactions', 'data/learning/reactions.json');
     this.load.json('learning-index', 'data/learning/index.json');
@@ -50,7 +54,7 @@ export class BootScene extends Phaser.Scene {
     // AD-16: one state store for the whole app; without a chosen slot it is a plain in-memory game.
     const characters = this.cache.json.get('characters');
     // the state config also knows each character's base attributes (player.setCharacter resets to them)
-    const stateCfg = { ...this.cache.json.get('state'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])) };
+    const stateCfg = { ...this.cache.json.get('state'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])), kopfnoten: this.cache.json.get('kopfnoten') };
     const state = new GameState(events, stateCfg);
     const saves = new SaveSlots(state, events, window.localStorage);
     this.registry.set('app', { events, i18n, t: i18n.t, quality, res, state, saves, characters });

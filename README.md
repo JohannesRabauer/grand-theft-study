@@ -96,6 +96,7 @@ node scripts/check-chase.mjs      # pathfinding, level rules, escape rules
 node scripts/check-crowd.mjs      # crowd spawn rules, caps, reaction geometry
 node scripts/check-state.mjs      # state store, actions, save slots, migrations
 node scripts/check-learning.mjs   # learning engine: simulated learners, adaptivity, repetition, persistence
+node scripts/check-grades.mjs     # grades: boundaries, bonus, averages, promotion rule, Kopfnoten, teacher comments
 node scripts/check-day.mjs        # day clock: phases, events, autosave, restore, weather schedule, tint
 node scripts/check-ui.mjs         # screen stack (top-only input, counted world freeze), HUD module list
 node scripts/check-players.mjs    # players array helpers; fails on any remaining use of the deprecated ctx.player
@@ -221,6 +222,16 @@ Learning content schema beyond `choice` and `typed` (all validated by `scripts/c
 - Repetition: a wrong item is parked for 3 answered questions, then due; each correct answer moves it up (intervals 3, 8, 20), after the last box it counts as learned. Due items are mixed in at the context's `dueRate`, forced when overdue by 2, and `context: 'bully'` asks them first.
 - Stats live in `state.players[i].learning[topic]` (the existing `learning` object, so no save version bump: missing fields are filled when read) and are saved with the slot. `SCHULWEG_GAME.learning` is available with `?debug`. `node scripts/check-learning.mjs` runs weak, average and strong simulated learners.
 
+## Grading and Kopfnoten
+
+`ctx.grades` (`grading/Grades.js`, Phaser-free logic in `grading/gradeCore.js`, tuning in `data/grading.json`) is the only code that maps a score to a German grade (AD-20). `grades.grade(player, subject, { score, effort, difficulty, lessonId })` turns a minigame result into a grade 1-6, writes it with the `grades.record` action and emits `grades:recorded`; `reportCard(player, lang)` bundles what the Zeugnis (epic 8) shows.
+
+- Thresholds (Klasse 3): 92% = 1, 81% = 2, 67% = 3, 50% = 4, 30% = 5. Gentle on purpose: a gain of 10 points over the previous result in the subject (`trend`) or effort of 80% (share of questions tried, hints count) lifts the grade by one step, at most one step in total, never worse than the base grade and never above 1. Each difficulty step above 3 adds 2 points to the score. Below 30% it is still a 5; a 6 only happens with a score under 5% and effort under 25% (basically nothing done).
+- Ledger: `state.players[i].grades = { entries, bySubject }` (save version 3, migration from v2; entries are capped at `gradesMaxEntries`, the per-subject tallies are not). `average(player)` gives per-subject averages and the overall mean of the subject averages (one decimal), `countOf(player, grade)`, `trend(subject)`.
+- Promotion: `evaluatePromotion(grades, kopfnoten)` takes the Zeugnis grades (the rounded subject average, x.5 goes to the worse grade). Promoted when the one-decimal average is at most 4.0 and at most two grades are 5 or worse (a 6 counts as one bad grade). It returns `{ promoted, average, fives, conduct, reasons, comebackBonus }`: `reasons` are encouraging i18n keys, `comebackBonus` (xp, money cents, perk) is set only for a repeated year. Kopfnoten are reported but never decide.
+- Kopfnoten (`data/kopfnoten.json`): verhalten, mitarbeit, ordnung, hilfsbereitschaft, values 1-4 (4 is best, stored fractionally, start 3, clamped). The event table moves them through the `kopfnoten.add` action (for example `traffic:red-light` with adults nearby lowers Verhalten, `homework:forgotten` lowers Ordnung, `lesson:done` with effort raises Mitarbeit, `npc:helped` raises Hilfsbereitschaft); events nobody emits yet simply never fire. The data file is merged into the state config at boot.
+- Texts: `data/teacher-comments.json` (39 warm, funny comments, chosen by subject strengths and weaknesses, improvement, conduct and the overall band; the pick is deterministic per ledger) and `data/parent-reactions.json` (12 promoted and 12 repeat lines) only hold i18n keys (`teacher.comment.*`, `parent.*`), so the content lint covers them. `teacherComment(grades, kopfnoten, lang)` returns the text.
+
 ## Day clock
 
 `ctx.day` (`services/DayClock.js`, pure time math in `services/dayTime.js`, all tuning in `data/day.json`) owns game time 06:30 to 22:00 and the phase machine morning, commute, school (from the 08:00 deadline), afternoon, evening, then the next day. One game minute takes `secondsPerGameMinute` real seconds (1.6, so a day is about 25 minutes). The time is `ctx.state.shared.clock` (`{ day, minute, phase }`), changed only by the `clock.set` action and restored with a loaded slot.
@@ -245,6 +256,7 @@ Learning content schema beyond `choice` and `typed` (all validated by `scripts/c
 | `state/` | `GameState.js` (store), `actions.js`, `migrations.js`, `SaveSlots.js` (AD-16) |
 | `characters/` | `attributes.js` (pure attribute maths), `AttrGrowth.js` (growth hooks), `Characters.js` (`ctx.characters`: dresses each player with its character) |
 | `learning/` | `engineCore.js` (pure adaptive and repetition logic), `LearningEngine.js` (`ctx.learning`) |
+| `grading/` | `gradeCore.js` (pure score-to-grade, ledger maths, promotion, Kopfnoten, comment selection), `Grades.js` (`ctx.grades`) |
 | `minigames/`, `missions/` | Empty so far |
 | `services/` | `World.js` (`ctx.world`, map switching, AD-28) + `worldLogic.js` (pure catalog validation, door resolution); `DayClock.js` + `dayTime.js` (day clock, AD-17); `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |

@@ -1,0 +1,22 @@
+{
+  "_doc": "Grading (CAP-8). thresholds: minimum score (0-1, after the difficulty boost) for each German grade, best first; below the last one the grade is 5, or 6 only when score < sixBelow and effort < sixEffortBelow (basically nothing done). Gentle bonus: improvement >= improvementMin (score gain over the previous result in that subject) or effort >= effortMin (share of questions tried, hints used count as trying) each lift the grade by one step, at most maxBonus steps in total; the grade never gets worse than the base grade and never better than 1. difficultyBoost is added to the score per difficulty step above 3. Promotion: average of the Zeugnis grades (one per subject, the rounded subject average) at most maxAverage, and at most maxFives grades of 5 or worse (a 6 counts as a 5). comebackBonus is what a repeated year gives.",
+  "subjects": ["mathe", "deutsch", "englisch", "sachkunde", "science"],
+  "thresholds": [
+    { "min": 0.92, "grade": 1 },
+    { "min": 0.81, "grade": 2 },
+    { "min": 0.67, "grade": 3 },
+    { "min": 0.5, "grade": 4 },
+    { "min": 0.3, "grade": 5 }
+  ],
+  "sixBelow": 0.05,
+  "sixEffortBelow": 0.25,
+  "improvementMin": 0.1,
+  "effortMin": 0.8,
+  "maxBonus": 1,
+  "difficultyBoost": 0.02,
+  "promotion": {
+    "maxAverage": 4.0,
+    "maxFives": 2,
+    "comebackBonus": { "xp": 150, "moneyCents": 500, "perk": "extraHints" }
+  }
+}

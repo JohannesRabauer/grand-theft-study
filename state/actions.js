@@ -1,4 +1,5 @@
 import { createPlayer } from './GameState.js';
+import { applyRecord, validEntry, moveKopfnote } from '../grading/gradeCore.js';
 
 // Registered state actions (AD-16). Each gets a mutable draft copy, the payload and the config and
 // returns { path } (the changed path(s)) or { reject: reason }. New systems add their actions here.
@@ -71,6 +72,23 @@ export const ACTIONS = {
     if (!s.players[player] || !topic || !stats || !Number.isInteger(stats.n) || !Number.isFinite(stats.level) || typeof stats.items !== 'object') return reject('bad-payload');
     s.players[player].learning[topic] = stats;
     return { path: `players.${player}.learning.${topic}` };
+  },
+
+  // Only Grades dispatches this (AD-20): appends one graded result to the ledger and updates the subject tally.
+  'grades.record'(s, { player, subject, score, grade, lessonId, day }, cfg) {
+    const entry = { subject, score, grade, lessonId, day };
+    if (!s.players[player] || !validEntry(entry)) return reject('bad-payload');
+    applyRecord(s.players[player].grades, entry, cfg.gradesMaxEntries);
+    return { path: `players.${player}.grades` };
+  },
+
+  // Kopfnoten move by a fractional delta, clamped to the data's range (so a kid at the limit simply stays there).
+  'kopfnoten.add'(s, { player, category, delta, reason }, cfg) {
+    const k = cfg.kopfnoten;
+    const p = s.players[player];
+    if (!p || !k || !k.categories.includes(category) || !Number.isFinite(delta) || delta === 0 || !reason) return reject('bad-payload');
+    p.kopfnoten[category] = moveKopfnote(p.kopfnoten[category] ?? k.start, delta, k);
+    return { path: `players.${player}.kopfnoten.${category}` };
   },
 
   'xp.add'(s, { player, amount }, cfg) {

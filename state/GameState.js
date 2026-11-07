@@ -2,8 +2,9 @@
 // Data is deep-frozen; the only way to change it is dispatch(), which runs a registered
 // action on a copy, freezes the result and emits `state:changed` with the changed path.
 import { ACTIONS } from './actions.js';
+import { emptyGrades, defaultKopfnoten } from '../grading/gradeCore.js';
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 export function createPlayer(cfg) {
   return {
@@ -11,7 +12,8 @@ export function createPlayer(cfg) {
     attributes: { ...cfg.attributes },
     xp: 0,
     level: 1,
-    grades: {},
+    grades: emptyGrades(),
+    kopfnoten: cfg.kopfnoten ? defaultKopfnoten(cfg.kopfnoten) : {}, // cfg.kopfnoten is data/kopfnoten.json, merged in at boot
     learning: {},
     karate: { belt: cfg.startBelt },
     cosmetics: { owned: [], equipped: {} },

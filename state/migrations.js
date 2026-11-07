@@ -1,6 +1,7 @@
 // Save upgrades (AD-16). MIGRATIONS[n] turns a version-n save into version n+1; migrate() chains them.
 // v0 was the pre-release shape: money as a float `euros` and a single flat `player`.
 import { createPlayer, createShared } from './GameState.js';
+import { emptyGrades, defaultKopfnoten } from '../grading/gradeCore.js';
 
 export const MIGRATIONS = {
   0({ euros = 0, player = {}, ...rest }, cfg) {
@@ -19,6 +20,19 @@ export const MIGRATIONS = {
       ...d,
       v: 2,
       players: d.players.map(p => ({ ...p, attributes: { ...(cfg.characters?.[p.character] ?? cfg.attributes) } }))
+    };
+  },
+
+  // v3: the grade ledger (entries + per-subject tallies) replaces the empty `grades` placeholder; Kopfnoten start at their default.
+  2(d, cfg) {
+    return {
+      ...d,
+      v: 3,
+      players: d.players.map(p => ({
+        ...p,
+        grades: Array.isArray(p.grades?.entries) ? p.grades : emptyGrades(),
+        kopfnoten: p.kopfnoten ?? (cfg.kopfnoten ? defaultKopfnoten(cfg.kopfnoten) : {})
+      }))
     };
   }
 };

@@ -9,5 +9,6 @@
   "maxLevel": 20,
   "attributes": { "wissen": 5, "tempo": 5, "ausdauer": 5, "charme": 5, "ordnung": 5, "zielen": 5 },
   "attrMax": 10,
+  "gradesMaxEntries": 300,
   "startBelt": "white"
 }

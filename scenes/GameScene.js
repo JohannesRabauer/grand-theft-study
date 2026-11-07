@@ -23,6 +23,7 @@ import { AmmoPickups } from '../entities/AmmoPickups.js';
 import { CrowdDirector } from '../ai/CrowdDirector.js';
 import { Characters } from '../characters/Characters.js';
 import { LearningEngine } from '../learning/LearningEngine.js';
+import { Grades } from '../grading/Grades.js';
 
 const STEP_MS = 1000 / 60; // Matter's fixed timestep (AD-14); MovementController assumes it too
 const STEP_SLACK = 0.95; // a frame that arrives a hair early (vsync jitter) still gets its step
@@ -63,6 +64,8 @@ export class GameScene extends Phaser.Scene {
     const topicFiles = cache.get('learning-index').topics.map(({ grade, topic }) => cache.get(`learning-${grade}-${topic}`));
     ctx.learning = new LearningEngine(ctx, cache.get('learning'), topicFiles, cache.get('learning-reactions')); // AD-19
     if (window.SCHULWEG_GAME) window.SCHULWEG_GAME.learning = ctx.learning;
+    ctx.grades = new Grades(ctx, { grading: cache.get('grading'), kopfnoten: cache.get('kopfnoten'), comments: cache.get('teacher-comments'), parents: cache.get('parent-reactions') }, { de: cache.get('de'), en: cache.get('en') }); // AD-20 / CAP-8
+    if (window.SCHULWEG_GAME) window.SCHULWEG_GAME.grades = ctx.grades;
     this.ctx = ctx;
 
     new World(this, ctx, index, maps).start(index.start); // AD-28: ground, walls and ctx.map of the first map

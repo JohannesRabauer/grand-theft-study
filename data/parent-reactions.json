@@ -1,0 +1,5 @@
+{
+  "_doc": "Parent reaction lines for the Zeugnis (CAP-8): i18n keys, warm in both outcomes. One is picked from the ledger.",
+  "promoted": ["parent.promoted.01", "parent.promoted.02", "parent.promoted.03", "parent.promoted.04", "parent.promoted.05", "parent.promoted.06", "parent.promoted.07", "parent.promoted.08", "parent.promoted.09", "parent.promoted.10", "parent.promoted.11", "parent.promoted.12"],
+  "repeat": ["parent.repeat.01", "parent.repeat.02", "parent.repeat.03", "parent.repeat.04", "parent.repeat.05", "parent.repeat.06", "parent.repeat.07", "parent.repeat.08", "parent.repeat.09", "parent.repeat.10", "parent.repeat.11", "parent.repeat.12"]
+}
