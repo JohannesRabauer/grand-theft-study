@@ -1,5 +1,5 @@
 // Smoke scenario: throwing stick and dog fetch (story 6.1, AD-24). Registered in scripts/smoke/index.js.
-// Q/E reaches the stick, a calm-air throw lands at the configured distance (Mehmet's perk stretches it, a crosswind shifts it,
+// Q/E reaches the throwing stick, a calm-air throw lands at the configured distance (Mehmet's perk stretches it, a crosswind shifts it,
 // the HUD and aim dots follow), it topples a ball, a frisbee and a kite stuck in trees, makes the trash can's noise carry
 // further, passes bully, pedestrian and dog without touching them (engine contacts are checked), is thrown only once until the
 // owner walks over it again, and a spawned chasing dog fetches it, carries it back and drops it near the thrower.
@@ -62,14 +62,17 @@ export const throwingStick = {
     setWind(0, 0);
 
     // ---- Q/E reaches the stick, HUD says ready
-    assert('the belt holds slingshot and throwing stick, in that order', belt.tools.map(t => t.id).join() === 'slingshot,throwing-stick');
+    assert('the belt holds slingshot, throwing stick and stick, in that order', belt.tools.map(t => t.id).join() === 'slingshot,throwing-stick,stick');
     press('toolNext');
     assert('E selects the throwing stick', belt.current === tool && of('tool:changed').at(-1).id === 'throwing-stick');
     assert('HUD shows the stick as ready', ui.hud.get('tool').tool.text === ctx.t('hud.toolStatus', { name: ctx.t('tool.throwing-stick'), status: ctx.t('tool.status.ready') }), ui.hud.get('tool').tool.text);
     press('toolNext');
-    assert('E again wraps to the slingshot', belt.current.id === 'slingshot');
+    assert('E again reaches the close-range stick', belt.current.id === 'stick');
+    press('toolNext');
+    assert('E once more wraps to the slingshot', belt.current.id === 'slingshot');
     press('toolPrev');
-    assert('Q goes back to the stick', belt.current === tool);
+    press('toolPrev');
+    assert('Q twice goes back to the throwing stick', belt.current === tool);
 
     // ---- a full-power throw in calm air along the open main road
     become('lena');

@@ -1,0 +1,28 @@
+{
+  "_doc": "Content of the stick's targets (story 6.2): bush loot tables, loot drops, pinata, kirmes balloons. Weights are relative; `once` names a flag in state.shared.flags that, once set, removes the entry from the table. Money is in cents.",
+  "seed": 24601,
+  "bush": {
+    "shake": 0.4,
+    "leaves": 9,
+    "tables": {
+      "garden": [
+        { "item": "coins", "weight": 30, "cents": [10, 40] },
+        { "item": "ammo", "weight": 20, "kind": "pebble" },
+        { "item": "sticker", "weight": 8 },
+        { "item": "homework", "weight": 6, "once": "lostHomeworkFound" },
+        { "item": "nothing", "weight": 36 }
+      ],
+      "park": [
+        { "item": "coins", "weight": 24, "cents": [10, 30] },
+        { "item": "ammo", "weight": 28, "kind": "acorn" },
+        { "item": "sticker", "weight": 10 },
+        { "item": "homework", "weight": 4, "once": "lostHomeworkFound" },
+        { "item": "nothing", "weight": 34 }
+      ]
+    }
+  },
+  "drops": { "pool": 16, "life": 25, "radius": 10, "pop": 9, "popSeconds": 0.45, "spread": 14, "coinCents": [10, 30] },
+  "pinata": { "radius": 10, "wobble": 0.45, "candies": 7, "candyCents": [5, 15], "coins": 3, "confetti": 26, "reach": 40 },
+  "balloon": { "radius": 5, "respawn": 45, "bob": 1.4, "sway": 3, "confetti": 10, "colors": { "red": "#e8493f", "yellow": "#f2c23a", "blue": "#3a7bd9", "green": "#3fae5a", "pink": "#ee7fb0", "orange": "#ee8a35" } },
+  "doorbell": { "radius": 5, "interactReach": 18 }
+}

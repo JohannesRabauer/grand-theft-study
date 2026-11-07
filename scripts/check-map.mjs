@@ -58,9 +58,25 @@ assert.deepEqual(of('turf').map(o => o.id).sort(), ['schoolyard-back', 'skatepar
 assert.ok(of('ammo').length >= 8, 'at least 8 ammo pickups');
 assert.ok(of('bully-spawn').length >= 3, 'at least 3 bully spawns');
 assert.ok(of('prop').length >= 15, 'about 15 props');
-assert.ok(of('prop').every(o => ['cone', 'can', 'crate', 'ball', 'trashcan', 'frisbee', 'kite-stuck'].includes(o.kind)), 'prop kinds');
+assert.ok(of('prop').every(o => ['cone', 'can', 'crate', 'box', 'ball', 'trashcan', 'frisbee', 'kite-stuck'].includes(o.kind)), 'prop kinds');
 assert.equal(of('prop').filter(o => o.kind === 'frisbee' && o.perch).length, 2, 'two frisbees stuck up in trees');
 assert.equal(of('prop').filter(o => o.kind === 'kite-stuck' && o.perch).length, 1, 'one kite stuck in a tree');
+// stick targets (story 6.2): bushes, doorbells with a free tile for the door and the neighbor, a pinata, a balloon stall
+const loot = load('stick-world.json').bush.tables;
+const neighbors = load('neighbors.json').neighbors;
+assert.ok(of('bush').length >= 10, 'at least 10 bushes');
+assert.ok(of('bush').every(o => loot[o.loot]), 'every bush names a loot table of data/stick-world.json');
+assert.equal(of('doorbell').length, 3, 'three doorbells');
+for (const o of of('doorbell')) {
+  assert.ok(neighbors[o.neighborId], `doorbell ${o.id}: unknown neighbor ${o.neighborId}`);
+  const wall = o.side === 'up' ? -1 : 1;
+  assert.ok(walkable(o.x + 1, o.y) && !walkable(o.x, o.y + wall) && !walkable(o.x + 1, o.y + wall), `doorbell ${o.id}: the next tile must be free and the house wall must be on its ${o.side === 'up' ? 'north' : 'south'} side`);
+}
+assert.equal(new Set(of('doorbell').map(o => o.houseId)).size, 3, 'doorbells belong to three different houses');
+assert.equal(of('pinata').length, 1, 'one pinata');
+assert.equal(of('fair-stall').length, 1, 'one fair stall');
+assert.ok(of('balloon').length >= 5, 'a cluster of balloons');
+assert.ok(of('prop').filter(o => o.kind === 'box').length >= 3, 'cardboard boxes lie around');
 for (const o of objects) {
   for (const [x, y] of cells(o)) {
     assert.ok(x >= 0 && y >= 0 && x < W && y < H, `${o.id} out of bounds`);

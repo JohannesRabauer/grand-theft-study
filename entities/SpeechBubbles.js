@@ -1,7 +1,8 @@
 // Pooled speech bubbles over pedestrians (AD-8, AD-15): a few Text objects created once, at most
-// `maxBubbles` visible at a time. The caller passes already translated text (ctx.t).
+// `maxBubbles` visible at a time. The caller passes already translated text (ctx.t). Owners are anything with x, y and `active`;
+// each set of bubbles registers its pool under `name`.
 export class SpeechBubbles {
-  constructor(scene, ctx, max) {
+  constructor(scene, ctx, max, name = 'bubbles') {
     const res = Math.round(ctx.res.scale * 2); // glyphs are drawn at twice the screen scale and shown at 1/that
     this.items = [];
     for (let i = 0; i < max; i++) {
@@ -11,7 +12,7 @@ export class SpeechBubbles {
       this.items.push({ text, owner: null, left: 0 });
     }
     this.max = max;
-    ctx.pools.register('bubbles', { live: () => this.live(), cap: max });
+    ctx.pools.register(name, { live: () => this.live(), cap: max });
   }
 
   live() {

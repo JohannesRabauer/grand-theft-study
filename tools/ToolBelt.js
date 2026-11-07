@@ -1,11 +1,12 @@
 import { Slingshot } from './Slingshot.js';
 import { ThrowingStick } from './ThrowingStick.js';
+import { Stick } from './Stick.js';
 
 const IDLE = { move: { x: 0, y: 0 }, aim: null, toolUse: false, toolNext: false, toolPrev: false };
 
 // One belt per player (player.toolbelt): holds the tools and cycles through them with that player's
 // toolNext / toolPrev intents; emits `tool:changed` { player, id }. Which tools it holds, in which order, is `belt` in data/tool.json.
-const TOOLS = { slingshot: Slingshot, 'throwing-stick': ThrowingStick };
+const TOOLS = { slingshot: Slingshot, 'throwing-stick': ThrowingStick, stick: Stick };
 export class ToolBelt {
   constructor(scene, ctx, cfg, player) {
     this.ctx = ctx;

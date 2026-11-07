@@ -26,6 +26,7 @@ Open the printed URL (`http://localhost:3000` or `http://localhost:8080`). URL f
 - Chase: the skatepark and the back of the schoolyard are bully turf; bullies see, chase, search and give up (levels 0 to 2, A* pathfinding). Hide in hedges, dumpsters and phone booths to escape; if you are caught a comic frame shows, you lose a euro and respawn at home.
 - Slingshot with wind-bent aim; pebbles only affect objects (cans, crates, trash cans), never people or animals. Hits lure bullies.
 - Throwing stick (Q / E): a long, wind-bent boomerang throw that topples balls, frisbees and kites stuck in trees, makes far-away bullies look, flies past people and animals, lands as a pickup you walk over to collect, and that a chasing dog fetches back.
+- Stick (Q / E, third tool, "Stock"): a close-range swing that smashes crates and cardboard boxes, flings cones, shakes bushes for daily loot, rings doorbells (Ding-Dong, then a harmless ding-dong-run), bursts the party pinata, and the slingshot pops the kirmes balloons. It only ever affects objects, never people or animals.
 - Menu and pause overlay with language (Deutsch / English) and quality (Low / Medium / High); touch controls, gamepad and keyboard.
 
 ## Controls
@@ -39,7 +40,7 @@ Every player has an intent snapshot, `ctx.input.intents[i]`; all devices produce
 | Manual (hold to balance, skateboard only) | C or Left Ctrl | small board button (only shown on a skateboard) | LT |
 | Sprint | Shift | double-chevron button | B |
 | Interact (mount / dismount bike, skateboard or skates; hold it behind a bus on skates to hang on) | F | circle button | Y |
-| Tool use / aim (hold to charge, release to fire) | left click, aim at the cursor | tool button, drag from it to aim | X or RT, right stick aims |
+| Tool use / aim (hold to charge, release to fire; with the stick: one swing per press, held = a swing every 0.35 s) | left click, aim at the cursor | tool button (tap swings), drag from it to aim | X or RT, right stick aims |
 | Next / previous tool | E / Q | small triangle button | RB / LB |
 | Map | M | - | Back |
 | Weather (clear / rain) | T | - | - |
@@ -193,12 +194,24 @@ Save slot screen: three slots with a summary line (player(s), level, day, money)
 
 ## Slingshot
 
-Hold the left mouse button (touch: hold the tool button and drag from it to aim; gamepad: X or RT, right stick aims) to charge for about 0.8 s, release to shoot. Aim at the cursor; without a pointer the shot goes the way you last walked. While charging, a rubber band and power ring show at the player, a dotted line shows the flight, and a wind arrow with strength shows at the bottom of the screen; the dots bend with the wind exactly like the pebble (`flightPoint` in `tools/Slingshot.js`). **Q / E** cycle tools (`ToolBelt`; the tools and their order are `belt` in `data/tool.json`: slingshot, throwing stick). The HUD shows the tool and its ammo.
+Hold the left mouse button (touch: hold the tool button and drag from it to aim; gamepad: X or RT, right stick aims) to charge for about 0.8 s, release to shoot. Aim at the cursor; without a pointer the shot goes the way you last walked. While charging, a rubber band and power ring show at the player, a dotted line shows the flight, and a wind arrow with strength shows at the bottom of the screen; the dots bend with the wind exactly like the pebble (`flightPoint` in `tools/Slingshot.js`). **Q / E** cycle tools (`ToolBelt`; the tools and their order are `belt` in `data/tool.json`: slingshot, throwing stick, stick). The HUD shows the tool and its ammo.
 
 - Pebbles are pooled sensor bodies in the `PROJECTILE` category (they collide only with `PROP` and `STATIC`): they pass through people, bullies and animals, and through fences. A hit pushes the prop (`knock` in `data/props.json`), crates take 3 hits, a spark puff shows, and `prop:hit` is emitted with the hit position (trash cans use `hitRadius` 260, cans 100, others the bully default), so bullies that are not watching you go to look (`DISTRACTED`).
 - Targets: 3 tin cans on the skatepark fence (map props with `"perch": true`, static until hit) and a trash can nearby.
 - Ammo: start with 5, magazine cap 12 (`data/tool.json`). Pebbles, chestnuts and acorns lie around (`ammo` map objects); walk over one to pick it up, it reappears after 40 s. The aim-dot count scales with the quality tier (`aimDots`).
 - `node scripts/check-collisions.mjs` asserts that projectiles never collide with player, bully, NPC or animal masks.
+
+## The stick: bushes, crates, doorbells, pinata, balloons
+
+Story 6.2 (CAP-17, AD-24). Press **E** / **Q** until the HUD says "Stock" / "Stick" (third on the belt), then click (touch: tap the tool button; gamepad X / RT). A swing is a short arc of 22 px in the aim direction (110 degrees, 0.35 s cooldown, a swoosh is drawn); `data/tool.json` `stick` has the numbers. What it can hit is decided by a query of **objects only** (`tools/swingLogic.js`: props, bushes, doorbells and the pinata; no list of people or animals is ever passed in and the query skips any body that is not PROP or STATIC; `scripts/check-stick.mjs` and `scripts/check-collisions.mjs` test this). At most 3 targets per swing, nearest first.
+
+- **Crates and boxes** (props): `data/props.json` `crate` (hp 3, two swings) and the weaker cardboard `box` (hp 1) smash with wood splinters or paper scraps and emit `prop:broken`; they may hide coins (`loot`). **Cones, cans and balls** fly off (`Props.knock` with the stick's `damage` and `knockMul`).
+- **Bushes** (map object `bush`, 11 in the town): whack one 3 times (`hp`) and it drops one thing from its table (`data/stick-world.json` `bush.tables`: coins, slingshot ammo, a sticker, the lost homework, or nothing) as a collectible you walk over (`entities/LootDrops.js`). The table is rolled with a seeded generator; a bush gives out once per game day (flag `bush-<id>-day`). The lost homework sets `flags.lostHomeworkFound` (and emits `homework:found`) for the later mission, stickers emit `sticker:found` (epic 10 stub).
+- **Doorbells** (map object `doorbell`, 3 houses): swing at one or press interact next to it: `doorbell:ring` { player, houseId }, a "Ding-Dong!" bubble, then the door opens, `neighbor:alert` { houseId, player } is emitted and a placeholder neighbor (a pooled sprite without a body, `data/neighbors.json`) shouts and follows you at walking speed for 6 s, then gives up laughing. If he reaches you nothing happens but an "Erwischt!" bubble. The real angry neighbor chaser comes in epic 7 (story 7.4) and takes over `neighbor:alert`.
+- **Pinata** (map object `pinata`, a party frame with bunting, table and cake near the meadow at the left of the town): 4 whacks burst it into confetti, candies, coins and a sticker (`pinata:burst` { player }, once per game day, flag `pinata-<id>-day`). There is no energy meter yet, so candies are worth a few cents.
+- **Kirmes balloons** (map objects `balloon` and `fair-stall`, same meadow): slingshot shots pop them (static PROP sensor bodies, so projectiles that only see PROP and STATIC still reach them), `balloon:popped` { player, color }, confetti, back after 45 s. They bob and lean with the wind.
+
+New object types are in `data/object-types.json` and validated by `scripts/check-map.mjs`; the pure logic (zone geometry, object-only query, loot, ding-dong-run timers, pinata hp, balloon respawn) is in `tools/swingLogic.js` and `entities/stickWorldLogic.js`, checked by `node scripts/check-stick.mjs`; the smoke scenario is `scripts/smoke/stick.js`.
 
 ## Throwing stick and dog fetch
 

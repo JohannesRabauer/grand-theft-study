@@ -21,8 +21,10 @@ export const worldDoors = {
     // ---- town -> test room through the door (walk in + interact)
     player.teleport(T(door.x + 1), T(door.y));
     step(30);
-    const before = { bodies: mapBodies(gs), children: gs.children.length, textures: gs.textures.getTextureKeys().length, pools: [...ctx.pools.byName.keys()].join(), props: ctx.props.props.length, ammo: gs.ammo.items.length, flags: gs.flags.flags.length, bikes: gs.bikes.parked.length };
-    const townZones = gs.zones.zones.filter(z => z.body).length + ctx.grabs.pool.filter(t => t.active).length; // sensors: zones and the bus bodies
+    const dead = () => ctx.props.props.filter(p => !p.alive).length; // smashed props are rebuilt with the map
+    const rawBodies = mapBodies(gs);
+    const before = { bodies: rawBodies + dead(), children: gs.children.length, textures: gs.textures.getTextureKeys().length, pools: [...ctx.pools.byName.keys()].join(), props: ctx.props.props.length, ammo: gs.ammo.items.length, flags: gs.flags.flags.length, bikes: gs.bikes.parked.length };
+    const townZones = gs.zones.zones.filter(z => z.body).length + ctx.grabs.pool.filter(t => t.active).length + gs.balloons.items.length; // sensors: zones, the bus bodies and the kirmes balloons
     const townProps = ctx.props.props.filter(p => p.alive).length;
     assert('before the trip the town has props, ammo, flags, a bike and sensors', before.props >= 15 && before.ammo >= 8 && before.flags >= 2 && before.bikes >= 1 && townZones >= 5, JSON.stringify(before));
     press('interact');
@@ -35,7 +37,7 @@ export const worldDoors = {
     assert('world:leave and world:enter fired in order with the entry id', JSON.stringify(log) === JSON.stringify([['leave', 'town'], ['enter', 'test-room', 'from-town']]), JSON.stringify(log));
     assert('a quick fade runs', gs.cameras.main.fadeEffect.isRunning);
     assert('town content is gone: props, ammo, flags, bikes, sensors, pedestrians, bullies', ctx.props.props.length === 0 && gs.ammo.items.length === 0 && gs.flags.flags.length === 0 && gs.bikes.parked.length === 0 && gs.zones.zones.length === 0 && live('npcs') === 0 && ctx.chase.pool.live() === 0, `${live('npcs')} npcs`);
-    assert('bodies: the town props and sensors left the physics world', mapBodies(gs) === before.bodies - townProps - townZones, `${mapBodies(gs)} vs ${before.bodies} - ${townProps} - ${townZones}`);
+    assert('bodies: the town props and sensors left the physics world', mapBodies(gs) === rawBodies - townProps - townZones, `${mapBodies(gs)} vs ${rawBodies} - ${townProps} - ${townZones}`);
     assert('only the room walls are streamed', live('walls') > 0 && live('walls') <= ctx.pools.byName.get('walls').cap && ctx.pools.byName.get('walls').cap < 40, `${live('walls')}/${ctx.pools.byName.get('walls').cap}`);
     step(60);
     assert('standing at the entry does not bounce the player back through the auto door', world.id === 'test-room');
@@ -57,7 +59,7 @@ export const worldDoors = {
     assert('arriving next to the door does not re-trigger it', world.id === 'town' && log.length === 4, JSON.stringify(log));
 
     // ---- nothing leaked after the round trip
-    const after = { bodies: mapBodies(gs), children: gs.children.length, textures: gs.textures.getTextureKeys().length, pools: [...ctx.pools.byName.keys()].join(), props: ctx.props.props.length, ammo: gs.ammo.items.length, flags: gs.flags.flags.length, bikes: gs.bikes.parked.length };
+    const after = { bodies: mapBodies(gs) + dead(), children: gs.children.length, textures: gs.textures.getTextureKeys().length, pools: [...ctx.pools.byName.keys()].join(), props: ctx.props.props.length, ammo: gs.ammo.items.length, flags: gs.flags.flags.length, bikes: gs.bikes.parked.length };
     assert('after the round trip bodies, display objects, textures, pools and map content are as before', JSON.stringify(after) === JSON.stringify(before), `${JSON.stringify(before)} -> ${JSON.stringify(after)}`);
     const walls = ctx.pools.byName.get('walls');
     const worldStatics = Phaser.Physics.Matter.Matter.Composite.allBodies(gs.matter.world.localWorld).filter(b => b.collisionFilter.category === CAT.STATIC).length;

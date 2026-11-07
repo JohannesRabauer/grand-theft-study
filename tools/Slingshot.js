@@ -15,7 +15,7 @@ const DEG = Math.PI / 180;
 // player's accuracy (player.mods.spread / .assist from the Zielen attribute, data/tool.json `spreadDeg`, `assistDeg`);
 // the aim dots show the intended line, not the scatter.
 // One instance per player (own ammo, shots and aim dots). Events: `tool:ammo` { player, ammo, max }, `tool:fire`
-// { player, x, y, power }; prop hits go through Props.knock (`prop:hit`).
+// { player, x, y, power }; prop hits go through Props.knock (`prop:hit`), balloons are popped through Balloons.popBody (`balloon:popped`).
 
 // Position after t seconds: straight line plus constant wind acceleration (wx, wy in px/s^2).
 export function flightPoint(out, sx, sy, dx, dy, speed, wx, wy, t) {
@@ -210,6 +210,8 @@ export class Slingshot extends Tool {
         if (p) {
           this.shotInfo.dist = Math.hypot(s.body.position.x - s.sx, s.body.position.y - s.sy);
           this.ctx.props.knock(p, s.dx, s.dy, this.shotInfo);
+        } else {
+          this.ctx.balloons.popBody(other, this.player.index); // a kirmes balloon is a PROP sensor of its own
         }
       }
       this.ctx.particles.emit('spark', s.body.position.x, s.body.position.y, { count: 4 });

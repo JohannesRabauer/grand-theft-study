@@ -16,7 +16,7 @@ const characters = load('characters.json');
 const cfg = tool.throwingStick;
 
 // ---- data
-assert.deepEqual(tool.belt, ['slingshot', 'throwing-stick'], 'the belt lists slingshot, then the throwing stick');
+assert.deepEqual(tool.belt, ['slingshot', 'throwing-stick', 'stick'], 'the belt lists slingshot, throwing stick, then the close-range stick');
 for (const k of ['frisbee', 'kite-stuck']) {
   const kind = props.kinds[k];
   assert.ok(kind && kind.texture && kind.knock > 0 && kind.perchFly > 0, `${k} is a prop kind that falls off its perch`);

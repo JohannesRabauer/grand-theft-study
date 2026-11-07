@@ -24,9 +24,26 @@
     } },
     "bully-spawn": { "shape": "point", "inWall": false, "fields": {} },
     "prop": { "shape": "point", "inWall": "perch", "fields": {
-      "kind": { "type": "enum", "values": ["cone", "can", "crate", "ball", "trashcan", "frisbee", "kite-stuck"], "required": true },
+      "kind": { "type": "enum", "values": ["cone", "can", "crate", "box", "ball", "trashcan", "frisbee", "kite-stuck"], "required": true },
       "perch": { "type": "bool" }
     } },
+    "bush": { "shape": "point", "inWall": false, "fields": {
+      "r": { "type": "number", "required": true, "min": 0, "doc": "radius in px of the area the stick can whack" },
+      "hp": { "type": "int", "required": true, "min": 1, "doc": "whacks it takes to drop its loot (once per game day, later whacks only shake it)" },
+      "loot": { "type": "string", "required": true, "doc": "id of a loot table in data/stick-world.json (bush.tables); one drop per bush per game day (flag bush-<id>-day)" }
+    }, "doc": "a walk-through bush the stick shakes; drawn procedurally (entities/Bushes.js)" },
+    "doorbell": { "shape": "point", "inWall": false, "reach": true, "fields": {
+      "houseId": { "type": "string", "required": true },
+      "neighborId": { "type": "string", "required": true, "doc": "who lives there (data/neighbors.json)" },
+      "side": { "type": "enum", "values": ["up", "down"], "required": true, "doc": "where the house wall is: up = north of the bell, down = south of it. The door stands on the next tile to the right and the neighbor steps out there" }
+    }, "doc": "swing the stick at it or press interact next to it: Ding-Dong, then a harmless ding-dong-run (entities/Doorbells.js)" },
+    "pinata": { "shape": "point", "inWall": false, "reach": true, "fields": {
+      "hp": { "type": "int", "required": true, "min": 1, "doc": "whacks until it bursts; one burst per game day" }
+    }, "doc": "a pinata hung in a party frame (entities/Pinata.js draws the frame, bunting and table around it)" },
+    "balloon": { "shape": "point", "inWall": false, "fields": {
+      "color": { "type": "enum", "values": ["red", "yellow", "blue", "green", "pink", "orange"], "required": true }
+    }, "doc": "a kirmes balloon the slingshot pops (PROP sensor body, respawns; entities/Balloons.js)" },
+    "fair-stall": { "shape": "point", "inWall": false, "fields": {}, "doc": "the kirmes stall (art only) the balloons are tied to; x is its centre tile, y its front tile" },
     "ammo": { "shape": "point", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["pebble", "chestnut", "acorn"], "required": true } } },
     "flag": { "shape": "point", "inWall": false, "fields": { "color": { "type": "color", "required": true } } },
     "ambient": { "shape": "point", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["steam", "chimney"], "required": true } } },

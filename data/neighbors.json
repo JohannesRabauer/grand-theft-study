@@ -1,0 +1,14 @@
+{
+  "_doc": "The angry neighbor of the ding-dong-run (story 6.2): a placeholder chaser until epic 7 story 7.4 replaces it with the real one. Seconds and px/s. The neighbor is a plain pooled sprite, no body: nothing collides with him and no tool ever affects him. Lines are i18n keys.",
+  "pool": 2,
+  "timing": { "doorDelay": 0.8, "chaseSeconds": 6, "giveUpSeconds": 2.4, "shoutSeconds": 1.6, "dingSeconds": 1.0, "cooldown": 8 },
+  "speed": 40,
+  "stepRate": 2.4,
+  "catchRadius": 9,
+  "bubbleSeconds": 1.4,
+  "neighbors": {
+    "herr-krause": { "outfit": { "kind": "adult", "jacket": "#7a8f4a", "pants": "#4a4036", "hair": "#cfcfcf", "skin": "#f2c9a0", "accessory": "none" } },
+    "frau-wendt": { "outfit": { "kind": "adult", "jacket": "#b05a7a", "pants": "#3a4a6a", "hair": "#8a4a2a", "skin": "#e8b98e", "accessory": "bag" } },
+    "herr-oelsner": { "outfit": { "kind": "elder", "jacket": "#4a6a9a", "pants": "#3a3a3a", "hair": "#eeeeee", "skin": "#f2c9a0", "accessory": "cane" } }
+  }
+}

@@ -1,6 +1,7 @@
 import { createI18n } from '../i18n/i18n.js';
 import { createQuality } from '../services/quality.js';
 import { makeToolArt } from './ToolArt.js';
+import { makeStickArt } from './StickArt.js';
 import { makeHiResArt } from './HiResArt.js';
 import { makeNpcArt } from './NpcArt.js';
 import { makeCharacterArt } from './CharacterArt.js';
@@ -28,6 +29,8 @@ export class BootScene extends Phaser.Scene {
     this.load.json('tool', 'data/tool.json');
     this.load.json('npcs', 'data/npcs.json');
     this.load.json('dogs', 'data/dogs.json');
+    this.load.json('stick-world', 'data/stick-world.json');
+    this.load.json('neighbors', 'data/neighbors.json');
     this.load.json('state', 'data/state.json');
     this.load.json('characters', 'data/characters.json');
     this.load.json('attr-growth', 'data/attr-growth.json');
@@ -88,6 +91,7 @@ export class BootScene extends Phaser.Scene {
     }
     makeNpcArt(this, this.cache.json.get('npcs'), res.scale);
     makeToolArt(this, res.scale);
+    makeStickArt(this, res.scale, this.cache.json.get('stick-world'), this.cache.json.get('neighbors'));
     makeCharacterArt(this, characters, res.scale);
     makeBusArt(this, res.scale);
     makeVehicleArt(this, res.scale);

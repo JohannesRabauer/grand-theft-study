@@ -37,7 +37,7 @@ const BODY = {
   kid: { t: 5, bot: 24, half: 6, arm: 2 }
 };
 
-function person(p, o, frame) {
+export function person(p, o, frame) {
   const b = BODY[o.kind];
   const { jacket, pants, hair, skin } = o;
   const dark = darken(jacket, 0.25);

@@ -403,5 +403,14 @@
   "garage.found": "Hidden behind the garage door: {name}!",
   "garage.old": "Just junk. You already have your {name}.",
   "garage.empty": "The garage is empty. Except for cobwebs.",
-  "hud.bike": "Bike: {m} m"
+  "hud.bike": "Bike: {m} m",
+  "tool.stick": "Stick",
+  "stick.ding": "Ding-Dong!",
+  "stick.neighborShout": "Just you wait, you rascals!",
+  "stick.neighborCaught": "Gotcha!",
+  "stick.neighborLaugh": "Hahaha, run along, run along!",
+  "stick.bushNothing": "Just leaves and one very confused beetle.",
+  "stick.pinataBurst": "The pinata bursts! Candy for everyone, bro!",
+  "loot.sticker": "A sticker! Into the album it goes.",
+  "loot.homework": "The lost homework notebook! Take it to the teacher."
 }

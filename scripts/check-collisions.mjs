@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { CAT, MASK } from '../physics/categories.js';
 import * as bodies from '../physics/bodies.js';
 import { contactCounts } from '../tools/stickLogic.js';
+import { swingZone, swingHits, makeHits, OBJECT_KINDS } from '../tools/swingLogic.js';
 import { readFileSync } from 'node:fs';
 
 const names = Object.keys(CAT);
@@ -45,6 +46,21 @@ for (const n of names) {
   }
 }
 for (const n of ['PLAYER', 'BULLY', 'NPC', 'ANIMAL']) assert.equal(contactCounts(stick, 0, CAT[n], true), false, `the stick passes ${n}`);
+
+// The swung stick (story 6.2) queries objects only: a body of any category but PROP and STATIC, standing right in its zone,
+// is never a candidate (the locator is not even asked), and the kinds it can target contain no person or animal.
+{
+  const zone = swingZone({}, JSON.parse(readFileSync(new URL('../data/tool.json', import.meta.url), 'utf8')).stick, 0, 0, 1, 0);
+  for (const n of names) {
+    let asked = 0;
+    const out = makeHits(3);
+    swingHits(out, zone, 'prop', [{ id: n, body: { collisionFilter: { category: CAT[n] } } }], (it, p) => { asked++; p.x = 8; p.y = 0; p.r = 4; return true; });
+    const object = n === 'PROP' || n === 'STATIC';
+    assert.equal(out.n, object ? 1 : 0, `the stick query ${object ? 'sees' : 'never sees'} ${n}`);
+    assert.equal(asked, object ? 1 : 0, `${n}: the locator is ${object ? '' : 'never '}asked`);
+  }
+  for (const k of ['npc', 'bully', 'player', 'animal', 'dog']) assert.ok(!OBJECT_KINDS.includes(k) && (() => { try { swingHits(makeHits(1), zone, k, [], () => true); return false; } catch { return true; } })(), `a swing cannot target '${k}'`);
+}
 
 // Factories, against a fake scene that records what Matter would create.
 const made = [];

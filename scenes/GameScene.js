@@ -30,6 +30,11 @@ import { ChaseDirector } from '../ai/ChaseDirector.js';
 import { Caught } from '../entities/Caught.js';
 import { ToolBelt } from '../tools/ToolBelt.js';
 import { AmmoPickups } from '../entities/AmmoPickups.js';
+import { LootDrops } from '../entities/LootDrops.js';
+import { Bushes } from '../entities/Bushes.js';
+import { Doorbells } from '../entities/Doorbells.js';
+import { Pinata } from '../entities/Pinata.js';
+import { Balloons } from '../entities/Balloons.js';
 import { CrowdDirector } from '../ai/CrowdDirector.js';
 import { Characters } from '../characters/Characters.js';
 import { LearningEngine } from '../learning/LearningEngine.js';
@@ -65,6 +70,7 @@ export class GameScene extends Phaser.Scene {
       saves, // save slots (save/load/delete/list)
       res, // render scale: world units stay the same, textures are drawn `res.scale` times finer (AD-14)
       pools: new Pools(),
+      swingTargets: {}, // the stick's object targets by kind (story 6.2): each system registers itself with `items` and `locate`
       map,
       surfaces: new Surfaces(map, cache.get('surfaces'))
     };
@@ -115,6 +121,12 @@ export class GameScene extends Phaser.Scene {
     ctx.particles = new ParticleHub(this, ctx, cache.get('particles'));
     this.props = new Props(this, ctx, cache.get('props'));
     this.ammo = new AmmoPickups(this, ctx, cache.get('tool'));
+    const stickWorld = cache.get('stick-world'); // story 6.2: what the stick, and the slingshot's balloons, play with
+    this.loot = new LootDrops(this, ctx, stickWorld, cache.get('tool'));
+    this.bushes = new Bushes(this, ctx, stickWorld);
+    this.doorbells = new Doorbells(this, ctx, stickWorld, cache.get('neighbors'));
+    this.pinata = new Pinata(this, ctx, stickWorld);
+    this.balloons = new Balloons(this, ctx, stickWorld);
     this.dogs = new NeighborDogs(this, ctx, cache.get('dogs')); // story 6.1: free dogs that fetch thrown sticks
     this.flags = new Flags(this, ctx, wcfg.flag);
     this.park = new Park(this, ctx, cache.get('park')); // story 5.4: skatepark art and hint signs
@@ -321,12 +333,17 @@ export class GameScene extends Phaser.Scene {
     this.zones.update();
     this.park.update();
     this.doors.update();
+    this.doorbells.update(dt);
     this.chase.update(dt);
     this.rig.update(dt);
     this.updateZoom(dt);
     this.followCamera(dt);
     this.crowd.update(dt);
     this.props.update(dt);
+    this.loot.update(dt);
+    this.bushes.update(dt);
+    this.pinata.update(dt);
+    this.balloons.update(dt);
     this.dogs.update(dt);
     this.flags.update(dt);
     this.ctx.particles.update(dt);

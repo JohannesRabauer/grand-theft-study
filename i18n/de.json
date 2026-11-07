@@ -403,5 +403,14 @@
   "garage.found": "Hinterm Garagentor versteckt: {name}!",
   "garage.old": "Nur Gerümpel. Dein {name} hast du ja schon.",
   "garage.empty": "Die Garage ist leer. Außer Spinnweben.",
-  "hud.bike": "Fahrrad: {m} m"
+  "hud.bike": "Fahrrad: {m} m",
+  "tool.stick": "Stock",
+  "stick.ding": "Ding-Dong!",
+  "stick.neighborShout": "Na wartet, ihr Rabauken!",
+  "stick.neighborCaught": "Erwischt!",
+  "stick.neighborLaugh": "Hahaha, lauft nur, lauft!",
+  "stick.bushNothing": "Nur Blätter und ein sehr verwirrter Käfer.",
+  "stick.pinataBurst": "Die Piñata platzt! Bonbons für alle, Digga!",
+  "loot.sticker": "Ein Sticker! Der kommt ins Album.",
+  "loot.homework": "Das verlorene Hausaufgabenheft! Ab zur Lehrerin damit."
 }
