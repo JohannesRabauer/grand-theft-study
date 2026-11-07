@@ -4,6 +4,7 @@ export function createEnv(game, h, assert, savedLang) {
   const step = n => { for (let i = 0; i < n; i++) h.stepAll(game); };
   // ---- menu -> game ----
   if (game.scene.isActive('Game')) game.scene.getScene('Game').scene.start('Menu'); else if (!game.scene.isActive('Menu')) game.scene.start('Menu');
+  game.trafficOff = true; // the scripted route runners ride the main road blind: buses only hit players in the `traffic` scenario
   step(3);
   const menu = game.scene.getScene('Menu');
   assert('menu is active', game.scene.isActive('Menu'));

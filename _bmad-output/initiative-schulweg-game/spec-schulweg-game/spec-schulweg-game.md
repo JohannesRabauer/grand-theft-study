@@ -2,6 +2,7 @@
 id: SPEC-schulweg-game
 companions:
   - beyond-klasse-3-backlog.md
+  - family-characters.md
   - ../architecture-schulweg-game/architecture-schulweg-game.md
   - ../../initiative-schulweg/architecture-schulweg-prototype/architecture-schulweg-prototype.md
 sources: []
@@ -51,8 +52,8 @@ A vision to realize, now proven. The Schulweg prototype showed that riding a bik
   - **intent:** The player starts side missions at phone booths or by phone message: newspaper route, skate challenges and races, Kirmes slingshot range, stolen-bike rescue, grandma's groceries, lost-homework hunt, and bully friendship missions.
   - **success:** At least five missions are playable start to finish with rewards, and friendship missions measurably change a bully's behaviour.
 - **CAP-12**
-  - **intent:** The player picks one of three characters — Lena, Mehmet, Jonas — each with six attributes (Wissen, Tempo, Ausdauer, Charme, Ordnung, Zielen), a start vehicle and perks; attributes grow through play.
-  - **success:** Attribute differences are felt in play (speed, stamina, aim, talk-downs, trick multipliers), and doing the matching activity raises the matching attribute.
+  - **intent:** The player picks one of three family characters — Helena (12), Kilian (10) and Lorenz (8) — each with a distinct look, six attributes (Wissen, Tempo, Ausdauer, Charme, Ordnung, Zielen), a start vehicle and perks; attributes grow through play.
+  - **success:** Attribute differences are felt in play (speed, stamina, aim, talk-downs, trick multipliers, karate), the three characters look as described in the character companion, and doing the matching activity raises the matching attribute.
 - **CAP-13**
   - **intent:** The skateboard offers ollie, grinding rails/benches/curbs, manual and stair jumps, with a trick-combo Style multiplier that converts to money and XP and a fire trail.
   - **success:** A combo chain raises the multiplier, banking it pays out money and XP, and each trick type is triggerable.
@@ -84,8 +85,8 @@ A vision to realize, now proven. The Schulweg prototype showed that riding a bik
   - **intent:** At levels 1–2 the player can talk a bully down with Charme or answer a bully's learning question correctly to make him back off; bullies can become friends through missions.
   - **success:** Correct answers or a successful Charme check end the chase at levels 1–2, wrong ones are gentle, and a befriended bully stops chasing.
 - **CAP-23**
-  - **intent:** Two players share one PC in local co-op with a shared camera that zooms out to keep both in view and a tether that limits distance; P1 uses WASD + Space, P2 uses arrow keys or a gamepad; each picks a character; single-player is unaffected.
-  - **success:** Two players complete the commute and a chase together, bullies and zones react to both, the camera keeps both on screen, and the single-player path passes all prior checks.
+  - **intent:** Up to three players share one PC in local co-op with a shared camera that zooms out to keep everyone in view and a tether that limits distance; P1 uses WASD + Space, P2 the arrow keys, P3 a third keyboard block or a gamepad, and gamepads can take any free slot; each picks a character; single-player is unaffected.
+  - **success:** Two and three players complete the commute and a chase together, bullies and zones react to everyone, the camera keeps all players on screen, and the single-player path passes all prior checks.
 - **CAP-24**
   - **intent:** Money is earned from pocket money, Pfand, missions, tricks and grades and spent in bike/skate shops, on cosmetics, slingshot upgrades, a monthly tram ticket and snacks.
   - **success:** All earn and spend paths work, prices are data-driven, and purchases persist.
@@ -139,7 +140,7 @@ Deferred items are recorded in `beyond-klasse-3-backlog.md`.
 
 ## Success signal
 
-A child plays one complete Klasse 3 day from waking to Zeugnis, alone or in two-player co-op, learns real curriculum content, sees their progress in the Lernbuch, and wants to play "one more day"; the game holds 60 FPS on Medium on a mid-range phone in Chrome.
+A child plays one complete Klasse 3 day from waking to Zeugnis, alone or in co-op with up to three players, learns real curriculum content, sees their progress in the Lernbuch, and wants to play "one more day"; the game holds 60 FPS on Medium on a mid-range phone in Chrome.
 
 ## Assumptions
 

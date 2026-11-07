@@ -1,7 +1,7 @@
 // Grab targets (story 5.3, AD-23, CAP-14): slow road vehicles that follow a looping route (data/routes.json) and can be
 // hung on to from behind. Kind 'bus' now; trams and the traffic of epic 12 reuse this class with more kinds in data/grab.json.
 // Each vehicle is a pooled kinematic body (a SENSOR body from the bodies factory: it never pushes or harms anything, a comic
-// hit by moving buses belongs to the traffic epic) with a sprite, and exposes `x, y, heading, vx, vy, speed` (px, rad, px/s).
+// hit by a moving bus is entities/Traffic.js, a geometric query that leaves the rear grab zone safe) with a sprite, and exposes `x, y, heading, vx, vy, speed` (px, rad, px/s).
 // A yellow handle sticks out of its rear; inside the rear zone (vehicles/grabLogic.js `inRearZone`) a rider on a profile with
 // `grab: true` (the skates) who holds the interact button hangs on: the rider is towed at the vehicle's speed on a rope,
 // steering sideways swings it, and the risk meter over its head shows how likely the grip is to give. The numbers are

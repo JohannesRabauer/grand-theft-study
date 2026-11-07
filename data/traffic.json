@@ -1,0 +1,19 @@
+{
+  "_doc": "Traffic hits (story 5.6, AD-23, CAP-31): vehicles/trafficLogic.js is the maths, entities/Traffic.js the loop. A road vehicle (now the buses of data/routes.json, later cars and the tram: they only need an entry in `kinds` and a place in Traffic's sources) that overlaps a player with a relative speed of at least `minSpeed` px/s hits it. `kinds.<kind>`: `frontReach` / `sideReach` px the hit box reaches past the vehicle's front and sides, `frontDepth` px at the front that count as a front hit (the rest of the length is a side hit). The grab zone behind the rear (data/grab.json) is always safe. The tumble is comic and harmless: `launch` throws the player `forward` px along the vehicle's heading and `side` px to the side it was on (the other side when a wall is in the way; `probe` px sample distance, `pad` px body margin) in `seconds` on a fake-height arc of `peak` px with `spins` turns; `lie` seconds lying sprawled (stars), `getUp` seconds of the get-up animation. Then `stun`: `seconds` (counted from the start of the get-up) at `speedMult` of the top speed; `stamina` is the share of the tank lost at the hit. `invulnerable`: seconds after the get-up without another hit. `coins`: the pocket loses `cents` [min, max] (never more than it holds, via wallet.spend), spilled as `count` [min, max] pickup coins that stay `life` s. `fling`: the ridden vehicle is thrown `distance` [min, max] px at up to `angle` rad off the heading and slides to a stop in `seconds`, turning `spins` times (it lies there, mountable again). `lines`: number of `traffic.hit.N` i18n lines, one said in a bubble for `bubbleSeconds`; `horn`: the bus's HUPP bubble (`bubbleSeconds`) and the `sfx:play` names. `fx`: stars and dust at the hit, stars over the lying player every `starsEvery` s, dust under a sliding vehicle every `slideDust` s. `npcReact`: pedestrians within `ahead` px in front of / `behind` px behind a vehicle and `lane` px beside its centre line step aside early (only vehicles at least `minSpeed` fast).",
+  "minSpeed": 40,
+  "kinds": {
+    "bus": { "frontReach": 3, "sideReach": 2, "frontDepth": 8 }
+  },
+  "launch": { "forward": 40, "side": 30, "peak": 18, "spins": 1.5, "seconds": 0.7, "probe": 6, "pad": 5 },
+  "lie": 0.7,
+  "getUp": 0.45,
+  "stun": { "seconds": 2.5, "speedMult": 0.45, "stamina": 0.35 },
+  "invulnerable": 1.5,
+  "coins": { "cents": [20, 50], "count": [3, 5], "life": 20 },
+  "fling": { "distance": [36, 58], "angle": 0.7, "seconds": 0.9, "spins": 1.5 },
+  "lines": 3,
+  "bubbleSeconds": 1.6,
+  "horn": { "bubbleSeconds": 1.1, "sfx": "bus-horn", "hitSfx": "traffic-hit" },
+  "fx": { "hitStars": 6, "hitDust": 8, "starsEvery": 0.22, "slideDust": 0.1 },
+  "npcReact": { "ahead": 90, "behind": 8, "lane": 22 }
+}

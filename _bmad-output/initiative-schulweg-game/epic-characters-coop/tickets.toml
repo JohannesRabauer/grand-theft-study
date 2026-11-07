@@ -46,3 +46,27 @@ hitl = false
 risk = "low"
 references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-18", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-29"]
 
+
+[[entry]]
+id = 5
+type = "story"
+title = "Family characters Helena, Kilian and Lorenz"
+description = "Replaces Lena, Mehmet and Jonas with Helena (12), Kilian (10) and Lorenz (8): data, perks, procedural looks (hair, glasses, freckles, eye colours as described in family-characters.md), start vehicles, intro lines, the higher starting karate belt and stronger Kiai for Helena, and updates every check and smoke scenario that named the old characters."
+verify = "The character select shows the three new kids with the described looks, each plays according to its attributes and perks, Helena starts with the higher belt, and all checks and the smoke test pass."
+covers = ["CAP-12"]
+after = [1]
+hitl = false
+risk = "medium"
+references = ["../spec-schulweg-game/family-characters.md", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-18"]
+
+[[entry]]
+id = 6
+type = "story"
+title = "Three-player co-op"
+description = "Extends co-op from two to three players: a third keyboard block and gamepad slots, a third HUD slice, camera rig and tether for N players, chase, caught, zones and pickups for N players, menu flow with a third character select, and the smoke scenarios."
+verify = "Three players start from the menu, complete the commute and a chase together, stay in view and within the tether, are caught and respawn independently, and the solo and two-player scenarios still pass."
+covers = ["CAP-23"]
+after = [5, 4]
+hitl = false
+risk = "high"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-18"]

@@ -485,5 +485,10 @@
   "karate.exam.exam-done": "Good training!\nThere was an exam today already. Again tomorrow!",
   "karate.exam.top": "Good training!\nYou already wear the highest belt.",
   "karate.exam.points": "+{n} training points",
-  "pause.belts": "Belts: {list}"
+  "pause.belts": "Belts: {list}",
+  "traffic.honk": "HONK!",
+  "traffic.hit.1": "Ow... er, oof!",
+  "traffic.hit.2": "Whoa, surprise somersault!",
+  "traffic.hit.3": "I see stars, bro!",
+  "traffic.spill": "Your coins flew everywhere! Quick, grab them!"
 }

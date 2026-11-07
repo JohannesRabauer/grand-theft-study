@@ -41,6 +41,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('tricks', 'data/tricks.json');
     this.load.json('park', 'data/park.json');
     this.load.json('grab', 'data/grab.json');
+    this.load.json('traffic', 'data/traffic.json');
     this.load.json('shop', 'data/shop.json');
     this.load.json('theft', 'data/theft.json');
     this.load.json('routes', 'data/routes.json');

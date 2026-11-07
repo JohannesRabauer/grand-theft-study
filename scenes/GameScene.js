@@ -6,6 +6,7 @@ import { Bikes } from '../entities/Bike.js';
 import { Skateboards } from '../entities/Skateboards.js';
 import { Skates } from '../entities/Skates.js';
 import { GrabTargets } from '../entities/GrabTargets.js';
+import { Traffic } from '../entities/Traffic.js';
 import { Ownership } from '../vehicles/Ownership.js';
 import { Parking } from '../entities/Parking.js';
 import { BikeTheft } from '../entities/BikeTheft.js';
@@ -111,6 +112,7 @@ export class GameScene extends Phaser.Scene {
     this.skates.rivals.push(this.skateboards);
     this.parking = new Parking(this, ctx, cache.get('theft'), [this.bikes, this.skateboards, this.skates]); // story 5.5: racks, locks, padlocks
     this.grabs = new GrabTargets(this, ctx, cache.get('routes'), cache.get('grab')); // AD-23: before the first mount, Skates asks it
+    this.traffic = new Traffic(this, ctx, cache.get('traffic'), [this.grabs], [this.bikes, this.skateboards, this.skates], this.parking); // story 5.6: moving buses hit players
     this.tricks = new TrickSystem(this, ctx, cache.get('tricks'), [this.skateboards, this.skates]); // AD-23
     for (const p of ctx.players) this.mountStartVehicle(p);
     ctx.frozen = false; // true while the caught frame or a freezing screen is up: the world stands still, UIScene keeps running
@@ -335,6 +337,7 @@ export class GameScene extends Phaser.Scene {
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.grabs.update(dt);
+    this.traffic.update(dt); // before the mounting services: a tumbling player cannot mount
     this.skateboards.update(dt);
     this.skates.update(dt);
     this.tricks.update(dt);

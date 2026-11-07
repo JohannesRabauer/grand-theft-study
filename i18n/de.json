@@ -485,5 +485,10 @@
   "karate.exam.exam-done": "Gutes Training!\nHeute war schon Prüfung. Morgen wieder!",
   "karate.exam.top": "Gutes Training!\nDu trägst schon den höchsten Gürtel.",
   "karate.exam.points": "+{n} Trainingspunkte",
-  "pause.belts": "Gürtel: {list}"
+  "pause.belts": "Gürtel: {list}",
+  "traffic.honk": "HUPP!",
+  "traffic.hit.1": "Aua... äh, uff!",
+  "traffic.hit.2": "Hoppla, Salto ohne Anmeldung!",
+  "traffic.hit.3": "Ich seh Sternchen, Digga!",
+  "traffic.spill": "Deine Münzen sind weggeflogen! Schnell einsammeln!"
 }

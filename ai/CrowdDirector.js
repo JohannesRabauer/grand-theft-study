@@ -297,10 +297,14 @@ export class CrowdDirector {
       const out = outsideView(n.x, n.y, v);
       if (out > this.cfg.despawnDistance) { this.despawn(n); continue; }
       if ((n.state === S.WALK || n.state === S.STAND) && n.cool <= 0 && !n.sitting) {
-        for (let i = 0; i < players.length; i++) {
-          const p = players[i];
-          const level = approach(p.move.vel.x, p.move.vel.y, n.x - p.x, n.y - p.y, r);
-          if (level) { this.react(n, level, p, p.move.vel.x, p.move.vel.y); break; }
+        const bus = this.ctx.traffic.threat(n.x, n.y); // a road vehicle coming: step aside early (story 5.6; it never hits pedestrians)
+        if (bus) this.react(n, 1, bus, bus.vx, bus.vy);
+        else {
+          for (let i = 0; i < players.length; i++) {
+            const p = players[i];
+            const level = approach(p.move.vel.x, p.move.vel.y, n.x - p.x, n.y - p.y, r);
+            if (level) { this.react(n, level, p, p.move.vel.x, p.move.vel.y); break; }
+          }
         }
       }
       switch (n.state) {
