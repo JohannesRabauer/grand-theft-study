@@ -145,7 +145,7 @@ export const minigames = {
     const rt = await timed;
     assert('a timed round is graded and restored', rt.total >= 5 && rt.grade >= 1 && rt.grade <= 6 && rt.quit === false && ctx.frozen === false);
     assert('unknown ids and players are refused', await MG.start('nope').then(() => false, () => true) && await MG.start('quiz-demo', { players: [0, 5] }).then(() => false, () => true));
-    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 4 : 2) && MG.list().some(d => d.id === 'mathe') && MG.list().some(d => d.id === 'deutsch'));
+    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 6 : 4) && ['mathe', 'deutsch', 'englisch', 'erdkunde'].every(id => MG.list().some(d => d.id === id)));
 
     // ---- Mathe: both modes in one run, one player ----
     // Answers every open question of the Mathe scene through the inputs a player has: number keys (answer buttons,
@@ -401,5 +401,295 @@ export const minigames = {
     ctx.screens.top().menu.rows.find(r => r.items[0].label() === ctx.t('minigame.quit')).items[0].on();
     const rqd = await quitDeutsch;
     assert('quitting Deutsch resolves without rewards and restores the world', rqd.quit === true && rqd.xp === 0 && ctx.frozen === false && ctx.minigames.active === null);
+
+    // ---- Englisch: Vokabel-Memory and Schilder-Check ----
+    // Plays the memory boards through the card grid (the same handler a tap uses) and the sign questions through the
+    // inputs a player has (number keys, letter pad). A "wrong" board is played with mistakes: the same two known cards
+    // of different pairs are flipped three times, so their pairs count as forgotten. `right(p, n)`: n = boards started
+    // so far (memory) or questions answered so far (signs).
+    const playEnglisch = (scene, right, seen, log, { hint = false, watch } = {}) => {
+      for (let f = 0; f < 9000 && ctx.screens.top()?.id === 'minigame' && !scene.over; f++) {
+        watch?.();
+        for (const slot of scene.slots) {
+          if (slot.mode) seen.add(slot.mode);
+          if (!slot.q) continue;
+          if (slot.mode === 'memory') {
+            const memo = slot.smoke ??= { board: null, boards: -1, cool: 0, wrong: false, bad: 0 };
+            const { board } = slot;
+            if (memo.board !== board) { memo.board = board; memo.boards++; memo.wrong = !right(slot.index, memo.boards); memo.cool = 20; memo.bad = 0; }
+            if (board.complete || board.locked || slot.grid.locked) continue;
+            if (memo.cool-- > 0) continue;
+            memo.cool = 20;
+            const find = (entry, side) => board.cards.findIndex(c => c.entry === entry && c.side === side);
+            if (memo.wrong && memo.bad < 3) {
+              if (board.first < 0) slot.grid.tap(find(0, 'en'));
+              else { slot.grid.tap(find(1, 'de')); memo.bad++; }
+            } else if (board.first >= 0) {
+              const a = board.cards[board.first];
+              slot.grid.tap(find(a.entry, a.side === 'en' ? 'de' : 'en'));
+            } else {
+              slot.grid.tap(board.done.findIndex(d => !d));
+            }
+            continue;
+          }
+          const ok = right(slot.index, slot.tally.total);
+          if (slot.q.type === 'typed') {
+            if (slot.pad.locked) continue;
+            const word = slot.q.answers[0].text;
+            const before = slot.tally.correct;
+            slot.pad.model.text = ok ? word.toUpperCase() : `${word}x`;
+            slot.pad.press('ok');
+            log.push([`${slot.q.id} judged ${ok}`, slot.tally.correct === before + (ok ? 1 : 0)]);
+          } else if (!slot.panel.locked) {
+            if (hint && slot.panel.hintsLeft > 0 && slot.panel.hintsUsed === 0) slot.panel.useHint();
+            const good = slot.q.answers.findIndex(a => a.correct);
+            intents[slot.index].answer = 1 + (ok ? good : (good + 1) % slot.q.answers.length);
+          }
+        }
+        step(1);
+        for (const slot of scene.slots) intents[slot.index].answer = 0;
+      }
+    };
+    // sign questions alternate between typed items and answer buttons so both input paths run
+    const mixSigns = scene => {
+      const orig = scene.nextSign.bind(scene);
+      scene.nextSign = slot => (slot.tally.total % 3 === 0
+        ? ctx.learning.next('englisch', { player: slot.index, context: 'lesson', filter: i => i.type === 'typed' && i.tags.includes('signs') })
+        : orig(slot));
+    };
+    const ne = learned(0);
+    const xpe = state.players[0].xp;
+    const moneye = state.shared.money;
+    const beforeE = snapshot();
+    const englisch = MG.start('englisch', { players: [0], difficulty: 3 });
+    step(1);
+    const es1 = game.scene.getScene('MG_englisch');
+    es1.plan = { first: 'memory', second: 'signs', switchMs: 35000 };
+    mixSigns(es1);
+    assert('the Englisch scene shows its title and instructions during the countdown', es1.title.text === ctx.t('minigame.englisch.title') && es1.help.visible && es1.help.text.length > 10);
+    assert('one player: the physical keyboard is listened to', es1.input.keyboard.listenerCount('keydown') === 1);
+    env.until(() => es1.clock.phase === 'play', 400);
+    const eslot = es1.slots[0];
+    assert('memory starts with a face-down board of 6 or 8 cards and the answer panel hidden', eslot.mode === 'memory' && eslot.board.cards.length >= 6 && eslot.board.up.every(u => !u) && eslot.grid.cards[0].mark.visible && !eslot.grid.cards[0].word.visible && !eslot.panel.rows[0].bg.visible);
+    assert('the board is made of English and German cards of engine items', eslot.deal.qs.every(q => q.meta.topic === 'englisch') && eslot.board.cards.some(c => c.side === 'en') && eslot.board.cards.some(c => c.side === 'de'));
+    // the cursor: arrows move over the cards and confirm turns the focused card
+    const focus0 = eslot.grid.focus;
+    intents[0].move.x = 1; step(1); intents[0].move.x = 0; step(1);
+    assert('the arrow keys move the card cursor', eslot.grid.focus === focus0 + 1);
+    const focused = eslot.grid.focus;
+    press(0, 'jump');
+    assert('confirm turns the focused card up and shows its word', eslot.board.up[focused] && eslot.grid.cards[focused].word.visible && eslot.grid.cards[focused].word.text === eslot.board.cards[focused].text);
+    const wrongPartner = eslot.board.cards.findIndex((c, i) => i !== focused && c.entry !== eslot.board.cards[focused].entry);
+    eslot.grid.tap(wrongPartner);
+    assert('two cards that do not belong together stay up and lock the board', eslot.board.locked && eslot.board.up[wrongPartner]);
+    env.until(() => !eslot.board.locked, 120);
+    assert('after a moment they are turned down again', !eslot.board.locked && !eslot.board.up[focused] && eslot.grid.cards[focused].mark.visible);
+    const seenE = new Set();
+    const logE = [];
+    let platesChecked = false;
+    playEnglisch(es1, (p, n) => n % 5 !== 4, seenE, logE, {
+      hint: true,
+      watch: () => {
+        const slot = es1.slots[0];
+        if (platesChecked || slot.mode !== 'signs' || !slot.q || slot.q.type !== 'choice' || slot.panel.locked) return;
+        platesChecked = true;
+        assert('a sign question shows the plate with the sign word, both languages in the caption', slot.plate.visible && slot.plate.word.text === slot.q.sign && slot.plate.caption.text.includes('/'));
+      }
+    });
+    assert('both modes were played in one run', seenE.has('memory') && seenE.has('signs'), [...seenE].join());
+    assert('typed sign answers were judged as expected', logE.length >= 2 && logE.every(e => e[1]), JSON.stringify(logE.filter(e => !e[1])));
+    step(2);
+    assert('the round ended on the result screen after about 70 s', ctx.screens.top()?.id === 'minigameResult' && es1.clock.phase === 'done' && es1.clock.elapsedMs >= 69000, `${ctx.screens.top()?.id} ${es1.clock.elapsedMs}`);
+    press(0, 'jump');
+    const re = await englisch;
+    assert('Englisch result: graded, rewarded and counted like any minigame', re.id === 'englisch' && re.subject === 'englisch' && re.total >= 8 && re.correct >= 1 && re.correct < re.total && re.score > 0 && re.score < 1
+      && re.grade >= 1 && re.grade <= 6 && re.xp > 0 && re.moneyCents > 0 && re.ms >= 69000 && re.quit === false, JSON.stringify(re));
+    assert('every memory pair and sign question went through the learning engine', learned(0) === ne + re.total, `${learned(0)} vs ${ne + re.total}`);
+    assert('Englisch rewards were applied', state.players[0].xp === xpe + re.xp && state.shared.money === moneye + re.moneyCents);
+    assert('the grade comes from ctx.grades', re.grade === ctx.grades.preview(0, 'englisch', { score: re.score, effort: re.effort, difficulty: 3 }).grade);
+    assert('the world is back after Englisch', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_englisch'));
+    step(5);
+    assert('Englisch leaks nothing (display objects, textures, listeners)', JSON.stringify(snapshot()) === JSON.stringify(beforeE), `${JSON.stringify(beforeE)} -> ${JSON.stringify(snapshot())}`);
+
+    // ---- Englisch: two players side by side, sign check first, the leader is cheered gently ----
+    const n0e = learned(0);
+    const n1e = learned(1);
+    const xp1e = state.players[1].xp;
+    const englisch2 = MG.start('englisch', { players: [0, 1], difficulty: 4 });
+    step(1);
+    const es2 = game.scene.getScene('MG_englisch');
+    es2.plan = { first: 'signs', second: 'memory', switchMs: 30000 };
+    mixSigns(es2);
+    assert('two players: the keyboard is not shared', es2.input.keyboard.listenerCount('keydown') === 0);
+    env.until(() => es2.clock.phase === 'play', 400);
+    assert('two players get two areas side by side with separate streams', es2.slots.length === 2 && es2.slots.every(s => s.mode === 'signs' && s.q) && es2.slots[0].q !== es2.slots[1].q && es2.slots[0].rect.x < es2.slots[1].rect.x);
+    const seenE2 = new Set();
+    const logE2 = [];
+    let ownBoards = 0;
+    playEnglisch(es2, (p, n) => p === 0 || n % 2 === 0, seenE2, logE2, {
+      watch: () => {
+        const [a, b] = es2.slots;
+        if (!ownBoards && a.mode === 'memory' && b.mode === 'memory' && a.board && b.board) ownBoards = a.board !== b.board && a.grid !== b.grid ? 1 : -1;
+      }
+    });
+    assert('both modes were played with two players', seenE2.has('memory') && seenE2.has('signs'));
+    assert('each player had their own memory board', ownBoards === 1);
+    assert('typed sign answers of two players were judged as expected', logE2.length >= 2 && logE2.every(e => e[1]), JSON.stringify(logE2.filter(e => !e[1])));
+    assert('the leader is cheered before the result screen', es2.over && es2.banner.visible && es2.bannerKey.key === 'minigame.englisch.winner' && ctx.screens.top()?.id === 'minigame' && es2.slots[0].tally.correct > es2.slots[1].tally.correct);
+    env.until(() => ctx.screens.top()?.id === 'minigameResult', 200);
+    assert('the cheer ends in the result screen', ctx.screens.top()?.id === 'minigameResult');
+    step(2);
+    press(1, 'interact');
+    const r2e = await englisch2;
+    assert('both players get a full, own result (the lead is only cosmetic)', r2e.perPlayer.length === 2 && r2e.perPlayer[0].score > r2e.perPlayer[1].score
+      && r2e.perPlayer.every(p => p.xp > 0 && p.effort > 0.5) && r2e.total === es2.slots[0].tally.total + es2.slots[1].tally.total);
+    assert('each player was learned separately and paid', learned(0) === n0e + es2.slots[0].tally.total && learned(1) === n1e + es2.slots[1].tally.total && state.players[1].xp === xp1e + r2e.perPlayer[1].xp);
+    assert('the world is restored after two-player Englisch', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_englisch'));
+    step(5);
+    assert('two-player Englisch leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeE), `${JSON.stringify(beforeE)} -> ${JSON.stringify(snapshot())}`);
+
+    // ---- Englisch: forgotten pairs are mistakes with the explanation, quitting still works ----
+    const quitEnglisch = MG.start('englisch', { players: [0] });
+    step(1);
+    const es3 = game.scene.getScene('MG_englisch');
+    es3.plan = { first: 'memory', second: 'memory', switchMs: 1000 };
+    env.until(() => es3.clock.phase === 'play', 400);
+    const e3 = es3.slots[0];
+    const e3total = e3.tally.total;
+    const e3board = e3.board;
+    const idx3 = (entry, side) => e3board.cards.findIndex(c => c.entry === entry && c.side === side);
+    for (let round = 0; round < 3; round++) {
+      e3.grid.tap(idx3(0, 'en'));
+      e3.grid.tap(idx3(1, 'de'));
+      env.until(() => !e3board.locked, 120);
+    }
+    assert('flipping two known cards of different pairs is a mistake for both pairs', e3board.faults[0] === 2 && e3board.faults[1] === 2 && e3board.faults[2] === 0 && e3board.totalFaults() === 4, JSON.stringify(e3board.faults));
+    const pairs3 = e3board.entries.length;
+    for (let e = 0; e < pairs3; e++) { e3.grid.tap(idx3(e, 'en')); e3.grid.tap(idx3(e, 'de')); }
+    const answered = e3.tally.total - e3total;
+    assert('the finished board answered every pair: forgotten pairs wrong, the others right', e3board.complete && answered === (e3.deal.whole ? 1 : pairs3) && e3.tally.correct === (e3.deal.whole ? 0 : pairs3 - 2), `${answered} answered, ${e3.tally.correct} right`);
+    env.until(() => e3.board !== e3board, 120);
+    assert('the next board follows by itself', e3.board !== e3board && e3.board.up.every(u => !u) && e3.note.text === '');
+    press(0, 'pause');
+    ctx.screens.top().menu.rows.find(r => r.items[0].label() === ctx.t('minigame.quit')).items[0].on();
+    const rqe = await quitEnglisch;
+    assert('quitting Englisch resolves without rewards and restores the world', rqe.quit === true && rqe.xp === 0 && ctx.frozen === false && ctx.minigames.active === null);
+
+    // ---- Erdkunde: "Wo liegt ...?" on the map and Hauptstadt-Match ----
+    // Taps the map where the question asks (the handler of a real tap, through GermanyMap.pick) or answers the capital
+    // buttons with the number keys. Player p answers `right(p, n)` correctly (n = questions answered so far).
+    const playErdkunde = (scene, right, seen, { watch } = {}) => {
+      for (let f = 0; f < 6000 && ctx.screens.top()?.id === 'minigame' && !scene.over; f++) {
+        watch?.();
+        for (const slot of scene.slots) {
+          if (slot.mode) seen.add(slot.mode);
+          if (!slot.q) continue;
+          const ok = right(slot.index, slot.tally.total);
+          if (slot.mode === 'wo') {
+            if (slot.locked) continue;
+            const anchors = slot.map.anchors();
+            const at = ok ? anchors.find(a => a.id === slot.target.target) : anchors.find(a => a.id !== slot.target.target);
+            slot.map.onTap(slot.map.pick(at.x, at.y));
+          } else if (!slot.panel.locked) {
+            const good = slot.q.answers.findIndex(a => a.correct);
+            intents[slot.index].answer = 1 + (ok ? good : (good + 1) % slot.q.answers.length);
+          }
+        }
+        step(1);
+        for (const slot of scene.slots) intents[slot.index].answer = 0;
+      }
+    };
+    const nk = learned(0);
+    const xpk = state.players[0].xp;
+    const moneyk = state.shared.money;
+    const beforeK = snapshot();
+    const erdkunde = MG.start('erdkunde', { players: [0], difficulty: 3 });
+    step(1);
+    const ks1 = game.scene.getScene('MG_erdkunde');
+    ks1.plan = { first: 'wo', second: 'capital', switchMs: 30000 };
+    assert('the Erdkunde scene shows its title and instructions during the countdown', ks1.title.text === ctx.t('minigame.erdkunde.title') && ks1.help.visible && ks1.help.text.length > 10);
+    env.until(() => ks1.clock.phase === 'play', 400);
+    const kslot = ks1.slots[0];
+    assert('"Wo liegt ...?" starts with the question above the big map and the panel hidden', kslot.mode === 'wo' && kslot.map.base.visible && kslot.question.visible && kslot.question.text === ctx.learning.localize(kslot.q).q && !kslot.panel.rows[0].bg.visible && kslot.target.mode === 'wo');
+    assert('the map targets match the question (states or rivers) and a cursor is on one of them', ['states', 'rivers'].includes(kslot.map.what) && kslot.map.anchors().some(a => a.id === kslot.sel) && kslot.map.hover === kslot.sel);
+    const sel0 = kslot.sel;
+    intents[0].move.x = 1; step(1); intents[0].move.x = 0; step(1);
+    intents[0].move.y = 1; step(1); intents[0].move.y = 0; step(1);
+    assert('the arrow keys move the map cursor to a neighbouring target', (kslot.sel !== sel0 || kslot.map.anchors().length < 3) && kslot.map.hover === kslot.sel);
+    const k0 = kslot.tally.total;
+    press(0, 'jump');
+    assert('confirm picks the cursor target: one answer, the right one lit green, the note explains', kslot.tally.total === k0 + 1 && kslot.locked && kslot.map.marks.get(kslot.target.target) === 'good' && kslot.note.text.length > 5);
+    kslot.map.onTap(null);
+    kslot.map.onTap(kslot.target.target);
+    assert('a tap on water or while locked does nothing', kslot.tally.total === k0 + 1);
+    ctx.i18n.set('en');
+    assert('a language switch re-translates the question', kslot.question.text === ctx.learning.localize(kslot.q, 'en').q && kslot.tag.text === ctx.t('minigame.erdkunde.mode.wo'));
+    ctx.i18n.set('de');
+    const seenK = new Set();
+    let capChecked = false;
+    playErdkunde(ks1, (p, n) => n % 5 !== 4, seenK, {
+      watch: () => {
+        const slot = ks1.slots[0];
+        if (capChecked || slot.mode !== 'capital' || !slot.q || slot.panel.locked) return;
+        capChecked = true;
+        assert('Hauptstadt-Match: the state glows on the map beside the answer buttons (a plain item shows them without)', slot.target ? slot.map.marks.get(slot.target.target) === 'focus' && slot.target.mode === 'capital' : slot.q.type === 'choice');
+        assert('the answer panel is beside the map, not under it', slot.panel.rect.x + slot.panel.rect.w <= slot.map.rect.x && slot.panel.rows[0].bg.visible);
+      }
+    });
+    assert('both modes were played in one run', seenK.has('wo') && seenK.has('capital'), [...seenK].join());
+    step(2);
+    assert('the round ended on the result screen after about 70 s', ctx.screens.top()?.id === 'minigameResult' && ks1.clock.phase === 'done' && ks1.clock.elapsedMs >= 69000, `${ctx.screens.top()?.id} ${ks1.clock.elapsedMs}`);
+    press(0, 'jump');
+    const rk = await erdkunde;
+    assert('Erdkunde result: graded, rewarded and counted like any minigame', rk.id === 'erdkunde' && rk.subject === 'erdkunde' && rk.total >= 8 && rk.correct >= 1 && rk.correct < rk.total && rk.score > 0 && rk.score < 1
+      && rk.grade >= 1 && rk.grade <= 6 && rk.xp > 0 && rk.moneyCents > 0 && rk.ms >= 69000 && rk.quit === false, JSON.stringify(rk));
+    assert('every map and capital question went through the learning engine', learned(0) === nk + rk.total, `${learned(0)} vs ${nk + rk.total}`);
+    assert('Erdkunde rewards were applied', state.players[0].xp === xpk + rk.xp && state.shared.money === moneyk + rk.moneyCents);
+    assert('the grade comes from ctx.grades', rk.grade === ctx.grades.preview(0, 'erdkunde', { score: rk.score, effort: rk.effort, difficulty: 3 }).grade);
+    assert('the world is back after Erdkunde', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_erdkunde'));
+    step(5);
+    assert('Erdkunde leaks nothing (display objects, textures, listeners)', JSON.stringify(snapshot()) === JSON.stringify(beforeK), `${JSON.stringify(beforeK)} -> ${JSON.stringify(snapshot())}`);
+
+    // ---- Erdkunde: two players side by side with their own maps, capital match first ----
+    const n0k = learned(0);
+    const n1k = learned(1);
+    const xp1k = state.players[1].xp;
+    const erdkunde2 = MG.start('erdkunde', { players: [0, 1], difficulty: 4 });
+    step(1);
+    const ks2 = game.scene.getScene('MG_erdkunde');
+    ks2.plan = { first: 'capital', second: 'wo', switchMs: 30000 };
+    env.until(() => ks2.clock.phase === 'play', 400);
+    assert('two players get two areas with their own maps and streams', ks2.slots.length === 2 && ks2.slots.every(s => s.mode === 'capital' && s.q && s.map) && ks2.slots[0].map !== ks2.slots[1].map && ks2.slots[0].rect.x < ks2.slots[1].rect.x && ks2.slots[0].q !== ks2.slots[1].q);
+    const seenK2 = new Set();
+    playErdkunde(ks2, (p, n) => p === 0 || n % 2 === 0, seenK2);
+    assert('both modes were played with two players', seenK2.has('wo') && seenK2.has('capital'));
+    assert('the leader is cheered before the result screen', ks2.over && ks2.banner.visible && ks2.bannerKey.key === 'minigame.erdkunde.winner' && ctx.screens.top()?.id === 'minigame' && ks2.slots[0].tally.correct > ks2.slots[1].tally.correct);
+    env.until(() => ctx.screens.top()?.id === 'minigameResult', 200);
+    assert('the cheer ends in the result screen', ctx.screens.top()?.id === 'minigameResult');
+    step(2);
+    press(1, 'interact');
+    const r2k = await erdkunde2;
+    assert('both players get a full, own result (the lead is only cosmetic)', r2k.perPlayer.length === 2 && r2k.perPlayer[0].score > r2k.perPlayer[1].score
+      && r2k.perPlayer.every(p => p.xp > 0 && p.effort > 0.5) && r2k.total === ks2.slots[0].tally.total + ks2.slots[1].tally.total);
+    assert('each player was learned separately and paid', learned(0) === n0k + ks2.slots[0].tally.total && learned(1) === n1k + ks2.slots[1].tally.total && state.players[1].xp === xp1k + r2k.perPlayer[1].xp);
+    assert('the world is restored after two-player Erdkunde', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_erdkunde'));
+    step(5);
+    assert('two-player Erdkunde leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeK), `${JSON.stringify(beforeK)} -> ${JSON.stringify(snapshot())}`);
+
+    // ---- Erdkunde: the plain-choice fallback for unmapped items, quitting still works ----
+    const quitErdkunde = MG.start('erdkunde', { players: [0] });
+    step(1);
+    const ks3 = game.scene.getScene('MG_erdkunde');
+    ks3.plan = { first: 'capital', second: 'capital', switchMs: 1000 };
+    env.until(() => ks3.clock.phase === 'play', 400);
+    const realRandom = Math.random;
+    Math.random = () => 0;
+    const plainQ = ks3.nextQuestion(ks3.slots[0], 'capital');
+    Math.random = realRandom;
+    assert('an unmapped geo or karte item falls back to plain choice rendering', !ks3.info.has(plainQ.id) && plainQ.type === 'choice' && plainQ.tags.some(t => ks3.def.options.tags.includes(t)));
+    press(0, 'pause');
+    ctx.screens.top().menu.rows.find(r => r.items[0].label() === ctx.t('minigame.quit')).items[0].on();
+    const rqk = await quitErdkunde;
+    assert('quitting Erdkunde resolves without rewards and restores the world', rqk.quit === true && rqk.xp === 0 && ctx.frozen === false && ctx.minigames.active === null);
   }
 };

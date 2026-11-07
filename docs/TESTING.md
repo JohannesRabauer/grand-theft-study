@@ -60,6 +60,8 @@ The same scenario also plays the Mathe minigame (`mathe`): one player through a 
 
 The same scenario also plays the Deutsch minigame (`deutsch`): one player through a whole 70 s run with both modes (belt bins via number keys, answer buttons, the letter pad and the physical-keyboard handler `scene.onKey` for typed items, umlaut and case rules), two players side by side with the winner cheer, a noun riding off the belt, a tap on a bin and quitting. It asserts the belt time from the engine meta, learning stats per answer, rewards, grade, a restored world and no leaks. Its pure logic is `node scripts/check-deutsch.mjs`.
 
+It then plays Englisch and Erdkunde the same way, for one and two players: memory boards through `slot.grid.tap` (and the card cursor via intents), a deliberately mistaken board (three flips of two known cards), sign questions (plate, number keys, letter pad), and for Erdkunde taps on the map through `slot.map.onTap(slot.map.pick(x, y))`, the map cursor via intents, the capital buttons and the plain-choice fallback (`nextQuestion` with `Math.random` stubbed).
+
 The `coop` scenario (last, it restarts the game) starts a real two-player run through the `coop` flag, sends both players along the commute route (`h.makeRouteRunner(ctx, reach, clearance, playerIndex)` drives any player) and asserts that the tether keeps the distance within the limit, the camera keeps both in view on every frame and zooms out, and that a pinned partner never blocks the other. `h.teleport` moves every player, so a second player is never left behind at the tether.
 
 ### Co-op scenarios

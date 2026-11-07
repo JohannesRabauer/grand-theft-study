@@ -36,6 +36,8 @@ export class BootScene extends Phaser.Scene {
     this.load.json('parent-reactions', 'data/parent-reactions.json');
     this.load.json('minigames', 'data/minigames.json');
     this.load.json('learning', 'data/learning.json');
+    this.load.json('geo-germany', 'data/maps-geo/germany.json'); // the Erdkunde map (and the later tram map quiz)
+    this.load.json('geo-map', 'data/learning/grade3/geo-map.json'); // which Sachkunde item points at which map target
     this.load.json('learning-reactions', 'data/learning/reactions.json');
     this.load.json('learning-index', 'data/learning/index.json');
     // the topic files are only known once the index is in

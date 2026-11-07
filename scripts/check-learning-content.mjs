@@ -85,7 +85,7 @@ const index = json('data/learning/index.json');
 const listed = new Set(index.topics.map(t => `${t.grade}/${t.topic}.json`));
 const gradeDirs = readdirSync(join(root, 'data', 'learning'), { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name);
 for (const g of gradeDirs) {
-  for (const f of readdirSync(join(root, 'data', 'learning', g)).filter(n => n.endsWith('.json'))) {
+  for (const f of readdirSync(join(root, 'data', 'learning', g)).filter(n => n.endsWith('.json') && n !== 'geo-map.json')) { // geo-map.json is the Erdkunde map table, not a topic
     if (!listed.has(`${g}/${f}`)) err(`data/learning/${g}/${f}`, 'not listed in data/learning/index.json');
   }
 }

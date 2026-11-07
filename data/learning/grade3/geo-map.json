@@ -1,0 +1,29 @@
+{
+  "_doc": "Map positions for Sachkunde geo items (story 4.4): itemId -> targetId on data/maps-geo/germany.json (a state or city-state id, a river id, a sea id). The Erdkunde minigame derives the question kind from it: when the right answer is the target's name the player taps it on the map ('Wo liegt ...?'), when it is the target state's capital the state is highlighted for a Hauptstadt-Match. Items not listed here (and every karte item) are shown as plain choice questions. This file is not a topic file and is not listed in index.json.",
+  "targets": {
+    "sk-001": "be",
+    "sk-013": "by",
+    "sk-014": "by",
+    "sk-015": "rhein",
+    "sk-016": "hh",
+    "sk-024": "nw",
+    "sk-025": "bw",
+    "sk-026": "sn",
+    "sk-027": "ni",
+    "sk-029": "elbe",
+    "sk-030": "sn",
+    "sk-037": "he",
+    "sk-038": "rp",
+    "sk-039": "sh",
+    "sk-040": "bb",
+    "sk-041": "weser",
+    "sk-042": "oder",
+    "sk-044": "rhein",
+    "sk-052": "mv",
+    "sk-053": "th",
+    "sk-054": "st",
+    "sk-055": "sl",
+    "sk-057": "bw",
+    "sk-058": "sh"
+  }
+}
