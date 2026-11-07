@@ -72,10 +72,10 @@ export const coopMenu = {
     assert('both may pick the same character', same.players.length === 2 && same.players.every(p => p.character.id === 'mehmet'));
     assert('co-op with two characters starts from the menu and is saved in slot 2', same.state.shared.flags.coop === true && app.saves.list()[1].players.map(p => p.character).join() === 'mehmet,mehmet');
 
-    // ---- two different kids: per-player start vehicles (the skateboard falls back to walking until skating exists)
+    // ---- two different kids: per-player start vehicles (Mehmet on his skateboard, Lena on her bike)
     const { gs, ui, ctx } = menuStart(game, env, { coop: true, characters: ['mehmet', 'lena'], slot: 1 });
     const [p1, p2] = ctx.players;
-    assert('P1 Mehmet starts on foot (skateboard fallback), P2 Lena on her bike', p1.character.id === 'mehmet' && p2.character.id === 'lena' && !gs.bikes.isMounted(0) && gs.bikes.isMounted(1) && p1.sprite.texture.key === 'player-mehmet' && p2.sprite.texture.key === 'player-lena-bike', `${p1.sprite.texture.key} ${p2.sprite.texture.key}`);
+    assert('P1 Mehmet starts on his skateboard, P2 Lena on her bike', p1.character.id === 'mehmet' && p2.character.id === 'lena' && p1.vehicle === 'skateboard' && gs.skateboards.isMounted(0) && !gs.bikes.isMounted(0) && gs.bikes.isMounted(1) && p1.sprite.texture.key === 'player-mehmet-skate' && p2.sprite.texture.key === 'player-lena-bike', `${p1.sprite.texture.key} ${p2.sprite.texture.key}`);
     assert('the HUD shows one slice per player', ui.hud.has('status.1') && !ui.hud.has('status'));
 
     // ---- the pause menu shows the mode

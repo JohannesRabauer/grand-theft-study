@@ -47,7 +47,7 @@ export class Bikes {
       if (player.pinned) continue; // a caught player's presses belong to the caught frame
       const r = this.riders[player.index];
       const i = input.intents[player.index];
-      if (i.interact) r.mounted ? this.dismount(player) : this.tryMount(player);
+      if (i.interact && !player.vehicleSwapped) r.mounted ? this.dismount(player) : this.tryMount(player);
       if (r.mounted) this.rideEffects(dt, player, r, i);
       r.jumpPrev = i.jump;
     }
@@ -56,13 +56,19 @@ export class Bikes {
     this.rings.update(dt);
   }
 
-  tryMount(player) {
+  // The standing bike closest to `player` within mount range (null when none) and its distance.
+  nearest(player) {
     let best = null;
     let bestD = this.fx.mountRange;
     for (const b of this.parked) {
       const d = Math.hypot(b.x - player.x, b.y - player.y);
       if (b.visible && d <= bestD) { best = b; bestD = d; }
     }
+    return { bike: best, dist: bestD };
+  }
+
+  tryMount(player) {
+    const best = this.nearest(player).bike;
     if (!best) return;
     best.setVisible(false);
     this.riders[player.index].mounted = best;

@@ -6,7 +6,7 @@
 import { NO_TOUCH, bindingFor, clearIntent, createIntent, createSlot, createTouchState, mapIntent, padFor, padOwner, PAD } from './inputBindings.js';
 
 // Keys the browser would otherwise scroll or act on (captured by Phaser so the page stays still).
-const CAPTURE = 'W,A,S,D,UP,LEFT,DOWN,RIGHT,SHIFT,SPACE,F,Q,E,M,T,ESC,ENTER,COMMA,PERIOD,NUMPAD_ZERO';
+const CAPTURE = 'W,A,S,D,UP,LEFT,DOWN,RIGHT,SHIFT,SPACE,F,C,Q,E,M,T,ESC,ENTER,COMMA,PERIOD,FORWARD_SLASH,NUMPAD_ZERO';
 
 export class Input {
   // `players` is the live ctx.players array: its length is the number of active players.

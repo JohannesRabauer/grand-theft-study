@@ -38,6 +38,51 @@
       "bellCooldown": 0.4
     }
   },
+  "skateboard": {
+    "texture": "player-skate",
+    "lookSlot": "skate",
+    "faceHeading": true,
+    "maxSpeed": 128,
+    "accel": 150,
+    "turnRate": 260,
+    "grip": 9,
+    "drift": 0.2,
+    "radius": 5,
+    "poses": {
+      "crouch": "-crouch",
+      "manual": "-manual"
+    },
+    "trick": {
+      "ollie": {
+        "airtime": 0.34,
+        "speedGain": 0.5,
+        "refSpeed": 120,
+        "height": 9,
+        "cooldown": 0.08
+      },
+      "manual": {
+        "minSpeed": 40,
+        "slowFrac": 0.6,
+        "startAt": 0.45,
+        "rise": 0.55,
+        "fall": 0.8,
+        "sweetLo": 0.3,
+        "sweetHi": 0.75,
+        "boost": 1.1,
+        "cooldown": 0.4,
+        "lift": 2
+      }
+    },
+    "fx": {
+      "mountRange": 24,
+      "clackSpeed": 50,
+      "clackInterval": 0.11,
+      "rattleJitter": 0.5,
+      "rattleMinSpeed": 30,
+      "landDust": 6,
+      "landMinAir": 0.12
+    }
+  },
   "bully-foot": {
     "texture": "bully",
     "faceHeading": false,

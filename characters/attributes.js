@@ -35,8 +35,8 @@ export function resolvePerks(def, cfg) {
 // (distance divided by the weight), so Lena is picked more often. Smaller score = preferred target.
 export const targetScore = (distSq, weight) => distSq / (weight * weight);
 
-// The start vehicle a character really gets: unknown ids (skateboard, rollerskates until epic 5 adds their
-// profiles) fall back to foot.
+// The start vehicle a character really gets: ids without a player profile (rollerskates until story 5.3)
+// fall back to foot.
 export function resolveStartVehicle(id, cfg, profiles) {
   return cfg.playerVehicles.includes(id) && profiles[id] ? id : 'foot';
 }

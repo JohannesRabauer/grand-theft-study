@@ -136,6 +136,12 @@ export class ParticleHub {
     }
   }
 
+  // A burst of the surface's own effect (dust in its tint, splash, leaves) at a point: landings and skate clack.
+  surfaceBurst(surface, x, y, count) {
+    const fx = this.cfg.surfaceFx[this.ctx.surfaces.props(surface).particle];
+    if (fx) this.emit(fx.name, x, y, fx.name === 'dust' ? { count, tint: fx.tint } : { count });
+  }
+
   // Drops anywhere in the view (short lives, wind-slanted by gravity) plus ground impacts.
   rain(dt, view) {
     const r = this.cfg.rain;

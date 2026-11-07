@@ -47,7 +47,7 @@ export const characters = {
     become('lena');
     assert('Lena looks like Lena and starts on the bike, bullies weight her up', player.sprite.texture.key === 'player-lena' && player.startVehicle === 'bike' && player.bullyWeight > 1 && player.perks.aimPrecision > 0, `${player.sprite.texture.key}/${player.startVehicle}/${player.bullyWeight}`);
     become('mehmet');
-    assert('Mehmet: own look, skateboard falls back to running, trick and stick perks', player.sprite.texture.key === 'player-mehmet' && player.startVehicle === 'foot' && player.perks.trickMultiplier > 1 && player.perks.stickThrowRange > 1);
+    assert('Mehmet: own look, starts on his skateboard, trick and stick perks', player.sprite.texture.key === 'player-mehmet' && player.startVehicle === 'skateboard' && player.perks.trickMultiplier > 1 && player.perks.stickThrowRange > 1);
     become('jonas');
     assert('Jonas: own look, skates fall back to running, bus and talk perks', player.sprite.texture.key === 'player-jonas' && player.startVehicle === 'foot' && player.perks.busGrabBonus > 0 && player.perks.talkDownBonus > 0);
     player.setVehicle('bike');

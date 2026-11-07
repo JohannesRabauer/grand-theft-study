@@ -1,5 +1,5 @@
 {
-  "_doc": "Bindings per player (AD-18); keys are KeyboardEvent.code values. P1 (global: true) is the only player whose map/weather/pause raise the global intents. Gamepads: the first pad drives P2 when two or more players are active, otherwise P1; the second pad drives P1. Touch controls always drive P1. aim: mouse = cursor, touch drag or right stick; stick = right stick only, otherwise the shot goes the way the player last moved. With one player, the soloShare actions of the other bindings are merged into P1 (arrow keys and Right Shift also steer).",
+  "_doc": "Bindings per player (AD-18); keys are KeyboardEvent.code values. P1 (global: true) is the only player whose map/weather/pause raise the global intents. Gamepads: the first pad drives P2 when two or more players are active, otherwise P1; the second pad drives P1. Touch controls always drive P1. `manual` (hold: skateboard balance) is C or Left Ctrl for P1, / for P2, LT on a pad, and a touch button that only shows while the active vehicle has tricks (`when`). `jump` is the ollie on a skateboard. aim: mouse = cursor, touch drag or right stick; stick = right stick only, otherwise the shot goes the way the player last moved. With one player, the soloShare actions of the other bindings are merged into P1 (arrow keys and Right Shift also steer).",
   "deadzone": 0.2,
   "aimReach": 80,
   "aimDragMin": 8,
@@ -40,6 +40,10 @@
         ],
         "jump": [
           "Space"
+        ],
+        "manual": [
+          "KeyC",
+          "ControlLeft"
         ],
         "interact": [
           "KeyF"
@@ -97,6 +101,9 @@
         "jump": [
           "ControlRight"
         ],
+        "manual": [
+          "Slash"
+        ],
         "interact": [
           "Enter"
         ],
@@ -141,6 +148,14 @@
       "x": 378,
       "y": 236,
       "r": 22
+    },
+    {
+      "id": "manual",
+      "icon": "manual",
+      "when": "trick",
+      "x": 440,
+      "y": 104,
+      "r": 16
     },
     {
       "id": "sprint",

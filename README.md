@@ -34,9 +34,10 @@ Every player has an intent snapshot, `ctx.input.intents[i]`; all devices produce
 | Action | Keyboard / mouse | Touch | Gamepad |
 | --- | --- | --- | --- |
 | Walk | WASD / arrows | joystick (left half) | left stick or d-pad |
-| Jump (rings the bell on the bike) | Space | big button | A |
+| Jump (rings the bell on the bike, ollie on the skateboard) | Space | big button | A |
+| Manual (hold to balance, skateboard only) | C or Left Ctrl | small board button (only shown on a skateboard) | LT |
 | Sprint | Shift | double-chevron button | B |
-| Interact (mount / dismount bike) | F | circle button | Y |
+| Interact (mount / dismount bike or skateboard) | F | circle button | Y |
 | Tool use / aim (hold to charge, release to fire) | left click, aim at the cursor | tool button, drag from it to aim | X or RT, right stick aims |
 | Next / previous tool | E / Q | small triangle button | RB / LB |
 | Map | M | - | Back |
@@ -48,7 +49,8 @@ Every player has an intent snapshot, `ctx.input.intents[i]`; all devices produce
 | Action | P1 | P2 |
 | --- | --- | --- |
 | Walk | WASD | arrow keys |
-| Jump / bell | Space | Right Ctrl |
+| Jump / bell / ollie | Space | Right Ctrl |
+| Manual (skateboard) | C or Left Ctrl | `/` |
 | Sprint | Left Shift | Right Shift |
 | Interact | F | Enter |
 | Previous / next tool | Q / E | `,` / `.` |
@@ -104,6 +106,7 @@ node scripts/check-deutsch.mjs    # Deutsch minigame: items per mode (every Arti
 node scripts/check-englisch.mjs   # Englisch minigame: memory pairs from every vocabulary/sign/match item, board dealing with the real engine, flip/match/mistake rules, card cursor, sign plates
 node scripts/check-science.mjs    # Science minigame: circuit solver (open switch, gap, no battery, two repairs, bridges), loop geometry, every circuit item solvable by its declared fix, sort and match judging through the engine, which items play as what
 node scripts/check-musik.mjs      # Musik minigame and rhythm core: every song chart valid, deterministic schedules, hit windows (perfect/good/miss, Jonas perk), note track, scoring and combo bounds, beat phase, lane input, notes on screen
+node scripts/check-skate.mjs      # skateboard (story 5.1): ollie ground/air state machine, manual balance meter (start, sweet window, over/under/slow endings, pulsing), profile and per-surface speeds on the real MovementController against bike and foot, manual intent bindings (keys, pad, touch)
 node scripts/check-sport.mjs      # Sport minigame: course per level, surfaces, Runner on the real MovementController (sprint stamina, Tempo/Ausdauer), hurdles and jump rules, cones, balance beam, checkpoints, penalties, score bounds, bot par times, tally units
 node scripts/check-kunst.mjs      # Kunst minigame: icons, seeded pattern generation per level (validity, symmetry, colours), palette, partial-credit scoring, adaptive level, memorize time (perk), paint cursor, layout
 node scripts/check-erdkunde.mjs   # Erdkunde minigame and map: polygon validity, 16 states with capitals tile the country, pick() at centres and capitals, geography, rivers and seas, all geo items resolve
@@ -128,6 +131,8 @@ Walking is the movement profile `foot` (`data/vehicles.json`). Hold Sprint to ru
 ## Bicycle
 
 A bike is parked near the start. Walk up to it and press F to mount; press F again to get off (the bike stays where you left it). The `bike` profile in `data/vehicles.json` is much faster than walking on asphalt, slower on grass and cobblestones, has less grip, slides in hard turns and on puddles, and leaves fading skid marks and smoke when it skids or brakes hard. Space rings the bell (a ring appears and `bike:bell` is emitted on `ctx.events`). The camera zooms out smoothly with speed (1.0 standing to 0.6 at top speed, `data/camera.json`); the HUD shows the current vehicle. More bikes can be placed with `{ "type": "bike", "x", "y" }` objects in the map.
+
+**Skateboard** (story 5.1, AD-23): a second profile on the same `MovementController` (no id branching): top speed 128 px/s on asphalt (bike 150, walking 70), snappy turning (`turnRate` 260), light drift, 1.1x on concrete, and a strong penalty on cobblestone (0.4, slower than walking, the rider sprite rattles with the surface's `rattle` value) and grass (0.35); puddles slow (0.5) and slide. All per-surface numbers are in `data/surfaces.json` (`speed.skateboard`). Boards lie around the town (`{ "type": "skateboard" }` map objects, `entities/Skateboards.js`): F next to one mounts it, F again gets off and the board stays on the ground (a bike standing closer wins the press, and one press only does one mount or dismount). Characters whose start vehicle is `skateboard` (Mehmet) start riding. Tricks, tuned in the profile's `trick` block and driven by the pure `vehicles/skateLogic.js`: **ollie** on the jump intent (Space): a short hop (lifted sprite over a ground shadow, crouch pose, longer when fast), during which the body ignores PROP bodies (cones, cans, crates, balls, bins; walls still stop it), landing dust through `ParticleHub.surfaceBurst`. **Manual** on holding the `manual` intent (C / Left Ctrl, P2 `/`, LT, touch button) at speed: a balance needle starts in the sweet window, rises while held and sinks when released; inside the window the board is balanced (1.1x speed through `MovementController.boostMult`), held too long it tips over and the rider simply drops back to rolling (short cooldown, no penalty); pulsing the button keeps it going. An ollie ends a manual. Events for the later trick system: `trick:ollie` and `trick:manual`, each `{ player, phase: 'start' | 'end', x, y, speed }` (ollie end adds `airtime`, manual end adds `time`, `sweet` seconds in the window and `reason` `over | under | slow | ollie`). The Mehmet perk `trickMultiplier` is stored and used by story 5.2. Decision: skate clack is a small dust puff at the rear wheels (more often on rough ground); the `rattle` surface value had no consumer before, it now shakes the skateboard rider sprite.
 
 ## The town
 
@@ -276,8 +281,8 @@ Learning content schema beyond `choice` and `typed` (all validated by `scripts/c
 | --- | --- |
 | `index.html`, `main.js` | Entry point, Phaser config (960x540, or 480x270 on Low; pixel art, Matter with zero gravity) |
 | `scenes/` | Boot (load + 1x procedural textures), `HiResArt.js` (2x textures), Menu, Game (owns `ctx`), UI (overlay HUD) |
-| `entities/` | Player, `players.js` (`ctx.players`, `ctx.forEachPlayer`, `ctx.nearestPlayer(x, y)`, `ctx.alivePlayers()`, the deprecated `ctx.player` alias for `players[0]`), caught/respawn flow (`Caught.js`), bikes (+ skid, smoke, bell effects), `pools.js` (pool registry, fade pool), `Prop.js`, `Flag.js`, `Bully.js`, `Npc.js` (pedestrians and dogs), `SpeechBubbles.js` |
-| `vehicles/` | `MovementController.js`: drives any actor from a profile in `data/vehicles.json` |
+| `entities/` | Player, `players.js` (`ctx.players`, `ctx.forEachPlayer`, `ctx.nearestPlayer(x, y)`, `ctx.alivePlayers()`, the deprecated `ctx.player` alias for `players[0]`), caught/respawn flow (`Caught.js`), bikes (+ skid, smoke, bell effects), skateboards (`Skateboards.js`: lying boards, mounting, ollie / manual effects), `pools.js` (pool registry, fade pool), `Prop.js`, `Flag.js`, `Bully.js`, `Npc.js` (pedestrians and dogs), `SpeechBubbles.js` |
+| `vehicles/` | `MovementController.js`: drives any actor from a profile in `data/vehicles.json`; `skateLogic.js`: pure ollie / manual state machine |
 | `tools/` | Slingshot and other tools |
 | `ai/` | Chase director and level rules, bully state machine, perception, pathfinding |
 | `physics/` | `categories.js`, `bodies.js` (only place that creates bodies), surfaces service (with weather overrides), `Wind.js`, `Weather.js`, `WallStreamer.js` (keeps only walls near moving things in the Matter world) |

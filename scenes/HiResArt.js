@@ -474,6 +474,48 @@ export function bike(p, o) {
   }
 }
 
+// Top-down skateboard facing right (40x24 grid). Without `o.rider` only the board lies there (grip tape, rim, trucks).
+// Rider poses (`o.pose`): roll (arms out, standing sideways on the board), crouch (knees bent, arms low for the ollie)
+// and manual (nose up: the front end is foreshortened and lifted off its shadow, arms spread for balance).
+export function skate(p, o) {
+  const nose = o.pose === 'manual';
+  const end = nose ? 29 : 34;
+  p.px('#0e0e12', 9, 7, 3, 2); p.px('#0e0e12', 9, 15, 3, 2);                    // trucks and wheel edges
+  if (!nose) { p.px('#0e0e12', 28, 7, 3, 2); p.px('#0e0e12', 28, 15, 3, 2); }
+  p.ell(o.frameDark, 8, 12, 3.2, 3.4);
+  p.px(o.frameDark, 8, 9, end - 8, 6);
+  p.px(o.frame, 8, 9, end - 8, 1);
+  p.px(o.frame, 8, 14, end - 8, 1);
+  p.ell(o.frame, 8, 12, 2.6, 2.8);
+  p.px('#2b2b33', 8, 10, end - 8, 4);                                           // grip tape
+  p.px('#3c3c47', 11, 11, 3, 1);
+  if (nose) {
+    p.px('rgba(0,0,0,0.3)', 29, 10, 2, 4);                                      // gap under the lifted nose
+    p.ell(lighten(o.frame, 0.2), 33, 12, 4, 2.6);
+    p.px('#3c3c47', 31, 11, 4, 2);
+  } else {
+    p.ell(o.frameDark, 34, 12, 3.2, 3.4);
+    p.ell(o.frame, 34, 12, 2.6, 2.8);
+    p.px('#2b2b33', 31, 10, 3, 4);
+  }
+  if (!o.rider) return;
+  const crouch = o.pose === 'crouch';
+  p.px('#2c2018', 21, 10, 4, 4);                                                // front foot
+  p.px('#2c2018', 11, 10, 4, 4);                                                // back foot
+  if (crouch) { p.ell(o.pants, 22, 8, 3.6, 2.4); p.ell(o.pants, 22, 16, 3.6, 2.4); }
+  const ty = crouch ? 6.2 : 7.8;
+  p.ell(o.jacketDark, 17, 12.5, 5, ty);
+  p.ell(o.jacket, 16.6, 11.8, 4.5, ty - 0.7);
+  p.px(o.jacketLight, 13, 8, 1, 7);
+  const arm = nose ? 1 : crouch ? 5 : 3;                                        // arms: balance out, or tucked in low
+  p.px(o.jacket, 15, arm, 4, 3); p.px(o.jacket, 15, 24 - arm - 3, 4, 3);
+  p.px('#f2c9a0', 18, arm + (crouch ? 1 : 0), 2, 2); p.px('#f2c9a0', 18, 24 - arm - 3 + 1, 2, 2);
+  p.ell(o.hair, 17.5, 12, 4.7, 4.7);
+  p.px(o.hairLight, 14, 9, 4, 1);
+  p.px('#f2c9a0', 21, 10, 2, 4);
+  o.cap?.(p);
+}
+
 function makeBikes(scene) {
   const mk = (key, o) => {
     const p = new Pen(scene, key, 40, 24);

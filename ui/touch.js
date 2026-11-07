@@ -7,6 +7,7 @@ export class TouchControls {
   constructor(scene, ctx, cfg) {
     this.scene = scene;
     this.input = ctx.input;
+    this.ctx = ctx;
     this.cfg = cfg;
     this.state = createTouchState();
     ctx.events.emit('input:touch-bind', this.state);
@@ -39,7 +40,7 @@ export class TouchControls {
     const px = p.x * this.k;
     const py = p.y * this.k;
     for (const b of this.buttons) {
-      if (!b.pointer && Math.hypot(px - b.x, py - b.y) <= b.r + pad) {
+      if (!b.pointer && b.gfx.visible && Math.hypot(px - b.x, py - b.y) <= b.r + pad) {
         b.pointer = p;
         return;
       }
@@ -92,7 +93,9 @@ export class TouchControls {
     }
 
     s.aiming = false;
+    const rider = this.ctx.players[0]?.move.profile;
     for (const b of this.buttons) {
+      if (b.when) b.gfx.setVisible(!!rider?.[b.when]); // e.g. the manual button only while the vehicle has tricks
       if (b.pointer && !b.pointer.isDown) b.pointer = null;
       const held = b.pointer !== null;
       s.btn[b.id] = held;
@@ -149,6 +152,9 @@ function drawButton(scene, b) {
       break;
     case 'next': // right triangle
       g.fillTriangle(-k / 2, -k, -k / 2, k, k, 0);
+      break;
+    case 'manual': // board with its nose up
+      g.lineStyle(3, 0xffffff, 1).beginPath().moveTo(-k, k * 0.5).lineTo(k * 0.2, k * 0.5).lineTo(k, -k * 0.7).strokePath();
       break;
     case 'pause':
       g.fillRect(-k * 0.8, -k, k * 0.6, k * 2).fillRect(k * 0.2, -k, k * 0.6, k * 2);

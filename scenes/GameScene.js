@@ -3,6 +3,7 @@ import { Surfaces } from '../physics/surfaces.js';
 import { WallStreamer } from '../physics/WallStreamer.js';
 import { Input } from '../ui/input.js';
 import { Bikes } from '../entities/Bike.js';
+import { Skateboards } from '../entities/Skateboards.js';
 import { Player } from '../entities/Player.js';
 import { installPlayers, startPlayers } from '../entities/players.js';
 import { PlayerMarkers } from '../entities/PlayerMarkers.js';
@@ -84,6 +85,7 @@ export class GameScene extends Phaser.Scene {
       if (s.vehicle) p.startVehicle = s.vehicle;
     }
     this.bikes = new Bikes(this, ctx);
+    this.skateboards = new Skateboards(this, ctx, this.bikes);
     for (const p of ctx.players) this.mountStartVehicle(p);
     ctx.frozen = false; // true while the caught frame or a freezing screen is up: the world stands still, UIScene keeps running
     this.caughtFrozen = false;
@@ -99,7 +101,7 @@ export class GameScene extends Phaser.Scene {
     this.ammo = new AmmoPickups(this, ctx, cache.get('tool'));
     this.flags = new Flags(this, ctx, wcfg.flag);
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
-    this.caught = new Caught(this, ctx, cache.get('chase').caught, this.bikes);
+    this.caught = new Caught(this, ctx, cache.get('chase').caught, [this.bikes, this.skateboards]);
     this.rig = new CameraRig(ctx, this.zoomCfg); // AD-18: focus, fit zoom and tether of all players
     this.markers = new PlayerMarkers(this, ctx, this.zoomCfg.coop);
     this.streamer = new WallStreamer(this, ctx, cache.get('quality').wallRadius);
@@ -155,9 +157,10 @@ export class GameScene extends Phaser.Scene {
     return player;
   }
 
-  // The character's start vehicle; anything but the bike (skateboard, skates until epic 5) means on foot.
+  // The character's start vehicle; anything but the bike and the skateboard (skates until story 5.3) means on foot.
   mountStartVehicle(player) {
     if (player.startVehicle === 'bike') this.bikes.giveBike(player);
+    else if (player.startVehicle === 'skateboard') this.skateboards.giveBoard(player);
   }
 
   // Debug helper behind SCHULWEG_GAME.addPlayer(): a second player at the first one's position, driven by
@@ -284,6 +287,8 @@ export class GameScene extends Phaser.Scene {
     for (const p of this.ctx.players) if (p.pinned) p.hold(); else p.update(dt);
     for (const p of this.ctx.players) p.toolbelt.update(dt);
     this.ammo.update(dt);
+    for (const p of this.ctx.players) p.vehicleSwapped = false;
+    this.skateboards.update(dt);
     this.bikes.update(dt);
     this.zones.update();
     this.doors.update();

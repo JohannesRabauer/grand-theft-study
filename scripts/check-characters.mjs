@@ -94,9 +94,9 @@ assert.ok(!ruleMatches({ filter: { source: 'slingshot' } }, { source: 'bump' }))
 
 // ---- start vehicle fallback
 assert.equal(resolveStartVehicle('bike', cfg, profiles), 'bike');
-assert.equal(resolveStartVehicle('skateboard', cfg, profiles), 'foot', 'no skateboard profile yet: run');
-assert.equal(resolveStartVehicle('rollerskates', cfg, profiles), 'foot');
-assert.equal(resolveStartVehicle('skateboard', cfg, { ...profiles, skateboard: {} }), 'foot', 'not a player vehicle until the config lists it');
+assert.equal(resolveStartVehicle('skateboard', cfg, profiles), 'skateboard', 'Mehmet rides his board');
+assert.equal(resolveStartVehicle('rollerskates', cfg, profiles), 'foot', 'no skates profile yet: run');
+assert.equal(resolveStartVehicle('rollerskates', cfg, { ...profiles, rollerskates: {} }), 'foot', 'not a player vehicle until the config lists it');
 assert.equal(resolveStartVehicle(undefined, cfg, profiles), 'foot');
 
 // ---- state, service and hooks together
@@ -120,7 +120,8 @@ const rig = (character) => {
   assert.equal(player.character.id, 'mehmet');
   assert.equal(player.look.walk, 'player-mehmet');
   assert.equal(player.look.bike, 'player-mehmet-bike');
-  assert.equal(player.startVehicle, 'foot', 'skateboard falls back to running');
+  assert.equal(player.startVehicle, 'skateboard', 'Mehmet starts on the board');
+  assert.equal(player.look.skate, 'player-mehmet-skate');
   assert.ok(player.looked);
   near(player.move.speedMult, 1.24);
   near(player.move.staminaSize, 1 + 0.08 * 4);

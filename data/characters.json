@@ -1,7 +1,7 @@
 {
-  "_doc": "The three playable kids (CAP-12). Attributes are 0..10 (growth in data/attr-growth.json); `modifiers` turns attributes into gameplay numbers per point around `pivot`; `perks` are numeric strengths read by their systems (aimPrecision: slingshot spread cut, bullyTargetWeight: how much more bullies prefer this kid, trickMultiplier: Style payout, stickThrowRange: stick tool range, forgetHomeworkChance: school chore roll, busGrabBonus: grab-target window, talkDownBonus: bully talk-down roll, musicArtBonus: music/art minigame score). A start vehicle without a profile in data/vehicles.json (skateboard, rollerskates until epic 5) falls back to foot. `palette` feeds the shared player art in scenes/CharacterArt.js.",
+  "_doc": "The three playable kids (CAP-12). Attributes are 0..10 (growth in data/attr-growth.json); `modifiers` turns attributes into gameplay numbers per point around `pivot`; `perks` are numeric strengths read by their systems (aimPrecision: slingshot spread cut, bullyTargetWeight: how much more bullies prefer this kid, trickMultiplier: Style payout, stickThrowRange: stick tool range, forgetHomeworkChance: school chore roll, busGrabBonus: grab-target window, talkDownBonus: bully talk-down roll, musicArtBonus: music/art minigame score). A start vehicle without a profile in data/vehicles.json (rollerskates until story 5.3) falls back to foot. `palette` feeds the shared player art in scenes/CharacterArt.js.",
   "attrMax": 10,
-  "playerVehicles": ["foot", "bike"],
+  "playerVehicles": ["foot", "bike", "skateboard"],
   "attributeOrder": ["wissen", "tempo", "ausdauer", "charme", "ordnung", "zielen"],
   "perkDefaults": {
     "aimPrecision": 0,

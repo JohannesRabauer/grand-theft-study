@@ -7,11 +7,11 @@
 // (always, with one player); otherwise the other keeps playing. Emits `player:caught` { player, lost, money } (cents) and
 // `player:respawn` { player, x, y }.
 export class Caught {
-  constructor(scene, ctx, cfg, bikes) {
+  constructor(scene, ctx, cfg, rides) {
     this.scene = scene;
     this.ctx = ctx;
     this.cfg = cfg;
-    this.bikes = bikes;
+    this.rides = rides; // Bikes and Skateboards
     this.slots = Array.from({ length: ctx.maxPlayers }, () => ({ active: false, t: 0, jumpPrev: false }));
     this.count = 0; // players currently caught
     ctx.events.on('bully:caught-contact', ev => this.trigger(ev.player ?? 0));
@@ -55,7 +55,7 @@ export class Caught {
   respawn(index) {
     const { ctx, scene } = this;
     const player = ctx.players[index];
-    if (this.bikes.isMounted(index)) this.bikes.dismount(player); // the bike stays where the player was caught
+    for (const ride of this.rides) if (ride.isMounted(index)) ride.dismount(player); // the bike or board stays where the player was caught
     const coop = ctx.players.length > 1;
     const off = coop ? scene.zoomCfg.coop.spawnOffsets[index] : [0, 0];
     const x = this.home.x + off[0];

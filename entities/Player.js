@@ -18,6 +18,7 @@ export class Player {
     this.profiles = profiles;
     const profile = profiles[profileId];
     this.vehicle = profileId;
+    this.vehicleSwapped = false; // set by setVehicle, cleared at the start of each frame: one mount or dismount per interact press
     this.character = null;
     this.perks = {};
     this.look = null;
@@ -46,6 +47,8 @@ export class Player {
   setVehicle(id) {
     const profile = this.profiles[id];
     this.vehicle = id;
+    this.vehicleSwapped = true;
+    this.move.boostMult = 1;
     this.move.setProfile(id, profile);
     this.sprite.setTexture(this.textureFor(profile)).setOrigin(0.5, profile.faceHeading ? 0.5 : 0.8);
     this.sprite.setFlipX(false).setRotation(0);

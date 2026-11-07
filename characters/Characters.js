@@ -2,7 +2,7 @@
 // attribute-derived modifiers current. Phaser-free (it only sets fields on the players), so the node check
 // drives it with plain objects.
 //   apply(player)  reads state.players[i].character, sets player.character / perks / look / bullyWeight,
-//                  computes the modifiers and sets player.startVehicle ('foot' or 'bike'; GameScene mounts it).
+//                  computes the modifiers and sets player.startVehicle ('foot', 'bike' or 'skateboard'; GameScene mounts it).
 //   refresh(player) recomputes player.mods after attributes changed and pushes them into the MovementController.
 // player.mods is { speed, accel, staminaSize, staminaRegen, spread, assist }; player.attrs is the live
 // (fractional) attribute object from the state.
@@ -29,7 +29,7 @@ export class Characters {
     player.character = def;
     player.perks = resolvePerks(def, this.cfg);
     player.bullyWeight = player.perks.bullyTargetWeight;
-    player.look = def ? { walk: `player-${def.id}`, bike: `player-${def.id}-bike` } : null;
+    player.look = def ? { walk: `player-${def.id}`, bike: `player-${def.id}-bike`, skate: `player-${def.id}-skate` } : null;
     player.refreshLook();
     this.refresh(player);
     player.startVehicle = resolveStartVehicle(def?.startVehicle, this.cfg, this.profiles);

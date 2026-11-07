@@ -7,6 +7,7 @@
 // A profile with a `stamina` block can sprint until it runs dry and then gets slower.
 // The character's attribute multipliers (speedMult, accelMult, staminaSize, staminaRegen; characters/Characters.js)
 // scale top speed, acceleration, the stamina tank (drain time) and its refill rate; all are 1 for a neutral kid.
+// A trick can scale the target speed through boostMult.
 // In co-op the tether scales the target speed (tetherMult) and adds a small pull velocity (nudgeX/Y).
 const DEG = Math.PI / 180;
 
@@ -35,6 +36,7 @@ export class MovementController {
     this.tetherMult = 1; // co-op tether (camera/CameraRig.js): speed factor and gentle pull in px/s; 1 and 0 for one player
     this.nudgeX = 0;
     this.nudgeY = 0;
+    this.boostMult = 1; // short speed boosts from tricks (vehicles/skateLogic.js); 1 otherwise
   }
 
   // Switch profile (mount/dismount) keeping heading, speed and velocity so the change is seamless.
@@ -53,7 +55,7 @@ export class MovementController {
     const moving = mag > 0.01;
     const speedMult = this.updateStamina(dt, moving && sprintWanted);
 
-    const target = moving ? mag * p.maxSpeed * this.speedMult * (surf.speed[this.profileId] ?? 1) * speedMult * this.tetherMult : 0;
+    const target = moving ? mag * p.maxSpeed * this.speedMult * (surf.speed[this.profileId] ?? 1) * speedMult * this.tetherMult * this.boostMult : 0;
     const step = p.accel * this.accelMult * surf.grip * dt;
     this.speed = this.speed < target ? Math.min(this.speed + step, target) : Math.max(this.speed - step, target);
 
