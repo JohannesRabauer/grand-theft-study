@@ -303,4 +303,38 @@ for (const topic of Object.keys(pools)) {
   assert.equal(makeCore(1).next(topic, { player: 7 }).topic, topic);
 }
 
+// ---- next(): the optional item filter ----
+{
+  const core = makeCore(11);
+  const tagsOf = q => q.tags;
+  for (let i = 0; i < 60; i++) {
+    const q = core.next('deutsch', { filter: 'artikel' });
+    assert.ok(tagsOf(q).includes('artikel'), 'a tag name keeps only items with that tag');
+    core.answer(q, i % 3 !== 0, 2000);
+  }
+  const spell = ['rechtschreibung', 'mehrzahl'];
+  for (let i = 0; i < 60; i++) {
+    const q = core.next('deutsch', { filter: spell, player: 1 });
+    assert.ok(tagsOf(q).some(t => spell.includes(t)), 'an array keeps items with any of the tags');
+    core.answer(q, i % 2 === 0, 2000, { player: 1 });
+  }
+  assert.ok(core.next('deutsch', { filter: i => i.type === 'typed' }).type === 'typed', 'a function is a predicate');
+  assert.equal(core.next('deutsch', { filter: 'no-such-tag' }), null, 'no match gives null');
+  assert.equal(core.next('deutsch', { filter: [] }), null, 'an empty tag list matches nothing');
+  assert.ok(core.next('deutsch', {}).id, 'no filter still picks from the whole topic');
+  // repetition: a wrong filtered item returns through the filter only when it matches
+  const c2 = makeCore(5);
+  const wrong = c2.next('deutsch', { filter: 'artikel' });
+  c2.answer(wrong, false, 1000);
+  const seen = new Set();
+  for (let i = 0; i < 40; i++) {
+    const q = c2.next('deutsch', { filter: 'gegenteile', context: 'lesson' });
+    assert.ok(q.tags.includes('gegenteile') && q.id !== wrong.id, 'due items outside the filter are not pulled in');
+    seen.add(q.id);
+    c2.answer(q, true, 1000);
+  }
+  assert.ok(seen.size > 5);
+  assert.equal(core.next('mathe', { filter: 'einmaleins' }).tags[0], 'einmaleins', 'works for every topic');
+}
+
 console.log('check-learning: ok');

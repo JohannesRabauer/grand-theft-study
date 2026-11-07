@@ -27,7 +27,8 @@ export class LearningEngine {
   topics() { return this.core.topics(); }
 
   // A question for the topic ({...item, meta}) or null for an unknown topic. context: 'lesson' | 'bully' | 'bakery' | ...
-  next(topic, { player = 0, context = 'lesson' } = {}) { return this.core.next(topic, { player: playerIndex(player), context }); }
+  // filter: optional tag name, array of tags or (item) => boolean; null when no item matches.
+  next(topic, { player = 0, context = 'lesson', filter } = {}) { return this.core.next(topic, { player: playerIndex(player), context, filter }); }
 
   due(player = 0, opts) { return this.core.due(playerIndex(player), opts); }
 

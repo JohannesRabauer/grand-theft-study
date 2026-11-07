@@ -87,6 +87,15 @@ export function applyAnswer(stats, item, ok, ms, hintsUsed, cfg) {
   return s;
 }
 
+// Predicate for next()'s `filter` option: a tag name, an array of tag names (an item needs one of them) or a function
+// (item) -> boolean. Returns null when there is no filter.
+export function itemFilter(filter) {
+  if (filter === undefined || filter === null) return null;
+  if (typeof filter === 'function') return filter;
+  const tags = Array.isArray(filter) ? filter : [filter];
+  return item => (item.tags ?? []).some(t => tags.includes(t));
+}
+
 const norm = v => String(v).trim().toLowerCase().replace(',', '.').replace(/\s+/g, ' ');
 
 export class EngineCore {
@@ -152,24 +161,28 @@ export class EngineCore {
     return out.slice(0, maxCount).map(e => this.present(e.topic, this.byId[e.topic][e.id], e.stats, true));
   }
 
-  next(topic, { player = 0, context = 'lesson' } = {}) {
+  // `filter` (see itemFilter) restricts the pick to matching items, e.g. the sub-tag 'artikel'; null when none match.
+  next(topic, { player = 0, context = 'lesson', filter } = {}) {
     const pool = this.pools[topic];
     if (!pool) return null;
+    const match = itemFilter(filter);
+    const items = match ? pool.items.filter(match) : pool.items;
+    if (!items.length) return null;
     const cfg = this.cfg;
     const stats = this.stats(player, topic);
     const ctxCfg = cfg.contexts[context] ?? cfg.defaultContext;
-    const due = this.dueEntries(stats, topic).filter(e => e.id !== stats.last);
+    const due = this.dueEntries(stats, topic).filter(e => e.id !== stats.last && (!match || match(this.byId[topic][e.id])));
     if (due.length && (ctxCfg.dueFirst || due[0].overdue >= cfg.maxOverdue || this.rng() < ctxCfg.dueRate)) {
       return this.present(topic, this.byId[topic][due[0].id], stats, true);
     }
     // everything not parked in a repetition interval, except the previous item
-    const open = pool.items.filter(i => {
+    const open = items.filter(i => {
       const it = stats.items[i.id];
       return i.id !== stats.last && !(it && it.b > 0 && it.d > stats.n);
     });
     let cands = open;
-    if (!cands.length) cands = pool.items.filter(i => i.id !== stats.last); // everything parked: pull the soonest back
-    if (!cands.length) cands = pool.items;
+    if (!cands.length) cands = items.filter(i => i.id !== stats.last); // everything parked: pull the soonest back
+    if (!cands.length) cands = items;
     const target = clamp(stats.level * this.pd(), cfg.levelMin, cfg.levelMax);
     const { sigma, novelty } = cfg.pick;
     const weights = cands.map(i => Math.exp(-((i.difficulty - target) ** 2) / (2 * sigma * sigma)) * (1 + novelty / (1 + (stats.items[i.id]?.s ?? 0))));

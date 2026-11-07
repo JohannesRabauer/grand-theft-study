@@ -18,16 +18,17 @@ export function shuffle(list, rng = Math.random) {
 // ---- mode mix ----
 
 // mix: { strategy, first, switchAt }. 'alternate' = two halves (first half mode `first`, 'random' picks it per run),
-// 'random' = one random mode for the whole run, 'sprint' / 'blocks' = always that mode.
-export function makePlan(mix, rng, durationMs) {
-  const other = m => (m === 'sprint' ? 'blocks' : 'sprint');
-  const pick = () => (rng() < 0.5 ? 'sprint' : 'blocks');
+// 'random' = one random mode for the whole run, a mode name = always that mode. `modes` = the two mode names of the
+// minigame (other minigames pass their own).
+export function makePlan(mix, rng, durationMs, modes = MODES) {
+  const other = m => (m === modes[0] ? modes[1] : modes[0]);
+  const pick = () => modes[rng() < 0.5 ? 0 : 1];
   let first;
   let second;
-  if (MODES.includes(mix.strategy)) first = second = mix.strategy;
+  if (modes.includes(mix.strategy)) first = second = mix.strategy;
   else if (mix.strategy === 'random') first = second = pick();
   else {
-    first = MODES.includes(mix.first) ? mix.first : pick();
+    first = modes.includes(mix.first) ? mix.first : pick();
     second = other(first);
   }
   return { first, second, switchMs: Math.round(durationMs * clamp(mix.switchAt ?? 0.5, 0.1, 0.9)) };

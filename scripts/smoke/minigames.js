@@ -2,6 +2,7 @@
 // players through the real intents (number keys), a pause that must not cost time, a quit-early round, and checks the
 // graded result, the rewards, the learning stats, that the world unfreezes and that nothing leaks.
 import { fallMsFor } from '../../minigames/matheCore.js';
+import { beltMsFor, foldUmlauts } from '../../minigames/deutschCore.js';
 
 export const minigames = {
   name: 'minigames',
@@ -144,7 +145,7 @@ export const minigames = {
     const rt = await timed;
     assert('a timed round is graded and restored', rt.total >= 5 && rt.grade >= 1 && rt.grade <= 6 && rt.quit === false && ctx.frozen === false);
     assert('unknown ids and players are refused', await MG.start('nope').then(() => false, () => true) && await MG.start('quiz-demo', { players: [0, 5] }).then(() => false, () => true));
-    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 3 : 1) && MG.list().some(d => d.id === 'mathe'));
+    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 4 : 2) && MG.list().some(d => d.id === 'mathe') && MG.list().some(d => d.id === 'deutsch'));
 
     // ---- Mathe: both modes in one run, one player ----
     // Answers every open question of the Mathe scene through the inputs a player has: number keys (answer buttons,
@@ -252,5 +253,153 @@ export const minigames = {
     ctx.screens.top().menu.rows.find(r => r.items[0].label() === ctx.t('minigame.quit')).items[0].on();
     const rqm = await quitMathe;
     assert('quitting Mathe resolves without rewards and restores the world', rqm.quit === true && rqm.xp === 0 && ctx.frozen === false && ctx.minigames.active === null);
+
+    // ---- Deutsch: both modes in one run, one player ----
+    // Answers every open question of the Deutsch scene through the inputs a player has: number keys (answer buttons, belt
+    // bins), the letter pad (typed items) and, for one typed item, the physical keyboard handler. Player p answers
+    // `right(p, n)` correctly (n = questions answered so far). `typedLog` collects every typed judgement for one assert.
+    const playDeutsch = (scene, right, seen, typedLog, { hint = false, keyboard = false, watch } = {}) => {
+      let folded = 0;
+      for (let f = 0; f < 6000 && ctx.screens.top()?.id === 'minigame' && !scene.over; f++) {
+        watch?.();
+        for (const slot of scene.slots) {
+          const ok = right(slot.index, slot.tally.total);
+          if (slot.mode) seen.add(slot.mode);
+          if (!slot.q) continue;
+          if (slot.mode === 'belt') {
+            const belt = slot.belt;
+            if (belt.locked) continue;
+            if (hint && belt.hintsLeft > 0 && belt.hintsUsed === 0) belt.nav({ dx: 0, dy: 1, confirm: false, pick: 0 });
+            if (belt.belt.progress > 0.2) intents[slot.index].answer = 1 + (ok ? belt.correct : (belt.correct + 1) % 3);
+          } else if (slot.q.type === 'typed') {
+            if (slot.pad.locked) continue;
+            const q = slot.q;
+            const word = q.answers[0].text;
+            const before = slot.tally.correct;
+            let text = ok ? word : `${word}x`;
+            if (ok && !q.strictUmlaut && foldUmlauts(word) !== word && folded++ % 2 === 0) text = foldUmlauts(word);
+            if (keyboard && slot.tally.total === 0) {
+              scene.onKey({ key: 'Backspace' });
+              scene.onKey({ key: 'ä' });
+              scene.onKey({ key: '5' });
+              scene.onKey({ key: 'Backspace' });
+              typedLog.push(['keyboard typing', slot.pad.model.text === '']);
+              for (const ch of text) scene.onKey({ key: ch });
+              typedLog.push(['keyboard letters reach the pad', slot.pad.model.text === text]);
+              scene.onKey({ key: 'Enter' });
+            } else {
+              slot.pad.model.text = text;
+              slot.pad.press('ok');
+            }
+            typedLog.push([`${q.id} "${text}" judged ${ok}`, slot.tally.correct === before + (ok ? 1 : 0)]);
+          } else if (!slot.panel.locked) {
+            const good = slot.q.answers.findIndex(a => a.correct);
+            intents[slot.index].answer = 1 + (ok ? good : (good + 1) % slot.q.answers.length);
+          }
+        }
+        step(1);
+        for (const slot of scene.slots) intents[slot.index].answer = 0;
+      }
+    };
+    // spell questions alternate between typed items and answer buttons so every input path is exercised
+    const mixSpell = scene => {
+      const orig = scene.nextQuestion.bind(scene);
+      scene.nextQuestion = (slot, mode) => (mode === 'spell' && slot.tally.total % 3 === 0
+        ? ctx.learning.next('deutsch', { player: slot.index, context: 'lesson', filter: i => i.type === 'typed' })
+        : orig(slot, mode));
+    };
+    const nd = learned(0);
+    const xpd = state.players[0].xp;
+    const moneyd = state.shared.money;
+    const beforeD = snapshot();
+    const deutsch = MG.start('deutsch', { players: [0], difficulty: 3 });
+    step(1);
+    const ds1 = game.scene.getScene('MG_deutsch');
+    ds1.plan = { first: 'belt', second: 'spell', switchMs: 30000 };
+    mixSpell(ds1);
+    assert('the Deutsch scene shows its title and instructions during the countdown', ds1.title.text === ctx.t('minigame.deutsch.title') && ds1.help.visible && ds1.help.text.length > 10);
+    assert('one player: the physical keyboard is listened to', ds1.input.keyboard.listenerCount('keydown') === 1);
+    env.until(() => ds1.clock.phase === 'play', 400);
+    assert('belt mode starts with the noun on the belt and the answer panel hidden', ds1.slots[0].mode === 'belt' && ds1.slots[0].belt.q !== null && !ds1.slots[0].belt.locked && ds1.slots[0].belt.crate.visible && !ds1.slots[0].panel.rows[0].bg.visible);
+    const seenD = new Set();
+    const typedLog = [];
+    let beltChecked = false;
+    playDeutsch(ds1, (p, n) => n % 5 !== 4, seenD, typedLog, {
+      hint: true,
+      keyboard: true,
+      watch: () => {
+        const slot = ds1.slots[0];
+        if (beltChecked || slot.mode !== 'belt' || !slot.q || slot.belt.locked) return;
+        beltChecked = true;
+        const expect = beltMsFor(ds1.def.options.belt, slot.q.meta);
+        assert('belt travel time comes from the engine difficulty and timeFactor', slot.belt.belt.fallMs === expect && expect >= 4500, `${slot.belt.belt.fallMs} vs ${expect}`);
+        assert('the belt items are Artikel items from the engine filter', slot.q.tags[0] === 'artikel' && slot.belt.noun.length > 1 && slot.belt.crateText.text === slot.belt.noun);
+      }
+    });
+    assert('both modes were played in one run', seenD.has('belt') && seenD.has('spell'), [...seenD].join());
+    assert('typed answers (pad and keyboard, umlauts, case) were judged as expected', typedLog.length >= 4 && typedLog.every(e => e[1]), JSON.stringify(typedLog.filter(e => !e[1])));
+    step(2);
+    assert('the round ended on the result screen after about 70 s', ctx.screens.top()?.id === 'minigameResult' && ds1.clock.phase === 'done' && ds1.clock.elapsedMs >= 69000, `${ctx.screens.top()?.id} ${ds1.clock.elapsedMs}`);
+    press(0, 'jump');
+    const rd = await deutsch;
+    assert('Deutsch result: graded, rewarded and counted like any minigame', rd.id === 'deutsch' && rd.subject === 'deutsch' && rd.total >= 8 && rd.correct >= 1 && rd.correct < rd.total && rd.score > 0 && rd.score < 1
+      && rd.grade >= 1 && rd.grade <= 6 && rd.xp > 0 && rd.moneyCents > 0 && rd.ms >= 69000 && rd.quit === false, JSON.stringify(rd));
+    assert('every question (belt and spelling) went through the learning engine', learned(0) === nd + rd.total, `${learned(0)} vs ${nd + rd.total}`);
+    assert('hints used on the belt are reported', rd.hintsUsed >= 1);
+    assert('Deutsch rewards were applied', state.players[0].xp === xpd + rd.xp && state.shared.money === moneyd + rd.moneyCents);
+    assert('the grade comes from ctx.grades', rd.grade === ctx.grades.preview(0, 'deutsch', { score: rd.score, effort: rd.effort, difficulty: 3 }).grade);
+    assert('the world is back after Deutsch', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_deutsch'));
+    step(5);
+    assert('Deutsch leaks nothing (display objects, textures, listeners)', JSON.stringify(snapshot()) === JSON.stringify(beforeD), `${JSON.stringify(beforeD)} -> ${JSON.stringify(snapshot())}`);
+
+    // ---- Deutsch: two players side by side, spelling first, the leader is cheered gently ----
+    const n0d = learned(0);
+    const n1d = learned(1);
+    const xp1d = state.players[1].xp;
+    const deutsch2 = MG.start('deutsch', { players: [0, 1], difficulty: 4 });
+    step(1);
+    const ds2 = game.scene.getScene('MG_deutsch');
+    ds2.plan = { first: 'spell', second: 'belt', switchMs: 30000 };
+    mixSpell(ds2);
+    assert('two players: the keyboard is not shared', ds2.input.keyboard.listenerCount('keydown') === 0);
+    env.until(() => ds2.clock.phase === 'play', 400);
+    assert('two players get two areas side by side with separate streams', ds2.slots.length === 2 && ds2.slots.every(s => s.mode === 'spell' && s.q) && ds2.slots[0].q !== ds2.slots[1].q && ds2.slots[0].rect.x < ds2.slots[1].rect.x);
+    const seenD2 = new Set();
+    const typedLog2 = [];
+    playDeutsch(ds2, (p, n) => p === 0 || n % 2 === 0, seenD2, typedLog2);
+    assert('both modes were played with two players', seenD2.has('belt') && seenD2.has('spell'));
+    assert('typed answers of two players were judged as expected', typedLog2.length >= 2 && typedLog2.every(e => e[1]), JSON.stringify(typedLog2.filter(e => !e[1])));
+    assert('the leader is cheered before the result screen', ds2.over && ds2.banner.visible && ds2.bannerKey.key === 'minigame.deutsch.winner' && ctx.screens.top()?.id === 'minigame' && ds2.slots[0].tally.correct > ds2.slots[1].tally.correct);
+    env.until(() => ctx.screens.top()?.id === 'minigameResult', 200);
+    assert('the cheer ends in the result screen', ctx.screens.top()?.id === 'minigameResult');
+    step(2);
+    press(1, 'interact');
+    const r2d = await deutsch2;
+    assert('both players get a full, own result (the lead is only cosmetic)', r2d.perPlayer.length === 2 && r2d.perPlayer[0].score > r2d.perPlayer[1].score
+      && r2d.perPlayer.every(p => p.xp > 0 && p.effort > 0.5) && r2d.total === ds2.slots[0].tally.total + ds2.slots[1].tally.total);
+    assert('each player was learned separately and paid', learned(0) === n0d + ds2.slots[0].tally.total && learned(1) === n1d + ds2.slots[1].tally.total && state.players[1].xp === xp1d + r2d.perPlayer[1].xp);
+    assert('the world is restored after two-player Deutsch', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_deutsch'));
+    step(5);
+    assert('two-player Deutsch leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeD), `${JSON.stringify(beforeD)} -> ${JSON.stringify(snapshot())}`);
+
+    // ---- Deutsch: a noun that rides off the belt is a gentle miss, a tap sorts, quitting still works ----
+    const quitDeutsch = MG.start('deutsch', { players: [0] });
+    step(1);
+    const ds3 = game.scene.getScene('MG_deutsch');
+    ds3.plan = { first: 'belt', second: 'belt', switchMs: 1000 };
+    env.until(() => ds3.clock.phase === 'play', 400);
+    const d0 = ds3.slots[0].tally.total;
+    env.until(() => ds3.slots[0].tally.total > d0, 60 * 20);
+    assert('a noun that rides off the belt is a gentle miss and the round goes on', ds3.slots[0].tally.total === d0 + 1 && ds3.slots[0].tally.correct === 0 && ds3.slots[0].belt.timeout === true && ds3.slots[0].belt.board.text.includes(ctx.t('minigame.deutsch.timeout')));
+    env.until(() => ds3.slots[0].belt.belt.state === 'falling', 60 * 4);
+    assert('the next noun follows by itself', ds3.slots[0].belt.belt.state === 'falling' && ds3.slots[0].tally.total === d0 + 1);
+    const noun = ds3.slots[0].belt;
+    noun.select(noun.correct);
+    noun.sort(noun.correct);
+    assert('a tap on the right bin sorts the noun and counts', ds3.slots[0].tally.total === d0 + 2 && ds3.slots[0].tally.correct === 1);
+    press(0, 'pause');
+    ctx.screens.top().menu.rows.find(r => r.items[0].label() === ctx.t('minigame.quit')).items[0].on();
+    const rqd = await quitDeutsch;
+    assert('quitting Deutsch resolves without rewards and restores the world', rqd.quit === true && rqd.xp === 0 && ctx.frozen === false && ctx.minigames.active === null);
   }
 };
