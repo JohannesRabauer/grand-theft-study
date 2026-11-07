@@ -68,6 +68,14 @@ export class Bikes {
     player.setVehicle('bike');
   }
 
+  // The player starts the game already on a bike of their own (a character's start vehicle).
+  giveBike(player) {
+    const bike = this.scene.add.image(player.x, player.y, 'bike').setScale(this.ctx.res.inv).setVisible(false);
+    this.parked.push(bike);
+    this.riders[player.index].mounted = bike;
+    player.setVehicle('bike');
+  }
+
   // The bike stays where the rider let go of it.
   dismount(player) {
     const r = this.riders[player.index];

@@ -6,7 +6,7 @@ import { Pen, darken, lighten } from './HiResArt.js';
 
 const OUT = '#16161e';
 
-class ScaledPen extends Pen {
+export class ScaledPen extends Pen {
   constructor(scene, key, w, h, f) {
     super(scene, key, Math.round(w * f), Math.round(h * f));
     this.f = f;

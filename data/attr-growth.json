@@ -1,0 +1,10 @@
+{
+  "_doc": "Attribute growth hooks (CAP-12). When `event` fires, the kid it names (payload.player, default 0) gains `amount` points of `attr` through the attr.grow action, until the attribute reaches `cap` (<= attrMax); growth is stored fractionally and shown rounded. `filter` must match payload fields exactly, `minDist` is a minimum payload.dist (the slingshot's target range). Events nobody emits yet (style:banked, quiz:correct, lesson:done, karate:belt) simply never fire.",
+  "rules": [
+    { "event": "style:banked", "attr": "tempo", "amount": 0.15, "cap": 10, "reason": "tricks" },
+    { "event": "prop:hit", "attr": "zielen", "amount": 0.12, "cap": 10, "reason": "slingshot", "filter": { "source": "slingshot" }, "minDist": 60 },
+    { "event": "quiz:correct", "attr": "wissen", "amount": 0.05, "cap": 10, "reason": "quiz" },
+    { "event": "lesson:done", "attr": "wissen", "amount": 0.3, "cap": 10, "reason": "lesson" },
+    { "event": "karate:belt", "attr": "ordnung", "amount": 1, "cap": 10, "reason": "karate" }
+  ]
+}

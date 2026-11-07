@@ -19,6 +19,7 @@ import { Caught } from '../entities/Caught.js';
 import { ToolBelt } from '../tools/ToolBelt.js';
 import { AmmoPickups } from '../entities/AmmoPickups.js';
 import { CrowdDirector } from '../ai/CrowdDirector.js';
+import { Characters } from '../characters/Characters.js';
 
 const STEP_MS = 1000 / 60; // Matter's fixed timestep (AD-14); MovementController assumes it too
 const STEP_SLACK = 0.95; // a frame that arrives a hair early (vsync jitter) still gets its step
@@ -52,6 +53,7 @@ export class GameScene extends Phaser.Scene {
     const inputCfg = cache.get('input');
     installPlayers(ctx, inputCfg.maxPlayers); // AD-18: ctx.players, helpers and the deprecated ctx.player alias
     ctx.input = new Input(this, events, inputCfg, ctx.players);
+    ctx.characters = new Characters(ctx, cache.get('characters'), cache.get('attr-growth'), cache.get('vehicles')); // CAP-12
     this.ctx = ctx;
 
     new World(this, ctx, index, maps).start(index.start); // AD-28: ground, walls and ctx.map of the first map
@@ -61,6 +63,7 @@ export class GameScene extends Phaser.Scene {
     this.toolCfg = cache.get('tool');
     this.addPlayer((spawn.x + 0.5) * ts, (spawn.y + 0.5) * ts);
     this.bikes = new Bikes(this, ctx);
+    for (const p of ctx.players) this.mountStartVehicle(p);
     ctx.frozen = false; // true while the caught frame or a freezing screen is up: the world stands still, UIScene keeps running
     this.caughtFrozen = false;
     this.zones = new Zones(this, ctx);
@@ -122,7 +125,13 @@ export class GameScene extends Phaser.Scene {
     const player = new Player(this, ctx, index, x, y, this.cache.json.get('vehicles'), 'foot');
     ctx.players.push(player);
     player.toolbelt = new ToolBelt(this, ctx, this.toolCfg, player);
+    ctx.characters.apply(player);
     return player;
+  }
+
+  // The character's start vehicle; anything but the bike (skateboard, skates until epic 5) means on foot.
+  mountStartVehicle(player) {
+    if (player.startVehicle === 'bike') this.bikes.giveBike(player);
   }
 
   // Debug helper behind SCHULWEG_GAME.addPlayer(): a second player at the first one's position, driven by
@@ -130,7 +139,9 @@ export class GameScene extends Phaser.Scene {
   addDebugPlayer() {
     const { players, maxPlayers } = this.ctx;
     if (players.length >= maxPlayers) return null;
-    return this.addPlayer(players[0].x, players[0].y);
+    const p = this.addPlayer(players[0].x, players[0].y);
+    this.mountStartVehicle(p);
+    return p;
   }
 
   // What the camera follows until the CameraRig (epic 2): the centre of all players, at the speed of the fastest.

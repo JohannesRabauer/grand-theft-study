@@ -5,6 +5,8 @@
 // the target at `accel`. Real velocity chases heading * speed at a rate of
 // grip * surfaceGrip * (1 - drift) per second, which is what makes stops and turns slide.
 // A profile with a `stamina` block can sprint until it runs dry and then gets slower.
+// The character's attribute multipliers (speedMult, accelMult, staminaSize, staminaRegen; characters/Characters.js)
+// scale top speed, acceleration, the stamina tank (drain time) and its refill rate; all are 1 for a neutral kid.
 const DEG = Math.PI / 180;
 
 export class MovementController {
@@ -25,6 +27,10 @@ export class MovementController {
     this.matterVel = { x: 0, y: 0 }; // reused argument for Body.setVelocity (no per-frame object)
     this.slip = 0; // angle (rad) between real velocity and heading
     this.velSpeed = 0;
+    this.speedMult = 1;
+    this.accelMult = 1;
+    this.staminaSize = 1;
+    this.staminaRegen = 1;
   }
 
   // Switch profile (mount/dismount) keeping heading, speed and velocity so the change is seamless.
@@ -43,8 +49,8 @@ export class MovementController {
     const moving = mag > 0.01;
     const speedMult = this.updateStamina(dt, moving && sprintWanted);
 
-    const target = moving ? mag * p.maxSpeed * (surf.speed[this.profileId] ?? 1) * speedMult : 0;
-    const step = p.accel * surf.grip * dt;
+    const target = moving ? mag * p.maxSpeed * this.speedMult * (surf.speed[this.profileId] ?? 1) * speedMult : 0;
+    const step = p.accel * this.accelMult * surf.grip * dt;
     this.speed = this.speed < target ? Math.min(this.speed + step, target) : Math.max(this.speed - step, target);
 
     if (moving) {
@@ -80,12 +86,12 @@ export class MovementController {
     if (!s) return 1;
     this.sprinting = wantsSprint && !this.exhausted;
     if (this.sprinting) {
-      this.stamina = Math.max(0, this.stamina - (s.drain / s.max) * dt);
+      this.stamina = Math.max(0, this.stamina - (s.drain / (s.max * this.staminaSize)) * dt);
       this.regenIn = s.regenDelay;
       if (this.stamina === 0) { this.exhausted = true; this.sprinting = false; }
     } else {
       this.regenIn -= dt;
-      if (this.regenIn <= 0) this.stamina = Math.min(1, this.stamina + (s.regen / s.max) * dt);
+      if (this.regenIn <= 0) this.stamina = Math.min(1, this.stamina + (s.regen * this.staminaRegen / s.max) * dt);
       if (this.exhausted && this.stamina >= s.recoverAt) this.exhausted = false;
     }
     return this.sprinting ? s.sprintMult : this.exhausted ? s.tiredMult : 1;

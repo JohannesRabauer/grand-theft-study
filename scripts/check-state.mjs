@@ -118,7 +118,7 @@ const fresh = (c = { ...cfg, startMoneyCents: 0 }) => {
 {
   const old = { v: 0, euros: 12.34, player: { character: 'kid-c', xp: 40, level: 1 } };
   const m = migrate(old, cfg, STATE_VERSION);
-  assert.equal(m.v, 1);
+  assert.equal(m.v, STATE_VERSION);
   assert.equal(m.shared.money, 1234, 'float euros become integer cents');
   assert.equal(m.players[0].character, 'kid-c');
   assert.equal(m.players[0].xp, 40);

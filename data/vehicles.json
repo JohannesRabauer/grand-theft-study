@@ -16,10 +16,12 @@
       "recoverAt": 0.25
     },
     "texture": "player",
+    "lookSlot": "walk",
     "faceHeading": false
   },
   "bike": {
     "texture": "player-bike",
+    "lookSlot": "bike",
     "faceHeading": true,
     "maxSpeed": 150,
     "accel": 170,

@@ -5,7 +5,8 @@
 // AD-8: props are created once; only those near the camera are awake (Matter sleeping), drawn and
 // pushed by wind; the number awake never exceeds the tier's `maxProps`.
 // AD-7: wind-affected kinds get a force scaled by mass from ctx.wind.vector.
-// Emits `prop:hit` ({ prop, speed, radius }) on strong impacts (radius = how far bullies hear it, optional);
+// Emits `prop:hit` ({ prop, speed, radius, source, player, dist }) on strong impacts (radius = how far bullies hear it, optional;
+// a slingshot pebble adds source 'slingshot', the shooter's player index and the shot distance in px);
 // crates break into debris. Slingshot pebbles call `knock`; props with `perch` (cans on a fence) are
 // static until knocked.
 import { addCircle, addRect, setPropFlying } from '../physics/bodies.js';
@@ -82,10 +83,10 @@ export class Props {
     }
   }
 
-  hit(p, speed) {
+  hit(p, speed, shot) {
     const { events, particles } = this.ctx;
     const { k, body } = p;
-    events.emit('prop:hit', { prop: p, speed, radius: k.hitRadius });
+    events.emit('prop:hit', { prop: p, speed, radius: k.hitRadius, source: shot?.source, player: shot?.player, dist: shot?.dist });
     if ((k.breakSpeed && speed >= k.breakSpeed) || p.hp <= 0) {
       p.alive = false;
       p.sprite.setVisible(false);
@@ -101,8 +102,8 @@ export class Props {
   }
 
   // A slingshot pebble hit `p` travelling in direction (dx, dy): a push of `knock` px/s, one point
-  // of damage for props with hp, and a perched prop falls off its perch.
-  knock(p, dx, dy) {
+  // of damage for props with hp, and a perched prop falls off its perch. `shot` ({ source, player, dist }) is passed on to `prop:hit`.
+  knock(p, dx, dy, shot) {
     if (!p.alive) return;
     const { k, body } = p;
     if (body.isStatic) {
@@ -114,7 +115,7 @@ export class Props {
     this.matter.body.setVelocity(body, { x: (dx * k.knock) / 60, y: (dy * k.knock) / 60 });
     p.hp--;
     p.cool = this.cfg.hitCooldown;
-    this.hit(p, k.knock);
+    this.hit(p, k.knock, shot);
   }
 
   // Wake props near the camera (nearest first, up to the tier cap); put the rest to sleep.

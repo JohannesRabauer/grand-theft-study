@@ -2,6 +2,7 @@ import { createI18n } from '../i18n/i18n.js';
 import { createQuality } from '../services/quality.js';
 import { makeHiResArt } from './HiResArt.js';
 import { makeNpcArt } from './NpcArt.js';
+import { makeCharacterArt } from './CharacterArt.js';
 import { GameState } from '../state/GameState.js';
 import { SaveSlots } from '../state/SaveSlots.js';
 
@@ -24,6 +25,8 @@ export class BootScene extends Phaser.Scene {
     this.load.json('tool', 'data/tool.json');
     this.load.json('npcs', 'data/npcs.json');
     this.load.json('state', 'data/state.json');
+    this.load.json('characters', 'data/characters.json');
+    this.load.json('attr-growth', 'data/attr-growth.json');
     this.load.json('day', 'data/day.json');
     this.load.json('hud', 'data/hud.json');
     this.load.json('screens', 'data/screens.json');
@@ -38,9 +41,12 @@ export class BootScene extends Phaser.Scene {
     const res = this.registry.get('res'); // render resolution class, fixed at load (main.js)
     const quality = createQuality(this.cache.json.get('quality'), events, res);
     // AD-16: one state store for the whole app; without a chosen slot it is a plain in-memory game.
-    const state = new GameState(events, this.cache.json.get('state'));
+    const characters = this.cache.json.get('characters');
+    // the state config also knows each character's base attributes (player.setCharacter resets to them)
+    const stateCfg = { ...this.cache.json.get('state'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])) };
+    const state = new GameState(events, stateCfg);
     const saves = new SaveSlots(state, events, window.localStorage);
-    this.registry.set('app', { events, i18n, t: i18n.t, quality, res, state, saves });
+    this.registry.set('app', { events, i18n, t: i18n.t, quality, res, state, saves, characters });
     if (window.SCHULWEG_GAME) window.SCHULWEG_GAME.state = state;
     const tiles = this.cache.json.get('tiles');
     if (res.scale > 1) {
@@ -55,6 +61,7 @@ export class BootScene extends Phaser.Scene {
       this.makeArrow();
     }
     makeNpcArt(this, this.cache.json.get('npcs'), res.scale);
+    makeCharacterArt(this, characters, res.scale);
     // The speed zoom scales the world by non-integer factors, where nearest-neighbour sampling makes
     // texels land on uneven screen pixels (shimmer). World textures are filtered bilinear instead; at
     // an exact integer zoom texels map 1:1 to pixels, so the result stays crisp. UI textures stay sharp.

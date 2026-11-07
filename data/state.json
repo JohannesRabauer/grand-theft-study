@@ -7,6 +7,7 @@
   "startVehicles": ["foot"],
   "xpPerLevel": 100,
   "maxLevel": 20,
-  "attributes": { "fitness": 1, "kopf": 1, "mut": 1, "charme": 1 },
+  "attributes": { "wissen": 5, "tempo": 5, "ausdauer": 5, "charme": 5, "ordnung": 5, "zielen": 5 },
+  "attrMax": 10,
   "startBelt": "white"
 }

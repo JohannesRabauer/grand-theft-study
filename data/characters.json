@@ -1,0 +1,67 @@
+{
+  "_doc": "The three playable kids (CAP-12). Attributes are 0..10 (growth in data/attr-growth.json); `modifiers` turns attributes into gameplay numbers per point around `pivot`; `perks` are numeric strengths read by their systems (aimPrecision: slingshot spread cut, bullyTargetWeight: how much more bullies prefer this kid, trickMultiplier: Style payout, stickThrowRange: stick tool range, forgetHomeworkChance: school chore roll, busGrabBonus: grab-target window, talkDownBonus: bully talk-down roll, musicArtBonus: music/art minigame score). A start vehicle without a profile in data/vehicles.json (skateboard, rollerskates until epic 5) falls back to foot. `palette` feeds the shared player art in scenes/CharacterArt.js.",
+  "attrMax": 10,
+  "playerVehicles": ["foot", "bike"],
+  "attributeOrder": ["wissen", "tempo", "ausdauer", "charme", "ordnung", "zielen"],
+  "perkDefaults": {
+    "aimPrecision": 0,
+    "bullyTargetWeight": 1,
+    "trickMultiplier": 1,
+    "stickThrowRange": 1,
+    "forgetHomeworkChance": 0.1,
+    "busGrabBonus": 0,
+    "talkDownBonus": 0,
+    "musicArtBonus": 0
+  },
+  "modifiers": {
+    "pivot": 5,
+    "tempo": { "speed": 0.06, "accel": 0.06 },
+    "ausdauer": { "staminaSize": 0.08, "staminaRegen": 0.06 },
+    "zielen": { "spread": -0.15, "assist": 0.12 },
+    "minSpread": 0.05
+  },
+  "characters": [
+    {
+      "id": "lena",
+      "name": "Lena",
+      "title": "character.lena.title",
+      "attributes": { "wissen": 9, "tempo": 5, "ausdauer": 5, "charme": 5, "ordnung": 8, "zielen": 8 },
+      "startVehicle": "bike",
+      "perks": { "aimPrecision": 0.35, "bullyTargetWeight": 1.4, "forgetHomeworkChance": 0.02, "talkDownBonus": 0.05 },
+      "perkText": "character.lena.perks",
+      "quips": ["character.lena.quip1", "character.lena.quip2", "character.lena.quip3"],
+      "palette": {
+        "jacket": "#3aa6a0", "jacketDark": "#25777a", "jacketLight": "#6fd0c8", "pants": "#4a3f7a", "straps": "#f2c14e", "zip": "#c9f0eb",
+        "hair": "#7a4a22", "hairLight": "#a8703a", "hairStyle": "ponytail", "accessory": "glasses", "frame": "#8e5bd6", "frameDark": "#5f3b9e", "backdrop": "#cfeeea"
+      }
+    },
+    {
+      "id": "mehmet",
+      "name": "Mehmet",
+      "title": "character.mehmet.title",
+      "attributes": { "wissen": 5, "tempo": 9, "ausdauer": 9, "charme": 6, "ordnung": 3, "zielen": 5 },
+      "startVehicle": "skateboard",
+      "perks": { "trickMultiplier": 1.35, "stickThrowRange": 1.4, "forgetHomeworkChance": 0.35, "busGrabBonus": 0.1 },
+      "perkText": "character.mehmet.perks",
+      "quips": ["character.mehmet.quip1", "character.mehmet.quip2", "character.mehmet.quip3"],
+      "palette": {
+        "jacket": "#e8e4d8", "jacketDark": "#b9b5a8", "jacketLight": "#ffffff", "pants": "#1f6b43", "straps": "#2f9e63", "zip": "#2f9e63",
+        "hair": "#1c1a1f", "hairLight": "#3d3a46", "hairStyle": "short", "accessory": "headband", "frame": "#2f9e63", "frameDark": "#1f6b43", "backdrop": "#d6efd9"
+      }
+    },
+    {
+      "id": "jonas",
+      "name": "Jonas",
+      "title": "character.jonas.title",
+      "attributes": { "wissen": 6, "tempo": 6, "ausdauer": 5, "charme": 9, "ordnung": 4, "zielen": 6 },
+      "startVehicle": "rollerskates",
+      "perks": { "forgetHomeworkChance": 0.15, "busGrabBonus": 0.5, "talkDownBonus": 0.4, "musicArtBonus": 0.3, "bullyTargetWeight": 0.9 },
+      "perkText": "character.jonas.perks",
+      "quips": ["character.jonas.quip1", "character.jonas.quip2", "character.jonas.quip3"],
+      "palette": {
+        "jacket": "#f2b630", "jacketDark": "#c78a14", "jacketLight": "#ffd870", "pants": "#3a5a9a", "straps": "#e04f8a", "zip": "#7a4a14",
+        "hair": "#d8b050", "hairLight": "#f0d27a", "hairStyle": "curly", "accessory": "headphones", "frame": "#e04f8a", "frameDark": "#a0305f", "backdrop": "#fbe6b8"
+      }
+    }
+  ]
+}

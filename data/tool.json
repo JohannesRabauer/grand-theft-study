@@ -14,7 +14,10 @@
     "startHeight": 5,
     "arcHeight": 10,
     "pool": 6,
-    "passFence": true
+    "passFence": true,
+    "spreadDeg": 4,
+    "assistDeg": 4,
+    "assistRange": 150
   },
   "pickup": { "radius": 10, "respawn": 40 },
   "ammo": {

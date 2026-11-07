@@ -3,7 +3,7 @@
 // action on a copy, freezes the result and emits `state:changed` with the changed path.
 import { ACTIONS } from './actions.js';
 
-export const STATE_VERSION = 1;
+export const STATE_VERSION = 2;
 
 export function createPlayer(cfg) {
   return {

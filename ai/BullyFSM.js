@@ -1,7 +1,10 @@
 // Bully state machine (AD-12): IDLE, CHASE, SEARCH, DISTRACTED, GIVE_UP, CAUGHT.
 // One stateless instance drives every bully; per-bully data lives on the Bully (state, t, lastX/Y).
-// Numbers come from data/chase.json `bully`. A bully's target is the nearest player it sees (`b.target`);
+// Numbers come from data/chase.json `bully`. A bully's target is the visible player with the best targetScore
+// (nearest, but a player's bullyWeight makes it count as closer: Lena draws bullies more often) (`b.target`);
 // CAUGHT only stops the bully (the director has already emitted `bully:caught-contact`).
+import { targetScore } from '../characters/attributes.js';
+
 export const S = { IDLE: 'IDLE', CHASE: 'CHASE', SEARCH: 'SEARCH', DISTRACTED: 'DISTRACTED', GIVE_UP: 'GIVE_UP', CAUGHT: 'CAUGHT' };
 
 export class BullyFSM {
@@ -71,7 +74,7 @@ export class BullyFSM {
     }
   }
 
-  // The nearest player this bully can see right now, or null.
+  // The preferred player this bully can see right now (nearest by targetScore), or null.
   nearestVisible(b) {
     const chasing = b.state === S.CHASE;
     const players = this.d.ctx.alivePlayers();
@@ -80,7 +83,7 @@ export class BullyFSM {
     for (let i = 0; i < players.length; i++) {
       const p = players[i];
       if (!this.d.perception.sees(b, p, chasing)) continue;
-      const d = (p.x - b.x) * (p.x - b.x) + (p.y - b.y) * (p.y - b.y);
+      const d = targetScore((p.x - b.x) * (p.x - b.x) + (p.y - b.y) * (p.y - b.y), p.bullyWeight);
       if (d < bestD) { bestD = d; best = p; }
     }
     return best;

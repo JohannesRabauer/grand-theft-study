@@ -11,6 +11,15 @@ export const MIGRATIONS = {
       shared: { ...createShared(cfg), money: Math.round(euros * 100) },
       players: [{ ...p, character: player.character ?? null, xp: player.xp ?? 0, level: player.level ?? 1 }]
     };
+  },
+
+  // v2: six character attributes (wissen..zielen) replace the placeholder four; a chosen character keeps its base values.
+  1(d, cfg) {
+    return {
+      ...d,
+      v: 2,
+      players: d.players.map(p => ({ ...p, attributes: { ...(cfg.characters?.[p.character] ?? cfg.attributes) } }))
+    };
   }
 };
 

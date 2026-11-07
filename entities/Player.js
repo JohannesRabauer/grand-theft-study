@@ -5,6 +5,8 @@ import { MovementController } from '../vehicles/MovementController.js';
 // One of ctx.players (AD-18): `index` selects its intent (ctx.input.intents[index]), and it owns its movement,
 // vehicle, stamina, hidden state and tool belt. Publishes `player:vehicle` { player, id } (profile id),
 // `player:surface` { player, id } (surface id) and `player:stamina` { player, value } (0..1, whole-percent steps).
+// Character fields (set by ctx.characters.apply): `character` (data entry or null), `perks`, `mods` (attribute-derived
+// multipliers), `look` (texture keys per profile `lookSlot`), `bullyWeight`; `attrs` is the live attribute object from the state.
 export class Player {
   constructor(scene, ctx, index, x, y, profiles, profileId) {
     this.ctx = ctx;
@@ -15,6 +17,11 @@ export class Player {
     this.profiles = profiles;
     const profile = profiles[profileId];
     this.vehicle = profileId;
+    this.character = null;
+    this.perks = {};
+    this.look = null;
+    this.bullyWeight = 1;
+    this.mods = { speed: 1, accel: 1, staminaSize: 1, staminaRegen: 1, spread: 1, assist: 1 };
     this.sprite = scene.add.image(x, y, profile.texture).setOrigin(0.5, 0.8).setScale(ctx.res.inv);
     this.body = addCircle(scene, x, y, profile.radius, 'PLAYER', { frictionAir: 0, friction: 0, inertia: Infinity });
     this.move = new MovementController(scene.matter, this.body, profileId, profile, ctx.surfaces);
@@ -24,12 +31,22 @@ export class Player {
     this.leafIn = 0;
   }
 
-  // Swap movement profile and look (data-driven: `texture`, `faceHeading`).
+  // A profile's texture, or this character's own look for it (profile `lookSlot`).
+  textureFor(profile) {
+    return (profile.lookSlot && this.look?.[profile.lookSlot]) || profile.texture;
+  }
+
+  // Re-reads the sprite texture after the character (look) changed.
+  refreshLook() {
+    this.sprite.setTexture(this.textureFor(this.profiles[this.vehicle]));
+  }
+
+  // Swap movement profile and look (data-driven: `texture`, `lookSlot`, `faceHeading`).
   setVehicle(id) {
     const profile = this.profiles[id];
     this.vehicle = id;
     this.move.setProfile(id, profile);
-    this.sprite.setTexture(profile.texture).setOrigin(0.5, profile.faceHeading ? 0.5 : 0.8);
+    this.sprite.setTexture(this.textureFor(profile)).setOrigin(0.5, profile.faceHeading ? 0.5 : 0.8);
     this.sprite.setFlipX(false).setRotation(0);
     this.ctx.events.emit('player:vehicle', { player: this.index, id });
   }
@@ -43,6 +60,8 @@ export class Player {
     if (heading !== undefined) this.move.heading = heading;
     this.sprite.setPosition(x, y);
   }
+
+  get attrs() { return this.ctx.state.players[this.index]?.attributes ?? this.ctx.state.cfg.attributes; }
 
   get x() { return this.body.position.x; }
   get y() { return this.body.position.y; }

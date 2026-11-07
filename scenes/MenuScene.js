@@ -1,12 +1,13 @@
 import { ButtonMenu } from '../ui/ButtonMenu.js';
 import { settingsRows } from '../ui/settingsRows.js';
+import { CharacterSelect } from '../ui/CharacterSelect.js';
 import { slotSummary } from '../ui/slotSummary.js';
 import { uiText, setupUiCamera, bindRestartNote } from '../ui/uiKit.js';
 
 const NOTE = { fontFamily: 'monospace', fontSize: '8px', color: '#dddddd', align: 'center' };
 
 // Screens: title (Play + toggles) -> slots (three slots, each New game / Continue / Delete) ->
-// confirm (overwrite or delete). Esc or Back steps one screen up. Every screen is rebuilt on
+// confirm (overwrite or delete); New game continues to the character select, whose pick starts the game. Esc or Back steps one screen up. Every screen is rebuilt on
 // show(), which also re-resolves the text after a language change.
 export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
@@ -34,6 +35,12 @@ export class MenuScene extends Phaser.Scene {
     const note = (x, y, str, style = NOTE) => { const o = uiText(this, x, y, str, style).setOrigin(0.5); extras.push(o); return o; };
 
     const play = (action) => { action(); this.scene.start('Game'); };
+    // a new game in `slot` with the chosen character (saved at once, so Continue brings the same kid back)
+    const startNew = (slot, character) => play(() => {
+      saves.startNew(slot);
+      app.state.dispatch('player.setCharacter', { player: 0, character });
+      saves.save(slot);
+    });
 
     const showTitle = () => {
       title.setPosition(cx, 52); tag.setVisible(true);
@@ -50,7 +57,7 @@ export class MenuScene extends Phaser.Scene {
       for (const r of saves.list()) if (r.status === 'corrupt') { saves.load(r.slot); brokenSlots.add(r.slot); }
       const rows = saves.list().map(r => {
         const items = r.status === 'ok' ? [{ label: () => t('menu.slot.continue'), on: () => play(() => saves.load(r.slot)) }] : [];
-        items.push({ label: () => t('menu.slot.new'), on: () => (r.status === 'ok' ? show('confirm', { kind: 'new', slot: r.slot }) : play(() => saves.startNew(r.slot))) });
+        items.push({ label: () => t('menu.slot.new'), on: () => (r.status === 'ok' ? show('confirm', { kind: 'new', slot: r.slot }) : show('character', { slot: r.slot })) });
         if (r.status === 'ok') items.push({ label: () => t('menu.slot.delete'), on: () => show('confirm', { kind: 'delete', slot: r.slot }) });
         return { items, row: r };
       });
@@ -68,7 +75,7 @@ export class MenuScene extends Phaser.Scene {
     const showConfirm = ({ kind, slot }) => {
       title.setPosition(cx, 28); tag.setVisible(false);
       back = () => show('slots');
-      const yes = kind === 'new' ? () => play(() => saves.startNew(slot)) : () => { saves.delete(slot); show('slots'); };
+      const yes = kind === 'new' ? () => show('character', { slot }) : () => { saves.delete(slot); show('slots'); };
       menu = new ButtonMenu(this, t, [{ items: [
         { label: () => t(`menu.confirm.${kind}Yes`), on: yes },
         { label: () => t(`menu.confirm.${kind}No`), on: back }
@@ -77,13 +84,19 @@ export class MenuScene extends Phaser.Scene {
       note(cx, 110, t(`menu.confirm.${kind}`, { n: slot }), { ...NOTE, fontSize: '10px', color: '#ffffff', wordWrap: { width: width - 60 } });
     };
 
+    const showCharacter = ({ slot }) => {
+      title.setPosition(cx, 22); tag.setVisible(false);
+      back = () => show('slots');
+      menu = new CharacterSelect(this, app, id => startNew(slot, id), back);
+    };
+
     const show = (name, arg) => {
       clear();
       screen = [name, arg];
       title.setText(t('menu.title'));
       tag.setText(t('menu.tagline'));
-      hint.setText(t('menu.hint'));
-      (name === 'slots' ? showSlots : name === 'confirm' ? showConfirm : showTitle)(arg);
+      hint.setText(t(name === 'character' ? 'menu.character.hint' : 'menu.hint'));
+      ({ slots: showSlots, confirm: showConfirm, character: showCharacter }[name] ?? showTitle)(arg);
     };
 
     show('title');

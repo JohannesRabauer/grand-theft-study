@@ -31,10 +31,23 @@ export const ACTIONS = {
     return { path: 'shared.clock' };
   },
 
-  'player.setCharacter'(s, { player, character }) {
+  // Choosing a character (cfg.characters: id -> base attributes, when known) also resets the attributes to its base values.
+  'player.setCharacter'(s, { player, character }, cfg) {
     if (!s.players[player] || !character) return reject('bad-payload');
+    const base = cfg.characters?.[character];
+    if (cfg.characters && !base) return reject('unknown-character');
     s.players[player].character = character;
-    return { path: `players.${player}.character` };
+    if (base) s.players[player].attributes = { ...base };
+    return { path: [`players.${player}.character`, `players.${player}.attributes`] };
+  },
+
+  // Attribute growth (CAP-12): fractional points, never past cfg.attrMax; at the cap it is rejected (hooks check first).
+  'attr.grow'(s, { player, attr, amount, reason }, cfg) {
+    const p = s.players[player];
+    if (!p || !(attr in p.attributes) || !(amount > 0) || !Number.isFinite(amount) || !reason) return reject('bad-payload');
+    if (p.attributes[attr] >= cfg.attrMax) return reject('at-cap');
+    p.attributes[attr] = Math.min(cfg.attrMax, p.attributes[attr] + amount);
+    return { path: `players.${player}.attributes.${attr}` };
   },
 
   'xp.add'(s, { player, amount }, cfg) {

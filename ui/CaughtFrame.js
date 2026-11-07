@@ -53,8 +53,7 @@ export class CaughtFrame {
     for (let i = 0; i < 4; i++) g.lineBetween(62, 78 + i * 5, 126, 78 + i * 5);
     g.fillStyle(0x1d2a3a).fillRect(62, 104, 64, 126);
     const big = 6 * ctx.res.inv; // the 2x textures are shown at half scale
-    this.playerTex = this.sharpCopy('player');
-    this.kid = add(scene.add.image(94, 178, this.playerTex).setScale(big).setAngle(10));
+    this.kid = add(scene.add.image(94, 178, this.sharpCopy('player')).setScale(big).setAngle(10));
     g.fillStyle(0x7aa0cc).lineStyle(3, 0x000000).fillPoints([{ x: 62, y: 104 }, { x: 36, y: 114 }, { x: 36, y: 222 }, { x: 62, y: 230 }], true).strokePoints([{ x: 62, y: 104 }, { x: 36, y: 114 }, { x: 36, y: 222 }, { x: 62, y: 230 }], true);
     g.lineStyle(2, 0x2b3f58).lineBetween(40, 140, 58, 134).lineBetween(40, 160, 58, 155);
     g.fillStyle(0xffe14d).fillCircle(42, 190, 3);
@@ -113,7 +112,7 @@ export class CaughtFrame {
     tex.refresh();
   }
 
-  show({ lost }) {
+  show({ lost, player }) {
     if (!this.built) this.build();
     const { ctx } = this;
     const v = (x) => ctx.i18n.lang === 'de' ? x.toFixed(2).replace('.', ',') : x.toFixed(2);
@@ -122,7 +121,7 @@ export class CaughtFrame {
     this.line.setText(ctx.t(`caught.line${Phaser.Math.Between(1, 3)}`));
     this.lost.setText(lost > 0 ? ctx.t('caught.lost', { v: `${v(lost)} €` }) : ctx.t('caught.nothing'));
     this.prompt.setText(ctx.t(`caught.continue.${ctx.input.type}`));
-    this.kid.setTexture(this.playerTex);
+    this.kid.setTexture(this.sharpCopy(ctx.players[player]?.look?.walk ?? 'player')); // the caught kid's own look
     for (const o of this.items) o.setVisible(true);
   }
 

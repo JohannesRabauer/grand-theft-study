@@ -84,6 +84,7 @@ node scripts/check-state.mjs      # state store, actions, save slots, migrations
 node scripts/check-day.mjs        # day clock: phases, events, autosave, restore, weather schedule, tint
 node scripts/check-ui.mjs         # screen stack (top-only input, counted world freeze), HUD module list
 node scripts/check-players.mjs    # players array helpers; fails on any remaining use of the deprecated ctx.player
+node scripts/check-characters.mjs # characters data, attribute modifiers, growth hooks, bully weights, start vehicle fallback
 node scripts/check-input.mjs      # P1/P2 key and gamepad bindings -> intents, edge and global intents
 node scripts/bench-cdp.mjs --url http://localhost:8080          # CPU cost per update, all scenarios and tiers (headless Edge/Chrome)
 node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke  # scripted whole-game smoke test
@@ -112,7 +113,7 @@ A bike is parked near the start. Walk up to it and press F to mount; press F aga
 
 The main menu has Play (opens the save slot screen), a language toggle (Deutsch / English) and a quality selector (Low / Medium / High); use the mouse, touch, or arrow keys + Enter. Esc (or the pause button, or Start on a gamepad) opens the pause overlay in the game with Resume, the same two toggles, and Back to menu; it shows the active slot.
 
-Save slot screen: three slots with a summary line (player(s), level, day, money). Per slot: New game (asks before overwriting an occupied slot), Continue, Delete (asks too); Esc or Back goes one screen up. Starting or continuing a slot binds it as the active slot, so autosave on `phase:ended` writes to it. An unreadable save is copied to `.bak` when the screen opens and shown as empty with a note. Character select and day phase/playtime in the summary come with later stories; a new game currently goes straight into the Game scene.
+Save slot screen: three slots with a summary line (player(s), level, day, money). Per slot: New game (asks before overwriting an occupied slot), Continue, Delete (asks too); Esc or Back goes one screen up. Starting or continuing a slot binds it as the active slot, so autosave on `phase:ended` writes to it. An unreadable save is copied to `.bak` when the screen opens and shown as empty with a note. New game continues to the character select (below); day phase/playtime in the summary come with later stories.
 
 - Language: switches instantly (all HUD and menu text re-resolves on the `lang:changed` event) and is saved in `localStorage` key `schulweg.lang`. All visible text lives in `i18n/de.json` and `i18n/en.json` and is read with `ctx.t('key')`.
 - Quality: tiers are in `data/quality.json` (particle and prop caps, bullies, NPCs, rain density, pool sizes, shadows; Medium is the AD-14 budget). The choice is saved in `schulweg.quality`; desktop starts on High, phones (coarse pointer or small screen) on Medium. `?q=low|medium|high` overrides it for one load. Switching between Medium and High applies live; switching to or from Low changes the render resolution (480x270 vs 960x540), which is fixed when the page loads, so the game shows "Neustart nötig ..." / "Restart needed ..." and reloads itself with the new tier saved. Changing it emits `quality:changed`; pooled effects (skid marks, smoke, bell rings) change their active cap without allocating.
@@ -161,6 +162,21 @@ The town is full of people so it looks lively wherever you are (`ai/CrowdDirecto
 - **Physics**: pedestrians are `NPC` bodies (feather-light, so you push them aside instead of getting stuck), they collide with walls, props and the player, never with bullies, each other or tools; dogs only with walls and props. The slingshot passes through all of them (AD-3).
 - `?debug` shows the crowd state counts, a label per pedestrian and the pools `npcs`, `dogs`, `bubbles`. `node scripts/check-crowd.mjs` checks the spawn rules, caps and reaction geometry.
 
+## Characters and attributes
+
+Three playable kids in `data/characters.json` (CAP-12), picked on the character select after New game (three cards: portrait, name, title, six attribute bars, start vehicle, perks; arrows + Enter, mouse or touch; the focused kid says an intro quip). The choice is dispatched as `player.setCharacter` (which also resets the attributes to the character's base values), saved at once, and Continue brings the same kid back. A game started without a character (debug, smoke) is a neutral kid with all attributes 5 and the original look.
+
+| | Wissen | Tempo | Ausdauer | Charme | Ordnung | Zielen | Start vehicle | Perks |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Lena, Die Streberin | 9 | 5 | 5 | 5 | 8 | 8 | bike | precision slingshot, bullies target her more |
+| Mehmet, Der Sportler | 5 | 9 | 9 | 6 | 3 | 5 | skateboard | bigger trick multipliers, throws the stick furthest, often forgets homework |
+| Jonas, Der Kreative | 6 | 6 | 5 | 9 | 4 | 6 | roller skates | pro at grabbing buses, talks his way out, music/art bonus |
+
+- **Attributes in play** (`characters/attributes.js`, numbers in `data/characters.json` `modifiers`, per point around 5): Tempo scales foot and bike top speed and acceleration (+-6%), Ausdauer the stamina tank (+-8%) and refill (+-6%), Zielen the slingshot scatter and aim-assist cone (`spreadDeg`, `assistDeg` in `data/tool.json`; the aim dots show the intended line, not the scatter). Wissen, Charme and Ordnung are stored for later systems. `ctx.players[i].attrs` is the live (fractional) attribute object, `.mods` the derived multipliers, `.perks` the perk strengths (`aimPrecision`, `bullyTargetWeight`, `trickMultiplier`, `stickThrowRange`, `forgetHomeworkChance`, `busGrabBonus`, `talkDownBonus`, `musicArtBonus`); `ctx.characters.display(player)` gives whole points for the UI. Bullies pick their target by distance divided by `bullyTargetWeight`, so Lena draws them more often. Perks without a consumer yet (tricks, stick, bus, talk-down, homework, music/art) are read by the stories that add those systems.
+- **Start vehicle**: only `foot` and `bike` exist; Mehmet's skateboard and Jonas' skates fall back to running until epic 5 adds their profiles (then add the ids to `playerVehicles` in `data/characters.json`).
+- **Growth**: the `attr.grow { player, attr, amount, reason }` action stores fractional points (max 10, shown rounded; `attr:up` fires when the shown value rises). `data/attr-growth.json` lists the hooks `{ event, attr, amount, cap, filter?, minDist? }`: `style:banked` raises Tempo, slingshot `prop:hit` from at least 60 px raises Zielen, `quiz:correct` and `lesson:done` raise Wissen, `karate:belt` raises Ordnung. Events nobody emits yet simply never fire.
+- **Art**: `scenes/CharacterArt.js` reuses the default kid's figure and bike drawers with a palette per character (outfit, hair style, glasses / headband / headphones, bike frame colour), producing `player-<id>`, `player-<id>-bike` and `portrait-<id>` on every quality tier. Save format v2 has the six attributes (v1 saves are migrated).
+
 ## Save data
 
 ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tree (`v`) with `shared` (money in integer cents, familienfrieden, vehicles, quests, clock, flags) and `players[i]` (character, attributes, xp/level, grades, learning, karate belt, cosmetics, stickers, bag). It is deep-frozen; the only way to change it is `ctx.state.dispatch('wallet.earn', { cents, reason })` and the other actions in `state/actions.js`, which emit `state:changed` with the changed path. Tuning defaults live in `data/state.json`.
@@ -191,6 +207,7 @@ ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tr
 | `physics/` | `categories.js`, `bodies.js` (only place that creates bodies), surfaces service (with weather overrides), `Wind.js`, `Weather.js`, `WallStreamer.js` (keeps only walls near moving things in the Matter world) |
 | `particles/` | `ParticleHub.js`: pooled emitters, surface effects, rain, ambient life |
 | `state/` | `GameState.js` (store), `actions.js`, `migrations.js`, `SaveSlots.js` (AD-16) |
+| `characters/` | `attributes.js` (pure attribute maths), `AttrGrowth.js` (growth hooks), `Characters.js` (`ctx.characters`: dresses each player with its character) |
 | `learning/`, `minigames/`, `missions/` | Empty in the prototype |
 | `services/` | `World.js` (`ctx.world`, map switching, AD-28) + `worldLogic.js` (pure catalog validation, door resolution); `DayClock.js` + `dayTime.js` (day clock, AD-17); `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |

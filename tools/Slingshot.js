@@ -2,6 +2,8 @@ import { Tool } from './Tool.js';
 import { CAT, MASK } from '../physics/categories.js';
 import { addProjectile } from '../physics/bodies.js';
 
+const DEG = Math.PI / 180;
+
 // Slingshot (CAP-9). Hold toolUse to charge (power 0..1 over chargeSeconds), aim at intent.aim
 // (or the last walking direction), release to fire. Top-down, so a shot is distance-limited travel
 // with wind drift plus a fake height (arc) for the sprite and its shadow. The same function
@@ -9,6 +11,9 @@ import { addProjectile } from '../physics/bodies.js';
 // for the wind at release. Projectile bodies are PROJECTILE (collide only with PROP and STATIC),
 // so people and animals are never touched; they are sensors, so hits are only reported here
 // and nothing is ever pushed by Matter's solver. Pooled: bodies, sprites and dots are made once.
+// The shot leaves along the aim direction nudged towards a prop in the aim-assist cone and then scattered by the
+// player's accuracy (player.mods.spread / .assist from the Zielen attribute, data/tool.json `spreadDeg`, `assistDeg`);
+// the aim dots show the intended line, not the scatter.
 // One instance per player (own ammo, shots and aim dots). Events: `tool:ammo` { player, ammo, max }, `tool:fire`
 // { player, x, y, power }; prop hits go through Props.knock (`prop:hit`).
 
@@ -37,6 +42,8 @@ export class Slingshot extends Tool {
     this.dir = { x: 1, y: 0 };
     this.p0 = { x: 0, y: 0 };
     this.p1 = { x: 0, y: 0 };
+    this.fire = { x: 1, y: 0 }; // the aimed-and-scattered direction of the shot being fired
+    this.shotInfo = { source: 'slingshot', player: player.index, dist: 0 };
 
     this.shots = [];
     for (let i = 0; i < this.cfg.pool; i++) this.shots.push(this.makeShot());
@@ -122,10 +129,11 @@ export class Slingshot extends Tool {
     const { player } = this;
     const { wind } = this.ctx;
     this.power = power;
-    s.sx = player.x + this.dir.x * c.muzzle;
-    s.sy = player.y + this.dir.y * c.muzzle;
-    s.dx = this.dir.x;
-    s.dy = this.dir.y;
+    const f = this.aimShot(this.fire);
+    s.sx = player.x + f.x * c.muzzle;
+    s.sy = player.y + f.y * c.muzzle;
+    s.dx = f.x;
+    s.dy = f.y;
     s.wx = wind.vector.x * c.windAccel;
     s.wy = wind.vector.y * c.windAccel;
     s.life = this.life();
@@ -140,6 +148,30 @@ export class Slingshot extends Tool {
     this.cool = c.cooldown;
     this.emitAmmo();
     this.ctx.events.emit('tool:fire', { player: player.index, x: s.sx, y: s.sy, power });
+  }
+
+  // The direction to fire in: the aim direction turned towards the prop closest to it inside the assist cone,
+  // plus a random scatter of up to +-spread degrees.
+  aimShot(out) {
+    const { player, dir } = this;
+    const c = this.cfg;
+    let ang = Math.atan2(dir.y, dir.x);
+    const cone = c.assistDeg * DEG * player.mods.assist;
+    let best = cone;
+    let turn = 0;
+    for (const p of this.ctx.props.props) {
+      if (!p.alive) continue;
+      const dx = p.body.position.x - player.x;
+      const dy = p.body.position.y - player.y;
+      if (dx * dx + dy * dy > c.assistRange * c.assistRange) continue;
+      let diff = Math.atan2(dy, dx) - ang;
+      diff -= Math.round(diff / (2 * Math.PI)) * 2 * Math.PI;
+      if (Math.abs(diff) < best) { best = Math.abs(diff); turn = diff; }
+    }
+    ang += turn + (Math.random() * 2 - 1) * c.spreadDeg * DEG * player.mods.spread;
+    out.x = Math.cos(ang);
+    out.y = Math.sin(ang);
+    return out;
   }
 
   // The body is placed on the flight curve every frame (a sensor, so it never needs integrating).
@@ -187,7 +219,10 @@ export class Slingshot extends Tool {
       s.dead = true;
       if (other.collisionFilter.category === CAT.PROP) {
         const p = this.ctx.props.byBody.get(other.id);
-        if (p) this.ctx.props.knock(p, s.dx, s.dy);
+        if (p) {
+          this.shotInfo.dist = Math.hypot(s.body.position.x - s.sx, s.body.position.y - s.sy);
+          this.ctx.props.knock(p, s.dx, s.dy, this.shotInfo);
+        }
       }
       this.ctx.particles.emit('spark', s.body.position.x, s.body.position.y, { count: 4 });
     }

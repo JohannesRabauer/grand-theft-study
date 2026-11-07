@@ -389,9 +389,9 @@ export function tileKey(map, tx, ty) {
 
 // ---------------------------------------------------------------- sprites
 
-const OUT = '#16161e';
+export const OUT = '#16161e';
 
-function figure(p, o) {
+export function figure(p, o) {
   const { jacket, jacketDark, jacketLight, pants, hair, brows } = o;
   p.px(pants, 7, 20, 4, 8);                             // legs
   p.px(pants, 13, 20, 4, 8);
@@ -444,7 +444,7 @@ function makeFigures(scene) {
 }
 
 // Top-down bike facing right; rider = jacket, sleeves, hands on the bars and a head seen from above.
-function bike(p, o) {
+export function bike(p, o) {
   const tire = (x, y, w) => { p.px('#0e0e12', x, y, w, 5); p.px('#2e2e36', x + 1, y + 1, w - 2, 1); p.px('#6b6b78', x + (w >> 1) - 1, y + 2, 2, 1); };
   tire(1, 9, 11);
   tire(28, 9, 11);
