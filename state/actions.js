@@ -66,6 +66,13 @@ export const ACTIONS = {
     return { path: `players.${player}.attributes.${attr}` };
   },
 
+  // Only LearningEngine dispatches this (AD-19): replaces one topic's stats of one player.
+  'learning.record'(s, { player, topic, stats }) {
+    if (!s.players[player] || !topic || !stats || !Number.isInteger(stats.n) || !Number.isFinite(stats.level) || typeof stats.items !== 'object') return reject('bad-payload');
+    s.players[player].learning[topic] = stats;
+    return { path: `players.${player}.learning.${topic}` };
+  },
+
   'xp.add'(s, { player, amount }, cfg) {
     const p = s.players[player];
     if (!p || !positiveInt(amount)) return reject('bad-payload');

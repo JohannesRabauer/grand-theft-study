@@ -125,5 +125,16 @@
   "menu.character.hintP2": "Left/right arrows + Enter, gamepad or mouse",
   "pause.mode.solo": "Solo: {who}",
   "pause.mode.coop": "Co-op: {who}",
-  "toast.padLost": "Controller disconnected"
+  "toast.padLost": "Controller disconnected",
+  "learning.react.correct.1": "You are on a roll!",
+  "learning.react.correct.2": "Right, dude!",
+  "learning.react.correct.3": "Nailed it, respect!",
+  "learning.react.correct.4": "Brain on turbo!",
+  "learning.react.wrong.1": "Just missed, happens to the best.",
+  "learning.react.wrong.2": "Oops, we will remember that for later.",
+  "learning.react.wrong.3": "No worries, next time it works.",
+  "learning.react.wrong.4": "Almost, bro! Have a look at the explanation.",
+  "learning.react.streak.1": "Three in a row, you are on fire!",
+  "learning.react.streak.2": "Streak is running, keep going!",
+  "learning.react.streak.3": "Mental maths champ in sight!"
 }

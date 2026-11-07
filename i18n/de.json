@@ -125,5 +125,16 @@
   "menu.character.hintP2": "Pfeile links/rechts + Enter, Controller oder Maus",
   "pause.mode.solo": "Allein: {who}",
   "pause.mode.coop": "Zu zweit: {who}",
-  "toast.padLost": "Controller getrennt"
+  "toast.padLost": "Controller getrennt",
+  "learning.react.correct.1": "Läuft bei dir!",
+  "learning.react.correct.2": "Richtig, Digga!",
+  "learning.react.correct.3": "Das saß, Respekt!",
+  "learning.react.correct.4": "Gehirn auf Turbo!",
+  "learning.react.wrong.1": "Knapp daneben, passiert den Besten.",
+  "learning.react.wrong.2": "Hoppla, das merken wir uns für später.",
+  "learning.react.wrong.3": "Kein Ding, beim nächsten Mal klappt es.",
+  "learning.react.wrong.4": "Fast, bro! Schau dir die Erklärung an.",
+  "learning.react.streak.1": "Drei am Stück, du bist on fire!",
+  "learning.react.streak.2": "Serie läuft, nicht aufhören!",
+  "learning.react.streak.3": "Kopfrechen-Champion in Sicht!"
 }

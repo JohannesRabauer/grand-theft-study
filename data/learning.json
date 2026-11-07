@@ -1,0 +1,32 @@
+{
+  "startLevel": 2,
+  "levelMin": 1,
+  "levelMax": 5,
+  "window": 10,
+  "minSamples": 5,
+  "emaAlpha": 0.03,
+  "hintScore": 0.6,
+  "band": { "low": 0.75, "high": 0.85, "hardLow": 0.7, "hardHigh": 0.9 },
+  "gain": 0.5,
+  "fastRatio": 0.6,
+  "fastRamp": 1.5,
+  "fastBonus": 0.03,
+  "intervals": [3, 8, 20],
+  "maxOverdue": 2,
+  "defaultContext": { "dueRate": 0.3 },
+  "contexts": {
+    "lesson": { "dueRate": 0.3 },
+    "bakery": { "dueRate": 0.15 },
+    "bully": { "dueFirst": true }
+  },
+  "pick": { "sigma": 0.7, "novelty": 0.6 },
+  "support": {
+    "struggling": { "timeFactor": 1.5, "hints": "all" },
+    "normal": { "timeFactor": 1, "hints": 1 },
+    "strong": { "timeFactor": 0.85, "hints": 0 }
+  },
+  "parentRange": [0.5, 1.5],
+  "timeFactorRange": [0.5, 2.5],
+  "expectedMs": { "default": 8000, "choice": 6000, "typed": 10000, "sort": 12000, "match": 12000, "perDifficulty": 0.25 },
+  "streakAt": 3
+}

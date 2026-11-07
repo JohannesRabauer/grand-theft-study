@@ -30,6 +30,13 @@ export class BootScene extends Phaser.Scene {
     this.load.json('day', 'data/day.json');
     this.load.json('hud', 'data/hud.json');
     this.load.json('screens', 'data/screens.json');
+    this.load.json('learning', 'data/learning.json');
+    this.load.json('learning-reactions', 'data/learning/reactions.json');
+    this.load.json('learning-index', 'data/learning/index.json');
+    // the topic files are only known once the index is in
+    this.load.once('filecomplete-json-learning-index', (key, type, index) => {
+      for (const { grade, topic } of index.topics) this.load.json(`learning-${grade}-${topic}`, `data/learning/${grade}/${topic}.json`);
+    });
     this.load.json('de', 'i18n/de.json');
     this.load.json('en', 'i18n/en.json');
   }

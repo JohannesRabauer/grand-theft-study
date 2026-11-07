@@ -95,6 +95,7 @@ node scripts/check-world.mjs      # map logic without Phaser: catalog validation
 node scripts/check-chase.mjs      # pathfinding, level rules, escape rules
 node scripts/check-crowd.mjs      # crowd spawn rules, caps, reaction geometry
 node scripts/check-state.mjs      # state store, actions, save slots, migrations
+node scripts/check-learning.mjs   # learning engine: simulated learners, adaptivity, repetition, persistence
 node scripts/check-day.mjs        # day clock: phases, events, autosave, restore, weather schedule, tint
 node scripts/check-ui.mjs         # screen stack (top-only input, counted world freeze), HUD module list
 node scripts/check-players.mjs    # players array helpers; fails on any remaining use of the deprecated ctx.player
@@ -202,6 +203,15 @@ ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tr
 - Older saves are upgraded by the `state/migrations.js` chain. An unreadable slot is copied to `schulweg.save.<n>.bak`, removed, and reported with `state:slot-corrupt`.
 - With `?debug`, `SCHULWEG_GAME.state` is the store and `SCHULWEG_GAME.registry.get('app').saves` the slots.
 
+## Learning engine
+
+`ctx.learning` (`learning/LearningEngine.js`, Phaser-free logic in `learning/engineCore.js`, tuning in `data/learning.json`) is the only code that picks questions and writes learning stats (AD-19). Questions are generic topic files `data/learning/<grade>/<topic>.json` (`{topic, grade, bothLangs, items[{id, topic, type, difficulty 1-5, q:{de,en}, answers, explain:{de,en}, hints, tags}]}`) listed in `data/learning/index.json`. `grade3/mathe-test.json` is test content only; the real content follows in later stories.
+
+- `next(topic, { player, context })` returns the item plus `meta` (`difficulty`, `target`, `timeFactor`, `hintsAllowed`, `expectedMs`, `due`, `bothLangs`). `answer(question, ok, ms, { player, hintsUsed })` records it (state action `learning.record`, emits `learning:answered`) and returns UI feedback data; `due(player, { topic, maxCount })` lists items due for repetition; `localize(question, lang)`, `isCorrect(question, response)` and `feedback(question, ok)` are the presentation helpers. Reaction lines come from `data/learning/reactions.json` (i18n keys `learning.react.*`); a wrong answer never costs anything, it shows the explanation and a gentle line. English topics set `bothLangs` and always show both languages.
+- Adaptivity: the level (1-5, fractional) follows the accuracy of the last 10 answers. Inside 75-85% nothing changes (hysteresis), below that it drops, above it rises, twice as hard beyond 70% / 90%. Struggling kids get 1.5x time and every hint, strong ones 0.85x time and no hints; fast correct answers ramp up quicker. The parent modifier `state.shared.flags.parentDifficulty` (default 1, clamped 0.5-1.5) scales the target difficulty and time.
+- Repetition: a wrong item is parked for 3 answered questions, then due; each correct answer moves it up (intervals 3, 8, 20), after the last box it counts as learned. Due items are mixed in at the context's `dueRate`, forced when overdue by 2, and `context: 'bully'` asks them first.
+- Stats live in `state.players[i].learning[topic]` (the existing `learning` object, so no save version bump: missing fields are filled when read) and are saved with the slot. `SCHULWEG_GAME.learning` is available with `?debug`. `node scripts/check-learning.mjs` runs weak, average and strong simulated learners.
+
 ## Day clock
 
 `ctx.day` (`services/DayClock.js`, pure time math in `services/dayTime.js`, all tuning in `data/day.json`) owns game time 06:30 to 22:00 and the phase machine morning, commute, school (from the 08:00 deadline), afternoon, evening, then the next day. One game minute takes `secondsPerGameMinute` real seconds (1.6, so a day is about 25 minutes). The time is `ctx.state.shared.clock` (`{ day, minute, phase }`), changed only by the `clock.set` action and restored with a loaded slot.
@@ -225,7 +235,8 @@ ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tr
 | `particles/` | `ParticleHub.js`: pooled emitters, surface effects, rain, ambient life |
 | `state/` | `GameState.js` (store), `actions.js`, `migrations.js`, `SaveSlots.js` (AD-16) |
 | `characters/` | `attributes.js` (pure attribute maths), `AttrGrowth.js` (growth hooks), `Characters.js` (`ctx.characters`: dresses each player with its character) |
-| `learning/`, `minigames/`, `missions/` | Empty in the prototype |
+| `learning/` | `engineCore.js` (pure adaptive and repetition logic), `LearningEngine.js` (`ctx.learning`) |
+| `minigames/`, `missions/` | Empty so far |
 | `services/` | `World.js` (`ctx.world`, map switching, AD-28) + `worldLogic.js` (pure catalog validation, door resolution); `DayClock.js` + `dayTime.js` (day clock, AD-17); `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |
 | `data/` | Tuning JSON, `maps/` (`index.json` lists the map files; `town.json`, `test-room.json`: ASCII grid, objects in tile coordinates), `object-types.json` (catalog of every allowed map object type) |

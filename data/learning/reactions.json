@@ -1,0 +1,5 @@
+{
+  "correct": ["learning.react.correct.1", "learning.react.correct.2", "learning.react.correct.3", "learning.react.correct.4"],
+  "wrong": ["learning.react.wrong.1", "learning.react.wrong.2", "learning.react.wrong.3", "learning.react.wrong.4"],
+  "streak": ["learning.react.streak.1", "learning.react.streak.2", "learning.react.streak.3"]
+}

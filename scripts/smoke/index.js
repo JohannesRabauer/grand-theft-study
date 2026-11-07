@@ -10,6 +10,7 @@ import { twoPlayers } from './players.js';
 import { characters } from './characters.js';
 import { worldDoors } from './world.js';
 import { quitAndSecondRun } from './state.js';
+import { learning } from './learning.js';
 import { coopMenu, coopCommute, coopChase } from './coop.js';
 
-export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, twoPlayers, characters, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase];
+export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, twoPlayers, characters, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning];
