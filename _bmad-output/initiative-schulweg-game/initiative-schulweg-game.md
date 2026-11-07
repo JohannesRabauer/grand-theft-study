@@ -40,3 +40,4 @@ Follows the spec's capability boundary: one school year, DE/EN, desktop and mobi
 - Open question: co-op shares money and keeps grades per player by default; user to confirm.
 - Decision: 2026-11-07 scope is Klasse 3 only; skating, karate and shared-screen co-op are in (user's choices).
 - Decision: 2026-11-07 stories are built in sub-agents one at a time, in epic order, with a commit per story.
+- Decision: 2026-11-07 user reprioritisation: make existing content reachable first. Build order next: 8.3 school interior, timetable and lessons (minigames become playable), 8.1 home and morning, 8.2 commute, 10.1 shops (buy skateboard and skates), 9.1 quest runner and phone booth, 9.8 and 9.7 missions (skate races and challenges), then 8.4 to 8.6, then the environment art epic and the rest. Three-player co-op is parked.

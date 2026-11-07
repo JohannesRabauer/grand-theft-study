@@ -38,4 +38,4 @@ Visual rendering of existing map data only. Not map layout, collision or gamepla
 ## Notes
 
 - Decision: 2026-11-07 user playtest: the blocks are fine but houses, doors, fences, water and ground transitions do not look right.
-- Decision: 2026-11-07 priority: build this epic before further gameplay epics.
+- Decision: 2026-11-07 priority revised by the user: build after the gameplay-access work (school day, lessons, quests, shops).

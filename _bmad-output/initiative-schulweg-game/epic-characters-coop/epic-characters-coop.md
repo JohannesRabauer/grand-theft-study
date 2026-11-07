@@ -34,3 +34,4 @@ One capability area of the game, following the spec. Not other epics' areas; see
 - constraint — _bmad-output/initiative-schulweg-game/architecture-schulweg-game/architecture-schulweg-game.md, the ADs cited on each story
 - constraint — the prototype spine AD-1 to AD-15 and the prototype code as base
 - Decision: 2026-11-07 user request: family characters Helena/Kilian/Lorenz replace the originals (entry 2.5) and co-op grows to three players (entry 2.6).
+- Decision: 2026-11-07 user: three-player co-op (entry 2.6) is parked for later; status draft, not planned now.
