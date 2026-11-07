@@ -39,7 +39,7 @@ export class Props {
     const body = k.shape === 'circle' ? addCircle(this.scene, x, y, k.size, 'PROP', opts) : addRect(this.scene, x, y, k.size, k.size, 'PROP', opts);
     this.matter.body.setMass(body, k.mass);
     if (o.perch) this.matter.body.setStatic(body, true);
-    const sprite = this.scene.add.image(x, y, k.texture).setVisible(false);
+    const sprite = this.scene.add.image(x, y, k.texture).setScale(this.ctx.res.inv).setVisible(false);
     const prop = { id: o.id, kind: o.kind, k, body, sprite, alive: true, awake: false, tipped: false, cool: 0, hp: k.hp ?? Infinity, flyT: 0 };
     this.sleeping.set(body, true);
     return prop;

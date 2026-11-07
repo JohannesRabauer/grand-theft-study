@@ -1,5 +1,7 @@
 // GTA-style objective arrow: orbits the player on screen and points at the school goal, with the
-// distance in meters. Drawn in UIScene space (480x270); reads the game camera, never the world state mutably.
+// distance in meters. Drawn in UIScene space (480x270, whatever the render size); reads the game camera, never the world state mutably.
+import { uiText } from './uiKit.js';
+
 export class ObjectiveArrow {
   constructor(scene, ctx, game) {
     this.ctx = ctx;
@@ -9,13 +11,13 @@ export class ObjectiveArrow {
     const goal = ctx.map.objects.find(o => o.type === 'goal');
     this.gx = (goal.x + goal.w / 2) * this.ts;
     this.gy = (goal.y + goal.h / 2) * this.ts;
-    this.arrow = scene.add.image(0, 0, 'arrow').setDepth(10);
-    this.text = scene.add.text(0, 0, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d', stroke: '#000000', strokeThickness: 2 })
+    this.arrow = scene.add.image(0, 0, 'arrow').setScale(ctx.res.inv).setDepth(10);
+    this.text = uiText(scene, 0, 0, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d', stroke: '#000000', strokeThickness: 2 })
       .setOrigin(0.5).setDepth(10);
     this.lastMeters = -1;
     this.done = false;
-    const sw = scene.scale.width;
-    this.msg = scene.add.text(sw / 2, 60, ctx.t('msg.arrived'), { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 })
+    const sw = ctx.res.w;
+    this.msg = uiText(scene, sw / 2, 60, ctx.t('msg.arrived'), { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 })
       .setOrigin(0.5).setDepth(10).setVisible(false);
     this.onReached = () => {
       this.done = true;
@@ -32,9 +34,11 @@ export class ObjectiveArrow {
     if (this.done) return;
     const { player } = this.ctx;
     const cam = this.cam;
-    const wv = cam.worldView;
-    const sx = (player.x - wv.x) * cam.zoom;
-    const sy = (player.y - wv.y) * cam.zoom;
+    // player on screen in UI units: from the live scroll (worldView is only refreshed at render time)
+    const { zoom } = cam;
+    const k = 1 / this.ctx.res.scale;
+    const sx = ((player.x - cam.scrollX - cam.width / 2) * zoom + cam.width / 2) * k;
+    const sy = ((player.y - cam.scrollY - cam.height / 2) * zoom + cam.height / 2) * k;
     const dx = this.gx - player.x;
     const dy = this.gy - player.y;
     const dist = Math.hypot(dx, dy);

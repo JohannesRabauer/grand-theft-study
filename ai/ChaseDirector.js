@@ -200,7 +200,7 @@ export class ChaseDirector {
   // ?debug: state label, path, LOS ray and radii per bully.
   makeDebug() {
     this.dbg = this.scene.add.graphics().setDepth(9600);
-    this.labels = this.pool.list.map(() => this.scene.add.text(0, 0, '', { fontFamily: 'monospace', fontSize: '6px', color: '#ffffff', backgroundColor: '#000000aa' }).setDepth(9601).setVisible(false));
+    this.labels = this.pool.list.map(() => this.scene.add.text(0, 0, '', { fontFamily: 'monospace', fontSize: '6px', color: '#ffffff', backgroundColor: '#000000aa', resolution: this.ctx.res.scale }).setDepth(9601).setVisible(false));
   }
 
   drawDebug() {

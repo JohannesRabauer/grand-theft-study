@@ -1,5 +1,6 @@
 import { createI18n } from '../i18n/i18n.js';
 import { createQuality } from '../services/quality.js';
+import { makeHiResArt } from './HiResArt.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
@@ -25,15 +26,21 @@ export class BootScene extends Phaser.Scene {
     // App-wide services that outlive GameScene (menu uses them too); GameScene reuses them in ctx.
     const events = new Phaser.Events.EventEmitter();
     const i18n = createI18n({ de: this.cache.json.get('de'), en: this.cache.json.get('en') }, events);
-    const quality = createQuality(this.cache.json.get('quality'), events);
-    this.registry.set('app', { events, i18n, t: i18n.t, quality });
-    this.makeTiles(this.cache.json.get('tiles'), this.cache.json.get('town').tileSize);
-    this.makePlayer();
-    this.makeBike();
-    this.makeBully();
-    this.makeFx();
-    this.makeWorldFx();
-    this.makeArrow();
+    const res = this.registry.get('res'); // render resolution class, fixed at load (main.js)
+    const quality = createQuality(this.cache.json.get('quality'), events, res);
+    this.registry.set('app', { events, i18n, t: i18n.t, quality, res });
+    const tiles = this.cache.json.get('tiles');
+    if (res.scale > 1) {
+      makeHiResArt(this, tiles); // Medium and High: textures drawn on a 2x grid (AD-14)
+    } else {
+      this.makeTiles(tiles, this.cache.json.get('town').tileSize);
+      this.makePlayer();
+      this.makeBike();
+      this.makeBully();
+      this.makeFx();
+      this.makeWorldFx();
+      this.makeArrow();
+    }
     this.scene.start('Menu');
   }
 

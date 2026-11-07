@@ -11,7 +11,7 @@ export class AmmoPickups {
       x: (o.x + 0.5) * ts,
       y: (o.y + 0.5) * ts,
       back: 0, // seconds until it is back, 0 = on the ground
-      sprite: scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, cfg.ammo[o.kind].texture).setDepth((o.y + 0.5) * ts - 2)
+      sprite: scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, cfg.ammo[o.kind].texture).setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts - 2)
     }));
     const self = this;
     ctx.pools.register('ammo', { live: () => self.items.filter(i => i.back === 0).length, cap: this.items.length });

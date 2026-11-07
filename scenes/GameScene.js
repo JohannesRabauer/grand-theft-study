@@ -15,6 +15,7 @@ import { ChaseDirector } from '../ai/ChaseDirector.js';
 import { Caught } from '../entities/Caught.js';
 import { ToolBelt } from '../tools/ToolBelt.js';
 import { AmmoPickups } from '../entities/AmmoPickups.js';
+import { tileKey } from './HiResArt.js';
 
 const STEP_MS = 1000 / 60; // Matter's fixed timestep (AD-14); MovementController assumes it too
 const STEP_SLACK = 0.95; // a frame that arrives a hair early (vsync jitter) still gets its step
@@ -29,12 +30,13 @@ export class GameScene extends Phaser.Scene {
     const ts = map.tileSize;
 
     // AD-2: one ctx, created once, handed to every system.
-    const { events, i18n, t, quality } = this.registry.get('app');
+    const { events, i18n, t, quality, res } = this.registry.get('app');
     const ctx = {
       events,
       i18n,
       t,
       quality,
+      res, // render scale: world units stay the same, textures are drawn `res.scale` times finer (AD-14)
       pools: new Pools(),
       map,
       surfaces: new Surfaces(map, cache.get('surfaces')),
@@ -42,7 +44,7 @@ export class GameScene extends Phaser.Scene {
     };
     this.ctx = ctx;
 
-    this.renderGrid(map);
+    this.renderGrid(map, res);
     const walls = this.buildWalls(map);
 
     // map objects are in tile coordinates
@@ -66,10 +68,25 @@ export class GameScene extends Phaser.Scene {
     this.zoomCfg = cache.get('camera');
     this.streamer = new WallStreamer(this, ctx, walls, cache.get('quality').wallRadius);
 
-    const worldW = map.rows[0].length * ts;
-    const worldH = map.rows.length * ts;
-    this.cameras.main.setBounds(0, 0, worldW, worldH);
-    this.cameras.main.startFollow(this.player.sprite, true, 0.15, 0.15);
+    // Own camera follow (see followCamera). The base zoom is the render scale, so the view still
+    // covers the same world area as at 480x270; the speed zoom (camera.json) multiplies it.
+    this.worldW = map.rows[0].length * ts;
+    this.worldH = map.rows.length * ts;
+    const cam = this.cameras.main;
+    cam.setZoom(res.scale * this.zoomCfg.max);
+    // Phaser floors the scroll of a roundPixels camera to whole world pixels in preRender (2 screen pixels
+    // at zoom 2). followCamera snaps to screen pixels itself, so that floor is skipped here; the
+    // sprite rounding that roundPixels also controls stays as Phaser sets it (integer zoom only).
+    const preRender = cam.preRender;
+    cam.preRender = function () {
+      this.roundPixels = false;
+      preRender.call(this);
+      this.roundPixels = true;
+      this.renderRoundPixels = Number.isInteger(this.zoomX) && Number.isInteger(this.zoomY);
+    };
+    this.camX = this.camOutX = this.player.x;
+    this.camY = this.camOutY = this.player.y;
+    this.followCamera(1);
 
     // UIScene asks for pause / quit through events; the world is only changed here.
     this.paused = false;
@@ -84,23 +101,49 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  // Zoom follows real speed continuously (1.0 standing .. 0.6 at top speed), smoothed.
-  // Only the main camera zooms; UIScene has its own camera.
+  // Zoom follows real speed continuously (1.0 standing .. 0.6 at top speed) times the render
+  // scale, smoothed. Only the main camera zooms; UIScene has its own camera.
   updateZoom(dt) {
     const z = this.zoomCfg;
     const t = Math.min(1, this.player.move.velSpeed / z.speedForMin);
-    const target = z.max + (z.min - z.max) * t;
+    const target = (z.max + (z.min - z.max) * t) * this.ctx.res.scale;
     const cam = this.cameras.main;
     cam.setZoom(cam.zoom + (target - cam.zoom) * (1 - Math.exp(-z.smooth * dt)));
   }
 
-  // Static ground: all tiles drawn once into a single RenderTexture.
-  renderGrid(map) {
-    const ts = map.tileSize;
-    const rt = this.add.renderTexture(0, 0, map.rows[0].length * ts, map.rows.length * ts).setOrigin(0).setDepth(-1);
+  // Eased follow of the player, in place of Phaser's startFollow: that one floors the scroll to whole
+  // *world* pixels, which at a base zoom of 2 would move the view in 2-screen-pixel jumps. Here the
+  // view centre is snapped to whole *screen* pixels instead (story 1.13 refines this for smooth zoom).
+  // Something else moving the camera (respawn, test teleports) is picked up instead of eased towards.
+  followCamera(dt) {
+    const cam = this.cameras.main;
+    const hw = cam.width / 2;
+    const hh = cam.height / 2;
+    if (Math.abs(cam.scrollX + hw - this.camOutX) > 0.01 || Math.abs(cam.scrollY + hh - this.camOutY) > 0.01) {
+      this.camX = cam.scrollX + hw;
+      this.camY = cam.scrollY + hh;
+    }
+    const k = 1 - Math.pow(1 - this.zoomCfg.follow, dt * 60);
+    this.camX += (this.player.x - this.camX) * k;
+    this.camY += (this.player.y - this.camY) * k;
+    const z = cam.zoom;
+    const vw = cam.width / z / 2; // half of the visible world, so the view stays inside the map
+    const vh = cam.height / z / 2;
+    const cx = this.worldW > vw * 2 ? Phaser.Math.Clamp(this.camX, vw, this.worldW - vw) : this.worldW / 2;
+    const cy = this.worldH > vh * 2 ? Phaser.Math.Clamp(this.camY, vh, this.worldH - vh) : this.worldH / 2;
+    this.camOutX = Math.round(cx * z) / z;
+    this.camOutY = Math.round(cy * z) / z;
+    cam.setScroll(this.camOutX - hw, this.camOutY - hh);
+  }
+
+  // Static ground: all tiles drawn once into a single RenderTexture, `res.scale` times as fine as
+  // the world (3072x2048 texture at 2x) and displayed at 1/scale, so one texture pixel is one screen pixel.
+  renderGrid(map, res) {
+    const ts = map.tileSize * res.scale;
+    const rt = this.add.renderTexture(0, 0, map.rows[0].length * ts, map.rows.length * ts).setOrigin(0).setScale(res.inv).setDepth(-1);
     rt.beginDraw();
     map.rows.forEach((row, ty) => {
-      for (let tx = 0; tx < row.length; tx++) rt.batchDraw(`tile-${map.legend[row[tx]]}`, tx * ts, ty * ts);
+      for (let tx = 0; tx < row.length; tx++) rt.batchDraw(res.scale > 1 ? tileKey(map, tx, ty) : `tile-${map.legend[row[tx]]}`, tx * ts, ty * ts);
     });
     rt.endDraw();
   }
@@ -172,6 +215,7 @@ export class GameScene extends Phaser.Scene {
     this.zones.update();
     this.chase.update(dt);
     this.updateZoom(dt);
+    this.followCamera(dt);
     this.props.update(dt);
     this.flags.update(dt);
     this.ctx.particles.update(dt);

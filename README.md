@@ -44,7 +44,7 @@ All devices produce the same intent snapshot (`ctx.input.intent`); `ctx.input.ty
 | Pause | Esc | pause button (top right) | Start |
 
 Touch controls appear on touch devices and hide as soon as a key or mouse is used. In portrait on a touch device a rotate hint covers the game and input is ignored.
-The 480x270 picture is scaled by a whole number (letterboxed, pixelated); only windows smaller than 480x270 get a fractional fit.
+Resolution (AD-14): Medium and High render at 960x540, Low at 480x270. The picture is scaled by a whole number of device pixels (letterboxed, pixelated, so a 1920x1080 window shows 960x540 at 2x); only windows smaller than the render size get a fractional fit.
 An FPS counter shows at the top left.
 
 ## Known limitations
@@ -89,8 +89,9 @@ A bike is parked near the start. Walk up to it and press F to mount; press F aga
 The main menu has Start, a language toggle (Deutsch / English) and a quality selector (Low / Medium / High); use the mouse, touch, or arrow keys + Enter. Esc (or the pause button, or Start on a gamepad) opens the pause overlay in the game with Resume, the same two toggles, and Back to menu.
 
 - Language: switches instantly (all HUD and menu text re-resolves on the `lang:changed` event) and is saved in `localStorage` key `schulweg.lang`. All visible text lives in `i18n/de.json` and `i18n/en.json` and is read with `ctx.t('key')`.
-- Quality: tiers are in `data/quality.json` (particle and prop caps, bullies, NPCs, rain density, pool sizes, shadows; Medium is the AD-14 budget). The choice is saved in `schulweg.quality`; desktop starts on High, phones (coarse pointer or small screen) on Medium. `?q=low|medium|high` overrides it for one load. Changing it emits `quality:changed`; pooled effects (skid marks, smoke, bell rings) change their active cap without allocating.
-- `?debug` also shows the current tier and live/cap counts of every pool under the HUD.
+- Quality: tiers are in `data/quality.json` (particle and prop caps, bullies, NPCs, rain density, pool sizes, shadows; Medium is the AD-14 budget). The choice is saved in `schulweg.quality`; desktop starts on High, phones (coarse pointer or small screen) on Medium. `?q=low|medium|high` overrides it for one load. Switching between Medium and High applies live; switching to or from Low changes the render resolution (480x270 vs 960x540), which is fixed when the page loads, so the game shows "Neustart nötig ..." / "Restart needed ..." and reloads itself with the new tier saved. Changing it emits `quality:changed`; pooled effects (skid marks, smoke, bell rings) change their active cap without allocating.
+- `?debug` also shows the current tier, render size, texture scale and zoom, and live/cap counts of every pool under the HUD.
+- Render resolution: world units, physics and tuning data are the same on every tier. On Medium and High the canvas is 960x540, the world camera runs at base zoom 2 (the speed zoom 0.6-1.0 in `data/camera.json` multiplies it), all procedural textures are drawn on a 2x grid (`scenes/HiResArt.js`, shown at scale 0.5, with tile variants, facades with windows, outlined sprites) and the UI keeps its 480x270 layout through a zoomed UI camera with text rendered at 2x. Low keeps the 1x art from `BootScene` and zoom 1.
 - `node scripts/check-i18n.mjs` checks that both language files have identical keys and no empty values, and that every `t('...')` key used in the source exists.
 
 ## Living world
@@ -126,8 +127,8 @@ Hold the left mouse button (touch: hold the tool button and drag from it to aim;
 
 | Path | Purpose |
 | --- | --- |
-| `index.html`, `main.js` | Entry point, Phaser config (480x270, pixel art, Matter with zero gravity) |
-| `scenes/` | Boot (load + procedural textures), Menu, Game (owns `ctx`), UI (overlay HUD) |
+| `index.html`, `main.js` | Entry point, Phaser config (960x540, or 480x270 on Low; pixel art, Matter with zero gravity) |
+| `scenes/` | Boot (load + 1x procedural textures), `HiResArt.js` (2x textures), Menu, Game (owns `ctx`), UI (overlay HUD) |
 | `entities/` | Player, caught/respawn flow (`Caught.js`), bikes (+ skid, smoke, bell effects), `pools.js` (pool registry, fade pool), `Prop.js`, `Flag.js` and later bully, NPC |
 | `vehicles/` | `MovementController.js`: drives any actor from a profile in `data/vehicles.json` |
 | `tools/` | Slingshot and other tools |
@@ -135,10 +136,10 @@ Hold the left mouse button (touch: hold the tool button and drag from it to aim;
 | `physics/` | `categories.js`, `bodies.js` (only place that creates bodies), surfaces service (with weather overrides), `Wind.js`, `Weather.js`, `WallStreamer.js` (keeps only walls near moving things in the Matter world) |
 | `particles/` | `ParticleHub.js`: pooled emitters, surface effects, rain, ambient life |
 | `learning/`, `minigames/`, `missions/` | Empty in the prototype |
-| `services/` | `quality.js`: active quality tier, persistence, `quality:changed` |
+| `services/` | `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |
 | `data/` | Tuning JSON, `maps/town.json` (ASCII grid, objects in tile coordinates) |
-| `ui/` | `input.js` (intent snapshot), HUD |
+| `ui/` | `input.js` (intent snapshot), HUD, `scaling.js` (integer scaling), `uiKit.js` (UI camera, crisp text) |
 | `scripts/` | `check-*.mjs` and `check-all.mjs`, `bench.js` / `smoke.js` (loaded by `?bench`), `bench-cdp.mjs` (headless runner) |
 | `docs/` | `PERFORMANCE.md`: benchmark results, optimizations, manual phone test |
 

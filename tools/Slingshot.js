@@ -43,7 +43,7 @@ export class Slingshot extends Tool {
 
     this.band = scene.add.graphics().setDepth(9000);
     this.dots = [];
-    for (let i = 0; i < ctx.quality.maxOf('aimDots'); i++) this.dots.push(scene.add.image(0, 0, 'aim-dot').setDepth(8900).setVisible(false));
+    for (let i = 0; i < ctx.quality.maxOf('aimDots'); i++) this.dots.push(scene.add.image(0, 0, 'aim-dot').setScale(ctx.res.inv).setDepth(8900).setVisible(false));
     this.dotsShown = 0;
 
     const self = this;
@@ -60,8 +60,8 @@ export class Slingshot extends Tool {
       body,
       active: false,
       dead: false,
-      sprite: this.scene.add.image(0, 0, 'proj').setVisible(false),
-      shadow: this.scene.add.image(0, 0, 'proj-shadow').setVisible(false),
+      sprite: this.scene.add.image(0, 0, 'proj').setScale(this.ctx.res.inv).setVisible(false),
+      shadow: this.scene.add.image(0, 0, 'proj-shadow').setScale(this.ctx.res.inv).setVisible(false),
       t: 0, life: 0, sx: 0, sy: 0, dx: 0, dy: 0, wx: 0, wy: 0
     };
   }
@@ -226,7 +226,7 @@ export class Slingshot extends Tool {
     const wy = wind.vector.y * c.windAccel;
     for (let i = 0; i < n; i++) {
       const p = flightPoint(this.p0, sx, sy, this.dir.x, this.dir.y, c.speed, wx, wy, (life * (i + 1)) / n);
-      this.dots[i].setPosition(p.x, p.y).setAlpha(1 - 0.6 * (i / n)).setScale(i === n - 1 ? 1.8 : 1).setVisible(true);
+      this.dots[i].setPosition(p.x, p.y).setAlpha(1 - 0.6 * (i / n)).setScale((i === n - 1 ? 1.8 : 1) * this.ctx.res.inv).setVisible(true);
     }
     this.dotsShown = n;
   }

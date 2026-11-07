@@ -11,7 +11,7 @@ export class Bikes {
     this.fx = ctx.player.profiles.bike.fx;
     const ts = ctx.map.tileSize;
     this.parked = ctx.map.objects.filter(o => o.type === 'bike')
-      .map(o => scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, 'bike').setDepth((o.y + 0.5) * ts));
+      .map(o => scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, 'bike').setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts));
     this.mounted = null; // the sprite being ridden (hidden while mounted)
     this.skids = new FadePool(scene, ctx, 'skid', -0.5, 'skidPool');
     this.puffs = new FadePool(scene, ctx, 'puff', 9000, 'smokePool');

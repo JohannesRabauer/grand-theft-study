@@ -3,6 +3,8 @@
 // outside ui/input.js that listens to keys: it only drives menu focus, never gameplay intents.
 //
 // rows: [{ caption?: key, items: [{ label: () => string, on: () => void, selected?: () => boolean }] }]
+import { uiText } from './uiKit.js';
+
 const STYLE = { fontFamily: 'monospace', fontSize: '10px', color: '#ffffff', padding: { x: 5, y: 3 } };
 const COLORS = { idle: '#2b2f3a', selected: '#2f6f4f', focus: '#d9a521' };
 
@@ -17,9 +19,9 @@ export class ButtonMenu {
     this.active = true;
     rows.forEach((r, ri) => {
       r.y = top + ri * step;
-      if (r.caption) r.cap = scene.add.text(0, r.y, '', { ...STYLE, padding: { x: 0, y: 3 }, color: '#bbbbbb' }).setOrigin(0, 0.5);
+      if (r.caption) r.cap = uiText(scene, 0, r.y, '', { ...STYLE, padding: { x: 0, y: 3 }, color: '#bbbbbb' }).setOrigin(0, 0.5);
       r.items.forEach((it, ci) => {
-        it.text = scene.add.text(0, r.y, '', STYLE).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
+        it.text = uiText(scene, 0, r.y, '', STYLE).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
         it.text.on('pointerdown', () => { this.focus(ri, ci); this.activate(); });
         it.text.on('pointerover', () => this.focus(ri, ci));
       });

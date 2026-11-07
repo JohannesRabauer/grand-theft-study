@@ -9,7 +9,7 @@ export class Player {
     this.profiles = profiles;
     const profile = profiles[profileId];
     this.vehicle = profileId;
-    this.sprite = scene.add.image(x, y, profile.texture).setOrigin(0.5, 0.8);
+    this.sprite = scene.add.image(x, y, profile.texture).setOrigin(0.5, 0.8).setScale(ctx.res.inv);
     this.body = addCircle(scene, x, y, profile.radius, 'PLAYER', { frictionAir: 0, friction: 0, inertia: Infinity });
     this.move = new MovementController(scene.matter, this.body, profileId, profile, ctx.surfaces);
     this.lastSurface = null;

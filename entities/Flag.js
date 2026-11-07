@@ -13,11 +13,11 @@ export class Flags {
       const x = (o.x + 0.5) * ts;
       const y = (o.y + 0.5) * ts;
       const top = y - cfg.poleHeight;
-      const objs = [scene.add.image(x, y, 'flag-pole').setOrigin(0.5, 1).setDepth(y)];
+      const objs = [scene.add.image(x, y, 'flag-pole').setOrigin(0.5, 1).setScale(ctx.res.inv).setDepth(y)];
       const segs = [];
       const color = parseInt(o.color.slice(1), 16);
       for (let i = 0; i < cfg.segments; i++) {
-        const s = scene.add.image(x, top, 'flag-seg').setOrigin(0, 0).setTint(i % 2 ? color : color + 0x101010).setDepth(y + 0.1);
+        const s = scene.add.image(x, top, 'flag-seg').setOrigin(0, 0).setScale(ctx.res.inv).setTint(i % 2 ? color : color + 0x101010).setDepth(y + 0.1);
         segs.push(s);
         objs.push(s);
       }

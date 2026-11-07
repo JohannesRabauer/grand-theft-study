@@ -12,7 +12,7 @@ export class Weather {
     this.intensity = 0; // 0..1, eased so rain fades in and out
     this.overlay = scene.add.rectangle(0, 0, 1, 1, parseInt(cfg.overlayColor.slice(1), 16)).setOrigin(0).setDepth(9300).setVisible(false);
     this.wet = [];
-    for (let i = 0; i < cfg.maxWet; i++) this.wet.push(scene.add.image(0, 0, 'tile-puddle').setOrigin(0).setDepth(-0.9).setAlpha(0.85).setVisible(false));
+    for (let i = 0; i < cfg.maxWet; i++) this.wet.push(scene.add.image(0, 0, 'tile-puddle').setOrigin(0).setScale(ctx.res.inv).setDepth(-0.9).setAlpha(0.85).setVisible(false));
     this.tx = new Int16Array(cfg.maxWet);
     this.ty = new Int16Array(cfg.maxWet);
     this.count = 0; // wet tiles in use, oldest first in a ring starting at `head`

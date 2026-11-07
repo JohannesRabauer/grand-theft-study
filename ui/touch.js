@@ -18,6 +18,8 @@ export class TouchControls {
     this.joyKnob = scene.add.graphics().setVisible(false);
     this.joyKnob.fillStyle(0xffffff, 0.6).fillCircle(0, 0, cfg.joystick.knob);
 
+    this.k = 1 / ctx.res.scale; // pointers are in canvas pixels, the layout in 480x270 UI units
+    this.uiW = ctx.res.w;
     this.buttons = cfg.buttons.map(b => ({ ...b, pointer: null, gfx: drawButton(scene, b) }));
     this.group = [this.joyBase, this.joyKnob, ...this.buttons.map(b => b.gfx)];
     this.shown = true;
@@ -27,17 +29,19 @@ export class TouchControls {
   onDown(p) {
     if (!p.wasTouch || this.input.blocked) return;
     const pad = this.cfg.hitPad;
+    const px = p.x * this.k;
+    const py = p.y * this.k;
     for (const b of this.buttons) {
-      if (!b.pointer && Math.hypot(p.x - b.x, p.y - b.y) <= b.r + pad) {
+      if (!b.pointer && Math.hypot(px - b.x, py - b.y) <= b.r + pad) {
         b.pointer = p;
         return;
       }
     }
     const j = this.cfg.joystick;
-    if (!this.joy.pointer && p.x < this.scene.scale.width * j.zone) {
+    if (!this.joy.pointer && px < this.uiW * j.zone) {
       this.joy.pointer = p;
-      this.joy.ox = p.x;
-      this.joy.oy = p.y;
+      this.joy.ox = px;
+      this.joy.oy = py;
     }
   }
 
@@ -55,8 +59,8 @@ export class TouchControls {
     const r = this.cfg.joystick.radius;
     if (j.pointer && !j.pointer.isDown) j.pointer = null;
     if (j.pointer) {
-      const dx = j.pointer.x - j.ox;
-      const dy = j.pointer.y - j.oy;
+      const dx = j.pointer.x * this.k - j.ox;
+      const dy = j.pointer.y * this.k - j.oy;
       const m = Math.min(Math.hypot(dx, dy), r);
       const a = Math.atan2(dy, dx);
       s.move.x = (Math.cos(a) * m) / r;
@@ -81,8 +85,8 @@ export class TouchControls {
 
   // Drag away from the tool button to aim in that direction.
   dragAim(b) {
-    const dx = b.pointer.x - b.x;
-    const dy = b.pointer.y - b.y;
+    const dx = b.pointer.x * this.k - b.x;
+    const dy = b.pointer.y * this.k - b.y;
     const m = Math.hypot(dx, dy);
     if (m < this.cfg.aimDragMin) return;
     this.state.aiming = true;

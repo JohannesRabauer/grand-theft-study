@@ -1,5 +1,7 @@
-// Integer pixel scaling (AD-14): the 480x270 canvas is shown at floor(min(w/480, h/270)) times
-// its size, centred and letterboxed by the page CSS. Only a window smaller than the base
+// Integer pixel scaling (AD-14): the render canvas (960x540 on Medium/High, 480x270 on Low) is
+// shown at floor(min(w/baseW, h/baseH)) times its size, centred and letterboxed by the page CSS.
+// The fit is computed in device pixels (innerWidth * devicePixelRatio), so a phone with a 3x
+// screen still gets whole screen pixels per game pixel. Only a window smaller than the base
 // resolution falls back to a fractional fit.
 export function integerScale(w, h, baseW, baseH) {
   const fit = Math.min(w / baseW, h / baseH);
@@ -8,10 +10,11 @@ export function integerScale(w, h, baseW, baseH) {
 
 export function installScaling(game, baseW, baseH) {
   const apply = () => {
-    const s = integerScale(window.innerWidth, window.innerHeight, baseW, baseH);
+    const dpr = window.devicePixelRatio || 1;
+    const s = integerScale(window.innerWidth * dpr, window.innerHeight * dpr, baseW, baseH);
     const style = game.canvas.style;
-    style.width = `${baseW * s}px`;
-    style.height = `${baseH * s}px`;
+    style.width = `${(baseW * s) / dpr}px`;
+    style.height = `${(baseH * s) / dpr}px`;
     game.scale.refresh(); // re-read canvas bounds so pointer coordinates stay correct
   };
   game.events.once('ready', apply);

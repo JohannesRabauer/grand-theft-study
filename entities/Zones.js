@@ -49,7 +49,7 @@ export class Zones {
     for (const z of this.zones) {
       const color = COLORS[z.o.type];
       g.lineStyle(1, color, 1).strokeRect(z.x0 + 0.5, z.y0 + 0.5, z.x1 - z.x0 - 1, z.y1 - z.y0 - 1);
-      scene.add.text(z.x0 + 2, z.y0 + 1, z.o.kind ?? z.o.id, { fontFamily: 'monospace', fontSize: '6px', color: '#' + color.toString(16).padStart(6, '0') })
+      scene.add.text(z.x0 + 2, z.y0 + 1, z.o.kind ?? z.o.id, { fontFamily: 'monospace', fontSize: '6px', color: '#' + color.toString(16).padStart(6, '0'), resolution: this.ctx.res.scale })
         .setDepth(9500);
     }
   }

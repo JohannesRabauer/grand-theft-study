@@ -48,5 +48,6 @@
   "caught.continue.gamepad": "A or Y: continue",
   "hud.tool": "{name}: {n}/{max}",
   "tool.slingshot": "Slingshot",
-  "hud.wind": "Wind {n}%"
+  "hud.wind": "Wind {n}%",
+  "quality.restart": "Restart needed …"
 }

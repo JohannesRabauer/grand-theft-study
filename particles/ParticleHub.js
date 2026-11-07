@@ -12,7 +12,10 @@ export class ParticleHub {
     this.cfg = cfg;
     this.emitters = {};
     for (const [name, e] of Object.entries(cfg.emitters)) {
-      const emitter = scene.add.particles(0, 0, e.texture, { ...e.config, emitting: false }).setDepth(e.depth);
+      // configs are written for 1x textures: scale them by the texture's display scale (AD-14)
+      const sc = e.config.scale;
+      const scale = sc ? { start: sc.start * ctx.res.inv, end: sc.end * ctx.res.inv } : ctx.res.inv;
+      const emitter = scene.add.particles(0, 0, e.texture, { ...e.config, scale, emitting: false }).setDepth(e.depth);
       this.emitters[name] = { emitter, cfg: e, gravityY: e.config.gravityY ?? 0, tint: null };
     }
     this.list = Object.values(this.emitters);

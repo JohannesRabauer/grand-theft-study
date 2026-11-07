@@ -11,6 +11,7 @@ export class Pools {
 export class FadePool {
   constructor(scene, ctx, key, depth, capKey) {
     this.capKey = capKey;
+    this.inv = ctx.res.inv; // display scale of the texture (AD-14)
     const max = ctx.quality.maxOf(capKey);
     this.cap = ctx.quality.tier[capKey];
     this.next = 0;
@@ -42,7 +43,7 @@ export class FadePool {
     this.next = (i + 1) % this.cap; // oldest entry is recycled when full
     this.age[i] = 0; this.life[i] = life; this.a0[i] = a0;
     this.s0[i] = s0; this.s1[i] = s1; this.rise[i] = rise;
-    this.sprites[i].setPosition(x, y).setRotation(rot).setScale(s0).setAlpha(a0).setVisible(true);
+    this.sprites[i].setPosition(x, y).setRotation(rot).setScale(s0 * this.inv).setAlpha(a0).setVisible(true);
   }
 
   update(dt) {
@@ -51,7 +52,7 @@ export class FadePool {
       const t = (this.age[i] += dt) / this.life[i];
       const s = this.sprites[i];
       if (t >= 1) { s.setVisible(false); this.life[i] = 0; continue; }
-      s.setAlpha(this.a0[i] * (1 - t)).setScale(this.s0[i] + (this.s1[i] - this.s0[i]) * t);
+      s.setAlpha(this.a0[i] * (1 - t)).setScale((this.s0[i] + (this.s1[i] - this.s0[i]) * t) * this.inv);
       if (this.rise[i]) s.y -= this.rise[i] * dt;
     }
   }

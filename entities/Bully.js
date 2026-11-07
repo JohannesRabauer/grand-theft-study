@@ -12,7 +12,7 @@ export class Bully {
     this.profiles = chase.profiles;
     this.cfg = chase.cfg.bully;
     const profile = this.profiles[profileId];
-    this.sprite = scene.add.image(0, 0, profile.texture).setVisible(false);
+    this.sprite = scene.add.image(0, 0, profile.texture).setScale(ctx.res.inv).setVisible(false);
     this.body = addCircle(scene, 0, 0, profile.radius, 'BULLY', { frictionAir: 0, friction: 0, inertia: Infinity });
     scene.matter.world.remove(this.body);
     this.move = new MovementController(scene.matter, this.body, profileId, profile, ctx.surfaces);

@@ -3,6 +3,7 @@ import { ObjectiveArrow } from '../ui/ObjectiveArrow.js';
 import { ButtonMenu } from '../ui/ButtonMenu.js';
 import { settingsRows } from '../ui/settingsRows.js';
 import { CaughtFrame } from '../ui/CaughtFrame.js';
+import { uiText, setupUiCamera, bindRestartNote } from '../ui/uiKit.js';
 
 // Overlay HUD, touch controls and rotate hint. Reads only; never mutates the world (AD-13).
 export class UIScene extends Phaser.Scene {
@@ -10,7 +11,8 @@ export class UIScene extends Phaser.Scene {
 
   create(data) {
     this.ctx = data.ctx;
-    this.fps = this.add.text(4, 2, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffff66' });
+    setupUiCamera(this, this.ctx.res);
+    this.fps = uiText(this, 4, 2, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffff66' });
     this.nextFps = 0;
     this.lastFps = -1;
     this.makeStatus();
@@ -22,8 +24,9 @@ export class UIScene extends Phaser.Scene {
     this.touch = new TouchControls(this, this.ctx, this.cache.json.get('input'));
     this.hint = this.makeRotateHint();
     this.makePause();
+    bindRestartNote(this, this.ctx.events, this.ctx.t, this.ctx.res);
     if (window.SCHULWEG_DEBUG) this.windArrow = this.add.graphics();
-    if (window.SCHULWEG_DEBUG) this.debug = this.add.text(4, 62, '', { fontFamily: 'monospace', fontSize: '8px', color: '#9fe0ff' });
+    if (window.SCHULWEG_DEBUG) this.debug = uiText(this, 4, 62, '', { fontFamily: 'monospace', fontSize: '8px', color: '#9fe0ff' });
     this.nextDebug = 0;
     this.windKey = -1;
     const ev = this.ctx.events;
@@ -66,9 +69,9 @@ export class UIScene extends Phaser.Scene {
 
   makePause() {
     const { ctx } = this;
-    const { width, height } = this.scale;
+    const { w: width, h: height } = this.ctx.res;
     const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0).setDepth(20).setInteractive(); // swallows clicks
-    this.pauseTitle = this.add.text(width / 2, 60, ctx.t('pause.title'), { fontFamily: 'monospace', fontSize: '20px', color: '#ffe14d', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(21);
+    this.pauseTitle = uiText(this, width / 2, 60, ctx.t('pause.title'), { fontFamily: 'monospace', fontSize: '20px', color: '#ffe14d', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(21);
     const rows = [
       { items: [{ label: () => ctx.t('pause.resume'), on: () => this.togglePause() }] },
       ...settingsRows(ctx),
@@ -85,15 +88,15 @@ export class UIScene extends Phaser.Scene {
   makeStatus() {
     const { ctx } = this;
     const style = { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff' };
-    this.stamina = this.add.text(4, 14, ctx.t('hud.stamina'), style);
+    this.stamina = uiText(this, 4, 14, ctx.t('hud.stamina'), style);
     this.bar = this.add.graphics();
-    this.label = this.add.text(4, 30, '', style);
+    this.label = uiText(this, 4, 30, '', style);
     const onStamina = (v) => {
       const g = this.bar.clear();
       g.fillStyle(0x000000, 0.6).fillRect(46, 15, 42, 6);
       g.fillStyle(v > 0.25 ? 0x62d26f : 0xe0483c).fillRect(47, 16, Math.round(40 * v), 4);
     };
-    this.vehicle = this.add.text(4, 40, '', style);
+    this.vehicle = uiText(this, 4, 40, '', style);
     this.showVehicle = (id) => this.vehicle.setText(ctx.t('hud.vehicle', { name: ctx.t(`vehicle.${id}`) }));
     this.showSurface = (id) => this.label.setText(ctx.t('hud.surface', { name: ctx.t(`surface.${id}`) }));
     const onVehicle = this.showVehicle;
@@ -114,13 +117,13 @@ export class UIScene extends Phaser.Scene {
   // Ärger meter (two bars, grey -> orange -> red) and a "spotted" flag, from chase events (read-only).
   makeAnger() {
     const { ctx } = this;
-    const { width } = this.scale;
+    const { w: width } = this.ctx.res;
     const style = { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff' };
-    this.angerLabel = this.add.text(width - 4, 2, ctx.t('hud.anger'), style).setOrigin(1, 0);
+    this.angerLabel = uiText(this, width - 4, 2, ctx.t('hud.anger'), style).setOrigin(1, 0);
     this.angerBars = this.add.graphics();
-    this.spotted = this.add.text(width - 4, 22, ctx.t('hud.spotted'), { ...style, color: '#ff5a4d', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 0).setVisible(false);
+    this.spotted = uiText(this, width - 4, 22, ctx.t('hud.spotted'), { ...style, color: '#ff5a4d', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 0).setVisible(false);
     // hide indicator + cooldown bar (until the Ärger level drops), same spot as "spotted"
-    this.hidden = this.add.text(width - 4, 22, ctx.t('hud.hidden'), { ...style, color: '#7dff8a', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 0).setVisible(false);
+    this.hidden = uiText(this, width - 4, 22, ctx.t('hud.hidden'), { ...style, color: '#7dff8a', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 0).setVisible(false);
     this.hideBar = this.add.graphics();
     this.hideShown = false;
     this.hideFill = -1;
@@ -145,7 +148,7 @@ export class UIScene extends Phaser.Scene {
   // "€ 5,00" in the HUD; changes come from `money:changed` (read-only).
   makeMoney() {
     const { ctx } = this;
-    this.money = this.add.text(4, 50, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d' });
+    this.money = uiText(this, 4, 50, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d' });
     this.showMoney = () => this.money.setText(ctx.t('hud.money', { v: this.formatMoney(ctx.state.money) }));
     ctx.events.on('money:changed', this.showMoney);
     this.events.once('shutdown', () => ctx.events.off('money:changed', this.showMoney));
@@ -155,10 +158,10 @@ export class UIScene extends Phaser.Scene {
   // Current tool and ammo (bottom centre); a wind arrow with strength appears above it while charging.
   makeTool() {
     const { ctx } = this;
-    const { width, height } = this.scale;
+    const { w: width, h: height } = this.ctx.res;
     const style = { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff', stroke: '#000000', strokeThickness: 2 };
-    this.tool = this.add.text(width / 2, height - 3, '', style).setOrigin(0.5, 1);
-    this.windText = this.add.text(width / 2 + 14, height - 17, '', { ...style, color: '#9fe0ff' }).setOrigin(0, 1).setVisible(false);
+    this.tool = uiText(this, width / 2, height - 3, '', style).setOrigin(0.5, 1);
+    this.windText = uiText(this, width / 2 + 14, height - 17, '', { ...style, color: '#9fe0ff' }).setOrigin(0, 1).setVisible(false);
     this.windGfx = this.add.graphics().setVisible(false);
     this.showTool = () => {
       const t = ctx.toolbelt.current;
@@ -188,7 +191,7 @@ export class UIScene extends Phaser.Scene {
     const key = Math.round(Math.atan2(v.y, v.x) * 20) * 1000 + Math.round(ctx.wind.strength * 50);
     if (key === this.windKey) return;
     this.windKey = key;
-    const { width, height } = this.scale;
+    const { w: width, h: height } = this.ctx.res;
     const cx = width / 2 - 14;
     const cy = height - 22;
     const a = Math.atan2(v.y, v.x);
@@ -224,7 +227,7 @@ export class UIScene extends Phaser.Scene {
     this.hideFill = fill;
     const g = this.hideBar.clear();
     if (fill < 0) return;
-    const { width } = this.scale;
+    const { w: width } = this.ctx.res;
     g.fillStyle(0x000000, 0.6).fillRect(width - 52, 33, 48, 6);
     g.fillStyle(0x7dff8a).fillRect(width - 51, 34, fill, 4);
   }
@@ -264,7 +267,9 @@ export class UIScene extends Phaser.Scene {
   // ?debug: active tier plus live/cap of every registered pool.
   showDebug() {
     const { quality, pools, wind, weather, chase } = this.ctx;
+    const { res } = this.ctx;
     let s = `quality: ${quality.id}
+render: ${res.renderW}x${res.renderH}  textures: x${res.scale}  zoom: ${this.scene.get('Game').cameras.main.zoom.toFixed(2)}
 chase: level ${chase.level}  seen: ${chase.seen}
 weather: ${weather.state}  wind: ${wind.vector.x.toFixed(2)}, ${wind.vector.y.toFixed(2)}`;
     for (const [name, p] of pools.byName) s += `
@@ -277,7 +282,7 @@ ${name}: ${p.live()}/${p.cap}`;
     const v = this.ctx.wind.vector;
     const g = this.windArrow.clear().lineStyle(2, 0x9fe0ff, 1);
     const cx = 30;
-    const cy = this.scale.height - 30;
+    const cy = this.ctx.res.h - 30;
     const ex = cx + v.x * 24;
     const ey = cy + v.y * 24;
     g.strokeCircle(cx, cy, 2).lineBetween(cx, cy, ex, ey);

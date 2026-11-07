@@ -13,7 +13,7 @@ below the budget.** The remaining risk is rendering on the phone GPU, which was 
 `index.html?bench` loads `scripts/bench.js` (see the README for the flag list). The game loop is put to sleep and
 `game.scene.update` is called by hand 1200 times at a fixed 60 Hz delta (120 untimed warm-up steps first). That runs every
 scene's update, the Matter step, particles and tweens, but no drawing. Intents are written into `ctx.input.intent`
-and the real gameplay code does the rest. Tiers are switched through `ctx.quality.set`.
+and the real gameplay code does the rest. Tiers are switched through `ctx.quality.set`. Inside `?bench` a tier switch changes the caps only and never reloads the page, so the render size stays that of the tier the page was loaded with (use `?q=low` to measure Low at 480x270).
 
 | Scenario | What runs |
 | --- | --- |
@@ -74,6 +74,46 @@ dropped below it, p95 frame 18.6 ms). Uncapped (`--disable-frame-rate-limit`), t
 the draw calls) took 0.34 to 0.61 ms after the changes (before: 0.44 to 1.17 ms), i.e. 1600 to 2900 frames per second possible.
 GPU fill and rasterization are not part of that number (software GL in headless mode).
 
+## Story 1.12: 960x540 rendering (4x the pixels)
+
+Medium and High now render at 960x540 (Low stays at 480x270). World units, physics and all tuning data are unchanged: the
+world camera runs at base zoom 2, textures are drawn on a 2x grid and shown at scale 0.5, the UI keeps its 480x270 layout
+on a zoom-2 camera. The static ground is one 3072x2048 RenderTexture (25 MB; under the 4096 limit of every WebGL device).
+The speed zoom (0.6 to 1.0) still multiplies the base zoom; one camera follow (`GameScene.followCamera`) replaces
+Phaser's `startFollow` so the view snaps to whole screen pixels instead of whole world pixels (which would be 2-pixel jumps).
+
+Update cost (logic + physics, no drawing; headless Edge, 1200 steps, quiet machine, ms avg per update; before = story 1.11 build):
+
+| Scenario | Tier | Before | After |
+| --- | --- | --- | --- |
+| a idle walking | Medium | 0.054 | 0.038 |
+| b bike top speed | Medium | 0.070 | 0.053 |
+| c level-2 chase | Medium | 0.086 | 0.066 |
+| d rain+wind+props+sling | Medium | 0.169 | 0.144 |
+| **e everything** | **Medium** | **0.157** | **0.177** |
+| e everything | Low / High | 0.177 / 0.340 | 0.136 / 0.178 |
+
+No regression (differences are inside the +-50% noise of the 0.1 ms timer). Note: a first "after" run taken while leftover headless
+Edge processes were still running showed 0.5 ms for Medium e; always check for stray browsers before measuring.
+
+Real render loop in headless Edge (software GL, so the fill cost of the 4x pixels is part of the number but a real GPU is not):
+
+| Measure | Medium before (480x270) | Medium after (960x540) |
+| --- | --- | --- |
+| vsync-capped FPS, all scenarios | 56 (headless compositor rate) | 60, p95 frame 19 to 21 ms |
+| uncapped frames per second, a idle / c chase / e everything | 4136 / 3092 / 2391 | 2337 / 2680 / 1639 |
+| uncapped CPU time per frame (e) | 0.42 ms | 0.61 ms |
+
+So a whole frame costs about 45% more CPU time to build (more draw calls for the finer textures and 2x text canvases, not more
+logic); nothing near the 16.7 ms budget on the desktop. GPU fill rate on a phone for 4x the pixels is **not measured**; if the phone
+protocol (below) shows a problem, Low is the fallback and `q=low` boots at 480x270.
+
+Observations for story 1.13 (smooth zoom): Phaser's WebGL renderer only rounds sprite vertices to whole pixels when the camera zoom
+is an integer (`renderRoundPixels`), so at the eased, non-integer zooms between 1.2 and 2.0 sprites sit at sub-pixel positions with
+nearest-neighbour sampling, and the tile layer is a texture scaled by a non-integer factor. That is the existing behaviour (it was
+the same at zoom 0.6 to 1.0), not made worse here; at the base zoom 2 everything is pixel aligned. Camera scroll is quantized to
+screen pixels at every zoom.
+
 ## What was optimized
 
 Profiling (`--cpu`) showed two thirds of the update time inside Matter, not in game code:
@@ -97,7 +137,7 @@ Caps in `data/quality.json` were left as they are (Medium is exactly the AD-14 b
 ## Render-side review (code review, no GPU profiler)
 
 - Static ground is drawn once into one RenderTexture (`GameScene.renderGrid`). OK.
-- `pixelArt: true`, `roundPixels: true` (read by Phaser 3.90 from the top level of the config), integer scaling, `image-rendering: pixelated`. OK.
+- `pixelArt: true`, `roundPixels: true` (read by Phaser 3.90 from the top level of the config), integer scaling in device pixels, `image-rendering: pixelated`. OK.
 - Graphics objects are redrawn per frame only while charging the slingshot (rubber band, needed) and in `?debug`. The HUD graphics now follow value changes.
 - Text objects are updated on events or value changes (distance text in 5 m steps, ammo, money, language). OK after the fixes above.
 - No shadows or filters anywhere except the pebble's blob shadow, which is off when the tier has `shadows: false` (Low). No FX pipelines are used.
