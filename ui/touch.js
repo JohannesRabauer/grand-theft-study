@@ -23,6 +23,7 @@ export class TouchControls {
     this.buttons = cfg.buttons.map(b => ({ ...b, pointer: null, gfx: drawButton(scene, b) }));
     this.group = [this.joyBase, this.joyKnob, ...this.buttons.map(b => b.gfx)];
     this.shown = true;
+    this.suspended = false;
     this.onPointerDown = p => this.onDown(p);
     scene.input.on('pointerdown', this.onPointerDown);
   }
@@ -33,7 +34,7 @@ export class TouchControls {
   }
 
   onDown(p) {
-    if (!p.wasTouch || this.input.blocked) return;
+    if (!p.wasTouch || this.input.blocked || this.suspended) return;
     const pad = this.cfg.hitPad;
     const px = p.x * this.k;
     const py = p.y * this.k;
@@ -51,7 +52,18 @@ export class TouchControls {
     }
   }
 
+  // Hides and releases everything until resumed (a minigame covers the controls).
+  setSuspended(on) {
+    this.suspended = on;
+    if (on) {
+      this.releaseAll();
+      for (const g of this.group) g.setVisible(false);
+    }
+    this.shown = on ? false : null; // the next update() decides again
+  }
+
   update() {
+    if (this.suspended) return;
     const visible = this.input.type === 'touch' && !this.input.blocked;
     if (visible !== this.shown) {
       this.shown = visible;

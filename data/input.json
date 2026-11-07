@@ -59,6 +59,18 @@
         ],
         "pause": [
           "Escape"
+        ],
+        "answer1": [
+          "Digit1"
+        ],
+        "answer2": [
+          "Digit2"
+        ],
+        "answer3": [
+          "Digit3"
+        ],
+        "answer4": [
+          "Digit4"
         ]
       }
     },
@@ -99,7 +111,19 @@
         ],
         "map": [],
         "weather": [],
-        "pause": []
+        "pause": [],
+        "answer1": [
+          "Numpad1"
+        ],
+        "answer2": [
+          "Numpad2"
+        ],
+        "answer3": [
+          "Numpad3"
+        ],
+        "answer4": [
+          "Numpad4"
+        ]
       }
     }
   ],

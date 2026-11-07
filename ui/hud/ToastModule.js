@@ -21,6 +21,8 @@ export class ToastModule extends HudModule {
     });
   }
 
+  get updatesWhileDucked() { return true; }
+
   retext() {
     if (this.req) this.text.setText(this.ctx.t(this.req.key, this.req.params));
   }

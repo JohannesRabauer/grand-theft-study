@@ -24,6 +24,7 @@ import { CrowdDirector } from '../ai/CrowdDirector.js';
 import { Characters } from '../characters/Characters.js';
 import { LearningEngine } from '../learning/LearningEngine.js';
 import { Grades } from '../grading/Grades.js';
+import { Minigames } from '../minigames/Minigames.js';
 
 const STEP_MS = 1000 / 60; // Matter's fixed timestep (AD-14); MovementController assumes it too
 const STEP_SLACK = 0.95; // a frame that arrives a hair early (vsync jitter) still gets its step
@@ -66,6 +67,7 @@ export class GameScene extends Phaser.Scene {
     if (window.SCHULWEG_GAME) window.SCHULWEG_GAME.learning = ctx.learning;
     ctx.grades = new Grades(ctx, { grading: cache.get('grading'), kopfnoten: cache.get('kopfnoten'), comments: cache.get('teacher-comments'), parents: cache.get('parent-reactions') }, { de: cache.get('de'), en: cache.get('en') }); // AD-20 / CAP-8
     if (window.SCHULWEG_GAME) window.SCHULWEG_GAME.grades = ctx.grades;
+    ctx.minigames = new Minigames(this, ctx, cache.get('minigames')); // AD-20
     this.ctx = ctx;
 
     new World(this, ctx, index, maps).start(index.start); // AD-28: ground, walls and ctx.map of the first map
@@ -131,6 +133,7 @@ export class GameScene extends Phaser.Scene {
     ctx.day.start();
     if (window.SCHULWEG_GAME) { // ?debug and ?bench
       window.SCHULWEG_GAME.addPlayer = () => this.addDebugPlayer();
+      window.SCHULWEG_GAME.startMinigame = (id, opts) => ctx.minigames.start(id, opts); // resolves with the result (AD-20)
       window.SCHULWEG_GAME.setCoop = (on) => { state.dispatch('coop.set', { on }); this.scene.restart(); }; // restarts the run with or without the second player
     }
     this.scene.launch('UI', { ctx });

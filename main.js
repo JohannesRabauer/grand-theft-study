@@ -2,6 +2,7 @@ import { BootScene } from './scenes/BootScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { GameScene } from './scenes/GameScene.js';
 import { UIScene } from './scenes/UIScene.js';
+import { MINIGAME_CLASSES } from './minigames/index.js';
 import { installScaling } from './ui/scaling.js';
 import { resolveRes } from './services/quality.js';
 
@@ -33,7 +34,8 @@ const game = new Phaser.Game({
       debug: window.SCHULWEG_DEBUG ? { renderFill: false, renderLine: true } : false
     }
   },
-  scene: [BootScene, MenuScene, GameScene, UIScene],
+  // minigame scenes (AD-20) are registered once and only started on demand; UI stays last so it draws above them
+  scene: [BootScene, MenuScene, GameScene, ...Object.values(MINIGAME_CLASSES), UIScene],
   callbacks: { preBoot: g => { g.registry.set('res', res); g.registry.set('mapIndex', mapIndex); } }
 });
 installScaling(game, res.renderW, res.renderH);

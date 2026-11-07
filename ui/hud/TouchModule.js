@@ -10,6 +10,9 @@ export class TouchModule extends HudModule {
 
   update() { this.touch.update(); }
 
+  // The joystick and buttons stand down during a minigame (its own buttons take the taps).
+  setDucked(on) { this.touch.setSuspended(on); }
+
   destroy() {
     this.touch.destroy();
     super.destroy();

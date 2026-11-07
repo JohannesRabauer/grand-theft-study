@@ -33,6 +33,21 @@ export class ParticleHub {
     ctx.world.register(this);
   }
 
+  // A pooled emitter of the registry entry `name` living in another scene (the minigame scene draws its own sparkle).
+  // It follows the tier like the hub's own emitters: burst sizes by `particleMul`, alive cap by `maxParticles` x `share`.
+  createFor(scene, name, share = this.cfg.emitters[name].share) {
+    const e = this.cfg.emitters[name];
+    const sc = e.config.scale;
+    const scale = sc ? { start: sc.start * this.ctx.res.inv, end: sc.end * this.ctx.res.inv } : this.ctx.res.inv;
+    const emitter = scene.add.particles(0, 0, e.texture, { ...e.config, scale, emitting: false }).setDepth(e.depth);
+    const tier = () => this.ctx.quality.tier;
+    const fit = () => { emitter.maxAliveParticles = Math.floor(tier().maxParticles * share); };
+    fit();
+    this.ctx.events.on('quality:changed', fit);
+    scene.events.once('shutdown', () => this.ctx.events.off('quality:changed', fit));
+    return { emitter, burst: (x, y, count = e.count) => emitter.emitParticleAt(x, y, Math.max(1, Math.round(count * tier().particleMul))) };
+  }
+
   // Ambient emitter spots and water tiles of the current map.
   readMap() {
     const { ctx } = this;

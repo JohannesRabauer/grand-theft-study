@@ -19,6 +19,18 @@ export class UIScene extends Phaser.Scene {
     this.hudList = [...this.hud.values()];
     this.screens = new ScreenStack(cache.get('screens'), (on) => events.emit(on ? 'game:pause' : 'game:resume'));
     ctx.screens = this.screens;
+    this.ducked = false;
+    ctx.duckHud = (on) => { // AD-20: a minigame covers the HUD
+      this.ducked = on;
+      for (const m of this.hudList) m.setDucked(on);
+      if (on) { // hide whatever the HUD is showing and remember exactly that
+        this.duckedObjects = this.children.list.filter(o => o.visible);
+        for (const o of this.duckedObjects) o.setVisible(false);
+      } else {
+        for (const o of this.duckedObjects ?? []) if (o.scene) o.setVisible(true);
+        this.duckedObjects = null;
+      }
+    };
 
     // every visible text re-resolves when the language changes
     const onLang = () => {
@@ -35,6 +47,7 @@ export class UIScene extends Phaser.Scene {
       this.screens.clear();
       for (const m of this.hudList) m.destroy();
       delete ctx.screens;
+      delete ctx.duckHud;
     });
   }
 
@@ -42,13 +55,13 @@ export class UIScene extends Phaser.Scene {
     const { screens } = this;
     const top = screens.top();
     if (top?.id === 'pause') top.close();
-    else if (!top) screens.push(new PauseScreen(this, this.ctx, screens));
+    else if (!top || top.id === 'minigame') screens.push(new PauseScreen(this, this.ctx, screens));
   }
 
   update(time) {
     // Edge intents last one frame; the open screen consumes them, otherwise Esc / the touch button opens the pause screen.
     const intent = this.ctx.input.intent;
     if (!this.screens.route(intent) && intent.pause) this.togglePause();
-    for (const m of this.hudList) m.update(time);
+    for (const m of this.hudList) if (!this.ducked || m.updatesWhileDucked) m.update(time);
   }
 }

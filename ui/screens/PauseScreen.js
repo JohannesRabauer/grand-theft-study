@@ -23,6 +23,7 @@ export class PauseScreen {
     const rows = [
       { items: [{ label: () => ctx.t('pause.resume'), on: () => this.close() }] },
       ...settingsRows(ctx),
+      ...(ctx.minigames?.active ? [{ items: [{ label: () => ctx.t('minigame.quit'), on: () => ctx.minigames.quit() }] }] : []),
       { items: [{ label: () => ctx.t('pause.menu'), on: () => ctx.events.emit('game:quit') }] }
     ];
     this.menu = new ButtonMenu(scene, ctx.t, rows, width / 2, 108, 28);

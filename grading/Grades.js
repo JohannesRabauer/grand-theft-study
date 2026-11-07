@@ -24,12 +24,17 @@ export class Grades {
 
   #ledger(player) { return this.ctx.state.players[player]?.grades; }
 
+  // The grade a result would get, without writing it (minigame result screens, previews). Same arguments as grade().
+  preview(player, subject, { score, effort = 0, difficulty = 3 }) {
+    const improvement = improvementFor(this.#ledger(player), subject, score);
+    return { ...gradeDetail(score, { effort, improvement, difficulty }, this.cfg), score };
+  }
+
   // Grades a result and writes it to the ledger. score 0-1; effort 0-1 (share of questions tried, hints count);
   // difficulty 1-5. Returns { grade, base, bonus, why, score } or null when the ledger rejects it. Emits grades:recorded.
   grade(player, subject, { score, effort = 0, difficulty = 3, lessonId }) {
-    const improvement = improvementFor(this.#ledger(player), subject, score);
-    const detail = gradeDetail(score, { effort, improvement, difficulty }, this.cfg);
-    return this.record(player, { subject, score, grade: detail.grade, lessonId }) ? { ...detail, score } : null;
+    const detail = this.preview(player, subject, { score, effort, difficulty });
+    return this.record(player, { subject, score, grade: detail.grade, lessonId }) ? detail : null;
   }
 
   // The raw ledger write (grades.record). Without a day the current game day is used.

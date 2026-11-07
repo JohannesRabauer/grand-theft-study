@@ -54,6 +54,7 @@ Every player has an intent snapshot, `ctx.input.intents[i]`; all devices produce
 | Previous / next tool | Q / E | `,` / `.` |
 | Tool use / aim | left click at the cursor | Numpad0, aims the way P2 last moved (or with a gamepad right stick) |
 | Map, weather, pause | M, T, Esc / Start | - (global intents come from P1 only) |
+| Minigame answer 1-4 (also `intent.answer`) | `1`-`4` (top row) | `Numpad1`-`Numpad4` |
 
 Gamepads bind to the next free player: with one player the first pad is P1; with two players the first pad drives P2 and the second drives P1. Touch controls always drive P1.
 
@@ -97,6 +98,7 @@ node scripts/check-crowd.mjs      # crowd spawn rules, caps, reaction geometry
 node scripts/check-state.mjs      # state store, actions, save slots, migrations
 node scripts/check-learning.mjs   # learning engine: simulated learners, adaptivity, repetition, persistence
 node scripts/check-grades.mjs     # grades: boundaries, bonus, averages, promotion rule, Kopfnoten, teacher comments
+node scripts/check-minigames.mjs  # minigame framework: registry data, round clock, scores, rewards, result aggregation, answer cursor, layout
 node scripts/check-day.mjs        # day clock: phases, events, autosave, restore, weather schedule, tint
 node scripts/check-ui.mjs         # screen stack (top-only input, counted world freeze), HUD module list
 node scripts/check-players.mjs    # players array helpers; fails on any remaining use of the deprecated ctx.player
@@ -232,6 +234,16 @@ Learning content schema beyond `choice` and `typed` (all validated by `scripts/c
 - Kopfnoten (`data/kopfnoten.json`): verhalten, mitarbeit, ordnung, hilfsbereitschaft, values 1-4 (4 is best, stored fractionally, start 3, clamped). The event table moves them through the `kopfnoten.add` action (for example `traffic:red-light` with adults nearby lowers Verhalten, `homework:forgotten` lowers Ordnung, `lesson:done` with effort raises Mitarbeit, `npc:helped` raises Hilfsbereitschaft); events nobody emits yet simply never fire. The data file is merged into the state config at boot.
 - Texts: `data/teacher-comments.json` (39 warm, funny comments, chosen by subject strengths and weaknesses, improvement, conduct and the overall band; the pick is deterministic per ledger) and `data/parent-reactions.json` (12 promoted and 12 repeat lines) only hold i18n keys (`teacher.comment.*`, `parent.*`), so the content lint covers them. `teacherComment(grades, kopfnoten, lang)` returns the text.
 
+## Minigames
+
+`ctx.minigames` (`minigames/Minigames.js`, Phaser-free logic in `minigames/minigameCore.js`, registry and tuning in `data/minigames.json`) is the one way to run a minigame (AD-20). `start(id, { players: [0], difficulty, context, lessonId, topic })` returns a Promise that resolves with `{ id, subject, quit, difficulty, score 0-1, effort 0-1, correct, total, hintsUsed, xp, moneyCents, grade 1-6, ms, stats, perPlayer[] }` after the player left the result screen and the world is back. With `?debug`, `SCHULWEG_GAME.startMinigame('quiz-demo', { players: [0, 1] })` does the same from the console (`await` it, or `.then(console.log)`).
+
+- Registry entry: `{ id, subject, scene: "MG_<id>", durationSeconds (30-90), rewards { xp, moneyCents }, topics, maxPlayers (1 or 2), difficultyRange, expectedQuestions, debug? }`. A new minigame adds an entry there, its scene class to `minigames/index.js`, and the title key `minigame.<id>.title`. `debug` entries (the two demos) are only listed in `?debug` sessions.
+- A minigame is a Phaser scene extending `minigames/Minigame.js`. The base owns the 480x270 layout space (crisp text like UIScene), the visible 3-2-1 countdown, the shared timer bar, the pause button, one playing area per player (the whole screen for one player, two halves side by side for two) and one answer cursor and tally per player. The subclass implements `buildGame(slots)`, `onStart()`, `updateGame(dtMs)` and optionally `navigate(slot, nav)`, answers through `record(slot, question, ok, ms, hints)` (feeds `ctx.learning.answer` and the tally) and ends with `finish()`. Input comes only from `ctx.input.intents[player]`: arrows/WASD or the stick to move the focus, Space/F/Enter/pad A to confirm, number keys 1-4 (P1: the top row, P2: the numpad) to pick an answer directly, plus click or tap on a button. `QuizDemo.js` is the template for the real minigames.
+- Flow: `start` pushes a `minigame` screen (freezes the world through the counted screen stack, so pause and the result screen nest on it), ducks the HUD (`ctx.duckHud`, touch controls stand down) and starts the scene (registered in `main.js`, stopped again afterwards) above the game. Esc or the on-screen pause button opens the normal pause screen, which gains an "End minigame" row; time stands still while it is open. Ending early counts as low effort (effort capped, no rewards, no result screen, a friendly toast). Otherwise `finish()` builds the result: per player score (correct against at least `expectedQuestions`), effort (share tried), the grade from `ctx.grades.preview` (the only score-to-grade mapper; the framework does not record grades, the day flow does through `ctx.grades.grade`), then `xp.add` per player, `wallet.earn` once and the event `minigame:done { id, result, players }`. Rewards scale from `minRewardShare` up to the full amount with the score.
+- Result screen (`ui/screens/MinigameResultScreen.js`, screen id `minigameResult`): 0-3 procedural stars, the German grade with a kind headline, a funny line per result band (`minigame.react.*`, DE and EN), correct count, XP and money, per-player lines for two players, and "Continue" by click, tap, confirm key or pad.
+- `QuestionPanel` renders a learning item in the current language (`bothLangs` topics show both), numbered answer buttons for `choice` items, a hint button (as many as the engine allows) and kind feedback: the funny reaction, the right answer lit green, and after a mistake the correct answer plus the explanation. Typed, match and sort items need their own interaction in their minigames. `Timer` and `ScorePop` (floating `+1` and a sparkle emitter from the particle registry, scaled by the quality tier) are shared too.
+
 ## Day clock
 
 `ctx.day` (`services/DayClock.js`, pure time math in `services/dayTime.js`, all tuning in `data/day.json`) owns game time 06:30 to 22:00 and the phase machine morning, commute, school (from the 08:00 deadline), afternoon, evening, then the next day. One game minute takes `secondsPerGameMinute` real seconds (1.6, so a day is about 25 minutes). The time is `ctx.state.shared.clock` (`{ day, minute, phase }`), changed only by the `clock.set` action and restored with a loaded slot.
@@ -257,7 +269,8 @@ Learning content schema beyond `choice` and `typed` (all validated by `scripts/c
 | `characters/` | `attributes.js` (pure attribute maths), `AttrGrowth.js` (growth hooks), `Characters.js` (`ctx.characters`: dresses each player with its character) |
 | `learning/` | `engineCore.js` (pure adaptive and repetition logic), `LearningEngine.js` (`ctx.learning`) |
 | `grading/` | `gradeCore.js` (pure score-to-grade, ledger maths, promotion, Kopfnoten, comment selection), `Grades.js` (`ctx.grades`) |
-| `minigames/`, `missions/` | Empty so far |
+| `minigames/` | `minigameCore.js` (pure clock, tallies, results, rewards, cursor, layout), `Minigames.js` (`ctx.minigames`), `Minigame.js` (scene base class), `QuizDemo.js` / `SprintDemo.js` (debug demos and the template), `ui/` (`QuestionPanel`, `Timer`, `ScorePop`) |
+| `missions/` | Empty so far |
 | `services/` | `World.js` (`ctx.world`, map switching, AD-28) + `worldLogic.js` (pure catalog validation, door resolution); `DayClock.js` + `dayTime.js` (day clock, AD-17); `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |
 | `data/` | Tuning JSON, `maps/` (`index.json` lists the map files; `town.json`, `test-room.json`: ASCII grid, objects in tile coordinates), `object-types.json` (catalog of every allowed map object type) |

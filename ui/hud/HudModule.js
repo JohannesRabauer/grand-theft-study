@@ -24,6 +24,12 @@ export class HudModule {
 
   track(o) { this.objects.push(o); return o; }
 
+  // A minigame covers the HUD (AD-20): UIScene hides what is showing; modules with input of their own stand down here.
+  setDucked() {}
+
+  // Modules that must keep running under a minigame (a toast has to time out).
+  get updatesWhileDucked() { return false; }
+
   update() {}
 
   retext() {}

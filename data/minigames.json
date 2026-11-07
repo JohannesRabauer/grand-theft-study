@@ -1,0 +1,46 @@
+{
+  "_doc": "Minigame registry (AD-20). id: unique, the scene key is MG_<id>. subject: grade ledger subject. durationSeconds: the shared round timer (30-90). rewards: xp and money (cents) for a perfect round; a lesser score earns a share from minRewardShare up. expectedQuestions: the score counts against at least this many questions and effort is the share tried. topics: learning-engine topics. difficultyRange: allowed 1-5 start difficulty. debug: only listed in ?debug sessions (demos and templates). Titles come from i18n minigame.<id>.title.",
+  "settings": {
+    "countdownSeconds": 2,
+    "feedbackCorrectMs": 700,
+    "feedbackWrongMs": 2400,
+    "minRewardShare": 0.2,
+    "quitEffortCap": 0.2,
+    "warnSeconds": 10,
+    "stars": [0.5, 0.75, 0.92],
+    "bands": [
+      { "min": 0.9, "key": "great", "lines": ["minigame.react.great.1", "minigame.react.great.2"] },
+      { "min": 0.7, "key": "good", "lines": ["minigame.react.good.1", "minigame.react.good.2"] },
+      { "min": 0.5, "key": "ok", "lines": ["minigame.react.ok.1", "minigame.react.ok.2"] },
+      { "min": 0.25, "key": "low", "lines": ["minigame.react.low.1", "minigame.react.low.2"] },
+      { "min": 0, "key": "zero", "lines": ["minigame.react.zero.1", "minigame.react.zero.2"] }
+    ]
+  },
+  "minigames": [
+    {
+      "id": "quiz-demo",
+      "debug": true,
+      "subject": "mathe",
+      "scene": "MG_quiz-demo",
+      "durationSeconds": 90,
+      "rewards": { "xp": 30, "moneyCents": 50 },
+      "topics": ["mathe", "deutsch", "englisch"],
+      "maxPlayers": 2,
+      "difficultyRange": [1, 5],
+      "expectedQuestions": 10,
+      "questionCount": 10
+    },
+    {
+      "id": "sprint-demo",
+      "debug": true,
+      "subject": "deutsch",
+      "scene": "MG_sprint-demo",
+      "durationSeconds": 30,
+      "rewards": { "xp": 20, "moneyCents": 30 },
+      "topics": ["deutsch"],
+      "maxPlayers": 2,
+      "difficultyRange": [1, 5],
+      "expectedQuestions": 8
+    }
+  ]
+}
