@@ -22,6 +22,7 @@ export const traffic = {
     step(4);
     const gs = game.scene.getScene('Game');
     const ctx = gs.ctx;
+    if (ctx.world.id === 'home') ctx.world.load('town', 'from-home');
     ctx.input.update = () => {};
     const intent = ctx.input.intent;
     intent.aim = null;

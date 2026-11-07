@@ -4,7 +4,9 @@
 import { ACTIONS } from './actions.js';
 import { emptyGrades, defaultKopfnoten } from '../grading/gradeCore.js';
 
-export const STATE_VERSION = 5;
+export const STATE_VERSION = 6;
+
+export const createMorning = () => ({ day: 0, breakfast: false, packed: false, missing: [] });
 
 // Belt progress (story 6.4): points = training points earned in all sessions, sessions = sessions ever started, trainDay /
 // trainedToday = the game day of the last session and how many sessions that day had (the daily limit), lastExamDay = the
@@ -33,7 +35,8 @@ export function createPlayer(cfg) {
     karate: createKarate(cfg),
     cosmetics: { owned: [], equipped: {} },
     stickers: [],
-    bag: []
+    bag: [],
+    morning: createMorning()
   };
 }
 

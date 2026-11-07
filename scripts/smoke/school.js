@@ -57,6 +57,11 @@ export const school = {
     ctx.screens.top().button.emit('pointerdown');
     step(2);
     const session = ctx.minigames.active;
+    if (ctx.screens.top()?.id === 'minigameIntroduction') {
+      const intro = ctx.screens.top();
+      for (const player of session.players) intro.confirm(player);
+      step(2);
+    }
     assert('the timetable button launches the scheduled minigame for the children', session?.def.id === lesson.minigame && session.lessonId === lesson.id && ctx.frozen && ctx.day.phase === 'school');
     assert('attendance skips waiting without moving time backwards', ctx.day.minute >= beforeMinute && ctx.day.minute >= lesson.start);
     const mg = game.scene.getScene(session.def.scene);
@@ -76,6 +81,11 @@ export const school = {
       const next = ctx.school.next();
       const run = ctx.school.attend();
       step(2);
+      if (ctx.screens.top()?.id === 'minigameIntroduction') {
+        const intro = ctx.screens.top();
+        for (const player of ctx.minigames.active.players) intro.confirm(player);
+        step(2);
+      }
       const scene = game.scene.getScene(ctx.minigames.active.def.scene);
       until(() => scene.clock.phase === 'play', 400);
       for (const slot of scene.slots) slot.tally.correct = slot.tally.total = 10;

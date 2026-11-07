@@ -1,0 +1,33 @@
+{
+  "tileSize": 16,
+  "metersPerTile": 2,
+  "indoor": true,
+  "legend": { "#": "wall", "w": "wood", "s": "concrete" },
+  "rows": [
+    "########################",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "#wwwwwwwwwwwwwwwwwwwwww#",
+    "##########ssss##########",
+    "#ssssssssssssssssssssss#",
+    "#ssssssssssssssssssssss#",
+    "#ssssssssssssssssssssss#",
+    "#ssssssssssssssssssssss#",
+    "#ssssssssssssssssssssss#",
+    "#ssssssssssssssssssssss#",
+    "#ssssssssssssssssssssss#",
+    "########################"
+  ],
+  "objects": [
+    { "type": "spawn", "id": "player", "x": 12, "y": 13 },
+    { "type": "entry", "id": "from-town", "x": 12, "y": 13, "facing": "up" },
+    { "type": "door", "id": "home-exit", "x": 11, "y": 16, "w": 3, "h": 1, "to": "town", "entry": "from-home", "label": "world.door.exit", "auto": true },
+    { "type": "home", "id": "breakfast", "role": "breakfast", "x": 5, "y": 4, "w": 3, "h": 2 },
+    { "type": "home", "id": "schoolbag", "role": "bag", "x": 18, "y": 5, "w": 1, "h": 1 }
+  ]
+}

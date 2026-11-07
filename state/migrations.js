@@ -1,6 +1,6 @@
 // Save upgrades (AD-16). MIGRATIONS[n] turns a version-n save into version n+1; migrate() chains them.
 // v0 was the pre-release shape: money as a float `euros` and a single flat `player`.
-import { createKarate, createPlayer, createShared, grantStartBelt } from './GameState.js';
+import { createKarate, createMorning, createPlayer, createShared, grantStartBelt } from './GameState.js';
 import { emptyGrades, defaultKopfnoten } from '../grading/gradeCore.js';
 
 // v5: Lena, Mehmet and Jonas became Helena, Kilian and Lorenz (the placeholder ids kid-a/b/c of old test saves map the same
@@ -67,6 +67,10 @@ export const MIGRATIONS = {
         return out;
       })
     };
+  },
+
+  5(d) {
+    return { ...d, v: 6, players: d.players.map(p => ({ ...p, bag: p.bag ?? [], morning: createMorning() })) };
   }
 };
 

@@ -70,6 +70,8 @@
   ],
   "objects": [
     { "type":"spawn", "id":"player", "x":7, "y":51 },
+    { "type":"door", "id":"door-home", "x":3, "y":49, "w":2, "h":1, "to":"home", "entry":"from-town", "label":"home.entrance" },
+    { "type":"entry", "id":"from-home", "x":7, "y":50, "facing":"down" },
     { "type":"entry", "id":"from-test-room", "x":7, "y":50, "facing":"down" },
     { "type":"door", "id":"door-test", "debug":true, "x":6, "y":49, "w":3, "h":1, "to":"test-room", "entry":"from-town", "label":"world.door.test" },
     { "type":"goal", "id":"school", "x":77, "y":11, "w":3, "h":3 },

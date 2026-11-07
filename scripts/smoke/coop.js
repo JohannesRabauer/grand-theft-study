@@ -35,6 +35,8 @@ function menuContinue(game, env, slot = 1) {
 function bootGame(game) {
   const gs = game.scene.getScene('Game');
   gs.ctx.input.update = () => {};
+  // These scenarios cover the street and start vehicles; the home scenario covers morning preparation.
+  if (gs.ctx.world.id === 'home') gs.ctx.world.load('town', 'from-home');
   return { gs, ui: game.scene.getScene('UI'), ctx: gs.ctx };
 }
 
@@ -149,10 +151,9 @@ export const coopCommute = {
     const scale = ctx.res.scale;
     assert('the coop flag starts two players with their own characters and intents', ctx.players.length === 2 && p1.character.id === 'lorenz' && p2.character.id === 'helena' && ctx.input.intents[0] !== ctx.input.intents[1] && ctx.state.shared.flags.coop === true);
     assert('each starts with its own vehicle: P1 on skates, P2 on the bike', p1.vehicle === 'skates' && p2.vehicle === 'bike' && gs.skates.isMounted(0) && gs.bikes.isMounted(1) && !gs.bikes.isMounted(0));
-    const spawn = ctx.map.objects.find(o => o.type === 'spawn' && o.id === 'player');
-    const off = gs.zoomCfg.coop.spawnOffsets;
-    const sx = (spawn.x + 0.5) * ctx.map.tileSize;
-    assert('they start at the spawn offsets, side by side', Math.abs(p1.x - (sx + off[0][0])) < 1 && Math.abs(p2.x - (sx + off[1][0])) < 1 && Math.abs(p1.y - p2.y) < 1);
+    const entry = ctx.map.objects.find(o => o.id === 'from-home');
+    const sx = (entry.x + 0.5) * ctx.map.tileSize;
+    assert('leaving home puts both children at the street entry together', Math.abs(p1.x - sx) < 1 && Math.abs(p2.x - sx) < 1 && Math.abs(p1.y - p2.y) < 1);
     assert('ctx.coop is active and the HUD has two status slices, one shared money line and one arrow', ctx.coop.active && ctx.coop.distance < 40 && ui.hud.has('status.0') && ui.hud.has('status.1') && ui.hud.has('tool.1') && ui.hud.has('money') && ui.hud.has('objective') && !ui.hud.has('objective.0'));
     assert('P2 sits on the right, P1 on the left', ui.hud.get('status.0').stamina.x < 100 && ui.hud.get('status.1').stamina.x > 380);
     assert('rings mark both players', gs.markers.rings.length === 2 && gs.markers.rings.every(r => r.visible));

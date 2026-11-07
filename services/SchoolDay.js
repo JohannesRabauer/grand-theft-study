@@ -56,7 +56,8 @@ export class SchoolDay {
       while (ctx.day.phase !== 'school') ctx.day.advance('attend-school');
       ctx.day.skipTo(Math.max(ctx.day.minute, lesson.start), 'lesson-start');
       ctx.events.emit('lesson:started', { lesson, players });
-      const result = await ctx.minigames.start(lesson.minigame, { players, context: 'lesson', lessonId: lesson.id });
+      const notice = ctx.home?.lessonNotice(lesson, players);
+      const result = await ctx.minigames.start(lesson.minigame, { players, context: 'lesson', lessonId: lesson.id, notice });
       if (this.closed || result.quit) return result;
       for (const p of result.perPlayer) {
         if (!ctx.grades.grade(p.player, lesson.subject, { ...p, difficulty: result.difficulty, lessonId: lesson.id })) {

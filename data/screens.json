@@ -3,6 +3,8 @@
   "minigame": { "freezesWorld": true },
   "minigameResult": { "freezesWorld": true },
   "timetable": { "freezesWorld": true },
+  "packing": { "freezesWorld": true },
+  "minigameIntroduction": { "freezesWorld": true },
   "test": { "freezesWorld": true },
   "testHint": { "freezesWorld": false }
 }

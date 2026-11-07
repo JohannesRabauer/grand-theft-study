@@ -87,7 +87,7 @@ An FPS counter shows at the top left.
 
 ## Known limitations
 
-- Placeholder procedural art, no audio, no saves (only language and quality are remembered), no school scene: arriving only shows a banner.
+- Placeholder procedural art and no audio. Saved mornings and school lessons are playable; remaining day-flow and open-world expansion are tracked in the BMAD backlog.
 - Phone performance is unmeasured on real hardware (desktop proxy only); the reference phone is not chosen.
 - Touch has no weather or map button; the map key does nothing yet.
 - Bullies, props and the slingshot are tuned by feel, not playtested with children.
@@ -198,7 +198,7 @@ Save slot screen: three slots with a summary line (player(s), level, day, money)
 - **HUD and debug**: top right an Ärger meter (two bars) and "Entdeckt!" / "Spotted!" while seen; angry steam puffs over chasing bullies (`anger` emitter). `?debug` shows each bully's state, path, line-of-sight ray and bump radius plus the level in the debug text.
 - **Escaping** (`ai/Escape.js`, `escape` in `data/chase.json`): stand still in a hiding spot, unseen and with no bully within `stumbleRadius`, for `hideSeconds` and the level drops to 0 (bullies walk off and return to the pool). Being seen, moving, leaving the spot or a bully stumbling close resets the timer and the level stays. Staying farther than `farDistance` from every bully and out of sight for `farSeconds` also cools the level down. While hidden the player sprite turns translucent and green, leaves rustle, the HUD shows "Versteckt!" / "Hidden!" and, during a chase, a bar under the Ärger meter fills until the level drops. Still only the director writes the level.
 - **Caught** (`entities/Caught.js`, `ui/CaughtFrame.js`, `caught` in `data/chase.json`): `bully:caught-contact` freezes the world (`ctx.frozen`; UIScene keeps running; with two players only while both are caught, see below), spends `lossCents` (100) from `ctx.state.shared.money` (starts at 500 cents, shown top left as "€ 5,00"), resets the chase and shows a comic frame (halftone panel, locker with the player inside, the bully with the lunchbox, a random one of three speech-bubble lines per language). After 2.5 s, or Space/F (A/Y on a gamepad, jump button on touch) once 0.8 s have passed, the player is dismounted (the bike stays where it was), put back at home with a dust puff, and the chase can start again at the next turf entry. Caught is per player: the caught player is pinned (`Player.pinned`: stands still, no input, tools drop their charge, no bike or ammo or door use) and out of play (`Player.alive = false`: bullies and the crowd ignore it), loses one fine from the shared wallet, and respawns beside the spawn point on its own timer or press. The other player keeps playing; the world freezes only while everyone is caught, and the first respawn unfreezes it. In co-op the catching bully gives up, other bullies carry on, and the level resets once no bully is chasing any more. The comic frame is scaled to `caught.coopScale` (0.5) and shown on the caught player's HUD half (P1 left, P2 right), so the other player keeps a clear view. Emits `player:caught` `{ player, lost, money }` (cents) and `player:respawn` `{ player, x, y }`.
-- Reaching the school (`goal:reached`) shows the arrival banner for a few seconds; the game keeps running (prototype, no school scene).
+- Reaching the school (`goal:reached`) shows the arrival banner; enter through the marked school door and interact in the classroom for the timetable and playable lessons.
 - `node scripts/check-chase.mjs` checks pathfinding on the real map (home to school, walls, request budget, timing), the level thresholds, the hide / distance escape rules and the two-player rules (target hysteresis, escape across players, spawn counts, off-view spawns).
 
 ## Slingshot
@@ -294,6 +294,7 @@ ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tr
 
 - Three slots in `localStorage` (`schulweg.save.1` to `3`) via `ctx.saves`: `save(n)`, `load(n)`, `delete(n)`, `list()` (summaries for the menu). Saves happen on `phase:ended` into the active slot and on explicit `save(n)`; world positions are not saved. Without a chosen slot the game runs in memory only.
 - Older saves are upgraded by the `state/migrations.js` chain. An unreadable slot is copied to `schulweg.save.<n>.bak`, removed, and reported with `state:slot-corrupt`.
+- Save format v6 adds per-player morning preparation without losing existing bags or earned progress.
 - With `?debug`, `SCHULWEG_GAME.state` is the store and `SCHULWEG_GAME.registry.get('app').saves` the slots.
 
 ## Learning engine
@@ -345,6 +346,8 @@ Learning content schema beyond `choice` and `typed` (all validated by `scripts/c
 - `QuestionPanel` renders a learning item in the current language (`bothLangs` topics show both), numbered answer buttons for `choice` items, a hint button (as many as the engine allows) and kind feedback: the funny reaction, the right answer lit green, and after a mistake the correct answer plus the explanation. Typed, match and sort items need their own interaction in their minigames. `Timer` and `ScorePop` (floating `+1` and a sparkle emitter from the particle registry, scaled by the quality tier) are shared too.
 
 ## Day clock
+
+**Home and morning (8.1).** A saved new game begins at home on foot. Interact with the breakfast table to restore stamina once per child/day, then with the blue bag to pack today's timetable supplies by dragging, tapping or using keyboard/gamepad navigation. Co-op bags and breakfast progress are independent. Ready or the ordinary exit checks both bags, saves forgotten supplies and advances to commute; starting rides become available outdoors. Missing supplies cause a friendly borrowing reminder before the affected lesson, not an arbitrary grade penalty. This introduction stops the clocks and waits for every participating reader's fresh confirmation before starting the lesson; it never auto-continues. The next morning resets preparation but preserves progress. `data/morning.json`, `ctx.home` and the `home.*`/`bag.*` state actions own this flow.
 
 `ctx.day` (`services/DayClock.js`, pure time math in `services/dayTime.js`, all tuning in `data/day.json`) owns game time 06:30 to 22:00 and the phase machine morning, commute, school (from the 08:00 deadline), afternoon, evening, then the next day. One game minute takes `secondsPerGameMinute` real seconds (1.6, so a day is about 25 minutes). The time is `ctx.state.shared.clock` (`{ day, minute, phase }`), changed only by the `clock.set` action and restored with a loaded slot.
 

@@ -1,0 +1,27 @@
+{
+  "map": "home",
+  "interactReach": 32,
+  "items": [
+    { "id": "pencil-case", "label": "home.item.pencil-case" },
+    { "id": "homework", "label": "home.item.homework" },
+    { "id": "maths-book", "label": "home.item.maths-book" },
+    { "id": "german-book", "label": "home.item.german-book" },
+    { "id": "english-book", "label": "home.item.english-book" },
+    { "id": "atlas", "label": "home.item.atlas" },
+    { "id": "science-book", "label": "home.item.science-book" },
+    { "id": "recorder", "label": "home.item.recorder" },
+    { "id": "art-kit", "label": "home.item.art-kit" },
+    { "id": "sports-kit", "label": "home.item.sports-kit" }
+  ],
+  "always": ["pencil-case", "homework"],
+  "byMinigame": {
+    "mathe": ["maths-book"],
+    "deutsch": ["german-book"],
+    "englisch": ["english-book"],
+    "erdkunde": ["atlas"],
+    "science": ["science-book"],
+    "musik": ["recorder"],
+    "kunst": ["art-kit"],
+    "sport": ["sports-kit"]
+  }
+}

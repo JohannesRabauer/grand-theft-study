@@ -1,4 +1,4 @@
-import { createPlayer, grantStartBelt } from './GameState.js';
+import { createMorning, createPlayer, grantStartBelt } from './GameState.js';
 import { applyRecord, validEntry, moveKopfnote } from '../grading/gradeCore.js';
 
 // Registered state actions (AD-16). Each gets a mutable draft copy, the payload and the config and
@@ -15,6 +15,42 @@ function unlockVehicle(s, id, reason, cfg) {
 }
 
 export const ACTIONS = {
+  'home.startDay'(s, { player, day }) {
+    const p = s.players[player];
+    if (!p || !positiveInt(day) || day !== s.shared.clock.day) return reject('bad-payload');
+    if (p.morning.day === day) return reject('already-started');
+    p.bag = [];
+    p.morning = { ...createMorning(), day };
+    return { path: [`players.${player}.bag`, `players.${player}.morning`] };
+  },
+
+  'home.breakfast'(s, { player, day }) {
+    const m = s.players[player]?.morning;
+    if (!m || m.day !== day || day !== s.shared.clock.day) return reject('bad-payload');
+    if (m.breakfast) return reject('already-eaten');
+    m.breakfast = true;
+    return { path: `players.${player}.morning.breakfast` };
+  },
+
+  'bag.set'(s, { player, day, items }, cfg) {
+    const p = s.players[player];
+    if (!p || p.morning.day !== day || day !== s.shared.clock.day || !Array.isArray(items)
+      || new Set(items).size !== items.length || !items.every(id => cfg.morning?.items.some(i => i.id === id))) return reject('bad-payload');
+    p.bag = [...items];
+    p.morning.packed = false;
+    p.morning.missing = [];
+    return { path: [`players.${player}.bag`, `players.${player}.morning`] };
+  },
+
+  'bag.check'(s, { player, day, required }, cfg) {
+    const p = s.players[player];
+    if (!p || p.morning.day !== day || day !== s.shared.clock.day || !Array.isArray(required)
+      || new Set(required).size !== required.length || !required.every(id => cfg.morning?.items.some(i => i.id === id))) return reject('bad-payload');
+    p.morning.packed = true;
+    p.morning.missing = required.filter(id => !p.bag.includes(id));
+    return { path: `players.${player}.morning` };
+  },
+
   'wallet.earn'(s, { cents, reason }) {
     if (!positiveInt(cents) || !reason) return reject('bad-payload');
     s.shared.money += cents;

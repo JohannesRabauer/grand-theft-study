@@ -104,6 +104,9 @@
     } },
     "grab-target": { "shape": "point", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["bus", "tram"], "required": true } } },
     "home-spot": { "shape": "point", "inWall": false, "reach": true, "fields": {} },
+    "home": { "shape": "rect", "inWall": false, "reach": true, "fields": {
+      "role": { "type": "enum", "values": ["breakfast", "bag"], "required": true }
+    } },
     "school-spot": { "shape": "point", "inWall": false, "reach": true, "fields": {} }
   }
 }

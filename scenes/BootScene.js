@@ -47,6 +47,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('routes', 'data/routes.json');
     this.load.json('day', 'data/day.json');
     this.load.json('timetable', 'data/timetable.json');
+    this.load.json('morning', 'data/morning.json');
     this.load.json('hud', 'data/hud.json');
     this.load.json('screens', 'data/screens.json');
     this.load.json('grading', 'data/grading.json');
@@ -80,7 +81,7 @@ export class BootScene extends Phaser.Scene {
     // the state config also knows each character's base attributes (player.setCharacter resets to them)
     const karate = this.cache.json.get('karate');
     const characterBelts = Object.fromEntries(characters.characters.filter(c => c.startBelt).map(c => [c.id, { belt: c.startBelt, points: karate.belts.find(b => b.id === c.startBelt).trainingPoints }]));
-    const stateCfg = { ...this.cache.json.get('state'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])), karateBelts: karate.belts.map(b => b.id), characterBelts, kopfnoten: this.cache.json.get('kopfnoten'), shop: this.cache.json.get('shop') };
+    const stateCfg = { ...this.cache.json.get('state'), morning: this.cache.json.get('morning'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])), karateBelts: karate.belts.map(b => b.id), characterBelts, kopfnoten: this.cache.json.get('kopfnoten'), shop: this.cache.json.get('shop') };
     const state = new GameState(events, stateCfg);
     const saves = new SaveSlots(state, events, window.localStorage);
     this.registry.set('app', { events, i18n, t: i18n.t, quality, res, state, saves, characters });

@@ -1,6 +1,7 @@
-import { buildResult, clampDifficulty, playersProblem } from './minigameCore.js';
+import { buildResult, clampDifficulty, playersProblem, Tally } from './minigameCore.js';
 import { MinigameScreen } from '../ui/screens/MinigameScreen.js';
 import { MinigameResultScreen } from '../ui/screens/MinigameResultScreen.js';
+import { MinigameIntroductionScreen } from '../ui/screens/MinigameIntroductionScreen.js';
 
 // ctx.minigames (AD-20): starts a registered minigame (data/minigames.json) on top of the frozen world and resolves with
 // its graded result. The freeze is a 'minigame' screen on ctx.screens (counted, so the pause screen and the result
@@ -23,7 +24,7 @@ export class Minigames {
   // Runs a minigame; resolves with { id, subject, quit, difficulty, score 0-1, effort 0-1, correct, total, hintsUsed, xp,
   // moneyCents, grade 1-6, ms, stats, perPlayer[] } once the player left the result screen and the world is back.
   // players: indexes into ctx.players (1..def.maxPlayers). topic: optional single topic of def.topics.
-  start(id, { players = [0], difficulty, context = 'lesson', lessonId = '', topic } = {}) {
+  start(id, { players = [0], difficulty, context = 'lesson', lessonId = '', topic, notice } = {}) {
     const { ctx } = this;
     const def = this.defs.find(d => d.id === id);
     const problem = !def ? `unknown minigame "${id}"`
@@ -32,18 +33,29 @@ export class Minigames {
           : playersProblem(def, players, ctx.players.length) ?? (topic && !def.topics.includes(topic) ? `unknown topic "${topic}"` : null);
     if (problem) return Promise.reject(new Error(`minigames.start: ${problem}`));
     return new Promise(resolve => {
-      const session = this.active = { def, players: [...players], difficulty: clampDifficulty(def, difficulty), lessonId, resolve, scene: null, screen: null, result: null };
+      const session = this.active = { def, players: [...players], difficulty: clampDifficulty(def, difficulty), lessonId, notice, resolve, scene: null, screen: null, result: null };
       session.complete = raw => this.complete(session, raw);
       session.screen = ctx.screens.push(new MinigameScreen(ctx));
       ctx.duckHud(true);
-      this.manager.start(def.scene, { ctx, def, cfg: this.cfg, session, players: session.players, difficulty: session.difficulty, context, topic });
+      const begin = () => {
+        if (ctx.screens.top() === session.introduction) ctx.screens.pop();
+        this.manager.start(def.scene, { ctx, def, cfg: this.cfg, session, players: session.players, difficulty: session.difficulty, context, topic });
+      };
+      if (notice) {
+        const ui = this.manager.getScene('UI');
+        session.introduction = ctx.screens.push(new MinigameIntroductionScreen(ui, ctx, session, begin, () => this.quit()));
+      } else begin();
     });
   }
 
   // The player chose "end minigame" in the pause screen: counts as a low-effort round, no rewards, no result screen.
   quit() {
     const s = this.active;
-    if (!s?.scene || s.result) return false;
+    if (!s || s.result) return false;
+    if (!s.scene) {
+      this.complete(s, { tallies: s.players.map(() => new Tally()), ms: 0, quit: true });
+      return true;
+    }
     s.scene.finish({ quit: true });
     return true;
   }

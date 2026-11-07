@@ -46,6 +46,8 @@ import { LearningEngine } from '../learning/LearningEngine.js';
 import { Grades } from '../grading/Grades.js';
 import { Minigames } from '../minigames/Minigames.js';
 import { School } from '../entities/School.js';
+import { Home } from '../entities/Home.js';
+import { morningStartMap } from '../services/Morning.js';
 
 const STEP_MS = 1000 / 60; // Matter's fixed timestep (AD-14); MovementController assumes it too
 const STEP_SLACK = 0.95; // a frame that arrives a hair early (vsync jitter) still gets its step
@@ -62,11 +64,11 @@ export class GameScene extends Phaser.Scene {
     const cache = this.cache.json;
     const index = this.registry.get('mapIndex');
     const maps = Object.fromEntries(index.maps.map(m => [m.id, cache.get(`map-${m.id}`)]));
-    const map = maps[index.start];
-    const ts = map.tileSize;
-
     // AD-2: one ctx, created once, handed to every system.
     const { events, i18n, t, quality, res, state, saves } = this.registry.get('app');
+    const startMap = morningStartMap(index, maps, saves, state.shared.clock);
+    const map = maps[startMap];
+    const ts = map.tileSize;
     const ctx = {
       events,
       i18n,
@@ -93,7 +95,7 @@ export class GameScene extends Phaser.Scene {
     ctx.minigames = new Minigames(this, ctx, cache.get('minigames')); // AD-20
     this.ctx = ctx;
 
-    new World(this, ctx, index, maps).start(index.start); // AD-28: ground, walls and ctx.map of the first map
+    new World(this, ctx, index, maps).start(startMap); // AD-28: ground, walls and ctx.map of the first map
 
     // map objects are in tile coordinates
     const spawn = map.objects.find(o => o.type === 'spawn' && o.id === 'player');
@@ -115,7 +117,17 @@ export class GameScene extends Phaser.Scene {
     this.grabs = new GrabTargets(this, ctx, cache.get('routes'), cache.get('grab')); // AD-23: before the first mount, Skates asks it
     this.traffic = new Traffic(this, ctx, cache.get('traffic'), [this.grabs], [this.bikes, this.skateboards, this.skates], this.parking); // story 5.6: moving buses hit players
     this.tricks = new TrickSystem(this, ctx, cache.get('tricks'), [this.skateboards, this.skates]); // AD-23
-    for (const p of ctx.players) this.mountStartVehicle(p);
+    for (const p of ctx.players) {
+      if (startMap === 'home') p.deferredStartVehicle = true;
+      else this.mountStartVehicle(p);
+    }
+    events.on('world:enter', e => {
+      if (e.map !== 'town') return;
+      for (const p of ctx.players) if (p.deferredStartVehicle) {
+        p.deferredStartVehicle = false;
+        this.mountStartVehicle(p);
+      }
+    });
     ctx.frozen = false; // true while the caught frame or a freezing screen is up: the world stands still, UIScene keeps running
     this.caughtFrozen = false;
     this.zones = new Zones(this, ctx);
@@ -142,6 +154,7 @@ export class GameScene extends Phaser.Scene {
     this.karate = new Karate(ctx, cache.get('karate')); // story 6.4: belts, training points and the daily limit (ctx.karate)
     this.dojo = new Dojo(this, ctx, cache.get('karate')); // the dojo building in the town, the sensei and the belt rack inside
     this.school = new School(this, ctx, cache.get('timetable'), cache.get('minigames').minigames);
+    this.home = new Home(this, ctx, cache.get('morning'));
     this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
     this.garage = new Garage(this, ctx);
     this.caught = new Caught(this, ctx, cache.get('chase').caught, [this.bikes, this.skateboards, this.skates]);
@@ -337,6 +350,7 @@ export class GameScene extends Phaser.Scene {
     this.karate.update(dt);
     this.dojo.update(dt);
     this.school.update();
+    this.home.update();
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.grabs.update(dt);
