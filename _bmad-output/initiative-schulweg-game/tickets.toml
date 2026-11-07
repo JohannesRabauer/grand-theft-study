@@ -94,3 +94,9 @@ slug = "epic-polish-platform"
 title = "Polish, platform and release readiness"
 covers = ["CAP-32", "CAP-33", "CAP-2", "CAP-1"]
 
+
+[[epic]]
+id = 15
+slug = "epic-environment-art"
+title = "Environment art: ground transitions, water, buildings, fences"
+covers = ["CAP-34"]

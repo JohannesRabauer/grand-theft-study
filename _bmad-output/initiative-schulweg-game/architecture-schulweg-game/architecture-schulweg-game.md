@@ -125,6 +125,11 @@ Dependency rule (extends the prototype's): scenes → ctx/services → entities 
 - **Prevents:** regressions going unseen and unmeasured performance claims.
 - **Rule:** Each epic adds node checks for its pure logic (modules with no Phaser, named `*Logic.js` or `check-*.mjs`), registers them in `scripts/check-all.mjs`, and extends `scripts/smoke.js` with a scripted scenario. `scripts/check-content.mjs` lints all `i18n/` and `data/learning/` text for disallowed words. The benchmark scenarios are re-run per epic; Medium worst case stays ≤ 3 ms per update. Scripts clean up only the processes they start, by PID.
 
+### AD-30 — Environment art is rendered from the map grid, not authored per tile
+- **Binds:** CAP-34, CAP-4, CAP-31
+- **Prevents:** hand-placed one-off art that drifts from the grid, and visual fixes that need map edits.
+- **Rule:** The ground renderer builds transitions, shores and edge details from each tile's neighbours (surface ids from AD-6) at map load into the static ground texture; no per-frame redraw. Buildings, doors, fences, hedges and street furniture are drawn by one procedural environment art module (`scenes/EnvArt.js`) from tile and object data using the HiResArt palette and shading rules, with matching art for Low (1x) and Medium/High (2x). Doors are `door`, `dojo` or `shop` objects drawn with frame, steps and mat so they are recognisable; walls are never plain filled squares. Art changes must not change collision, pathfinding or map data.
+
 ## Consistency Conventions
 
 | Concern | Convention |

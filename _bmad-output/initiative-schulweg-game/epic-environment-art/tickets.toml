@@ -1,0 +1,47 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Ground transitions and water"
+description = "Renders blended transitions between all surface types (grass, asphalt, lane, path, cobble, concrete), curbs and sidewalk edges, and a proper water look with banks, depth shading, animated shoreline, shimmer and bridge supports, all derived from neighbouring tiles when the ground texture is built."
+verify = "Headless screenshots of each surface boundary and the canal and pond show no hard tile seams, water has visible banks and depth, there is no per-frame redraw, and the map checks still pass."
+covers = ["CAP-34"]
+after = []
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-30"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Houses, buildings and doors"
+description = "Draws buildings with roofs, walls, windows, chimneys and clearly readable doors (frame, steps, mat, awnings) for houses, the school, the dojo, shops and the bakery, with district-appropriate variety, correct depth sorting and unchanged collision."
+verify = "Screenshots of each district show buildings with recognisable roofs, walls and windows and doors that are obviously usable, and the door interaction and map checks still pass."
+covers = ["CAP-34"]
+after = [1]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-30"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Fences, hedges and street furniture"
+description = "Draws fences with posts, rails and gates, hedges with leafy texture, walls with caps, lamps, benches, trash cans, bike racks, trees and flowers in a consistent style with soft shadows."
+verify = "Screenshots show fences, hedges and walls clearly as such with consistent shadows, hiding spots still read as hiding spots, and the map checks still pass."
+covers = ["CAP-34"]
+after = [2]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-30"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Environment art review pass"
+description = "Reviews every district in headless screenshots at Medium and Low, fixes seams, jaggies, palette mismatches and readability problems, and re-runs the budget benchmarks."
+verify = "A screenshot set for all districts passes a self-review checklist, Low and Medium look consistent, and the Medium worst-case update cost stays within budget."
+covers = ["CAP-34"]
+after = [3]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-30"]

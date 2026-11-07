@@ -118,6 +118,10 @@ A vision to realize, now proven. The Schulweg prototype showed that riding a bik
   - **intent:** The game supports gamepads, optionally installs as an offline PWA, and runs in current Chrome, Edge, Firefox and Safari on desktop, Android and iOS at 60 FPS on Medium.
   - **success:** The cross-browser checklist passes; the 60 FPS result is measured on the reference phone (still to be named).
 
+- **CAP-34**
+  - **intent:** The town's environment looks right and consistent: ground surfaces blend into each other with proper transitions, water has shores and depth, and houses, doors, fences, hedges and street furniture read as what they are.
+  - **success:** In screenshots of every district, no surface boundary looks like a hard tile seam, water meets land with a visible bank, every building has a recognisable roof, walls, windows and an obviously usable door, and fences, hedges and walls show posts, rails or caps; the user's visual review accepts it.
+
 ## Constraints
 
 - Base stack and architecture from the adopted spine (AD-1 to AD-15): Phaser 3.90.0 with Matter via CDN, no build step, static files, `ctx` plus events, pooled objects, collision categories, quality tiers; new systems add decisions through an architecture update, not around the spine.
