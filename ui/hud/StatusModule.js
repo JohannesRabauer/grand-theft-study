@@ -10,9 +10,9 @@ export class StatusModule extends HudModule {
     this.bar = this.track(scene.add.graphics());
     this.label = this.track(uiText(scene, 4, 30, '', style));
     this.vehicle = this.track(uiText(scene, 4, 40, '', style));
-    this.on('player:stamina', (v) => this.showStamina(v));
-    this.on('player:surface', (id) => this.showSurface(id));
-    this.on('player:vehicle', (id) => this.showVehicle(id));
+    this.on('player:stamina', (ev) => { if (this.mine(ev)) this.showStamina(ev.value); });
+    this.on('player:surface', (ev) => { if (this.mine(ev)) this.showSurface(ev.id); });
+    this.on('player:vehicle', (ev) => { if (this.mine(ev)) this.showVehicle(ev.id); });
     const p = this.player;
     this.showStamina(p.stamina);
     this.showSurface(p.surface);

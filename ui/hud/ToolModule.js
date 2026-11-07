@@ -1,7 +1,7 @@
 import { HudModule } from './HudModule.js';
 import { uiText } from '../uiKit.js';
 
-// Current tool and ammo (bottom centre); a wind arrow with strength appears above it while charging.
+// The bound player's current tool and ammo (bottom centre); a wind arrow with strength appears above it while charging.
 export class ToolModule extends HudModule {
   constructor(scene, ctx, opts) {
     super(scene, ctx, opts);
@@ -13,14 +13,14 @@ export class ToolModule extends HudModule {
     this.windText = this.track(uiText(scene, width / 2 + 14, height - 17, '', { ...style, color: '#9fe0ff' }).setOrigin(0, 1).setVisible(false));
     this.windGfx = this.track(scene.add.graphics().setVisible(false));
     this.windKey = -1;
-    this.on('tool:ammo', () => this.show());
-    this.on('tool:changed', () => this.show());
+    this.on('tool:ammo', (ev) => { if (this.mine(ev)) this.show(); });
+    this.on('tool:changed', (ev) => { if (this.mine(ev)) this.show(); });
     this.show();
   }
 
   show() {
     const { ctx } = this;
-    const t = ctx.toolbelt.current;
+    const t = this.player.toolbelt.current;
     this.tool.setText(ctx.t('hud.tool', { name: ctx.t(`tool.${t.id}`), n: t.ammo, max: t.max }));
     this.tool.setColor(t.ammo === 0 ? '#ff8a7a' : '#ffffff');
   }
@@ -32,7 +32,7 @@ export class ToolModule extends HudModule {
 
   update() {
     const { ctx } = this;
-    const aiming = ctx.toolbelt.current.charging;
+    const aiming = this.player.toolbelt.current.charging;
     if (aiming !== this.windGfx.visible) {
       this.windGfx.setVisible(aiming);
       this.windText.setVisible(aiming);

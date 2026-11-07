@@ -1,13 +1,13 @@
 import { Slingshot } from './Slingshot.js';
 
-// Holds the tools and cycles through them with the toolNext / toolPrev intents. Exposed as
-// ctx.toolbelt; emits `tool:changed` { id }. Only the slingshot exists so far.
+// One belt per player (player.toolbelt): holds the tools and cycles through them with that player's
+// toolNext / toolPrev intents; emits `tool:changed` { player, id }. Only the slingshot exists so far.
 export class ToolBelt {
-  constructor(scene, ctx, cfg) {
+  constructor(scene, ctx, cfg, player) {
     this.ctx = ctx;
-    this.tools = [new Slingshot(scene, ctx, cfg)];
+    this.player = player;
+    this.tools = [new Slingshot(scene, ctx, cfg, player)];
     this.index = 0;
-    ctx.toolbelt = this;
     this.current.equip();
   }
 
@@ -19,11 +19,11 @@ export class ToolBelt {
     this.current.unequip();
     this.index = (this.index + step + n) % n;
     this.current.equip();
-    this.ctx.events.emit('tool:changed', { id: this.current.id });
+    this.ctx.events.emit('tool:changed', { player: this.player.index, id: this.current.id });
   }
 
   update(dt) {
-    const i = this.ctx.input.intent;
+    const i = this.ctx.input.intents[this.player.index];
     if (i.toolNext) this.cycle(1);
     if (i.toolPrev) this.cycle(-1);
     // every tool updates so shots in flight finish after a switch

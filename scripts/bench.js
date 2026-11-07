@@ -43,7 +43,7 @@ function makeDriver(ctx) {
   const d = { len: 0, idx: 0, gx: 0, gy: 0, age: 0, dist: 0, sx: 0, sy: 0, still: 0 };
   d.goal = (x, y) => { d.gx = x; d.gy = y; d.age = 1e9; };
   d.tick = (reach = 10, clearance = 5) => {
-    const p = ctx.player;
+    const p = ctx.players[0];
     const i = ctx.input.intent;
     if (++d.age > 120) { // replan now and then (also after teleports or being shoved)
       d.age = 0;
@@ -104,10 +104,10 @@ function teleport(gs, ctx, tx, ty) {
   const ts = ctx.map.tileSize;
   const x = (tx + 0.5) * ts;
   const y = (ty + 0.5) * ts;
-  gs.matter.body.setPosition(ctx.player.body, { x, y });
-  gs.matter.body.setVelocity(ctx.player.body, { x: 0, y: 0 });
-  ctx.player.move.speed = 0;
-  ctx.player.sprite.setPosition(x, y);
+  gs.matter.body.setPosition(ctx.players[0].body, { x, y });
+  gs.matter.body.setVelocity(ctx.players[0].body, { x: 0, y: 0 });
+  ctx.players[0].move.speed = 0;
+  ctx.players[0].sprite.setPosition(x, y);
   gs.cameras.main.centerOn(x, y);
 }
 
@@ -116,7 +116,7 @@ const obj = (ctx, type, id) => ctx.map.objects.find(o => o.type === type && (!id
 
 // Fires the slingshot in bursts at a rotating target; refills ammo so it never stops.
 function makeShooter(ctx) {
-  const sling = ctx.toolbelt.tools[0];
+  const sling = ctx.players[0].toolbelt.tools[0];
   const targets = ctx.props.props;
   const i = ctx.input.intent;
   let n = 0;
@@ -154,7 +154,7 @@ const SCENARIOS = {
   },
   bike(s) {
     const { ctx } = s;
-    ctx.player.setVehicle('bike');
+    ctx.players[0].setVehicle('bike');
     ctx.input.intent.sprint = true;
     return makeRouteRunner(ctx, 16, 9);
   },
@@ -163,7 +163,7 @@ const SCENARIOS = {
     const c = ctx.chase.cfg.bully;
     restore.push([c, 'catchRadius', c.catchRadius]);
     c.catchRadius = -1; // bullies stay on the player's heels instead of ending the run
-    ctx.player.setVehicle('bike');
+    ctx.players[0].setVehicle('bike');
     teleport(gs, ctx, 46, 34);
     const d = makeDriver(ctx);
     // loop around the skatepark and the old town so the bullies keep needing paths
@@ -196,7 +196,7 @@ const SCENARIOS = {
     c.catchRadius = -1;
     ctx.weather.set('rain');
     strongWind(ctx);
-    ctx.player.setVehicle('bike');
+    ctx.players[0].setVehicle('bike');
     ctx.input.intent.sprint = true;
     teleport(gs, ctx, 46, 34);
     wake(ctx);

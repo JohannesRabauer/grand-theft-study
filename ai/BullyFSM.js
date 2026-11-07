@@ -1,7 +1,7 @@
 // Bully state machine (AD-12): IDLE, CHASE, SEARCH, DISTRACTED, GIVE_UP, CAUGHT.
 // One stateless instance drives every bully; per-bully data lives on the Bully (state, t, lastX/Y).
-// Numbers come from data/chase.json `bully`. The caught cutscene is story 1.9: CAUGHT only stops
-// the bully (the director has already emitted `bully:caught-contact`).
+// Numbers come from data/chase.json `bully`. A bully's target is the nearest player it sees (`b.target`);
+// CAUGHT only stops the bully (the director has already emitted `bully:caught-contact`).
 export const S = { IDLE: 'IDLE', CHASE: 'CHASE', SEARCH: 'SEARCH', DISTRACTED: 'DISTRACTED', GIVE_UP: 'GIVE_UP', CAUGHT: 'CAUGHT' };
 
 export class BullyFSM {
@@ -21,16 +21,21 @@ export class BullyFSM {
   }
 
   update(b, dt) {
-    const { player } = this.d.ctx;
+    const { ctx } = this.d;
     const c = this.cfg;
     b.t += dt;
-    b.sees = b.state !== S.CAUGHT && b.state !== S.GIVE_UP && this.d.perception.sees(b, b.state === S.CHASE);
+    const target = b.state !== S.CAUGHT && b.state !== S.GIVE_UP ? this.nearestVisible(b) : null;
+    b.target = target;
+    b.sees = target !== null;
     // A freshly spawned bully was called to where the player was; it does not give up on the way,
     // only once it is within viewing distance does sight decide.
-    if (b.alerted && Math.hypot(player.x - b.x, player.y - b.y) <= this.d.cfg.perception.viewDistance) b.alerted = false;
-    if (b.sees) {
-      b.lastX = player.x;
-      b.lastY = player.y;
+    if (b.alerted) {
+      const near = ctx.nearestPlayer(b.x, b.y);
+      if (Math.hypot(near.x - b.x, near.y - b.y) <= this.d.cfg.perception.viewDistance) b.alerted = false;
+    }
+    if (target) {
+      b.lastX = target.x;
+      b.lastY = target.y;
     }
     if (b.sees || b.alerted) b.lost = 0;
     else b.lost += dt;
@@ -41,7 +46,7 @@ export class BullyFSM {
         if (b.t >= c.idleSeconds || b.sees) this.enter(b, S.CHASE);
         break;
       case S.CHASE:
-        if (b.sees) b.goTo(player.x, player.y);
+        if (b.sees) b.goTo(b.target.x, b.target.y);
         else {
           b.goTo(b.lastX, b.lastY);
           if (b.lost >= c.loseSightSeconds) this.enter(b, S.SEARCH);
@@ -64,6 +69,21 @@ export class BullyFSM {
       default: // CAUGHT
         b.stop();
     }
+  }
+
+  // The nearest player this bully can see right now, or null.
+  nearestVisible(b) {
+    const chasing = b.state === S.CHASE;
+    const players = this.d.ctx.alivePlayers();
+    let best = null;
+    let bestD = Infinity;
+    for (let i = 0; i < players.length; i++) {
+      const p = players[i];
+      if (!this.d.perception.sees(b, p, chasing)) continue;
+      const d = (p.x - b.x) * (p.x - b.x) + (p.y - b.y) * (p.y - b.y);
+      if (d < bestD) { bestD = d; best = p; }
+    }
+    return best;
   }
 
   // A prop was hit at (x, y) (radius: how far it is heard, default distractRadius): bullies in range that are not watching the player go and look.

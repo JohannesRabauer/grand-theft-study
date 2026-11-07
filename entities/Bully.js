@@ -22,6 +22,7 @@ export class Bully {
     this.state = 'IDLE';
     this.t = 0;
     this.sees = false;
+    this.target = null; // the nearest visible player this frame
     this.lost = 0;
     this.lastX = 0; this.lastY = 0; // last known player position
     this.targetX = 0; this.targetY = 0; // distraction / give-up destination
@@ -50,6 +51,7 @@ export class Bully {
     this.active = true;
     this.t = 0;
     this.sees = false;
+    this.target = null;
     this.lost = 0;
     this.steamIn = 0;
     this.pathLen = this.pathIdx = 0;

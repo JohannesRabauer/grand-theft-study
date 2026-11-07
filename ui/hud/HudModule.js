@@ -10,8 +10,11 @@ export class HudModule {
     this.objects = [];
   }
 
-  // The players array arrives with story 1.5; until then every player index resolves to ctx.player.
-  get player() { return this.ctx.player; }
+  // The player this module is bound to (shared modules read player 1).
+  get player() { return this.ctx.players[this.playerIndex ?? 0]; }
+
+  // Is an event about this module's player? Payloads carry `player: index` (AD-18).
+  mine(ev) { return ev.player === (this.playerIndex ?? 0); }
 
   on(event, fn) {
     this.ctx.events.on(event, fn);

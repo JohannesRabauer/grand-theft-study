@@ -27,7 +27,7 @@ const sp = {
 const rng = (seed) => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
 // spawn selection: only markers in the ring outside the view, never occupied ones, never next to the player
-const view = { cx: 700, cy: 400, hw: 240, hh: 135, px: 700, py: 400 };
+const view = { cx: 700, cy: 400, hw: 240, hh: 135, players: [{ x: 700, y: 400 }] };
 const taken = new Uint8Array(sp.count);
 const rand = rng(7);
 const picked = new Set();
@@ -45,11 +45,11 @@ for (let i = 0; i < 200; i++) assert.notEqual(pickSpawn(sp, taken, view, cfg.spa
 taken.fill(1);
 assert.equal(pickSpawn(sp, taken, view, cfg.spawn, rand, false), -1, 'no free marker -> no spawn');
 taken.fill(0);
-const near = { ...view, px: sp.xs[some], py: sp.ys[some] };
+const near = { ...view, players: [{ x: sp.xs[some], y: sp.ys[some] }] };
 
 for (let i = 0; i < 200; i++) {
   const idx = pickSpawn(sp, taken, near, cfg.spawn, rand, true);
-  if (idx >= 0) assert.ok(Math.hypot(sp.xs[idx] - near.px, sp.ys[idx] - near.py) >= cfg.spawn.playerClear, 'never spawn on top of the player');
+  if (idx >= 0) assert.ok(Math.hypot(sp.xs[idx] - near.players[0].x, sp.ys[idx] - near.players[0].y) >= cfg.spawn.playerClear, 'never spawn on top of the player');
 }
 // prefill may use markers inside the view, normal spawning never does
 let inside = false;

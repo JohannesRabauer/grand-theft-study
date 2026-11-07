@@ -1,6 +1,6 @@
 // Wall streaming (AD-8, AD-14): the town has ~530 static wall bodies and Matter walks every body
 // in the world on every step (sort, pair search, solver passes), which was two thirds of the
-// per-frame logic cost. Only walls within `radius` px of something that moves (player, active
+// per-frame logic cost. Only walls within `radius` px of something that moves (players, active
 // bullies, awake props, flying pebbles) are kept in the world; the rest are parked outside it.
 // Nothing is created or destroyed after startup. Re-evaluated only when an actor crosses into
 // another `cell`, so most frames cost a handful of comparisons.
@@ -24,7 +24,7 @@ export class WallStreamer {
         for (let cx = Math.floor(w.x0 / CHUNK); cx <= Math.floor((w.x1 - 1) / CHUNK); cx++) this.chunks[cy * this.chunkCols + cx].push(i);
       }
     });
-    const maxActors = 1 + ctx.quality.maxOf('maxBullies') + ctx.props.props.length + ctx.toolbelt.tools[0].shots.length;
+    const maxActors = ctx.maxPlayers * (1 + ctx.players[0].toolbelt.tools[0].shots.length) + ctx.quality.maxOf('maxBullies') + ctx.props.props.length;
     this.ax = new Float32Array(maxActors);
     this.ay = new Float32Array(maxActors);
     this.cells = new Int32Array(maxActors * 2).fill(-1e9);
@@ -35,13 +35,12 @@ export class WallStreamer {
   }
 
   collect() {
-    const { player, chase, props, toolbelt } = this.ctx;
+    const { players, chase, props } = this.ctx;
     let n = 0;
-    this.ax[n] = player.x;
-    this.ay[n++] = player.y;
+    for (const player of players) { this.ax[n] = player.x; this.ay[n++] = player.y; }
     for (const b of chase.bullies) if (b.active) { this.ax[n] = b.x; this.ay[n++] = b.y; }
     for (const p of props.props) if (p.awake && p.alive) { this.ax[n] = p.body.position.x; this.ay[n++] = p.body.position.y; }
-    for (const s of toolbelt.tools[0].shots) if (s.active) { this.ax[n] = s.body.position.x; this.ay[n++] = s.body.position.y; }
+    for (const player of players) for (const s of player.toolbelt.tools[0].shots) if (s.active) { this.ax[n] = s.body.position.x; this.ay[n++] = s.body.position.y; }
     return n;
   }
 

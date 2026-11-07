@@ -1,6 +1,6 @@
 // The comic "caught" frame (CAP-7), drawn procedurally in UIScene space (480x270): halftone panel,
 // a locker with the player stuffed inside, the bully with the snatched lunchbox and a speech bubble.
-// Shown on `player:caught`, hidden on `player:respawn`. Read-only: the world logic is entities/Caught.js.
+// Shown on `player:caught`, hidden once every caught player has a `player:respawn`. Read-only: the world logic is entities/Caught.js.
 import { uiText } from './uiKit.js';
 
 const W = 480;
@@ -17,8 +17,9 @@ export class CaughtFrame {
     this.ctx = ctx;
     this.items = [];
     this.built = false;
-    this.onCaught = (ev) => this.show(ev);
-    this.onRespawn = () => this.hide();
+    this.caught = 0; // players currently shown as caught
+    this.onCaught = (ev) => { this.caught++; this.show(ev); };
+    this.onRespawn = () => { if (--this.caught <= 0) this.hide(); };
     ctx.events.on('player:caught', this.onCaught);
     ctx.events.on('player:respawn', this.onRespawn);
   }
@@ -53,7 +54,7 @@ export class CaughtFrame {
     g.fillStyle(0x1d2a3a).fillRect(62, 104, 64, 126);
     const big = 6 * ctx.res.inv; // the 2x textures are shown at half scale
     this.playerTex = this.sharpCopy('player');
-    this.player = add(scene.add.image(94, 178, this.playerTex).setScale(big).setAngle(10));
+    this.kid = add(scene.add.image(94, 178, this.playerTex).setScale(big).setAngle(10));
     g.fillStyle(0x7aa0cc).lineStyle(3, 0x000000).fillPoints([{ x: 62, y: 104 }, { x: 36, y: 114 }, { x: 36, y: 222 }, { x: 62, y: 230 }], true).strokePoints([{ x: 62, y: 104 }, { x: 36, y: 114 }, { x: 36, y: 222 }, { x: 62, y: 230 }], true);
     g.lineStyle(2, 0x2b3f58).lineBetween(40, 140, 58, 134).lineBetween(40, 160, 58, 155);
     g.fillStyle(0xffe14d).fillCircle(42, 190, 3);
@@ -121,7 +122,7 @@ export class CaughtFrame {
     this.line.setText(ctx.t(`caught.line${Phaser.Math.Between(1, 3)}`));
     this.lost.setText(lost > 0 ? ctx.t('caught.lost', { v: `${v(lost)} €` }) : ctx.t('caught.nothing'));
     this.prompt.setText(ctx.t(`caught.continue.${ctx.input.type}`));
-    this.player.setTexture(this.playerTex);
+    this.kid.setTexture(this.playerTex);
     for (const o of this.items) o.setVisible(true);
   }
 

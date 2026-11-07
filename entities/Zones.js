@@ -2,8 +2,8 @@ import { addSensor } from '../physics/bodies.js';
 
 // Map trigger zones in tile coordinates: hiding spots, bully turf and the school goal.
 // Hiding and turf zones get SENSOR bodies (read later by bullies and the chase director);
-// the player's overlap is a cheap per-frame point-in-rect test that emits
-// `hide:enter|leave` and `turf:enter|leave` ({ id, kind }) and, once, `goal:reached`.
+// each player's overlap is a cheap per-frame point-in-rect test that emits
+// `hide:enter|leave` and `turf:enter|leave` ({ id, kind, player }) and, once per player, `goal:reached` ({ id, player }).
 const COLORS = { hiding: 0x4cd964, turf: 0xff4d4d, goal: 0xffe14d };
 
 export class Zones {
@@ -13,34 +13,36 @@ export class Zones {
     this.zones = ctx.map.objects
       .filter(o => o.type === 'hiding' || o.type === 'turf' || o.type === 'goal')
       .map(o => {
-        const z = { o, x0: o.x * ts, y0: o.y * ts, x1: (o.x + o.w) * ts, y1: (o.y + o.h) * ts, inside: false };
+        const z = { o, x0: o.x * ts, y0: o.y * ts, x1: (o.x + o.w) * ts, y1: (o.y + o.h) * ts, inside: new Uint8Array(ctx.maxPlayers) };
         if (o.type !== 'goal') z.body = addSensor(scene, (z.x0 + z.x1) / 2, (z.y0 + z.y1) / 2, z.x1 - z.x0, z.y1 - z.y0);
         return z;
       });
-    this.reached = false;
-    this.hiding = 0; // number of hiding-spot zones the player is inside (read by bully perception)
+    this.reached = new Uint8Array(ctx.maxPlayers); // per player: has reached the goal
+    this.hiding = new Uint8Array(ctx.maxPlayers); // per player: number of hiding-spot zones inside (read by bully perception)
     if (window.SCHULWEG_DEBUG) this.drawDebug(scene);
   }
 
   update() {
-    const { player, events } = this.ctx;
-    const px = player.x;
-    const py = player.y;
-    for (const z of this.zones) {
-      const now = px >= z.x0 && px < z.x1 && py >= z.y0 && py < z.y1;
-      if (now === z.inside) continue;
-      z.inside = now;
-      const { type, id, kind } = z.o;
-      if (type === 'goal') {
-        if (now && !this.reached) {
-          this.reached = true;
-          events.emit('goal:reached', { id });
+    const { players, events } = this.ctx;
+    for (let i = 0; i < players.length; i++) {
+      const px = players[i].x;
+      const py = players[i].y;
+      for (const z of this.zones) {
+        const now = px >= z.x0 && px < z.x1 && py >= z.y0 && py < z.y1;
+        if (now === !!z.inside[i]) continue;
+        z.inside[i] = now ? 1 : 0;
+        const { type, id, kind } = z.o;
+        if (type === 'goal') {
+          if (now && !this.reached[i]) {
+            this.reached[i] = 1;
+            events.emit('goal:reached', { id, player: i });
+          }
+          continue;
         }
-        continue;
+        if (type === 'hiding') this.hiding[i] += now ? 1 : -1;
+        const ev = type === 'hiding' ? 'hide' : 'turf';
+        events.emit(`${ev}:${now ? 'enter' : 'leave'}`, { id, kind: kind ?? id, player: i });
       }
-      if (type === 'hiding') this.hiding += now ? 1 : -1;
-      const ev = type === 'hiding' ? 'hide' : 'turf';
-      events.emit(`${ev}:${now ? 'enter' : 'leave'}`, { id, kind: kind ?? id });
     }
   }
 

@@ -1,7 +1,7 @@
 // Particle registry (AD-8): a few shared pooled emitters, created once. Everything fires through
 // ctx.particles.emit(name, x, y, opts); nothing is created per frame. Each emitter gets a share of
 // the tier's `maxParticles` (re-read on `quality:changed`), and `particleMul` scales burst sizes.
-// The hub also drives the effects that come from the world: surface effects under the player,
+// The hub also drives the effects that come from the world: surface effects under every player,
 // rain, ambient steam, leaf swirl and fish ripples. Wind is applied here as emitter gravity (AD-7).
 const DEG = Math.PI / 180;
 
@@ -22,8 +22,8 @@ export class ParticleHub {
     this.spots = ctx.map.objects.filter(o => o.type === 'ambient')
       .map(o => ({ x: (o.x + 0.5) * ctx.map.tileSize, y: (o.y + 0.5) * ctx.map.tileSize, chimney: o.kind === 'chimney', in: 0 }));
     this.water = this.findWater();
-    this.fxIn = 0;
-    this.ringIn = 0;
+    this.fxIn = new Float64Array(ctx.maxPlayers); // per player emit timers
+    this.ringIn = new Float64Array(ctx.maxPlayers);
     this.rainAcc = 0;
     this.impactAcc = 0;
     this.leafIn = 0;
@@ -76,13 +76,18 @@ export class ParticleHub {
     this.ambient(dt, view);
   }
 
-  // Dust (sprint, drifting), leaves (grass) and splash + ring (puddles) at the mover's feet.
+  // Dust (sprint, drifting), leaves (grass) and splash + ring (puddles) at every mover's feet.
   surfaceFx(dt) {
-    const p = this.ctx.player;
+    const players = this.ctx.players;
+    for (let i = 0; i < players.length; i++) this.playerFx(dt, players[i]);
+  }
+
+  playerFx(dt, p) {
     const m = p.move;
     const s = this.cfg.surfaceEmit;
-    this.fxIn -= dt;
-    this.ringIn -= dt;
+    const i = p.index;
+    this.fxIn[i] -= dt;
+    this.ringIn[i] -= dt;
     const fx = this.cfg.surfaceFx[this.ctx.surfaces.props(m.surface).particle];
     if (!fx) return;
     const speed = m.velSpeed;
@@ -92,12 +97,12 @@ export class ParticleHub {
     // a bike (faceHeading profile) kicks it up at the rear wheel, walkers at their feet
     const x = m.profile.faceHeading ? p.x - Math.cos(m.heading) * s.rearOffset : p.x;
     const y = m.profile.faceHeading ? p.y - Math.sin(m.heading) * s.rearOffset : p.y + s.feetOffset;
-    if (this.fxIn <= 0) {
-      this.fxIn = wet ? s.puddleInterval : s.interval;
+    if (this.fxIn[i] <= 0) {
+      this.fxIn[i] = wet ? s.puddleInterval : s.interval;
       this.emit(fx.name, x, y, wet ? { count: 3 + Math.round(speed / 40) } : { tint: fx.tint });
     }
-    if (fx.ring && this.ringIn <= 0) {
-      this.ringIn = s.ringInterval;
+    if (fx.ring && this.ringIn[i] <= 0) {
+      this.ringIn[i] = s.ringInterval;
       this.emit('ripple', x, y);
     }
   }

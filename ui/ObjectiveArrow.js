@@ -1,10 +1,11 @@
-// GTA-style objective arrow: orbits the player on screen and points at the school goal, with the
+// GTA-style objective arrow for one player: orbits that player on screen and points at the school goal, with the
 // distance in meters. Drawn in UIScene space (480x270, whatever the render size); reads the game camera, never the world state mutably.
 import { uiText } from './uiKit.js';
 
 export class ObjectiveArrow {
-  constructor(scene, ctx, game) {
+  constructor(scene, ctx, game, playerIndex = 0) {
     this.ctx = ctx;
+    this.playerIndex = playerIndex;
     this.cam = game.cameras.main;
     this.ts = ctx.map.tileSize;
     this.mpt = ctx.map.metersPerTile;
@@ -19,7 +20,8 @@ export class ObjectiveArrow {
     const sw = ctx.res.w;
     this.msg = uiText(scene, sw / 2, 60, ctx.t('msg.arrived'), { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 })
       .setOrigin(0.5).setDepth(10).setVisible(false);
-    this.onReached = () => {
+    this.onReached = (ev) => {
+      if (ev.player !== this.playerIndex) return;
       this.done = true;
       this.arrow.setVisible(false);
       this.text.setVisible(false);
@@ -38,7 +40,7 @@ export class ObjectiveArrow {
 
   update() {
     if (this.done) return;
-    const { player } = this.ctx;
+    const player = this.ctx.players[this.playerIndex];
     const cam = this.cam;
     // player on screen in UI units: from the live scroll (worldView is only refreshed at render time)
     const { zoom } = cam;

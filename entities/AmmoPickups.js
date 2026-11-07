@@ -1,6 +1,6 @@
 // Ammo pickups (pebble, chestnut, acorn) from map objects of type 'ammo'. Walking over one adds
 // its amount to the slingshot magazine (capped); it reappears after `respawn` seconds. Sprites
-// are made once. Emits `ammo:pickup` { kind, amount }.
+// are made once. The player who walks over one fills their own magazine; emits `ammo:pickup` { player, kind, amount }.
 export class AmmoPickups {
   constructor(scene, ctx, cfg) {
     this.ctx = ctx;
@@ -18,8 +18,7 @@ export class AmmoPickups {
   }
 
   update(dt) {
-    const { player, toolbelt } = this.ctx;
-    const sling = toolbelt.tools.find(t => t.id === 'slingshot');
+    const { players } = this.ctx;
     const r = this.cfg.pickup.radius;
     for (const it of this.items) {
       if (it.back > 0) {
@@ -27,13 +26,17 @@ export class AmmoPickups {
         if (it.back <= 0) { it.back = 0; it.sprite.setVisible(true); }
         continue;
       }
-      if (Math.hypot(player.x - it.x, player.y - it.y) > r) continue;
-      if (!sling || sling.ammo >= sling.max) continue; // stays on the ground while the magazine is full
-      const amount = this.cfg.ammo[it.kind].amount;
-      sling.addAmmo(amount);
-      it.back = this.cfg.pickup.respawn;
-      it.sprite.setVisible(false);
-      this.ctx.events.emit('ammo:pickup', { kind: it.kind, amount });
+      for (const player of players) {
+        if (Math.hypot(player.x - it.x, player.y - it.y) > r) continue;
+        const sling = player.toolbelt.tools.find(t => t.id === 'slingshot');
+        if (!sling || sling.ammo >= sling.max) continue; // stays on the ground while the magazine is full
+        const amount = this.cfg.ammo[it.kind].amount;
+        sling.addAmmo(amount);
+        it.back = this.cfg.pickup.respawn;
+        it.sprite.setVisible(false);
+        this.ctx.events.emit('ammo:pickup', { player: player.index, kind: it.kind, amount });
+        break;
+      }
     }
   }
 }

@@ -1,9 +1,10 @@
 // Chase director (AD-12): the only writer of the Ärger level (0-2) and the only spawner of
 // bullies. It listens on ctx.events for `turf:enter|leave`, `bully:bump` and `prop:hit`, and
 // emits `chase:level` { level, reason } and `chase:seen` (bool). Exposed as ctx.chase:
-//   level, seen, hidden, hideProgress (0..1 while the hide timer runs), cool(seconds) (level falls to 0 after that long, bullies give up), reset()
+//   level, seen, hidden (every player hidden), hiddenFor(player), hideProgress (0..1 while the hide timer runs), cool(seconds) (level falls to 0 after that long, bullies give up), reset()
 //   (level 0, bullies removed at once). Thresholds are in ai/ChaseLevel.js + data/chase.json.
-// Contact with a bully emits `bully:caught-contact` { bully } for story 1.9 and puts it in CAUGHT.
+// Bullies target the nearest player they can see; contact with a bully emits `bully:caught-contact` { bully, player }
+// (the player's index) and puts it in CAUGHT. The Ärger level is shared by all players.
 import { ChaseLevel } from './ChaseLevel.js';
 import { Pathfinder } from './Pathfinding.js';
 import { Escape } from './Escape.js';
@@ -28,11 +29,12 @@ export class ChaseDirector {
     const ts = ctx.map.tileSize;
     this.spawns = ctx.map.objects.filter(o => o.type === 'bully-spawn').map(o => ({ x: (o.x + 0.5) * ts, y: (o.y + 0.5) * ts }));
     this.seen = false;
+    this.inTurf = new Uint8Array(ctx.maxPlayers); // per player: standing in bully turf
     ctx.chase = this;
 
     const { events } = ctx;
-    events.on('turf:enter', () => this.lvl.turf(true));
-    events.on('turf:leave', () => this.lvl.turf(false));
+    events.on('turf:enter', ev => this.onTurf(ev.player, true));
+    events.on('turf:leave', ev => this.onTurf(ev.player, false));
     events.on('bully:bump', () => this.lvl.bump());
     events.on('prop:hit', ev => this.onPropHit(ev));
     events.on('quality:changed', () => this.trim());
@@ -42,7 +44,20 @@ export class ChaseDirector {
   get level() { return this.lvl.level; }
   get bullies() { return this.pool.list; }
   get hidden() { return this.perception.hidden; }
+  hiddenFor(p) { return this.perception.hiddenFor(p); }
   get hideProgress() { return this.escape.progress; }
+
+  // The level reacts to turf while any player stands in it.
+  onTurf(player, inside) {
+    this.inTurf[player] = inside ? 1 : 0;
+    if (inside || !this.inTurf.some(Boolean)) this.lvl.turf(inside);
+  }
+
+  // Distance from (x, y) to the nearest player.
+  nearestDist(x, y) {
+    const p = this.ctx.nearestPlayer(x, y);
+    return Math.hypot(p.x - x, p.y - y);
+  }
 
   cool(seconds) { this.lvl.cool(seconds); }
 
@@ -75,7 +90,7 @@ export class ChaseDirector {
     const p = this.pickSpawn();
     const b = this.pool.get(kind, this.cfg.kinds[kind], p.x, p.y);
     if (!b) return null;
-    const { player } = this.ctx;
+    const player = this.ctx.nearestPlayer(b.x, b.y);
     b.lastX = player.x;
     b.lastY = player.y;
     b.alerted = true;
@@ -84,7 +99,6 @@ export class ChaseDirector {
   }
 
   pickSpawn() {
-    const { player } = this.ctx;
     const cam = this.scene.cameras.main;
     const need = Math.hypot(cam.width, cam.height) / cam.zoom / 2 + this.cfg.spawn.margin;
     const sep = this.cfg.spawn.minSeparation;
@@ -93,7 +107,7 @@ export class ChaseDirector {
     let far = this.spawns[0];
     let farD = -1;
     for (const s of this.spawns) {
-      const d = Math.hypot(s.x - player.x, s.y - player.y);
+      const d = this.nearestDist(s.x, s.y);
       if (d > farD) { farD = d; far = s; }
       if (d < need || d >= bestD || this.occupied(s, sep)) continue;
       bestD = d;
@@ -108,11 +122,10 @@ export class ChaseDirector {
   }
 
   farSpawn() {
-    const { player } = this.ctx;
     let best = this.spawns[0];
     let bestD = -1;
     for (const s of this.spawns) {
-      const d = Math.hypot(s.x - player.x, s.y - player.y);
+      const d = this.nearestDist(s.x, s.y);
       if (d > bestD) { bestD = d; best = s; }
     }
     return best;
@@ -157,7 +170,7 @@ export class ChaseDirector {
   update(dt) {
     this.lvl.update(dt);
     this.nav.update();
-    const { player, particles, quality, events } = this.ctx;
+    const { particles, quality, events } = this.ctx;
     const c = this.cfg.bully;
     let seen = false;
     let nearest = Infinity;
@@ -165,7 +178,7 @@ export class ChaseDirector {
       if (!b.active) continue;
       this.fsm.update(b, dt);
       b.step(dt);
-      if (b.state !== S.CAUGHT) nearest = Math.min(nearest, Math.hypot(player.x - b.x, player.y - b.y));
+      if (b.state !== S.CAUGHT) nearest = Math.min(nearest, this.nearestDist(b.x, b.y));
       if (b.sees) seen = true;
       if (b.state === S.CHASE) {
         b.steamIn -= dt;
@@ -175,11 +188,12 @@ export class ChaseDirector {
         }
       }
       if (b.state === S.CAUGHT) continue;
+      const player = this.contactPlayer(b);
+      if (!player) continue; // a hidden player is not noticed or bumped
       const d = Math.hypot(player.x - b.x, player.y - b.y);
-      if (this.perception.hidden && d < c.bumpRadius) continue; // a hidden player is not noticed or bumped
       if (d < c.catchRadius && b.state !== S.GIVE_UP) {
         this.fsm.enter(b, S.CAUGHT);
-        events.emit('bully:caught-contact', { bully: b });
+        events.emit('bully:caught-contact', { bully: b, player: player.index });
       } else if (d < c.bumpRadius && b.state !== S.CHASE) {
         if (!b.bumped) events.emit('bully:bump', { bully: b });
         b.bumped = true; // once per approach: re-armed when the player is out of range again
@@ -189,6 +203,20 @@ export class ChaseDirector {
     const gone = this.escape.update(dt, this.lvl.level > 0, this.perception.hidden, seen, nearest);
     if (gone) this.lvl.clear(gone);
     if (this.dbg) this.drawDebug();
+  }
+
+  // The nearest player a bully can bump or catch: hidden players within bump range do not count.
+  contactPlayer(b) {
+    const players = this.ctx.alivePlayers();
+    const bump = this.cfg.bully.bumpRadius;
+    let best = null;
+    let bestD = Infinity;
+    for (let i = 0; i < players.length; i++) {
+      const p = players[i];
+      const d = Math.hypot(p.x - b.x, p.y - b.y);
+      if (d < bestD && !(d < bump && this.perception.hiddenFor(p))) { bestD = d; best = p; }
+    }
+    return best;
   }
 
   setSeen(seen) {
@@ -205,7 +233,6 @@ export class ChaseDirector {
 
   drawDebug() {
     const g = this.dbg.clear();
-    const { player } = this.ctx;
     const { ts, cols } = this.nav;
     this.pool.list.forEach((b, i) => {
       const label = this.labels[i];
@@ -213,6 +240,7 @@ export class ChaseDirector {
       if (!b.active) return;
       const col = STATE_COLORS[b.state];
       label.setText(`${b.kind} ${b.state}${b.sees ? ' *' : ''}`).setPosition(b.x - 14, b.y - 24).setColor('#' + col.toString(16).padStart(6, '0'));
+      const player = b.target ?? this.ctx.nearestPlayer(b.x, b.y);
       g.lineStyle(1, b.sees ? 0xff4d4d : 0x666666, 0.8).lineBetween(b.x, b.y, player.x, player.y);
       g.lineStyle(1, 0x4dd2ff, 0.9).beginPath().moveTo(b.x, b.y);
       for (let k = b.pathIdx; k < b.pathLen; k++) g.lineTo((b.path[k] % cols + 0.5) * ts, (((b.path[k] / cols) | 0) + 0.5) * ts);

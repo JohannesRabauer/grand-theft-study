@@ -1,4 +1,4 @@
-import { createTouchState } from './input.js';
+import { createTouchState } from './inputBindings.js';
 
 // On-screen touch controls, drawn procedurally inside UIScene (AD-13). They only fill the
 // state object that Input merges into the intent snapshot (AD-10): a floating joystick in the

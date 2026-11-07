@@ -2,10 +2,15 @@ import { addCircle } from '../physics/bodies.js';
 import { MovementController } from '../vehicles/MovementController.js';
 
 // Player on foot. Movement comes from a profile in data/vehicles.json (AD-4).
-// Publishes `player:vehicle` (profile id), `player:surface` (surface id) and `player:stamina` (0..1, whole-percent steps).
+// One of ctx.players (AD-18): `index` selects its intent (ctx.input.intents[index]), and it owns its movement,
+// vehicle, stamina, hidden state and tool belt. Publishes `player:vehicle` { player, id } (profile id),
+// `player:surface` { player, id } (surface id) and `player:stamina` { player, value } (0..1, whole-percent steps).
 export class Player {
-  constructor(scene, ctx, x, y, profiles, profileId) {
+  constructor(scene, ctx, index, x, y, profiles, profileId) {
     this.ctx = ctx;
+    this.index = index;
+    this.alive = true;
+    this.toolbelt = null; // set by GameScene right after creation (the belt needs the player)
     this.profiles = profiles;
     const profile = profiles[profileId];
     this.vehicle = profileId;
@@ -25,7 +30,7 @@ export class Player {
     this.move.setProfile(id, profile);
     this.sprite.setTexture(profile.texture).setOrigin(0.5, profile.faceHeading ? 0.5 : 0.8);
     this.sprite.setFlipX(false).setRotation(0);
-    this.ctx.events.emit('player:vehicle', id);
+    this.ctx.events.emit('player:vehicle', { player: this.index, id });
   }
 
   get x() { return this.body.position.x; }
@@ -35,7 +40,7 @@ export class Player {
 
   // Hidden in a hiding spot: translucent, greenish and the odd rustling leaf.
   updateHidden(dt) {
-    const hid = this.ctx.chase.hidden;
+    const hid = this.ctx.chase.hiddenFor(this);
     if (hid !== this.hid) {
       this.hid = hid;
       this.sprite.setAlpha(hid ? 0.5 : 1);
@@ -48,7 +53,7 @@ export class Player {
   }
 
   update(dt) {
-    const i = this.ctx.input.intent;
+    const i = this.ctx.input.intents[this.index];
     const m = this.move;
     m.update(dt, i.move.x, i.move.y, i.sprint);
     this.sprite.setPosition(this.x, this.y);
@@ -63,12 +68,12 @@ export class Player {
     this.updateHidden(dt);
     if (m.surface !== this.lastSurface) {
       this.lastSurface = m.surface;
-      this.ctx.events.emit('player:surface', m.surface);
+      this.ctx.events.emit('player:surface', { player: this.index, id: m.surface });
     }
     const pct = Math.round(m.stamina * 100);
     if (pct !== this.lastPct) {
       this.lastPct = pct;
-      this.ctx.events.emit('player:stamina', m.stamina);
+      this.ctx.events.emit('player:stamina', { player: this.index, value: m.stamina });
     }
   }
 }

@@ -71,7 +71,7 @@ try {
     const off = document.createElement('canvas'); off.width = W; off.height = H;
     const oc = off.getContext('2d', { willReadFrequently: true });
     const frame = () => new Promise(r => game.events.once('postrender', () => { oc.drawImage(game.canvas, 0, 0); r(oc.getImageData(0, 0, W, H).data); }));
-    const px = scene.player.x, py = scene.player.y;
+    const px = scene.ctx.players[0].x, py = scene.ctx.players[0].y;
     const P = { x: px + 150, y: py + 90 }; // fixed world feature
     const project = (z, cx, cy) => ({ x: (P.x - cx) * z + W / 2, y: (P.y - cy) * z + H / 2 });
     const sweep = async (from, to, step) => {

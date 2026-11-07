@@ -9,7 +9,8 @@ import { addProjectile } from '../physics/bodies.js';
 // for the wind at release. Projectile bodies are PROJECTILE (collide only with PROP and STATIC),
 // so people and animals are never touched; they are sensors, so hits are only reported here
 // and nothing is ever pushed by Matter's solver. Pooled: bodies, sprites and dots are made once.
-// Events: `tool:ammo` { ammo, max }, `tool:fire`; prop hits go through Props.knock (`prop:hit`).
+// One instance per player (own ammo, shots and aim dots). Events: `tool:ammo` { player, ammo, max }, `tool:fire`
+// { player, x, y, power }; prop hits go through Props.knock (`prop:hit`).
 
 // Position after t seconds: straight line plus constant wind acceleration (wx, wy in px/s^2).
 export function flightPoint(out, sx, sy, dx, dy, speed, wx, wy, t) {
@@ -21,10 +22,11 @@ export function flightPoint(out, sx, sy, dx, dy, speed, wx, wy, t) {
 const PARK = { x: -1000, y: -1000 };
 
 export class Slingshot extends Tool {
-  constructor(scene, ctx, cfg) {
+  constructor(scene, ctx, cfg, player) {
     super('slingshot');
     this.scene = scene;
     this.ctx = ctx;
+    this.player = player;
     this.cfg = cfg.slingshot;
     this.matter = scene.matter;
     this.max = this.cfg.maxAmmo;
@@ -47,8 +49,9 @@ export class Slingshot extends Tool {
     this.dotsShown = 0;
 
     const self = this;
-    ctx.pools.register('projectiles', { live: () => self.shots.filter(s => s.active).length, cap: this.cfg.pool });
-    ctx.pools.register('aimDots', { live: () => self.dotsShown, get cap() { return ctx.quality.tier.aimDots; } });
+    const sfx = player.index ? `.${player.index}` : ''; // pool names: projectiles, projectiles.1, ...
+    ctx.pools.register(`projectiles${sfx}`, { live: () => self.shots.filter(s => s.active).length, cap: this.cfg.pool });
+    ctx.pools.register(`aimDots${sfx}`, { live: () => self.dotsShown, get cap() { return ctx.quality.tier.aimDots; } });
   }
 
   makeShot() {
@@ -70,7 +73,7 @@ export class Slingshot extends Tool {
 
   unequip() { this.endCharge(); }
 
-  emitAmmo() { this.ctx.events.emit('tool:ammo', { ammo: this.ammo, max: this.max }); }
+  emitAmmo() { this.ctx.events.emit('tool:ammo', { player: this.player.index, ammo: this.ammo, max: this.max }); }
 
   // Returns how many were actually taken (the magazine has a cap).
   addAmmo(n) {
@@ -101,7 +104,7 @@ export class Slingshot extends Tool {
 
   // Aim at the pointer / stick point; without one, face the way the player last walked.
   updateAimDir(intent) {
-    const { player } = this.ctx;
+    const { player } = this;
     const ax = intent.aim ? intent.aim.x - player.x : intent.move.x;
     const ay = intent.aim ? intent.aim.y - player.y : intent.move.y;
     const m = Math.hypot(ax, ay);
@@ -116,7 +119,8 @@ export class Slingshot extends Tool {
     const s = this.shots.find(sh => !sh.active);
     if (!s) return;
     const c = this.cfg;
-    const { player, wind } = this.ctx;
+    const { player } = this;
+    const { wind } = this.ctx;
     this.power = power;
     s.sx = player.x + this.dir.x * c.muzzle;
     s.sy = player.y + this.dir.y * c.muzzle;
@@ -135,7 +139,7 @@ export class Slingshot extends Tool {
     this.ammo--;
     this.cool = c.cooldown;
     this.emitAmmo();
-    this.ctx.events.emit('tool:fire', { x: s.sx, y: s.sy, power });
+    this.ctx.events.emit('tool:fire', { player: player.index, x: s.sx, y: s.sy, power });
   }
 
   // The body is placed on the flight curve every frame (a sensor, so it never needs integrating).
@@ -197,7 +201,7 @@ export class Slingshot extends Tool {
 
   // Rubber band, power ring and predicted path while charging.
   drawCharge() {
-    const { player } = this.ctx;
+    const { player } = this;
     const d = this.dir;
     const g = this.band.clear();
     const fx = player.x + d.x * 5;
@@ -216,7 +220,8 @@ export class Slingshot extends Tool {
 
   // Dots follow the same flightPoint as the shot, so wind bends them exactly like the pebble.
   drawDots() {
-    const { player, wind, quality } = this.ctx;
+    const { player } = this;
+    const { wind, quality } = this.ctx;
     const c = this.cfg;
     const n = quality.tier.aimDots;
     const life = this.life();

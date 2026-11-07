@@ -29,7 +29,7 @@ Open the printed URL (`http://localhost:3000` or `http://localhost:8080`). URL f
 
 ## Controls
 
-All devices produce the same intent snapshot (`ctx.input.intent`); `ctx.input.type` is `keyboard`, `touch` or `gamepad` (whichever was used last) so prompts can adapt.
+Every player has an intent snapshot, `ctx.input.intents[i]`; all devices produce the same one (`ctx.input.intent` aliases `intents[0]`); `ctx.input.type` is `keyboard`, `touch` or `gamepad` (whichever was used last) so prompts can adapt.
 
 | Action | Keyboard / mouse | Touch | Gamepad |
 | --- | --- | --- | --- |
@@ -42,6 +42,20 @@ All devices produce the same intent snapshot (`ctx.input.intent`); `ctx.input.ty
 | Map | M | - | Back |
 | Weather (clear / rain) | T | - | - |
 | Pause | Esc | pause button (top right) | Start |
+
+**Two players** (AD-18; the number of active players is `ctx.players.length`, the game starts with one, `SCHULWEG_GAME.addPlayer()` with `?debug` adds a second until co-op joins in epic 2). Bindings live in `data/input.json` (KeyboardEvent codes); with a single player the arrow keys and Right Shift also steer P1, so one-player controls are unchanged.
+
+| Action | P1 | P2 |
+| --- | --- | --- |
+| Walk | WASD | arrow keys |
+| Jump / bell | Space | Right Ctrl |
+| Sprint | Left Shift | Right Shift |
+| Interact | F | Enter |
+| Previous / next tool | Q / E | `,` / `.` |
+| Tool use / aim | left click at the cursor | Numpad0, aims the way P2 last moved (or with a gamepad right stick) |
+| Map, weather, pause | M, T, Esc / Start | - (global intents come from P1 only) |
+
+Gamepads bind to the next free player: with one player the first pad is P1; with two players the first pad drives P2 and the second drives P1. Touch controls always drive P1.
 
 Touch controls appear on touch devices and hide as soon as a key or mouse is used. In portrait on a touch device a rotate hint covers the game and input is ignored.
 Resolution (AD-14): Medium and High render at 960x540, Low at 480x270. The picture is scaled by a whole number of device pixels (letterboxed, pixelated, so a 1920x1080 window shows 960x540 at 2x); only windows smaller than the render size get a fractional fit.
@@ -67,6 +81,8 @@ node scripts/check-crowd.mjs      # crowd spawn rules, caps, reaction geometry
 node scripts/check-state.mjs      # state store, actions, save slots, migrations
 node scripts/check-day.mjs        # day clock: phases, events, autosave, restore, weather schedule, tint
 node scripts/check-ui.mjs         # screen stack (top-only input, counted world freeze), HUD module list
+node scripts/check-players.mjs    # players array helpers; fails on any remaining use of the deprecated ctx.player
+node scripts/check-input.mjs      # P1/P2 key and gamepad bindings -> intents, edge and global intents
 node scripts/bench-cdp.mjs --url http://localhost:8080          # CPU cost per update, all scenarios and tiers (headless Edge/Chrome)
 node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke  # scripted whole-game smoke test
 ```
@@ -84,7 +100,7 @@ A bike is parked near the start. Walk up to it and press F to mount; press F aga
 
 ## The town
 
-`data/maps/town.json` is a 96x64 tile town (16 px tiles): a main road with a bike lane, a park with a canal, pond and bridge, an old town with cobbled alleys, a skatepark, and the school with a fenced yard. Walking from home to the school takes about 30 seconds by either of two routes: along the main road, or through the park and over the canal bridge into the old town. The yellow arrow around the player points to the school and shows the distance in meters (`metersPerTile` in the map); arriving emits `goal:reached` and shows a short message. Legend chars map to surface ids; surfaces with `"solid": true` in `data/surfaces.json` (walls, water, trees, fences, hedges, dumpsters, phone booths) become static bodies. Map objects: `spawn`, `goal`, `bike`, `hiding` (hedge, dumpster, phone-booth sensor zones), `turf` (skatepark, schoolyard-back sensor zones), `bully-spawn`, and `prop` markers (cone, can, crate, ball), `flag` and `ambient` (steam, chimney) spots. The player entering or leaving zones emits `hide:enter|leave` and `turf:enter|leave` on `ctx.events`. With `?debug`, hiding zones are outlined green, turf zones red and the goal yellow.
+`data/maps/town.json` is a 96x64 tile town (16 px tiles): a main road with a bike lane, a park with a canal, pond and bridge, an old town with cobbled alleys, a skatepark, and the school with a fenced yard. Walking from home to the school takes about 30 seconds by either of two routes: along the main road, or through the park and over the canal bridge into the old town. The yellow arrow around the player points to the school and shows the distance in meters (`metersPerTile` in the map); arriving emits `goal:reached` and shows a short message. Legend chars map to surface ids; surfaces with `"solid": true` in `data/surfaces.json` (walls, water, trees, fences, hedges, dumpsters, phone booths) become static bodies. Map objects: `spawn`, `goal`, `bike`, `hiding` (hedge, dumpster, phone-booth sensor zones), `turf` (skatepark, schoolyard-back sensor zones), `bully-spawn`, and `prop` markers (cone, can, crate, ball), `flag` and `ambient` (steam, chimney) spots. Each player entering or leaving zones emits `hide:enter|leave` and `turf:enter|leave` (`{ id, kind, player }`) on `ctx.events`; `goal:reached` is `{ id, player }`. Player events carry the player index: `player:surface` `{ player, id }`, `player:stamina` `{ player, value }`, `player:vehicle` `{ player, id }`, `tool:*` and `ammo:pickup` `{ player, ... }`. With `?debug`, hiding zones are outlined green, turf zones red and the goal yellow.
 
 `node scripts/check-map.mjs` validates the map: grid shape, legend, objects (none inside walls), and that the school is reachable by two different, bike-friendly routes, even when the middle of either one is blocked.
 
@@ -117,7 +133,7 @@ Save slot screen: three slots with a summary line (player(s), level, day, money)
 - **Pathfinding** (`ai/Pathfinding.js`): grid A* over the map (walls blocked, surface speed and wall proximity as cost), requests queued with a shared budget of 2 per frame, per-bully cached path re-requested about every 0.5 s or when the target tile changes, straight-line steering when the way is clear. A full-map search takes about 0.25 ms in node.
 - **HUD and debug**: top right an Ärger meter (two bars) and "Entdeckt!" / "Spotted!" while seen; angry steam puffs over chasing bullies (`anger` emitter). `?debug` shows each bully's state, path, line-of-sight ray and bump radius plus the level in the debug text.
 - **Escaping** (`ai/Escape.js`, `escape` in `data/chase.json`): stand still in a hiding spot, unseen and with no bully within `stumbleRadius`, for `hideSeconds` and the level drops to 0 (bullies walk off and return to the pool). Being seen, moving, leaving the spot or a bully stumbling close resets the timer and the level stays. Staying farther than `farDistance` from every bully and out of sight for `farSeconds` also cools the level down. While hidden the player sprite turns translucent and green, leaves rustle, the HUD shows "Versteckt!" / "Hidden!" and, during a chase, a bar under the Ärger meter fills until the level drops. Still only the director writes the level.
-- **Caught** (`entities/Caught.js`, `ui/CaughtFrame.js`, `caught` in `data/chase.json`): `bully:caught-contact` freezes the world (`ctx.frozen`; UIScene keeps running), spends `lossCents` (100) from `ctx.state.shared.money` (starts at 500 cents, shown top left as "€ 5,00"), resets the chase and shows a comic frame (halftone panel, locker with the player inside, the bully with the lunchbox, a random one of three speech-bubble lines per language). After 2.5 s, or Space/F (A/Y on a gamepad, jump button on touch) once 0.8 s have passed, the player is dismounted (the bike stays where it was), put back at home with a dust puff, and the chase can start again at the next turf entry. Emits `player:caught` `{ lost, money }` (cents) and `player:respawn` `{ x, y }`.
+- **Caught** (`entities/Caught.js`, `ui/CaughtFrame.js`, `caught` in `data/chase.json`): `bully:caught-contact` freezes the world (`ctx.frozen`; UIScene keeps running), spends `lossCents` (100) from `ctx.state.shared.money` (starts at 500 cents, shown top left as "€ 5,00"), resets the chase and shows a comic frame (halftone panel, locker with the player inside, the bully with the lunchbox, a random one of three speech-bubble lines per language). After 2.5 s, or Space/F (A/Y on a gamepad, jump button on touch) once 0.8 s have passed, the player is dismounted (the bike stays where it was), put back at home with a dust puff, and the chase can start again at the next turf entry. Caught is per player (`bully:caught-contact { bully, player }`; the world stays frozen until every caught player is back). Emits `player:caught` `{ player, lost, money }` (cents) and `player:respawn` `{ player, x, y }`.
 - Reaching the school (`goal:reached`) shows the arrival banner for a few seconds; the game keeps running (prototype, no school scene).
 - `node scripts/check-chase.mjs` checks pathfinding on the real map (home to school, walls, request budget, timing), the level thresholds and the hide / distance escape rules.
 
@@ -137,7 +153,7 @@ The town is full of people so it looks lively wherever you are (`ai/CrowdDirecto
 - **Population**: up to `maxNPCs` of the quality tier (Low 6, Medium 12, High 20) from the pool `npcs`, re-applied live on a tier switch. They appear on `npc-spawn` map markers (about 125, with district and role) in a ring just outside the camera view and are removed again once they are far outside it, so the crowd follows you through the districts; the density per district (`districts` in `data/npcs.json`) steers where they gather (plaza and park busiest, skatepark quietest). The level is filled on start.
 - **Walking**: `npc-node` markers form a graph of sidewalk, park path, alley and schoolyard waypoints; walkers go node to node along straight corridors (checked by `scripts/check-map.mjs`), sometimes stopping to chat. No pathfinding is used, bullies ignore pedestrians.
 - **Roles**: walkers (adults, kids, slower grandparents with canes), standers (bus stop, plaza, school gate), a grandparent on a bench, someone feeding the ducks, dog walkers (the dog is a pooled `ANIMAL` body on a leash) and two kids kicking a ball back and forth in the park. 12 outfits, three frames each, drawn procedurally at the render scale.
-- **Reactions**: ringing the bell (`bike:bell`) within 85 px, or riding at them quickly from the front, makes them hop, step aside perpendicular to your heading and shout a kid-safe line (`npc.react.N`, six per language, at most 3 speech bubbles at once); very fast and very close they dash away. Event `npc:react` `{ x, y, state }`.
+- **Reactions**: ringing the bell (`bike:bell`) within 85 px, or riding at them quickly from the front, makes them hop, step aside perpendicular to your heading and shout a kid-safe line (`npc.react.N`, six per language, at most 3 speech bubbles at once); very fast and very close they dash away. Event `npc:react` `{ x, y, state }`; `bike:bell` carries `{ x, y, player }`.
 - **Physics**: pedestrians are `NPC` bodies (feather-light, so you push them aside instead of getting stuck), they collide with walls, props and the player, never with bullies, each other or tools; dogs only with walls and props. The slingshot passes through all of them (AD-3).
 - `?debug` shows the crowd state counts, a label per pedestrian and the pools `npcs`, `dogs`, `bubbles`. `node scripts/check-crowd.mjs` checks the spawn rules, caps and reaction geometry.
 
@@ -164,7 +180,7 @@ ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tr
 | --- | --- |
 | `index.html`, `main.js` | Entry point, Phaser config (960x540, or 480x270 on Low; pixel art, Matter with zero gravity) |
 | `scenes/` | Boot (load + 1x procedural textures), `HiResArt.js` (2x textures), Menu, Game (owns `ctx`), UI (overlay HUD) |
-| `entities/` | Player, caught/respawn flow (`Caught.js`), bikes (+ skid, smoke, bell effects), `pools.js` (pool registry, fade pool), `Prop.js`, `Flag.js`, `Bully.js`, `Npc.js` (pedestrians and dogs), `SpeechBubbles.js` |
+| `entities/` | Player, `players.js` (`ctx.players`, `ctx.forEachPlayer`, `ctx.nearestPlayer(x, y)`, `ctx.alivePlayers()`, the deprecated `ctx.player` alias for `players[0]`), caught/respawn flow (`Caught.js`), bikes (+ skid, smoke, bell effects), `pools.js` (pool registry, fade pool), `Prop.js`, `Flag.js`, `Bully.js`, `Npc.js` (pedestrians and dogs), `SpeechBubbles.js` |
 | `vehicles/` | `MovementController.js`: drives any actor from a profile in `data/vehicles.json` |
 | `tools/` | Slingshot and other tools |
 | `ai/` | Chase director and level rules, bully state machine, perception, pathfinding |
@@ -175,7 +191,7 @@ ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tr
 | `services/` | `DayClock.js` + `dayTime.js` (day clock, AD-17); `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |
 | `data/` | Tuning JSON, `maps/town.json` (ASCII grid, objects in tile coordinates) |
-| `ui/` | `input.js` (intent snapshot), `hud/` (HUD modules, listed per mode in `data/hud.json`, registered in `hud/index.js`), `ScreenStack.js` + `screens/` (overlays; `data/screens.json` says which freeze the world), `scaling.js` (integer scaling), `uiKit.js` (UI camera, crisp text) |
+| `ui/` | `input.js` (device reading, per-player intents) + `inputBindings.js` (pure bindings -> intent), `hud/` (HUD modules, listed per mode in `data/hud.json`, registered in `hud/index.js`), `ScreenStack.js` + `screens/` (overlays; `data/screens.json` says which freeze the world), `scaling.js` (integer scaling), `uiKit.js` (UI camera, crisp text) |
 | `scripts/` | `check-*.mjs` and `check-all.mjs`, `bench.js` / `smoke.js` (loaded by `?bench`), `bench-cdp.mjs` (headless runner) |
 | `docs/` | `PERFORMANCE.md`: benchmark results, optimizations, manual phone test |
 

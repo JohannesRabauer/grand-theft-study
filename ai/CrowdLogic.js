@@ -9,7 +9,7 @@ export function outsideView(x, y, v) {
 // Spawn candidates are parallel arrays (xs, ys, weight) with `taken[i] = 1` for occupied markers.
 // A marker qualifies when it lies outside the view by `margin` .. `margin + ring` (a ring just off
 // screen), or, while prefilling the level, anywhere within `ring` of the view edge; and when it is at
-// least `playerClear` from the player (v.px, v.py). Picks one at random by weight; -1 if none.
+// least `playerClear` from every player (v.players, objects with x and y). Picks one at random by weight; -1 if none.
 export function pickSpawn(sp, taken, v, c, rand, prefill) {
   const lo = prefill ? -Infinity : c.margin;
   const hi = prefill ? c.ring : c.margin + c.ring;
@@ -39,7 +39,10 @@ function eligible(sp, taken, v, c, i, lo, hi) {
   if (taken[i] || sp.weight[i] <= 0) return false;
   const d = outsideView(sp.xs[i], sp.ys[i], v);
   if (d < lo || d > hi) return false;
-  return Math.hypot(sp.xs[i] - v.px, sp.ys[i] - v.py) >= c.playerClear;
+  for (let k = 0; k < v.players.length; k++) {
+    if (Math.hypot(sp.xs[i] - v.players[k].x, sp.ys[i] - v.players[k].y) < c.playerClear) return false;
+  }
+  return true;
 }
 
 // A role needing `slots` pool entries may spawn only while that many are free under the cap.

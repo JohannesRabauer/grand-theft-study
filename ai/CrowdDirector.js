@@ -10,7 +10,7 @@
 // so the population follows the player. The cap is ctx.quality.tier.maxNPCs and is re-applied on
 // `quality:changed`. Bodies are in the NPC / ANIMAL categories, tools never touch them (AD-3).
 //
-// Reactions: `bike:bell` within `bellRadius`, or the player closing in fast (CrowdLogic.approach),
+// Reactions: `bike:bell` (`player` = the ringing rider) within `bellRadius`, or any player closing in fast (CrowdLogic.approach),
 // make a pedestrian step aside (REACT, speech bubble from i18n `npc.react.N`) or dash away (FLEE).
 // Emits `npc:react` { x, y, state }.
 import { Npc, Dog, S } from '../entities/Npc.js';
@@ -70,7 +70,7 @@ export class CrowdDirector {
     this.bubbles = new SpeechBubbles(scene, ctx, cfg.maxBubbles);
 
     this.liveCount = 0;
-    this.view = { cx: 0, cy: 0, hw: 0, hh: 0, px: 0, py: 0 };
+    this.view = { cx: 0, cy: 0, hw: 0, hh: 0, players: ctx.players };
     this.spawnIn = 0;
     this.side = { x: 0, y: 0 };
     this.evt = { x: 0, y: 0, state: '' };
@@ -97,8 +97,7 @@ export class CrowdDirector {
     v.hh = cam.height / cam.zoom / 2;
     v.cx = cam.scrollX + cam.width / 2;
     v.cy = cam.scrollY + cam.height / 2;
-    v.px = this.ctx.player.x;
-    v.py = this.ctx.player.y;
+    v.players = this.ctx.alivePlayers();
   }
 
   // ---------------------------------------------------------------- spawning
@@ -228,18 +227,18 @@ export class CrowdDirector {
 
   onBell(ev) {
     const r = this.cfg.react;
-    const { player } = this.ctx;
+    const player = this.ctx.players[ev.player ?? 0];
     for (const n of this.list) {
       if (!n.active || n.cool > 0 || (n.state !== S.WALK && n.state !== S.STAND)) continue;
       if (Math.hypot(n.x - ev.x, n.y - ev.y) > r.bellRadius) continue;
-      this.react(n, 1, player.move.velSpeed > 20 ? player.move.vel.x : Math.cos(player.move.heading), player.move.velSpeed > 20 ? player.move.vel.y : Math.sin(player.move.heading));
+      this.react(n, 1, player, player.move.velSpeed > 20 ? player.move.vel.x : Math.cos(player.move.heading), player.move.velSpeed > 20 ? player.move.vel.y : Math.sin(player.move.heading));
     }
   }
 
-  // Step aside (level 1) or dash away (level 2), face the player and shout a line.
-  react(n, level, vx, vy) {
+  // Step aside (level 1) or dash away (level 2) from `player`, face them and shout a line.
+  react(n, level, player, vx, vy) {
     const r = this.cfg.react;
-    const { player, events, t } = this.ctx;
+    const { events, t } = this.ctx;
     const dx = n.x - player.x;
     const dy = n.y - player.y;
     const side = sideStep(this.side, vx, vy, dx, dy);
@@ -272,12 +271,10 @@ export class CrowdDirector {
 
   update(dt) {
     this.updateView();
-    const { player } = this.ctx;
+    const players = this.view.players;
     const v = this.view;
     const r = this.cfg.react;
     const w = this.cfg.walk;
-    const pvx = player.move.vel.x;
-    const pvy = player.move.vel.y;
     this.spawnIn -= dt;
     if (this.spawnIn <= 0) { this.spawnIn = this.cfg.spawn.interval; this.fill(false); }
     let leashes = false;
@@ -287,8 +284,11 @@ export class CrowdDirector {
       const out = outsideView(n.x, n.y, v);
       if (out > this.cfg.despawnDistance) { this.despawn(n); continue; }
       if ((n.state === S.WALK || n.state === S.STAND) && n.cool <= 0 && !n.sitting) {
-        const level = approach(pvx, pvy, n.x - player.x, n.y - player.y, r);
-        if (level) this.react(n, level, pvx, pvy);
+        for (let i = 0; i < players.length; i++) {
+          const p = players[i];
+          const level = approach(p.move.vel.x, p.move.vel.y, n.x - p.x, n.y - p.y, r);
+          if (level) { this.react(n, level, p, p.move.vel.x, p.move.vel.y); break; }
+        }
       }
       switch (n.state) {
         case S.WALK: this.walk(n, dt, w); break;
@@ -357,7 +357,7 @@ export class CrowdDirector {
     const flee = n.state === S.FLEE;
     const moving = !n.sitting && (flee || n.t > r.seconds - r.stepSeconds);
     if (moving) n.steer(n.rx, n.ry, flee ? r.fleeSpeedPx : r.stepSpeed, dt, 12); else n.steer(0, 0, 0, dt, 10);
-    if (!flee) n.face = this.ctx.player.x < n.x ? -1 : 1;
+    if (!flee) n.face = this.ctx.nearestPlayer(n.x, n.y).x < n.x ? -1 : 1;
     if ((n.t -= dt) <= 0) {
       n.state = n.resume;
       n.t = n.state === S.STAND && (n.role === 'walk' || n.role === 'dogwalk') ? 0 : Infinity;

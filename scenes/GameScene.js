@@ -5,6 +5,7 @@ import { WallStreamer } from '../physics/WallStreamer.js';
 import { Input } from '../ui/input.js';
 import { Bikes } from '../entities/Bike.js';
 import { Player } from '../entities/Player.js';
+import { installPlayers } from '../entities/players.js';
 import { Zones } from '../entities/Zones.js';
 import { Wind } from '../physics/Wind.js';
 import { DayClock } from '../services/DayClock.js';
@@ -44,9 +45,11 @@ export class GameScene extends Phaser.Scene {
       res, // render scale: world units stay the same, textures are drawn `res.scale` times finer (AD-14)
       pools: new Pools(),
       map,
-      surfaces: new Surfaces(map, cache.get('surfaces')),
-      input: new Input(this, events, cache.get('input'))
+      surfaces: new Surfaces(map, cache.get('surfaces'))
     };
+    const inputCfg = cache.get('input');
+    installPlayers(ctx, inputCfg.maxPlayers); // AD-18: ctx.players, helpers and the deprecated ctx.player alias
+    ctx.input = new Input(this, events, inputCfg, ctx.players);
     this.ctx = ctx;
 
     this.renderGrid(map, res);
@@ -54,8 +57,8 @@ export class GameScene extends Phaser.Scene {
 
     // map objects are in tile coordinates
     const spawn = map.objects.find(o => o.type === 'spawn' && o.id === 'player');
-    this.player = new Player(this, ctx, (spawn.x + 0.5) * ts, (spawn.y + 0.5) * ts, cache.get('vehicles'), 'foot');
-    ctx.player = this.player;
+    this.toolCfg = cache.get('tool');
+    this.addPlayer((spawn.x + 0.5) * ts, (spawn.y + 0.5) * ts);
     this.bikes = new Bikes(this, ctx);
     ctx.frozen = false; // true while the caught frame or a freezing screen is up: the world stands still, UIScene keeps running
     this.caughtFrozen = false;
@@ -67,8 +70,7 @@ export class GameScene extends Phaser.Scene {
     ctx.weather = new Weather(this, ctx, wcfg.weather);
     ctx.particles = new ParticleHub(this, ctx, cache.get('particles'));
     this.props = new Props(this, ctx, cache.get('props'));
-    this.tools = new ToolBelt(this, ctx, cache.get('tool'));
-    this.ammo = new AmmoPickups(this, ctx, cache.get('tool'));
+        this.ammo = new AmmoPickups(this, ctx, cache.get('tool'));
     this.flags = new Flags(this, ctx, wcfg.flag);
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
     this.caught = new Caught(this, ctx, cache.get('chase').caught, this.bikes);
@@ -93,8 +95,10 @@ export class GameScene extends Phaser.Scene {
     };
     this.zoomGoal = cam.zoom;
     this.zoomVel = 0;
-    this.camX = this.camOutX = this.player.x;
-    this.camY = this.camOutY = this.player.y;
+    this.focus = { x: 0, y: 0, speed: 0 };
+    this.updateFocus();
+    this.camX = this.camOutX = this.focus.x;
+    this.camY = this.camOutY = this.focus.y;
     this.followCamera(1);
     this.crowd = new CrowdDirector(this, ctx, cache.get('npcs')); // after the camera: it prefills the view
 
@@ -105,11 +109,45 @@ export class GameScene extends Phaser.Scene {
     events.on('game:resume', () => this.setPaused(false));
     events.on('game:quit', () => this.scene.start('Menu'));
     ctx.day.start();
+    if (window.SCHULWEG_GAME) window.SCHULWEG_GAME.addPlayer = () => this.addDebugPlayer(); // ?debug and ?bench
     this.scene.launch('UI', { ctx });
     this.events.once('shutdown', () => {
       this.scene.stop('UI');
       events.removeAllListeners(); // the shared emitter outlives this run; menu re-subscribes in create
     });
+  }
+
+  // Creates the next player (ctx.players[index], its intent is ctx.input.intents[index]) with its own tool belt.
+  // The game starts with one; SCHULWEG_GAME.addPlayer() (?debug) adds a second until co-op joins (epic 2).
+  addPlayer(x, y) {
+    const { ctx } = this;
+    const index = ctx.players.length;
+    const player = new Player(this, ctx, index, x, y, this.cache.json.get('vehicles'), 'foot');
+    ctx.players.push(player);
+    player.toolbelt = new ToolBelt(this, ctx, this.toolCfg, player);
+    return player;
+  }
+
+  // Debug helper behind SCHULWEG_GAME.addPlayer(): a second player at the first one's position, driven by
+  // the player-2 intent (arrow keys, right Ctrl / Shift, Enter, , . and Numpad0, or the first gamepad).
+  addDebugPlayer() {
+    const { players, maxPlayers } = this.ctx;
+    if (players.length >= maxPlayers) return null;
+    return this.addPlayer(players[0].x, players[0].y);
+  }
+
+  // What the camera follows until the CameraRig (epic 2): the centre of all players, at the speed of the fastest.
+  updateFocus() {
+    const f = this.focus;
+    const players = this.ctx.players;
+    f.x = f.y = f.speed = 0;
+    for (const p of players) {
+      f.x += p.x;
+      f.y += p.y;
+      f.speed = Math.max(f.speed, p.move.velSpeed);
+    }
+    f.x /= players.length;
+    f.y /= players.length;
   }
 
   // Zoom follows real speed continuously (1.0 standing .. 0.6 at top speed) times the render scale.
@@ -120,7 +158,7 @@ export class GameScene extends Phaser.Scene {
   updateZoom(dt) {
     const z = this.zoomCfg;
     const scale = this.ctx.res.scale;
-    const t = Math.min(1, this.player.move.velSpeed / z.speedForMin);
+    const t = Math.min(1, this.focus.speed / z.speedForMin);
     const raw = (z.max + (z.min - z.max) * t) * scale;
     if (raw >= z.max * scale || raw <= z.min * scale || Math.abs(raw - this.zoomGoal) > z.deadband * scale) this.zoomGoal = raw;
     const cam = this.cameras.main;
@@ -158,8 +196,8 @@ export class GameScene extends Phaser.Scene {
       this.camY = cam.scrollY + hh;
     }
     const k = 1 - Math.pow(1 - this.zoomCfg.follow, dt * 60);
-    this.camX += (this.player.x - this.camX) * k;
-    this.camY += (this.player.y - this.camY) * k;
+    this.camX += (this.focus.x - this.camX) * k;
+    this.camY += (this.focus.y - this.camY) * k;
     const z = cam.zoom;
     const vw = cam.width / z / 2; // half of the visible world, so the view stays inside the map
     const vh = cam.height / z / 2;
@@ -235,7 +273,7 @@ export class GameScene extends Phaser.Scene {
     this.ctx.input.update();
     if (this.paused) return;
     this.stepPhysics(delta);
-    if (this.ctx.input.intent.weather) this.ctx.weather.toggle();
+    if (this.ctx.input.intent.weather) this.ctx.weather.toggle(); // global intents come from P1 only
     this.ctx.day.update(dt);
     this.ctx.wind.update(dt);
     this.ctx.weather.update(dt);
@@ -245,12 +283,13 @@ export class GameScene extends Phaser.Scene {
       this.ctx.particles.update(dt);
       return;
     }
-    this.player.update(dt);
-    this.tools.update(dt);
+    for (const p of this.ctx.players) p.update(dt);
+    for (const p of this.ctx.players) p.toolbelt.update(dt);
     this.ammo.update(dt);
     this.bikes.update(dt);
     this.zones.update();
     this.chase.update(dt);
+    this.updateFocus();
     this.updateZoom(dt);
     this.followCamera(dt);
     this.crowd.update(dt);
