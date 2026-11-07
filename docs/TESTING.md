@@ -56,6 +56,8 @@ Areas so far: `prototype-core` (bike ride, slingshot, weather, language, quality
 
 The `minigames` scenario (last) runs the quiz demo through `ctx.minigames.start`: one player with a pause, number-key answers and the result screen, two players side by side, a quit-early round and a timed sprint round. It asserts the graded result, rewards, learning stats, that the world unfreezes and that display objects, scenes, textures and listeners are back to their counts before. Because it scripts the intents, it stubs `ctx.input.update` like the other scenarios; a new minigame can be exercised the same way (`env.until` to step past the countdown, set `ctx.input.intents[i].answer = 1..4` for one frame to answer).
 
+The same scenario also plays the Mathe minigame (`mathe`): one player through a whole 70 s run with both modes (the scene's `plan` is set so the sprint and the block half both happen; answers via number keys, the keypad model and block lanes), two players side by side with the gentle winner cheer, an uncaught block landing as a gentle miss and quitting. It asserts the fall time from the engine meta, learning stats per answer, rewards, grade, a restored world and no leaks. Its pure logic is `node scripts/check-mathe.mjs`.
+
 The `coop` scenario (last, it restarts the game) starts a real two-player run through the `coop` flag, sends both players along the commute route (`h.makeRouteRunner(ctx, reach, clearance, playerIndex)` drives any player) and asserts that the tether keeps the distance within the limit, the camera keeps both in view on every frame and zooms out, and that a pinned partner never blocks the other. `h.teleport` moves every player, so a second player is never left behind at the tether.
 
 ### Co-op scenarios

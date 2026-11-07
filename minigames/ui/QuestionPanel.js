@@ -8,10 +8,12 @@ const NOTE = { good: '#9be58f', soft: '#ffd27a', hint: '#9fd0ff' };
 // topics show German and English together), numbered answer buttons, a hint button and kind feedback. Answers come
 // from the player's choice cursor (nav), the number keys or a tap or click; the panel only reports the chosen index
 // through onChoose(index, hintsUsed). Only choice items have answer buttons here; typed, match and sort items get
-// their own interaction in their minigames and use the panel for the question text and the feedback.
+// their own interaction in their minigames and use the panel for the question text and the feedback (a minigame
+// with its own hint control sets externalHints and calls useHint()). `frame`, `frameAlpha` and `edge` restyle the board.
 export class QuestionPanel {
-  constructor(scene, ctx, rect, { depth = 10 } = {}) {
+  constructor(scene, ctx, rect, { depth = 10, frame = COLORS.frame, frameAlpha = 0.92, edge = null } = {}) {
     this.ctx = ctx;
+    this.externalHints = false;
     this.rect = rect;
     this.onChoose = null;
     this.q = null;
@@ -35,7 +37,8 @@ export class QuestionPanel {
     this.noteYFeedback = this.hintY;
     this.objects = [];
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(x, y, rect.w, rect.h, COLORS.frame, 0.92).setOrigin(0).setDepth(depth));
+    const back = own(scene.add.rectangle(x, y, rect.w, rect.h, frame, frameAlpha).setOrigin(0).setDepth(depth));
+    if (edge !== null) back.setStrokeStyle(3, edge);
     const font = { fontFamily: 'monospace', color: '#ffffff' };
     this.question = own(uiText(scene, x + pad, y + 6, '', { ...font, fontSize: `${fs}px`, wordWrap: { width: wrap }, lineSpacing: 2 }).setDepth(depth + 1));
     this.rows = [];
@@ -60,7 +63,7 @@ export class QuestionPanel {
 
   get hintsLeft() { return this.q ? Math.min(this.q.meta.hintsAllowed, this.view.hints.length) - this.hintsUsed : 0; }
 
-  get hasHintButton() { return !!this.q && !this.locked && this.q.meta.hintsAllowed > 0 && this.view.hints.length > 0; }
+  get hasHintButton() { return !!this.q && !this.locked && !this.externalHints && this.q.meta.hintsAllowed > 0 && this.view.hints.length > 0; }
 
   // Shows a learning item and unlocks the answer buttons.
   show(question) {
@@ -107,7 +110,7 @@ export class QuestionPanel {
     let color = NOTE.hint;
     let y = this.noteY;
     if (fb) {
-      const correct = view.answers.find(a => a.correct);
+      const correct = view.answers.find(a => a.correct) ?? (this.q.type === 'typed' ? view.answers[0] : null);
       color = fb.ok ? NOTE.good : NOTE.soft;
       y = this.noteYFeedback;
       text = ctx.t(fb.reaction);
