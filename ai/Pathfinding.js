@@ -2,7 +2,7 @@
 // Walkability and cost come from the map legend + data/surfaces.json (solid = blocked, cost =
 // 1 / foot speed, tiles beside walls cost extra so paths keep clear of corners). Everything is
 // preallocated: searches reuse typed arrays and an indexed binary heap, no allocation per request.
-// Requests are queued and solved at most `budget` per frame (shared by all bullies).
+// Requests share completion and expanded-node budgets; long searches resume next frame.
 const DX = new Int8Array([1, -1, 0, 0, 1, 1, -1, -1]);
 const DY = new Int8Array([0, 0, 1, -1, 1, -1, 1, -1]);
 const SQRT2 = Math.SQRT2;
@@ -23,8 +23,11 @@ export class Pathfinder {
     this.cols = map.rows[0].length;
     this.rowCount = map.rows.length;
     const n = this.cols * this.rowCount;
+    if (this.activeSearch) this.activeSearch.pathPending = false;
+    for (const owner of this.queue) if (owner) owner.pathPending = false;
     this.qHead = 0;
     this.qCount = 0;
+    this.activeSearch = null;
     this.queue.fill(null);
     this.size = 0;
     this.solvedLastUpdate = 0;
@@ -36,6 +39,9 @@ export class Pathfinder {
         this.cost[ty * this.cols + tx] = 1 / (s?.speed?.foot ?? 1);
       }
     }
+    const worker = this.worker ??= Object.create(Pathfinder.prototype);
+    if (worker.n !== n) worker.allocate(n);
+    Object.assign(worker, { cfg, ts: this.ts, cols: this.cols, rowCount: this.rowCount, solid: this.solid, cost: this.cost });
     for (let ty = 0; ty < this.rowCount; ty++) {
       for (let tx = 0; tx < this.cols; tx++) {
         if (this.isSolid(tx, ty)) continue;
@@ -122,24 +128,48 @@ export class Pathfinder {
   // Writes tile indices start..goal into `out` (Int32Array); returns the count, 0 when unreachable
   // or longer than `out`.
   findPath(sx, sy, gx, gy, out) {
+    this.beginPath(sx, sy, gx, gy, out);
+    this.advancePath(out, Infinity);
+    return this.searchResult;
+  }
+
+  beginPath(sx, sy, gx, gy, out) {
     const cols = this.cols;
     const s = this.snap(Math.floor(sx / this.ts), Math.floor(sy / this.ts));
     const goal = this.snap(Math.floor(gx / this.ts), Math.floor(gy / this.ts));
-    if (s < 0 || goal < 0) return 0;
-    if (s === goal) { out[0] = s; return 1; }
-    const { g, f, from, openGen, closedGen, cost, solid } = this;
+    this.searchResult = 0;
+    this.searchDone = true;
+    this.expanded = 0;
+    if (s < 0 || goal < 0) return;
+    if (s === goal) { out[0] = s; this.searchResult = 1; return; }
+    const { g, f, from, openGen } = this;
     const gen = ++this.gen;
     const goalX = goal % cols;
     const goalY = (goal / cols) | 0;
+    this.searchDone = false;
+    this.searchGoal = goal;
+    this.goalX = goalX;
+    this.goalY = goalY;
     this.size = 0;
     g[s] = 0;
     f[s] = this.h(s % cols, (s / cols) | 0, goalX, goalY);
     from[s] = -1;
     openGen[s] = gen;
     this.push(s);
-    while (this.size > 0) {
+  }
+
+  advancePath(out, limit) {
+    const { g, f, from, openGen, closedGen, cost, solid, cols, goalX, goalY, gen } = this;
+    this.expanded = 0;
+    if (this.searchDone) return;
+    while (this.size > 0 && this.expanded < limit) {
+      this.expanded++;
       const cur = this.pop();
-      if (cur === goal) return this.trace(goal, out);
+      if (cur === this.searchGoal) {
+        this.searchResult = this.trace(cur, out);
+        this.searchDone = true;
+        return;
+      }
       closedGen[cur] = gen;
       const cx = cur % cols;
       const cy = (cur / cols) | 0;
@@ -166,7 +196,7 @@ export class Pathfinder {
         }
       }
     }
-    return 0;
+    if (!this.size) this.searchDone = true;
   }
 
   h(x, y, gx, gy) { // octile distance; every tile costs >= 1
@@ -233,16 +263,45 @@ export class Pathfinder {
     this.queue[(this.qHead + this.qCount++) % this.queue.length] = owner;
   }
 
+  cancel(owner) {
+    if (this.activeSearch === owner) this.activeSearch = null;
+    for (let i = 0; i < this.queue.length; i++) if (this.queue[i] === owner) this.queue[i] = null;
+    owner.pathPending = false;
+  }
+
   update() {
     let done = 0;
-    while (done < this.cfg.budget && this.qCount > 0) {
+    let nodes = this.cfg.nodesPerFrame ?? 256;
+    this.expandedLastUpdate = 0;
+    while (done < this.cfg.budget && (this.qCount > 0 || this.activeSearch)) {
+      if (this.activeSearch) {
+        const o = this.activeSearch;
+        if (o.active) {
+          this.worker.advancePath(o.path, nodes);
+          nodes -= this.worker.expanded;
+          this.expandedLastUpdate += this.worker.expanded;
+          if (!this.worker.searchDone) break;
+          o.receivePath(this.worker.searchResult);
+        }
+        o.pathPending = false;
+        this.activeSearch = null;
+        done++;
+        if (nodes <= 0) break;
+        continue;
+      }
       const o = this.queue[this.qHead];
       this.queue[this.qHead] = null;
       this.qHead = (this.qHead + 1) % this.queue.length;
       this.qCount--;
-      o.pathPending = false;
-      o.solvePath(this);
-      done++;
+      if (!o) continue;
+      if (typeof o.receivePath === 'function') {
+        this.activeSearch = o;
+        this.worker.beginPath(o.x, o.y, o.goalX, o.goalY, o.path);
+      } else {
+        o.pathPending = false;
+        o.solvePath(this);
+        done++;
+      }
     }
     this.solvedLastUpdate = done;
   }

@@ -48,7 +48,7 @@ export class Player {
   // Walking is always allowed, anything else must be owned (AD-23, vehicles/Ownership.js). A refused mount toasts and
   // uses up this frame's interact press (vehicleSwapped), so a nearer locked item does not pass it on to the next one.
   mayUse(id) {
-    if (this.ctx.ownership.owns(id)) return true;
+    if (this.ctx.ownership.owns(id) || this.ctx.street?.allowed(this.index, id)) return true;
     this.vehicleSwapped = true;
     this.ctx.ownership.refuse(id);
     return false;

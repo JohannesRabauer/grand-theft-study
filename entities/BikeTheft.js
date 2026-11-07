@@ -89,7 +89,7 @@ export class BikeTheft {
     if (this.cooldown > 0 || this.stolen || ctx.state.shared.flags.stolenBike || !this.hideouts.length) return;
     const { chase } = ctx;
     for (const b of this.parking.dropped) {
-      if (b.parkState !== 'unlocked' || b.awayT < cfg.awaySeconds) continue;
+      if (b.streetId || b.parkState !== 'unlocked' || b.awayT < cfg.awaySeconds) continue;
       const origin = pickOrigin(chase.spawns, b.x, b.y, cfg, visible);
       if (!origin) continue;
       probe.locked = false;

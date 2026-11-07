@@ -4,7 +4,7 @@
 import { ACTIONS } from './actions.js';
 import { emptyGrades, defaultKopfnoten } from '../grading/gradeCore.js';
 
-export const STATE_VERSION = 6;
+export const STATE_VERSION = 7;
 
 export const createMorning = () => ({ day: 0, breakfast: false, packed: false, missing: [] });
 
@@ -45,6 +45,7 @@ export function createShared(cfg) {
     money: cfg.startMoneyCents,
     familienfrieden: cfg.startFamilienfrieden,
     ownedVehicles: [...cfg.startVehicles],
+    streetRides: {},
     quests: { active: [], done: [] },
     clock: { day: 1, minute: 0, phase: null }, // DayClock moves a fresh clock to the start of the day
     flags: {}

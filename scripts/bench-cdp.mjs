@@ -38,7 +38,7 @@ try {
   ws.addEventListener('message', ev => {
     const m = JSON.parse(ev.data);
     if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); }
-    if (m.method === 'Runtime.exceptionThrown') logs.push('EXCEPTION ' + m.params.exceptionDetails.text + ' ' + (m.params.exceptionDetails.exception?.description ?? ''));
+    if (m.method === 'Runtime.exceptionThrown') logs.push('EXCEPTION ' + m.params.exceptionDetails.text + ' ' + (m.params.exceptionDetails.exception?.description ?? '') + ' ' + m.params.exceptionDetails.url + ':' + (m.params.exceptionDetails.lineNumber + 1));
     if (m.method === 'Runtime.consoleAPICalled' && ['error', 'warning'].includes(m.params.type)) logs.push(m.params.type + ': ' + m.params.args.map(a => a.value ?? a.description).join(' '));
   });
   const send = (method, params = {}) => new Promise(r => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
@@ -56,7 +56,7 @@ try {
     await sleep(300);
     try { ready = await evalJs('!!window.SCHULWEG_BENCH && !!window.Phaser && !!window.SCHULWEG_GAME.registry.get("app")'); } catch { /* page still loading */ }
   }
-  if (!ready) throw new Error('game did not start; is the server running at ' + base + '?');
+  if (!ready) throw new Error('game did not start; is the server running at ' + base + '?\n' + logs.join('\n'));
   await sleep(1500); // let BootScene finish
 
   const out = {};

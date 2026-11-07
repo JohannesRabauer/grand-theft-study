@@ -11,6 +11,8 @@ import { makeBusArt } from './SkatesArt.js';
 import { makeVehicleArt } from './VehicleArt.js';
 import { GameState } from '../state/GameState.js';
 import { SaveSlots } from '../state/SaveSlots.js';
+import { streetCatalog } from '../vehicles/streetLogic.js';
+import { makeExpansionArt } from './ExpansionArt.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
@@ -27,6 +29,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('weather', 'data/weather.json');
     this.load.json('particles', 'data/particles.json');
     this.load.json('props', 'data/props.json');
+    this.load.json('play-objects', 'data/play-objects.json');
     this.load.json('chase', 'data/chase.json');
     this.load.json('tool', 'data/tool.json');
     this.load.json('karate', 'data/karate.json');
@@ -82,6 +85,9 @@ export class BootScene extends Phaser.Scene {
     const karate = this.cache.json.get('karate');
     const characterBelts = Object.fromEntries(characters.characters.filter(c => c.startBelt).map(c => [c.id, { belt: c.startBelt, points: karate.belts.find(b => b.id === c.startBelt).trainingPoints }]));
     const stateCfg = { ...this.cache.json.get('state'), morning: this.cache.json.get('morning'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])), karateBelts: karate.belts.map(b => b.id), characterBelts, kopfnoten: this.cache.json.get('kopfnoten'), shop: this.cache.json.get('shop') };
+    stateCfg.worldMaps = Object.fromEntries(this.registry.get('mapIndex').maps.map(m => [m.id, this.cache.json.get(`map-${m.id}`)]));
+    stateCfg.worldSurfaces = this.cache.json.get('surfaces');
+    stateCfg.streetObjects = streetCatalog(stateCfg.worldMaps);
     const state = new GameState(events, stateCfg);
     const saves = new SaveSlots(state, events, window.localStorage);
     this.registry.set('app', { events, i18n, t: i18n.t, quality, res, state, saves, characters });
@@ -106,6 +112,7 @@ export class BootScene extends Phaser.Scene {
     makeDojoArt(this, this.cache.json.get('karate'), res.scale);
     makeBusArt(this, res.scale);
     makeVehicleArt(this, res.scale);
+    makeExpansionArt(this, res.scale);
     // The speed zoom scales the world by non-integer factors, where nearest-neighbour sampling makes
     // texels land on uneven screen pixels (shimmer). World textures are filtered bilinear instead; at
     // an exact integer zoom texels map 1:1 to pixels, so the result stays crisp. UI textures stay sharp.

@@ -215,11 +215,40 @@ const SCENARIOS = {
       shoot(step);
       kick(step);
     };
+  },
+  openWorld(s, restore) {
+    const { ctx, gs } = s;
+    if (ctx.world.id !== 'town') ctx.world.load('town', 'from-home');
+    if (ctx.players.length < 2) gs.addDebugPlayer();
+    for (const p of ctx.players) {
+      for (const svc of gs.mountables) if (svc.isMounted(p.index)) svc.dismount(p);
+      p.setVehicle('foot');
+    }
+    const c = ctx.chase.cfg.bully;
+    restore.push([c, 'catchRadius', c.catchRadius], [ctx.props.cfg, 'margin', ctx.props.cfg.margin],
+      [ctx.wind.cfg, 'base', ctx.wind.cfg.base], [ctx.wind.cfg, 'gust', ctx.wind.cfg.gust]);
+    c.catchRadius = -1;
+    ctx.weather.set('rain'); strongWind(ctx); wake(ctx);
+    const kick = makeKicker(gs, ctx);
+    const places = [[112,29],[95,87],[109,43],[102,52],[86,85]];
+    let last = -1;
+    return step => {
+      const phase = Math.floor(step / 120) % places.length;
+      if (phase !== last) {
+        last = phase; teleport(gs, ctx, ...places[phase]); gs.snapCamera(); ctx.props.cull();
+        ctx.chase.lvl.set(2, 'bench-open-world');
+      }
+      if (step % 30 === 0) {
+        const g = gs.play.groups.find(g => g.parts.every(p => p.awake));
+        if (g) gs.play.activate(g, ctx.players[step % 2]);
+      }
+      kick(step);
+    };
   }
 };
 
 const LABELS = {
-  walk: 'a idle walking', bike: 'b bike top speed', chase: 'c level-2 chase (3 bullies)', props: 'd rain+wind+props+sling', all: 'e everything'
+  walk: 'a idle walking', bike: 'b bike top speed', chase: 'c level-2 chase (3 bullies)', props: 'd rain+wind+props+sling', all: 'e everything', openWorld: 'f co-op expansion+linked toys+traffic'
 };
 
 const mem = () => performance.memory?.usedJSHeapSize ?? 0;
@@ -237,6 +266,7 @@ async function runOne(game, name, tier, steps, warm) {
   let peakBullies = 0;
   let last = 0;
   let heap0 = 0;
+  const peakPools = new Map();
   const particles = s.ctx.pools.byName.get('particles');
   const bullies = s.ctx.pools.byName.get('bullies');
   for (let i = -warm; i < steps; i++) {
@@ -248,6 +278,12 @@ async function runOne(game, name, tier, steps, warm) {
     cam.preRender(); // camera follow + worldView (normally done while drawing); not timed
     if (i < 0) continue;
     times[i] = dt;
+    for (const [name, pool] of s.ctx.pools.byName) {
+      const peak = peakPools.get(name) ?? { name, live: 0, cap: pool.cap };
+      peak.live = Math.max(peak.live, pool.live());
+      peak.cap = pool.cap;
+      peakPools.set(name, peak);
+    }
     const m = mem();
     if (i === 0) { window.gc?.(); heap0 = mem(); last = heap0; }
     if (m > last) alloc += m - last; else if (m < last - 262144) gcs++;
@@ -275,7 +311,9 @@ async function runOne(game, name, tier, steps, warm) {
     gcs,
     particles: peakParticles,
     bullies: peakBullies,
-    awakeProps: awake
+    awakeProps: awake,
+    pools: [...peakPools.values()],
+    poolsWithinCap: [...peakPools.values()].every(p => p.live <= p.cap)
   };
 }
 

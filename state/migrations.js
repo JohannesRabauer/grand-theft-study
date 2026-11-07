@@ -71,6 +71,10 @@ export const MIGRATIONS = {
 
   5(d) {
     return { ...d, v: 6, players: d.players.map(p => ({ ...p, bag: p.bag ?? [], morning: createMorning() })) };
+  },
+
+  6(d) {
+    return { ...d, v: 7, shared: { ...d.shared, streetRides: {} } };
   }
 };
 

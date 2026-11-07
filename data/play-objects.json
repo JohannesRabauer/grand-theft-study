@@ -1,0 +1,13 @@
+{
+  "reach": 40,
+  "kinds": {
+    "swing": { "parts": 1, "spacing": 0, "texture": "play-swing", "tether": 24, "push": 2.8 },
+    "sign": { "parts": 1, "spacing": 0, "texture": "play-sign", "tether": 8, "push": 1.8 },
+    "bridge": { "parts": 5, "spacing": 13, "texture": "play-plank", "push": 2.0 },
+    "kite": { "parts": 1, "spacing": 0, "texture": "play-kite", "tether": 32, "push": 3.0, "wind": 65 },
+    "flag": { "parts": 1, "spacing": 0, "texture": "play-flag", "tether": 14, "push": 2.0, "wind": 40 },
+    "cart": { "parts": 1, "spacing": 0, "texture": "play-cart", "push": 3.0, "slope": 38 },
+    "dominoes": { "parts": 6, "spacing": 13, "texture": "play-crate", "push": 5.0 },
+    "floater": { "parts": 1, "spacing": 0, "texture": "play-floater", "tether": 28, "push": 2.0, "wind": 24 }
+  }
+}

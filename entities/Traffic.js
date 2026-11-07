@@ -200,6 +200,7 @@ export class Traffic {
     }
     if (u < 1) return;
     s.item = null;
+    this.ctx.street.snapshot();
     if (item.parkState !== undefined || item.bikeId !== undefined) this.parking?.park(item, player.index);
   }
 
@@ -275,6 +276,7 @@ export class Traffic {
       slot.shadow?.setVisible(false);
     }
     slot.hit.stun = slot.hit.safe = 0;
+    this.ctx.street.snapshot();
     slot.slide.item = null;
     this.bubbles.release(slot.anchor);
   }

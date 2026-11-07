@@ -2,6 +2,7 @@
 // Saves happen on `phase:ended` (autosave) and on explicit save(), never mid-phase.
 import { STATE_VERSION, createDefaultState } from './GameState.js';
 import { migrate } from './migrations.js';
+import { validStreetRecords } from '../vehicles/streetLogic.js';
 
 const KEY = (n) => `schulweg.save.${n}`;
 const isObj = (o) => o !== null && typeof o === 'object';
@@ -20,6 +21,7 @@ export class SaveSlots {
   save(n) {
     this.#checkSlot(n);
     try {
+      this.events.emit('state:saving', { slot: n });
       this.storage.setItem(KEY(n), JSON.stringify({ ...this.state.data, savedAt: Date.now() }));
     } catch (err) {
       console.warn('save failed', err);
@@ -101,7 +103,7 @@ export class SaveSlots {
       if (!isObj(d) || !Number.isInteger(d.v)) return null;
       const m = migrate(d, this.state.cfg, STATE_VERSION);
       const ok = isObj(m.shared) && isObj(m.shared.clock) && Array.isArray(m.players) && m.players.length > 0
-        && m.players.every(isObj);
+        && m.players.every(isObj) && validStreetRecords(m.shared.streetRides, this.state.cfg, m.players.length);
       return ok ? m : null;
     } catch {
       return null;

@@ -13,10 +13,10 @@ export function classifyHit(x, y, h, length, width, zone, hit, px, py, pr) {
   const along = dx * c + dy * s;
   const lat = -dx * s + dy * c;
   const rear = -length / 2;
-  if (along >= rear - zone.length && along <= rear + zone.reach && Math.abs(lat) <= zone.width / 2) return 'rear';
+  if (zone && along >= rear - zone.length && along <= rear + zone.reach && Math.abs(lat) <= zone.width / 2) return 'rear';
   const front = length / 2 + hit.frontReach;
   const half = width / 2 + hit.sideReach;
-  const nx = Math.max(rear + zone.reach, Math.min(front, along)); // nearest point of the hit box
+  const nx = Math.max(rear + (zone?.reach ?? 0), Math.min(front, along)); // nearest point of the hit box
   const ny = Math.max(-half, Math.min(half, lat));
   if (Math.hypot(along - nx, lat - ny) > pr) return '';
   return nx >= front - hit.frontDepth ? 'front' : 'side';
@@ -26,10 +26,36 @@ export function relativeSpeed(vx, vy, wx, wy) {
   return Math.hypot(vx - wx, vy - wy);
 }
 
+export function yieldsTo(t, x, y, radius = 5, ahead = 38) {
+  const dx = x - t.x, dy = y - t.y;
+  const reach = t.kcfg.length / 2 + ahead + radius;
+  if (Math.abs(dx) > reach || Math.abs(dy) > reach) return false;
+  const along = dx * Math.cos(t.heading) + dy * Math.sin(t.heading);
+  const lat = -dx * Math.sin(t.heading) + dy * Math.cos(t.heading);
+  return along > t.kcfg.length / 2 + radius && along < t.kcfg.length / 2 + ahead + radius
+    && Math.abs(lat) < t.kcfg.width / 2 + radius + 2;
+}
+
+export function trafficStep(t, blocked, dt, cfg) {
+  t.blocked = blocked ? Math.min(cfg.recoverAfter + cfg.retryEvery, (t.blocked ?? 0) + dt) : 0;
+  t.speed = blocked ? 0 : t.cruise;
+  return t.blocked >= cfg.recoverAfter;
+}
+
+export function trafficFootprintFree(x, y, heading, length, width, solid) {
+  const c = Math.cos(heading), s = Math.sin(heading);
+  for (const a of [-length / 2, 0, length / 2]) for (const l of [-width / 2, 0, width / 2]) {
+    if (solid(x + a * c - l * s, y + a * s + l * c)) return false;
+  }
+  return true;
+}
+
 // Is a pedestrian at (px, py) in the path of a vehicle (so it should step aside early)?
 export function inPath(x, y, h, length, width, react, px, py) {
   const dx = px - x;
   const dy = py - y;
+  const reach = length / 2 + react.ahead + react.behind + width / 2 + react.lane;
+  if (Math.abs(dx) > reach || Math.abs(dy) > reach) return false;
   const along = dx * Math.cos(h) + dy * Math.sin(h);
   const lat = -dx * Math.sin(h) + dy * Math.cos(h);
   return along >= -length / 2 - react.behind && along <= length / 2 + react.ahead && Math.abs(lat) <= width / 2 + react.lane;

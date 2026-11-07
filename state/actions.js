@@ -1,5 +1,6 @@
 import { createMorning, createPlayer, grantStartBelt } from './GameState.js';
 import { applyRecord, validEntry, moveKopfnote } from '../grading/gradeCore.js';
+import { safeStreetPosition, streetRecord } from '../vehicles/streetLogic.js';
 
 // Registered state actions (AD-16). Each gets a mutable draft copy, the payload and the config and
 // returns { path } (the changed path(s)) or { reject: reason }. New systems add their actions here.
@@ -15,6 +16,42 @@ function unlockVehicle(s, id, reason, cfg) {
 }
 
 export const ACTIONS = {
+  'street.claim'(s, { id, player, map, x, y }, cfg) {
+    const r = streetRecord(cfg, s.shared.streetRides, id);
+    if (!r || !s.players[player] || !Number.isInteger(player) || !safeStreetPosition(cfg, map, x, y)) return reject('bad-payload');
+    if (r.status === 'carried' || r.map !== map || Math.hypot(r.x - x, r.y - y) > 36) return reject('unavailable');
+    if (Object.values(s.shared.streetRides).some(v => v.status === 'carried' && v.player === player)) return reject('already-riding');
+    s.shared.streetRides[id] = { ...r, status: 'carried', player, map, x, y };
+    return { path: 'shared.streetRides' };
+  },
+
+  'street.locate'(s, { id, player, map, x, y, drop = false }, cfg) {
+    const r = s.shared.streetRides[id];
+    if (!r || !safeStreetPosition(cfg, map, x, y) || typeof drop !== 'boolean') return reject('bad-payload');
+    if (r.status === 'available' || (r.status === 'carried' && r.player !== player)
+      || (r.status === 'dropped' && (player !== null || map !== r.map || drop))) return reject('invalid-transition');
+    Object.assign(r, { map, x, y });
+    if (drop) { r.status = 'dropped'; r.player = null; }
+    return { path: 'shared.streetRides' };
+  },
+
+  'street.return'(s, { id, player, map, x, y }, cfg) {
+    const r = s.shared.streetRides[id];
+    const o = cfg.streetObjects?.[id];
+    if (!o || !r || r.status !== 'carried' || r.player !== player || map !== o.map
+      || !safeStreetPosition(cfg, map, x, y) || Math.hypot(x - o.x, y - o.y) > 36) return reject('invalid-return');
+    s.shared.streetRides[id] = { kind: o.kind, map: o.map, x: o.x, y: o.y, status: 'available', player: null };
+    return { path: 'shared.streetRides' };
+  },
+
+  'street.restore'(s, {}, cfg) {
+    for (const r of Object.values(s.shared.streetRides)) {
+      if (!safeStreetPosition(cfg, r.map, r.x, r.y)) return reject('bad-location');
+      if (r.status === 'carried') { r.status = 'dropped'; r.player = null; }
+    }
+    return { path: 'shared.streetRides' };
+  },
+
   'home.startDay'(s, { player, day }) {
     const p = s.players[player];
     if (!p || !positiveInt(day) || day !== s.shared.clock.day) return reject('bad-payload');

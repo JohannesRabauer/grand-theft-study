@@ -6,7 +6,13 @@ import { CaughtFrame } from '../CaughtFrame.js';
 export class CaughtModule extends HudModule {
   constructor(scene, ctx, opts) {
     super(scene, ctx, opts);
-    this.frames = [new CaughtFrame(scene, ctx, 0)];
+    // Baking the comic canvas on first contact stalls the enlarged world's update.
+    this.frames = ctx.players.map((_, index) => {
+      const frame = new CaughtFrame(scene, ctx, index);
+      frame.show({ player: index, lost: ctx.chase.cfg.caught.lossCents });
+      frame.hide();
+      return frame;
+    });
     this.frame = this.frames[0];
     this.on('player:caught', (ev) => {
       this.frames[ev.player] ??= new CaughtFrame(scene, ctx, ev.player);

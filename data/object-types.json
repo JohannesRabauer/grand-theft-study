@@ -14,11 +14,11 @@
       "auto": { "type": "bool", "doc": "true: enter on touch, otherwise walk in and press interact" }
     } },
     "goal": { "shape": "rect", "inWall": false, "reach": true, "fields": {} },
-    "bike": { "shape": "point", "inWall": false, "fields": {} },
-    "skateboard": { "shape": "point", "inWall": false, "fields": {} },
+    "bike": { "shape": "point", "inWall": false, "fields": { "street": { "type": "bool", "doc": "An unattended identifiable street ride; object-scoped temporary use, not ownership." } } },
+    "skateboard": { "shape": "point", "inWall": false, "fields": { "street": { "type": "bool", "doc": "An unattended identifiable street ride; object-scoped temporary use, not ownership." } } },
     "skates": { "shape": "point", "inWall": false, "fields": {} },
-    "scooter": { "shape": "point", "inWall": false, "reach": true, "fields": {} },
-    "rollerblades": { "shape": "point", "inWall": false, "reach": true, "fields": {} },
+    "scooter": { "shape": "point", "inWall": false, "reach": true, "fields": { "street": { "type": "bool", "doc": "An unattended identifiable street ride; object-scoped temporary use, not ownership." } } },
+    "rollerblades": { "shape": "point", "inWall": false, "reach": true, "fields": { "street": { "type": "bool", "doc": "An unattended identifiable street ride; object-scoped temporary use, not ownership." } } },
     "hiding": { "shape": "rect", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["hedge", "dumpster", "phone-booth"], "required": true } } },
     "turf": { "shape": "rect", "inWall": true, "fields": {
       "toast": { "type": "i18n", "doc": "HUD toast key shown when a player enters the zone" },
@@ -109,6 +109,7 @@
     "home": { "shape": "rect", "inWall": false, "reach": true, "fields": {
       "role": { "type": "enum", "values": ["breakfast", "bag"], "required": true }
     } },
-    "school-spot": { "shape": "point", "inWall": false, "reach": true, "fields": {} }
+    "school-spot": { "shape": "point", "inWall": false, "reach": true, "fields": {} },
+    "play": { "shape": "point", "inWall": false, "reach": true, "fields": { "kind": { "type": "enum", "values": ["swing", "sign", "bridge", "kite", "flag", "cart", "dominoes", "floater"], "required": true } } }
   }
 }

@@ -48,6 +48,8 @@ import { Minigames } from '../minigames/Minigames.js';
 import { School } from '../entities/School.js';
 import { Home } from '../entities/Home.js';
 import { morningStartMap } from '../services/Morning.js';
+import { StreetRides } from '../entities/StreetRides.js';
+import { PlayObjects } from '../entities/PlayObjects.js';
 
 const STEP_MS = 1000 / 60; // Matter's fixed timestep (AD-14); MovementController assumes it too
 const STEP_SLACK = 0.95; // a frame that arrives a hair early (vsync jitter) still gets its step
@@ -108,6 +110,7 @@ export class GameScene extends Phaser.Scene {
       const p = this.addPlayer((spawn.x + 0.5) * ts + offsets[s.index][0], (spawn.y + 0.5) * ts + offsets[s.index][1]);
       if (s.vehicle) p.startVehicle = s.vehicle;
     }
+    this.street = new StreetRides(this, ctx);
     this.bikes = new Bikes(this, ctx);
     this.skateboards = new Skateboards(this, ctx, this.bikes);
     this.skates = new Skates(this, ctx, this.bikes);
@@ -115,6 +118,7 @@ export class GameScene extends Phaser.Scene {
     this.rollerblades = new Skates(this, ctx, this.bikes, { id: 'rollerblades', object: 'rollerblades', texture: 'rollerblades' });
     this.rollers = [this.skateboards, this.skates, this.scooters, this.rollerblades];
     this.mountables = [this.bikes, ...this.rollers];
+    this.street.services = this.mountables;
     for (const service of this.rollers) service.rivals = this.mountables.filter(s => s !== service);
     this.parking = new Parking(this, ctx, cache.get('theft'), this.mountables); // story 5.5: racks, locks, padlocks
     this.grabs = new GrabTargets(this, ctx, cache.get('routes'), cache.get('grab')); // AD-23: before the first mount, Skates asks it
@@ -142,6 +146,7 @@ export class GameScene extends Phaser.Scene {
     ctx.weather = new Weather(this, ctx, wcfg.weather);
     ctx.particles = new ParticleHub(this, ctx, cache.get('particles'));
     this.props = new Props(this, ctx, cache.get('props'));
+    this.play = new PlayObjects(this, ctx, cache.get('play-objects'));
     this.ammo = new AmmoPickups(this, ctx, cache.get('tool'));
     const stickWorld = cache.get('stick-world'); // story 6.2: what the stick, and the slingshot's balloons, play with
     this.loot = new LootDrops(this, ctx, stickWorld, cache.get('tool'));
@@ -361,6 +366,7 @@ export class GameScene extends Phaser.Scene {
     for (const service of this.rollers) service.update(dt);
     this.tricks.update(dt);
     this.bikes.update(dt);
+    this.street.update();
     this.garage.update();
     this.theft.update(dt);
     this.zones.update();
@@ -373,6 +379,7 @@ export class GameScene extends Phaser.Scene {
     this.followCamera(dt);
     this.crowd.update(dt);
     this.props.update(dt);
+    this.play.update(dt);
     this.loot.update(dt);
     this.bushes.update(dt);
     this.pinata.update(dt);

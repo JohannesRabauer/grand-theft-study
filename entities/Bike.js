@@ -32,10 +32,15 @@ export class Bikes {
     const ts = ctx.map.tileSize;
     const stolen = ctx.state.shared.flags.stolenBike?.bikeId; // a bike that is at a hideout is not at home too
     for (const o of ctx.map.objects) {
-      if (o.type !== 'bike' || o.id === stolen) continue;
+      if (o.type !== 'bike' || o.id === stolen || o.street) continue;
       const bike = this.scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, 'bike').setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts);
       bike.bikeId = o.id;
       this.parked.push(bike);
+    }
+    for (const r of ctx.street.locations(this.id)) {
+      const b = this.place(r.x, r.y, r.id);
+      b.streetId = r.id;
+      b.setTint(0xf4c85c);
     }
   }
 
@@ -62,7 +67,7 @@ export class Bikes {
       if (player.pinned) continue; // a caught player's presses belong to the caught frame
       const r = this.riders[player.index];
       const i = input.intents[player.index];
-      if (i.interact && !player.vehicleSwapped) r.mounted ? this.dismount(player) : this.tryMount(player);
+      if (i.interact && !player.vehicleSwapped) r.mounted ? this.dismount(player, true) : this.tryMount(player);
       if (r.mounted) this.rideEffects(dt, player, r, i);
       r.jumpPrev = i.jump;
     }
@@ -84,7 +89,7 @@ export class Bikes {
 
   tryMount(player) {
     const best = this.nearest(player).bike;
-    if (!best || !player.mayUse('bike')) return;
+    if (!best || player.vehicle !== 'foot' || best.busy || !this.ctx.street.claim(best, player)) return;
     best.setVisible(false);
     this.riders[player.index].mounted = best;
     player.setVehicle('bike');
@@ -101,10 +106,11 @@ export class Bikes {
   }
 
   // The bike stays where the rider let go of it.
-  dismount(player) {
+  dismount(player, returnRequested = false) {
     const r = this.riders[player.index];
     const b = r.mounted;
     b.setPosition(player.x, player.y).setRotation(player.move.heading).setDepth(player.y).setVisible(true);
+    this.ctx.street.drop(b, player, returnRequested);
     r.mounted = null;
     r.skidding = false;
     player.setVehicle('foot');

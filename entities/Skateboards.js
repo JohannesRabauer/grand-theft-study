@@ -38,7 +38,18 @@ export class Skateboards {
     const { ctx } = this;
     const ts = ctx.map.tileSize;
     for (const o of ctx.map.objects) {
-      if (o.type === this.kind.object) this.parked.push(this.scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, this.kind.texture).setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts));
+      if (o.type === this.kind.object && !o.street) {
+        const b = this.scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, this.kind.texture).setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts);
+        b.rideId = o.id;
+        b.rideKind = this.id;
+        this.parked.push(b);
+      }
+    }
+    for (const r of ctx.street.locations(this.id)) {
+      const b = this.scene.add.image(r.x, r.y, this.kind.texture).setScale(ctx.res.inv).setDepth(r.y).setTint(0xf4c85c);
+      b.streetId = b.rideId = r.id;
+      b.rideKind = this.id;
+      this.parked.push(b);
     }
   }
 
@@ -60,7 +71,7 @@ export class Skateboards {
       const i = input.intents[player.index];
       if (r.mounted && player.vehicle !== this.id) this.dismount(player); // switched away by something else
       if (i.interact && !player.vehicleSwapped && !this.ctx.grabs.claims(player.index)) { // an early press near a bus is a grab, not a dismount
-        if (r.mounted) this.dismount(player); else if (player.vehicle === 'foot') this.tryMount(player);
+        if (r.mounted) this.dismount(player, true); else if (player.vehicle === 'foot') this.tryMount(player);
       }
       if (r.mounted) this.ride(dt, player, r, i);
     }
@@ -79,7 +90,7 @@ export class Skateboards {
 
   tryMount(player) {
     const { item, dist } = this.nearest(player);
-    if (!item || this.rivals.some(r => r.nearest(player).dist < dist) || !player.mayUse(this.id)) return;
+    if (!item || this.rivals.some(r => r.nearest(player).dist < dist) || !this.ctx.street.claim(item, player)) return;
     item.setVisible(false);
     this.riders[player.index].mounted = item;
     player.setVehicle(this.id);
@@ -88,16 +99,19 @@ export class Skateboards {
   // The player starts the game already on a board of their own (a character's start vehicle).
   giveBoard(player) {
     const board = this.scene.add.image(player.x, player.y, this.kind.texture).setScale(this.ctx.res.inv).setVisible(false);
+    board.rideId = `own-${player.index}-${this.id}`;
+    board.rideKind = this.id;
     this.parked.push(board);
     this.riders[player.index].mounted = board;
     player.setVehicle(this.id);
   }
 
   // The board stays where the rider let go of it.
-  dismount(player) {
+  dismount(player, returnRequested = false) {
     const r = this.riders[player.index];
     const b = r.mounted;
     b.setPosition(player.x, player.y).setRotation(player.move.heading).setDepth(player.y).setVisible(true);
+    this.ctx.street.drop(b, player, returnRequested);
     r.mounted = null;
     this.endAir(player);
     resetSkate(r.skate);

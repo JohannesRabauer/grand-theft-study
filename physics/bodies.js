@@ -28,6 +28,16 @@ export function addProp(scene, x, y, w, h, options = {}) {
   return addRect(scene, x, y, w, h, 'PROP', options);
 }
 
+export function addPropLink(scene, body, point, other = null, length = 0) {
+  const link = Phaser.Physics.Matter.Matter.Constraint.create({
+    bodyA: body, bodyB: other ?? undefined,
+    pointB: other ? { x: 0, y: 0 } : { x: point.x, y: point.y },
+    length, stiffness: 0.35, damping: 0.12
+  });
+  scene.matter.world.add(link);
+  return link;
+}
+
 // Hits only PROP and STATIC, so tools can never affect people or animals.
 export function addProjectile(scene, x, y, radius, options = {}) {
   return addCircle(scene, x, y, radius, 'PROJECTILE', options);

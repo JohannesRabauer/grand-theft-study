@@ -5,7 +5,7 @@
 // accelerated timers (the thief walks to it, rides it to a hideout, phone toast, mission trigger, objective arrow, a guard
 // raises Aerger), a scared-off thief, the rescue, and ownership in a save and in a map reload.
 import { makeCharacterArt } from '../../scenes/CharacterArt.js';
-import { MASK } from '../../physics/categories.js';
+import { CAT, MASK } from '../../physics/categories.js';
 export const vehicles = {
   name: 'vehicles',
   run(game, assert, env) {
@@ -42,7 +42,7 @@ export const vehicles = {
     const at = (tx, ty) => { player.teleport(T(tx), T(ty)); gs.snapCamera(); ctx.chase.reset(); step(3); };
     const lying = id => ctx.map.objects.find(o => o.id === id);
     const visiblePads = () => parking.padlocks.filter(p => p.visible);
-    const lockedItems = () => services.filter(s => !ctx.ownership.owns(s.id)).reduce((n, s) => n + s.parked.filter(b => b.visible).length, 0); // what should wear a padlock
+    const lockedItems = () => services.filter(s => !ctx.ownership.owns(s.id)).reduce((n, s) => n + s.parked.filter(b => b.visible && !b.streetId).length, 0); // ordinary display pieces only
 
     onFoot();
     ctx.chase.reset();
@@ -52,7 +52,7 @@ export const vehicles = {
     // ---- nothing owned: lying vehicles are display pieces with a padlock
     setOwned(['foot']);
     step(2);
-    const items = services.flatMap(s => s.parked).filter(b => b.visible);
+    const items = services.flatMap(s => s.parked).filter(b => b.visible && !b.streetId);
     assert('with nothing owned every lying vehicle has a padlock above it', items.length >= 6 && visiblePads().length === items.length && items.every(b => visiblePads().some(p => Math.abs(p.x - b.x) < 1 && p.y < b.y)), `${visiblePads().length}/${items.length}`);
     const board = lying('board1');
     at(board.x, board.y);
@@ -239,10 +239,16 @@ export const newRides = {
       intent.interact = other.interact = false;
       assert(`${id}: simultaneous co-op interaction mounts one copy only`, service.riders[0].mounted === item && !service.isMounted(1) && !item.visible && p1.vehicle === id && p2.vehicle === 'foot');
       assert(`${id}: riding keeps character appearance and earned attributes`, p1.sprite.texture.key === `player-${p1.character.id}-${id}` && JSON.stringify(ctx.state.players) === oldProgress);
+      // Isolate intent movement from randomly placed pedestrians; crowd contact has its own scenario.
+      const masks = [p1.body.collisionFilter.mask, p2.body.collisionFilter.mask];
+      for (const p of [p1,p2]) p.body.collisionFilter.mask &= ~CAT.NPC;
+      p1.teleport(600,888,0);
+      p2.teleport(700,888,Math.PI);
       const fromX = p1.x, fromX2 = p2.x;
       intent.move.x = 1; other.move.x = -1;
       step(18);
       assert(`${id}: both players move independently through their own intents`, p1.x > fromX + 3 && p2.x < fromX2 - 3 && p1.move.profileId === id && p2.move.profileId === 'foot', `rider dx ${p1.x - fromX}, partner dx ${p2.x - fromX2}`);
+      [p1,p2].forEach((p,index) => { p.body.collisionFilter.mask = masks[index]; });
       intent.move.x = 0; intent.move.y = -1;
       step(12);
       assert(`${id}: direction intent turns the rider`, p1.move.heading < -0.4);

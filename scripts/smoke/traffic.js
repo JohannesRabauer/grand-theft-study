@@ -65,8 +65,10 @@ export const traffic = {
     const calm = () => { ctx.chase.reset(); for (const p of ctx.players) { place(p, T(7), T(51)); onFoot(p); } step(2); };
     const [bus, other] = grabs.pool.filter(t => t.active);
     const speed0 = bus.speed;
-    other.speed = 0; // the second bus waits somewhere else
-    const setBus = x => { bus.s = x - 112; bus.heading = 0; bus.speed = speed0; step(1); }; // the straight eastbound lane: x = s + 112, y = bus.y
+    const cruises = grabs.pool.map(t => t.cruise);
+    for (const t of grabs.pool) { t.testNoYield = true; if (t !== bus) t.speed = t.cruise = 0; }
+    // Deliberately force contact here; normal yielding and recovery have their own open-world scenario.
+    const setBus = x => { bus.s = x - 112; bus.heading = 0; bus.speed = bus.cruise = speed0; step(1); };
     const lat = p => (p.y - bus.y) * Math.cos(bus.heading);
     ctx.state.dispatch('wallet.earn', { cents: 400, reason: 'smoke' });
     if (ctx.players.length < 2) gs.addDebugPlayer();
@@ -142,13 +144,13 @@ export const traffic = {
     // ---- a slow bus touching a kid does not hit
     calm();
     setBus(420);
-    bus.speed = 10;
+    bus.speed = bus.cruise = 10;
     place(player, bus.x + 35, bus.y);
     const touching = classifyHit(bus.x, bus.y, bus.heading, bus.kcfg.length, bus.kcfg.width, bus.kcfg.zone, cfg.kinds.bus, player.x, player.y, 5);
     const n0 = hits().length;
     step(30);
     assert('a bus creeping below the speed threshold touches without a hit', touching === 'front' && hits().length === n0 && !tr.tumbling(0), `${touching}`);
-    bus.speed = speed0;
+    bus.speed = bus.cruise = speed0;
 
     // ---- pedestrian and dog next to the bus: untouched, the pedestrian steps aside early
     calm();
@@ -193,11 +195,11 @@ export const traffic = {
       assert(`${id}: the ${id} was flung off and slid away to a stop where it lies on the ground`, item.visible && Math.hypot(rest.x - at.x, rest.y - at.y) > 20 && Math.hypot(item.x - rest.x, item.y - rest.y) < 0.01 && !ride.isMounted(0) && ride.parked.includes(item), `${Math.hypot(rest.x - at.x, rest.y - at.y).toFixed(0)} px`);
       until(() => idle(player), 400);
       place(player, item.x, item.y);
-      step(2);
       intent.interact = true;
       step(1);
       intent.interact = false;
-      assert(`${id}: after getting up the kid mounts it again`, player.vehicle === id && ride.isMounted(0) && !item.visible);
+      assert(`${id}: after getting up the kid mounts it again`, player.vehicle === id && ride.isMounted(0) && !item.visible,
+        JSON.stringify({vehicle:player.vehicle,distance:Math.hypot(player.x-item.x,player.y-item.y),near:rides.map(r=>({id:r.id,...r.nearest(player)})).map(r=>({id:r.id,dist:r.dist})),grabs:grabs.claims(0)}));
       onFoot(player);
     }
 
@@ -275,6 +277,7 @@ export const traffic = {
     ctx.particles.emit = emit;
     bus.speed = speed0;
     other.speed = speed0;
+    grabs.pool.forEach((t, i) => { t.speed = t.cruise = cruises[i]; delete t.testNoYield; });
     game.trafficOff = true;
     tr.enabled = false;
     ctx.crowd.clear();

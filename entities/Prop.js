@@ -25,6 +25,7 @@ export class Props {
     this.order = []; // scratch list for the nearest-first wake-up
     this.force = { x: 0, y: 0 };
     this.awake = 0;
+    this.cullGeneration = 0;
     this.cullIn = 0;
     ctx.props = this;
     this.loadMap();
@@ -63,6 +64,20 @@ export class Props {
     const sprite = this.scene.add.image(x, y, k.texture).setScale(this.ctx.res.inv).setVisible(false);
     const prop = { id: o.id, kind: o.kind, k, body, sprite, alive: true, awake: false, tipped: false, cool: 0, hp: k.hp ?? Infinity, flyT: 0 };
     this.sleeping.set(body, true);
+    return prop;
+  }
+
+  addPlay(o, k, x, y) {
+    const prop = this.create({ id: o.id, kind: 'crate' }, x, y);
+    prop.k = { ...prop.k, texture: k.texture, hp: Infinity, breakSpeed: 0, debris: 0, loot: null, windAccel: k.wind ?? 0 };
+    prop.hp = Infinity;
+    prop.sprite.setTexture(k.texture);
+    prop.body.collisionFilter.mask &= ~(CAT.NPC | CAT.ANIMAL | CAT.BULLY);
+    this.matter.body.setMass(prop.body, 0.08);
+    prop.body.frictionAir = 0.025;
+    this.props.push(prop);
+    this.order.push(prop);
+    this.byBody.set(prop.body.id, prop);
     return prop;
   }
 
@@ -132,19 +147,29 @@ export class Props {
     const list = this.order;
     list.sort((a, b) => dist2(a, mid) - dist2(b, mid));
     let awake = 0;
+    const generation = ++this.cullGeneration;
     for (const p of list) {
       if (!p.alive) continue;
+      if (p.cullGeneration === generation) continue;
       const { x, y } = p.body.position;
       const near = (x > v.x - m && x < v.right + m && y > v.y - m && y < v.bottom + m) || this.nearBully(x, y);
-      const want = near && awake < cap;
-      if (want) awake++;
-      if (want === p.awake) continue;
-      p.awake = want;
-      this.sleeping.set(p.body, !want);
-      p.sprite.setVisible(want);
-      if (want) this.sync(p);
+      const group = p.playGroup?.parts;
+      const count = group?.length ?? 1;
+      const want = near && awake + count <= cap;
+      if (want) awake += count;
+      if (group) for (const member of group) this.setAwake(member, want, generation);
+      else this.setAwake(p, want, generation);
     }
     this.awake = awake;
+  }
+
+  setAwake(prop, want, generation) {
+    prop.cullGeneration = generation;
+    if (prop.awake === want) return;
+    prop.awake = want;
+    this.sleeping.set(prop.body, !want);
+    prop.sprite.setVisible(want);
+    if (want) this.sync(prop);
   }
 
   // Bullies run offscreen too, so props in their way must be awake (sleeping bodies block them).

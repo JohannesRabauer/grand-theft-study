@@ -119,7 +119,7 @@ export class CaughtFrame {
     this.title.setText(ctx.t('caught.title'));
     this.sfx.setText(ctx.t('caught.sfx'));
     this.line.setText(ctx.t(`caught.line${Phaser.Math.Between(1, 3)}`));
-    this.lost.setText(lost > 0 ? ctx.t('caught.lost', { v: `${v(lost)} €` }) : ctx.t('caught.nothing'));
+    this.lost.setText(lost > 0 ? ctx.t('caught.lost', { v: `${v(lost / 100)} €` }) : ctx.t('caught.nothing'));
     this.prompt.setText(ctx.t(`caught.continue.${ctx.input.type}`));
     this.kid.setTexture(this.sharpCopy(ctx.players[player]?.look?.walk ?? 'player')); // the caught kid's own look
     const coop = ctx.players.length > 1;

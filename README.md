@@ -21,7 +21,7 @@ Open the printed URL (`http://localhost:3000` or `http://localhost:8080`). URL f
 ## Features
 
 - Walk (sprint with stamina), ride a bike (slides, skid marks, bell), surfaces that change speed and grip (asphalt, cobble, grass, puddles).
-- A 96x64 tile town with two routes from home to the school, an objective arrow with distance, zoom that follows speed.
+- A 160x112 tile town with the original two school routes, connected riverside recreation and workshop-market neighborhoods, an objective arrow with distance, and speed-following zoom.
 - Living world: wind, rain with puddles (T), particles, pushable props, flags.
 - Chase: the skatepark and the back of the schoolyard are bully turf; bullies see, chase, search and give up (levels 0 to 2, A* pathfinding). Hide in hedges, dumpsters and phone booths to escape; if you are caught a comic frame shows, you lose a euro and respawn at home.
 - Slingshot with wind-bent aim; pebbles only affect objects (cans, crates, trash cans), never people or animals. Hits lure bullies.
@@ -87,9 +87,32 @@ Touch controls appear on touch devices and hide as soon as a key or mouse is use
 Resolution (AD-14): Medium and High render at 960x540, Low at 480x270. The picture is scaled by a whole number of device pixels (letterboxed, pixelated, so a 1920x1080 window shows 960x540 at 2x); only windows smaller than the render size get a fractional fit.
 An FPS counter shows at the top left.
 
+### Open-world exploration and temporary street rides
+
+The **riverside recreation** district is east of the old town: follow the east exits around tiles (95,32) or (95,55)
+to its promenade loop, kite lawn and canal. The fixed canal crossings at rows 22–24 and 39–41 are safe to walk or ride;
+the separate rope play bridge is a wobbling toy, not the only crossing. The **workshop market** is south of town,
+through the wide paths around (25,63) and (84,63): a perimeter road connects courtyards, cobbled alleys, workshop/bakery
+landmarks, a slope cart and crate dominoes. Both neighborhoods connect to each other and share the existing co-op camera.
+Actual flood-fill reachability is 14,571 tiles versus the original 4,204 (**3.47×**), not just a bigger map rectangle.
+
+Gold-tinted unattended **bikes, skateboards, rollerblades and scooters** are street objects, distinct from locked
+family/shop displays. A fresh interact takes that exact object immediately, without buying or globally unlocking its type:
+**P1 F / P2 Enter / gamepad Y / touch Hand**. The same input leaves it at the current safe location; near its original
+spot the prompt instead offers a return. A nearby witness protests and can increase the existing comic trouble meter.
+You can ride it between maps, abandon it and pick it up again; another player cannot duplicate the same object.
+Save v7 preserves the object's identity/location. Continue restores carried objects as dropped, never as an origin clone,
+and does not bypass breakfast or packing. Legacy v6 progress, family ownership and bully bike rescue remain separate.
+
+On foot, use the same fresh interact at the **swing, wobbling sign, rope bridge, kite, flag, slope cart, crate dominoes
+or canal boat**. Prompts name the toy; immediate motion and feedback invite another turn. Repeated use resets the same
+bodies rather than producing loot. Cars and delivery vans circulate alongside buses and a riverside tram, yielding
+to obstacles and safely recovering when blocked. Cars/vans are neither player-drivable nor grabbable; existing original
+skates can still hold on behind a bus or tram. Ordinary shops, including the new visual landmarks, do not add purchase UI.
+
 ## Known limitations
 
-- Placeholder procedural art and no audio. Saved mornings and school lessons are playable; remaining day-flow and open-world expansion are tracked in the BMAD backlog.
+- Placeholder procedural art and no audio. Saved mornings, school lessons and the expanded open world are playable; remaining day-flow is tracked in the BMAD backlog.
 - Phone performance is unmeasured on real hardware (desktop proxy only); the reference phone is not chosen.
 - Touch has no weather or map button; the map key does nothing yet.
 - Bullies, props and the slingshot are tuned by feel, not playtested with children.
@@ -196,7 +219,7 @@ Save slot screen: three slots with a summary line (player(s), level, day, money)
 - **Two players** (`ai/chaseLogic.js`, `coop` in `data/chase.json`, AD-18): one shared Ärger level that rises from the turf or bumps of either player. A bully chases the nearest visible player (distance over `bullyTargetWeight`) and keeps that target until another visible player scores below `switchRatio` (0.6) of its score, so it does not flip-flop; spawns are picked outside the camera view that holds both players, and `level.coopExtraByLevel` adds at most one bully (never past the tier's `maxBullies`). Cooling is judged per player (one `Escape` each): the level only drops when EVERY player in play is safe, hidden for `hideSeconds` or far and unseen for `farSeconds`. A hider whose partner is still seen or near a bully keeps the chase on. The HUD hide bar shows the slowest player.
 - **Bully states** (`ai/BullyFSM.js`): `IDLE` (short beat after spawn), `CHASE`, `SEARCH` (walk to the last seen spot, look around), `DISTRACTED` (a `prop:hit` within `distractRadius` makes a bully that is not watching the player walk to the hit point), `STUMBLE` (story 6.3, see Karate defense), `GIVE_UP` (walks to the farthest spawn point and vanishes out of view; when the last bully is gone the level drops to 0), `CAUGHT`. Bullies use the movement profiles `bully-foot` (a bit slower than sprinting) and `bully-bike` in `data/vehicles.json`, and are pooled (`entities/Bully.js`, pool `bullies`). Their bodies do not collide with the player; contact is a proximity check.
 - **Seeing** (`ai/Perception.js`): view distance and field of view from `data/chase.json`, grid raycast against solid tiles. Standing almost still (below `hideSpeed`) inside a hiding spot makes you invisible, and a hidden player is not caught or bumped.
-- **Pathfinding** (`ai/Pathfinding.js`): grid A* over the map (walls blocked, surface speed and wall proximity as cost), requests queued with a shared budget of 2 per frame, per-bully cached path re-requested about every 0.5 s or when the target tile changes, straight-line steering when the way is clear. A full-map search takes about 0.25 ms in node.
+- **Pathfinding** (`ai/Pathfinding.js`): grid A* over the map (walls blocked, surface speed and wall proximity as cost), requests queued with shared budgets of 2 completions and 256 expanded nodes per frame; larger searches resume across frames. Per-bully cached paths are re-requested about every 0.5 s or when the target tile changes, with straight-line steering when the way is clear. Synchronous searches retain separate scratch buffers.
 - **HUD and debug**: top right an Ärger meter (two bars) and "Entdeckt!" / "Spotted!" while seen; angry steam puffs over chasing bullies (`anger` emitter). `?debug` shows each bully's state, path, line-of-sight ray and bump radius plus the level in the debug text.
 - **Escaping** (`ai/Escape.js`, `escape` in `data/chase.json`): stand still in a hiding spot, unseen and with no bully within `stumbleRadius`, for `hideSeconds` and the level drops to 0 (bullies walk off and return to the pool). Being seen, moving, leaving the spot or a bully stumbling close resets the timer and the level stays. Staying farther than `farDistance` from every bully and out of sight for `farSeconds` also cools the level down. While hidden the player sprite turns translucent and green, leaves rustle, the HUD shows "Versteckt!" / "Hidden!" and, during a chase, a bar under the Ärger meter fills until the level drops. Still only the director writes the level.
 - **Caught** (`entities/Caught.js`, `ui/CaughtFrame.js`, `caught` in `data/chase.json`): `bully:caught-contact` freezes the world (`ctx.frozen`; UIScene keeps running; with two players only while both are caught, see below), spends `lossCents` (100) from `ctx.state.shared.money` (starts at 500 cents, shown top left as "€ 5,00"), resets the chase and shows a comic frame (halftone panel, locker with the player inside, the bully with the lunchbox, a random one of three speech-bubble lines per language). After 2.5 s, or Space/F (A/Y on a gamepad, jump button on touch) once 0.8 s have passed, the player is dismounted (the bike stays where it was), put back at home with a dust puff, and the chase can start again at the next turf entry. Caught is per player: the caught player is pinned (`Player.pinned`: stands still, no input, tools drop their charge, no bike or ammo or door use) and out of play (`Player.alive = false`: bullies and the crowd ignore it), loses one fine from the shared wallet, and respawns beside the spawn point on its own timer or press. The other player keeps playing; the world freezes only while everyone is caught, and the first respawn unfreezes it. In co-op the catching bully gives up, other bullies carry on, and the level resets once no bully is chasing any more. The comic frame is scaled to `caught.coopScale` (0.5) and shown on the caught player's HUD half (P1 left, P2 right), so the other player keeps a clear view. Emits `player:caught` `{ player, lost, money }` (cents) and `player:respawn` `{ player, x, y }`.

@@ -16,6 +16,7 @@
 import { addSensor } from '../physics/bodies.js';
 import { createGrab, inRearZone, mayStart, startGrab, stepGrab } from '../vehicles/grabLogic.js';
 import { buildRoute, easeHeading, routeAt } from '../vehicles/routeLogic.js';
+import { trafficFootprintFree, trafficStep, yieldsTo } from '../vehicles/trafficLogic.js';
 
 const DEG = Math.PI / 180;
 const CULL = 96; // px around the view where a vehicle's sprite is drawn
@@ -51,7 +52,7 @@ export class GrabTargets {
     for (const r of this.routes) {
       if (r.map !== this.ctx.world.id) continue;
       const route = buildRoute(r.points, ts);
-      for (let k = 0; k < r.count; k++) this.spawn(r, route, (route.total * k) / r.count, `${r.id}-${k}`);
+      for (let k = 0; k < r.count; k++) this.spawn(r, route, route.total * (k / r.count + (r.phase ?? 0)), `${r.id}-${k}`);
     }
   }
 
@@ -68,7 +69,7 @@ export class GrabTargets {
       t = { kind: def.kind, kcfg: kind, sprite, body: addSensor(this.scene, 0, 0, kind.length, kind.width), active: false, hint: false };
       this.pool.push(t);
     } else this.scene.matter.world.add(t.body); // a released body is out of the physics world
-    Object.assign(t, { active: true, id, route, speed: def.speed, s, x: 0, y: 0, heading: 0, vx: 0, vy: 0 });
+    Object.assign(t, { active: true, id, route, speed: def.speed, cruise: def.speed, blocked: 0, retry: 0, recoveries: 0, s, x: 0, y: 0, heading: 0, vx: 0, vy: 0 });
     routeAt(route, s, this.pt);
     t.heading = Math.atan2(this.pt.ty, this.pt.tx);
     this.place(t);
@@ -104,6 +105,7 @@ export class GrabTargets {
     const view = this.scene.cameras.main.worldView;
     for (const t of this.pool) {
       if (!t.active) continue;
+      if (trafficStep(t, this.blocked(t), dt, this.cfg.yield)) this.recover(t, dt);
       t.s += t.speed * dt;
       routeAt(t.route, t.s, this.pt);
       t.heading = easeHeading(t.heading, Math.atan2(this.pt.ty, this.pt.tx), t.kcfg.turnRate * DEG * dt);
@@ -114,6 +116,7 @@ export class GrabTargets {
       const west = Math.cos(t.heading) < 0;
       t.sprite.setPosition(t.x, t.y).setDepth(t.y).setFlipX(west).setRotation(west ? t.heading + (t.heading > 0 ? -Math.PI : Math.PI) : t.heading);
     }
+
     for (const player of ctx.players) {
       const slot = this.slots[player.index];
       if (player.pinned) continue;
@@ -126,12 +129,44 @@ export class GrabTargets {
     this.draw();
   }
 
+  blocked(t) {
+    if (window.SCHULWEG_TESTMAPS && t.testNoYield) return false;
+    const { ctx } = this;
+    for (const p of ctx.players) if (!p.grabbing && yieldsTo(t, p.x, p.y, 5, this.cfg.yield.ahead)) return true;
+    for (const n of ctx.crowd?.list ?? []) if (n.active && yieldsTo(t, n.x, n.y, 5, this.cfg.yield.ahead)) return true;
+    for (const p of ctx.props?.props ?? []) if (p.alive && yieldsTo(t, p.body.position.x, p.body.position.y, 7, this.cfg.yield.ahead)) return true;
+    for (const other of this.pool) if (other !== t && other.active && yieldsTo(t, other.x, other.y, other.kcfg.length / 2, this.cfg.yield.ahead)) return true;
+    return false;
+  }
+
+  recover(t, dt) {
+    if ((t.retry -= dt) > 0 || this.slots.some(s => s.target === t)) return;
+    t.retry = this.cfg.yield.retryEvery;
+    const solid = (x, y) => this.ctx.surfaces.solid(this.ctx.surfaces.at(x, y));
+    for (let k = 1; k <= this.cfg.yield.recoveryProbes; k++) {
+      const s = t.s + k * t.route.total / this.cfg.yield.recoveryProbes;
+      routeAt(t.route, s, this.pt);
+      const heading = Math.atan2(this.pt.ty, this.pt.tx);
+      if (!trafficFootprintFree(this.pt.x, this.pt.y, heading, t.kcfg.length, t.kcfg.width, solid)
+        || this.ctx.players.some(p => Math.hypot(p.x - this.pt.x, p.y - this.pt.y) < this.cfg.yield.recoveryDistance)
+        || this.pool.some(o => o !== t && o.active && Math.hypot(o.x - this.pt.x, o.y - this.pt.y) < 90)
+        || this.ctx.props?.props.some(p => p.alive && Math.hypot(p.body.position.x - this.pt.x, p.body.position.y - this.pt.y) < 48)) continue;
+      t.s = s;
+      t.heading = heading;
+      t.blocked = 0;
+      t.speed = t.cruise;
+      t.recoveries++;
+      this.place(t);
+      return;
+    }
+  }
+
   // Looks for a vehicle to hang on to: near ones light up their zone and keep the interact press for the grab.
   seek(player, slot, i) {
     let zoneOf = null;
     slot.near = false;
     for (const t of this.pool) {
-      if (!t.active || Math.hypot(t.x - player.x, t.y - player.y) > this.cfg.armRange) continue;
+      if (!t.active || !t.kcfg.zone || Math.hypot(t.x - player.x, t.y - player.y) > this.cfg.armRange) continue;
       slot.near = t.hint = true;
       if (inRearZone(t.x, t.y, t.heading, t.kcfg.length, t.kcfg.zone, player.x, player.y)) zoneOf = t;
     }

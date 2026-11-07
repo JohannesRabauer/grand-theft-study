@@ -79,6 +79,7 @@ export class Bully {
 
   deactivate() {
     this.active = false;
+    this.chase.nav.cancel(this);
     this.sprite.setVisible(false);
     this.scene.matter.world.remove(this.body);
   }
@@ -88,6 +89,11 @@ export class Bully {
     if (!this.active) return;
     this.pathLen = nav.findPath(this.x, this.y, this.goalX, this.goalY, this.path);
     this.pathIdx = this.pathLen > 1 ? 1 : this.pathLen;
+  }
+
+  receivePath(length) {
+    this.pathLen = length;
+    this.pathIdx = length > 1 ? 1 : length;
   }
 
   stop() { this.mx = this.my = 0; }

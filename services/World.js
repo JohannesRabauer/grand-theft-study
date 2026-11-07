@@ -93,19 +93,31 @@ export class World {
     scene.worldH = map.rows.length * map.tileSize;
   }
 
-  // Static ground: all tiles drawn once into a single RenderTexture, `res.scale` times as fine as
-  // the world (3072x2048 texture at 2x) and displayed at 1/scale, so one texture pixel is one screen pixel.
+  // Static ground stays within the device's texture limit, including the larger town.
   renderGround(map) {
     const { res } = this.ctx;
     const ts = map.tileSize * res.scale;
-    const rt = this.scene.add.renderTexture(0, 0, map.rows[0].length * ts, map.rows.length * ts).setOrigin(0).setScale(res.inv).setDepth(-1);
-    rt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
-    rt.beginDraw();
-    map.rows.forEach((row, ty) => {
-      for (let tx = 0; tx < row.length; tx++) rt.batchDraw(res.scale > 1 ? tileKey(map, tx, ty) : `tile-${map.legend[row[tx]]}`, tx * ts, ty * ts);
-    });
-    rt.endDraw();
-    return rt;
+    const gl = this.scene.sys.game.renderer.gl;
+    const limit = Math.min(4096, gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 4096);
+    const span = Math.floor(limit / ts);
+    const cols = map.rows[0].length;
+    const ground = this.scene.add.container(0, 0).setDepth(-1);
+    for (let y = 0; y < map.rows.length; y += span) {
+      for (let x = 0; x < cols; x += span) {
+        const w = Math.min(span, cols - x);
+        const h = Math.min(span, map.rows.length - y);
+        const rt = this.scene.add.renderTexture(x * map.tileSize, y * map.tileSize, w * ts, h * ts).setOrigin(0).setScale(res.inv);
+        rt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+        ground.add(rt);
+        rt.beginDraw();
+        for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) {
+          const key = res.scale > 1 ? tileKey(map, x + tx, y + ty) : `tile-${map.legend[map.rows[y + ty][x + tx]]}`;
+          rt.batchDraw(key, tx * ts, ty * ts);
+        }
+        rt.endDraw();
+      }
+    }
+    return ground;
   }
 
   // Wall bodies merged into horizontal runs per row to keep the body count low.

@@ -116,3 +116,88 @@ The menu logic itself (modes, picks, validation, keys and pads) is `node scripts
 ## Benchmarks
 
 `node scripts/bench-cdp.mjs --url http://localhost:8080` and `node scripts/zoom-sweep.mjs`; see docs/PERFORMANCE.md.
+
+### Open-world expansion
+
+Delivery follows [the integration plan](../_bmad-output/initiative-schulweg-game/plan-open-world-expansion.md).
+Regenerate the town with `node scripts\build-town-expansion.mjs`. It reads the immutable original-town fixture at
+revision `599f3c1efa3316cd434cbf61f69693cb2bf8693d`, preserves old coordinates/content apart from the documented boundary
+openings, and writes deterministic map, route, catalog and translation data. Two consecutive runs produced identical hashes.
+
+`node scripts\check-open-world.mjs` covers all four object-scoped street identities, atomic contention, invalid transitions,
+cross-map drop/return, v6 migration, v7 save restoration and corruption backups; actual flood fill (4,204 → 14,571 tiles),
+bike-sized neighborhood paths/canal crossings, original content, eased traffic hulls over two circuits, yielding,
+non-grabbable classification, and eight reusable play layouts. Queued A* resumes within a shared 256-node frame budget;
+its test uses 16 nodes and compares the complete result with synchronous A*, including map cancellation.
+
+The registered `openWorld` browser scenario exercises actual mounts/abandon/return, contention and independent co-op rides,
+both neighborhood routes, witness feedback, locked displays, traffic/caught dismounts, skates-only rear grabs,
+bounded traffic recovery, repeated use of all eight toy types, constraint/body/reward leak checks, and real menu Continue.
+It runs alongside all old scenarios, rather than replacing them. Verification: **all 40 pure checks passed;
+the full browser smoke passed 927 assertions with zero console problems**.
+The additional assertions cover bounded ground-texture chunks and the actual cents-to-euros catch loss display.
+
+```powershell
+node scripts\check-all.mjs
+node scripts\bench-cdp.mjs --url http://127.0.0.1:8087 --smoke --json open-world-smoke.json
+# Or, in the ?bench browser console:
+# await SCHULWEG_BENCH.runAll({tiers:["medium"],steps:1200})
+```
+
+Inspect `smoke.pass`, every `smoke.checks` entry whose `ok` is false, and `consoleProblems`; exit status alone is insufficient.
+Do not run pure checks while project-local browser profiles are active: the existing translation checker recursively
+walks the repository and can race changing profile files. This host needed an isolated project-local browser profile and
+a temporary `--no-sandbox` flag. Final verification retained GPU acceleration and normal certificate checks; the earlier
+GPU/certificate workarounds proved unnecessary. No permanent launch settings were changed.
+Verification reports/preloads are not shipped game content.
+
+Medium measurement after traffic broad-phase rejection, resumable navigation and pre-baked catch-frame UI
+(600 measured steps per scenario, existing default warm-up):
+
+| Scenario | Average ms | p95 ms | Maximum ms |
+| --- | ---: | ---: | ---: |
+| Idle walking | 0.19 | 0.40 | 1.10 |
+| Bike top speed | 0.18 | 0.40 | 1.60 |
+| Level-2 chase | 0.21 | 0.40 | 1.20 |
+| Rain/wind/props/slingshot | 0.35 | 0.70 | **4.70** |
+| Everything | 0.36 | 0.60 | 2.70 |
+| Co-op expansion/linked toys/traffic | 0.36 | 0.70 | **13.60** |
+
+Every reported pool stayed within its cap; traffic peaked at **12/12**, aggregate awake props at **47/60**.
+These values **do not satisfy the strict 3 ms worst-case requirement**; p95 is not a substitute. Earlier runs also
+exceeded the limit. These are pre-fix measurements, not the final delivery result below.
+Real-phone frame rate and physical touch/gamepad usability remain manual checks.
+
+A later full Medium repeat recorded maxima **1.1/0.8/0.9/3.7/1.3/2.2 ms**, again with every pool capped; this also fails
+the maximum requirement and does not erase earlier spikes. Final full smoke again passed 924 checks. Random crowd
+contacts had interfered with two scripted input/grab assertions, so those specific assertions temporarily exclude NPC
+collisions (restored immediately afterward); separate crowd/traffic scenarios still test normal collision behavior.
+Expansion traversal uses body-sized clearance in the real route driver and retains the no-wall-crossing assertion.
+The final traversal driver also steers around live pedestrian clusters when stalled, without disabling collisions
+or teleporting across the tested routes.
+
+Profiling then isolated a first-catch text rasterization stall. Prewarming the configured loss, correcting its
+cents-to-euros display, and removing repeated prop-sleep transitions/per-frame prompt allocations resolved the measured
+spikes. Ground rendering now uses tile-aligned chunks bounded by the GPU limit (at most 4096 pixels), instead of a
+5120-pixel-wide town texture.
+
+Final GPU-enabled Medium measurement, **1,200 measured steps per scenario** with the existing warm-up:
+
+| Scenario | Average ms | p95 ms | Maximum ms |
+| --- | ---: | ---: | ---: |
+| Idle walking | 0.16 | 0.30 | 1.70 |
+| Bike top speed | 0.15 | 0.30 | 0.70 |
+| Level-2 chase | 0.17 | 0.30 | 1.00 |
+| Rain/wind/props/slingshot | 0.29 | 0.50 | 1.70 |
+| Everything | 0.40 | 0.70 | 1.20 |
+| Co-op expansion/linked toys/traffic | 0.30 | 0.50 | 1.30 |
+
+All six measured maxima meet **3 ms**, and all pools remain capped (traffic 12/12, awake props at most 60/60).
+This is a desktop proxy result, not a guarantee on untested phone hardware.
+
+BMAD Quick review found one wall-adjacent traffic-fling persistence defect. Unmounted street snapshots now reuse safe
+placement and synchronize the visible sprite with the validated saved location; pure reclaim/save and browser fling
+regressions pass. No review work was deferred. After that correction, all 40 pure checks and 927 browser assertions passed,
+with zero console problems. A fresh 1,200-step Medium repeat recorded maxima **1.2/1.1/1.1/2.2/1.2/1.3 ms**;
+every pool remained capped (aggregate prop peak 48/60). Isolated ride-input checks start in a clear road lane, and the
+traffic remount check presses interact before unrelated pedestrians can displace its scripted placement.

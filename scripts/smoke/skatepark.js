@@ -34,7 +34,7 @@ export const skatepark = {
 
     // ---- the map: every obstacle is there, the strip on the road is gone
     const nOf = t => ctx.map.objects.filter(o => o.type === t && o.id.startsWith('park-')).length;
-    assert('the park is loaded into the trick system: rails, ramps, stairs, a bank spot', tr.rails.length === 6 && tr.ramps.length === nOf('ramp') && tr.stairs.length === 1 && tr.spots.length === 1, `${tr.rails.length} rails, ${tr.ramps.length} ramps, ${tr.stairs.length} stairs, ${tr.spots.length} spots`);
+    assert('the park is loaded into the trick system: rails, ramps, stairs, a bank spot', tr.rails.filter(r => r.id.startsWith('park-')).length === 6 && tr.ramps.length === nOf('ramp') && tr.stairs.length === 1 && tr.spots.length === 1, `${tr.rails.length} rails, ${tr.ramps.length} ramps, ${tr.stairs.length} stairs, ${tr.spots.length} spots`);
     assert('the practice strip no longer lies on the road', !ctx.map.objects.some(o => o.id.startsWith('practice-')));
     assert('the park art is drawn: ground canvas, lamps, rack and the Lines sign', gs.park.art.images.length >= 1 + nOf('lamp') + 2 && gs.park.art.images.every(i => i.active), `${gs.park.art.images.length} images`);
 

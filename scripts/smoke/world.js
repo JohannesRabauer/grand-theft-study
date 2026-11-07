@@ -5,6 +5,8 @@ import { CAT } from '../../physics/categories.js';
 // Matter bodies a map switch must give back: everything except walls (streamed by distance) and pedestrians (pooled, refilled by the crowd).
 const mapBodies = (gs) => Phaser.Physics.Matter.Matter.Composite.allBodies(gs.matter.world.localWorld)
   .filter(b => ![CAT.STATIC, CAT.NPC, CAT.ANIMAL].includes(b.collisionFilter.category)).length;
+// Parking decorations deliberately disappear when a dropped map bike is rebuilt at its origin.
+const mapChildren = gs => gs.children.length - gs.parking.dropped.reduce((n, b) => n + (b.icon?.scene ? 1 : 0) + (b.chain?.scene ? 1 : 0), 0);
 
 export const worldDoors = {
   name: 'worldDoors',
@@ -23,7 +25,7 @@ export const worldDoors = {
     step(30);
     const dead = () => ctx.props.props.filter(p => !p.alive).length; // smashed props are rebuilt with the map
     const rawBodies = mapBodies(gs);
-    const before = { bodies: rawBodies + dead(), children: gs.children.length, textures: gs.textures.getTextureKeys().length, pools: [...ctx.pools.byName.keys()].join(), props: ctx.props.props.length, ammo: gs.ammo.items.length, flags: gs.flags.flags.length, bikes: gs.bikes.parked.length };
+    const before = { bodies: rawBodies + dead(), children: mapChildren(gs), textures: gs.textures.getTextureKeys().length, pools: [...ctx.pools.byName.keys()].join(), props: ctx.props.props.length, ammo: gs.ammo.items.length, flags: gs.flags.flags.length, bikes: gs.bikes.parked.length };
     const townZones = gs.zones.zones.filter(z => z.body).length + ctx.grabs.pool.filter(t => t.active).length + gs.balloons.items.length; // sensors: zones, the bus bodies and the kirmes balloons
     const townProps = ctx.props.props.filter(p => p.alive).length;
     assert('before the trip the town has props, ammo, flags, a bike and sensors', before.props >= 15 && before.ammo >= 8 && before.flags >= 2 && before.bikes >= 1 && townZones >= 5, JSON.stringify(before));
@@ -59,7 +61,7 @@ export const worldDoors = {
     assert('arriving next to the door does not re-trigger it', world.id === 'town' && log.length === 4, JSON.stringify(log));
 
     // ---- nothing leaked after the round trip
-    const after = { bodies: mapBodies(gs) + dead(), children: gs.children.length, textures: gs.textures.getTextureKeys().length, pools: [...ctx.pools.byName.keys()].join(), props: ctx.props.props.length, ammo: gs.ammo.items.length, flags: gs.flags.flags.length, bikes: gs.bikes.parked.length };
+    const after = { bodies: mapBodies(gs) + dead(), children: mapChildren(gs), textures: gs.textures.getTextureKeys().length, pools: [...ctx.pools.byName.keys()].join(), props: ctx.props.props.length, ammo: gs.ammo.items.length, flags: gs.flags.flags.length, bikes: gs.bikes.parked.length };
     assert('after the round trip bodies, display objects, textures, pools and map content are as before', JSON.stringify(after) === JSON.stringify(before), `${JSON.stringify(before)} -> ${JSON.stringify(after)}`);
     const walls = ctx.pools.byName.get('walls');
     const worldStatics = Phaser.Physics.Matter.Matter.Composite.allBodies(gs.matter.world.localWorld).filter(b => b.collisionFilter.category === CAT.STATIC).length;

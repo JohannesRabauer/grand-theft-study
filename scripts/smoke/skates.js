@@ -4,6 +4,7 @@
 // the skates' top speed with sparks, rope and risk bar, swinging sideways, the failure with its comic stumble, release by
 // letting go and by jumping (Style 'bus ride'), failure odds with seeded randomness (cobble worse, the perk better) and
 // independent co-op grabs.
+import { CAT } from '../../physics/categories.js';
 export const skates = {
   name: 'skates',
   run(game, assert, env) {
@@ -43,7 +44,8 @@ export const skates = {
     const vehicleLine = ui.hud.get('status').vehicle.text;
     assert('Lorenz starts on skates (no fallback to running): vehicle, mounted, own rider look, HUD line',
       player.character.startVehicle === 'skates' && player.startVehicle === 'skates' && player.vehicle === 'skates' && skatesSvc.isMounted(0) && player.sprite.texture.key.startsWith('player-lorenz-skates') && vehicleLine === ctx.t('hud.vehicle', { name: ctx.t('vehicle.skates') }), `${player.vehicle} ${player.sprite.texture.key} "${vehicleLine}"`);
-    assert('the town has lying skates to pick up and two buses on the main road', skatesSvc.parked.filter(b => b.visible).length >= 2 && grabs.pool.filter(t => t.active).length === 2 && grabs.pool.every(t => !t.active || (t.y > 54 * 16 && t.y < 58 * 16)));
+    const buses = grabs.pool.filter(t => t.active && t.kind === 'bus');
+    assert('the town has lying skates to pick up and two buses on the main road', skatesSvc.parked.filter(b => b.visible).length >= 2 && buses.length === 2 && buses.every(t => t.y > 54 * 16 && t.y < 58 * 16));
 
     // ---- measured speeds and acceleration
     const real = ctx.surfaces.at;
@@ -127,6 +129,8 @@ export const skates = {
     // ---- grab: hold interact in the rear zone
     quiet();
     const bus = grabs.pool.find(t => t.active);
+    const cruises = grabs.pool.map(t => t.cruise);
+    for (const t of grabs.pool) { t.testNoYield = true; if (t !== bus) t.speed = t.cruise = 0; }
     const setBus = x => { bus.s = x - 112; bus.heading = 0; step(1); }; // on the straight eastbound lane (the heading would need a moment to ease there)
     const behind = (gap, speed = bus.speed) => place(player, bus.x - bus.kcfg.length / 2 - gap, bus.y, speed, 0);
     setBus(420);
@@ -314,6 +318,8 @@ export const skates = {
     const p2 = ctx.players[1];
     if (!skatesSvc.isMounted(1)) { if (gs.bikes.isMounted(1)) gs.bikes.dismount(p2); if (gs.skateboards.isMounted(1)) gs.skateboards.dismount(p2); skatesSvc.giveBoard(p2); }
     const i2 = ctx.input.intents[1];
+    const masks = [player.body.collisionFilter.mask, p2.body.collisionFilter.mask];
+    for (const p of [player,p2]) p.body.collisionFilter.mask &= ~CAT.NPC;
     quiet();
     place(p2, T(7), T(51));
     grabs.random = () => 0.999;
@@ -334,7 +340,8 @@ export const skates = {
     const only2 = !player.grabbing && p2.grabbing && of('grab:end').at(-1).player === 0;
     i2.hold = false;
     step(3);
-    assert('co-op: one hangs on while the other cannot reach, then both, and each lets go on its own', grabbedOne && stillNotP2 && both && only2 && !p2.grabbing && of('grab:end').at(-1).player === 1 && of('grab:end').at(-1).reason === 'release');
+    assert('co-op: one hangs on while the other cannot reach, then both, and each lets go on its own', grabbedOne && stillNotP2 && both && only2 && !p2.grabbing && of('grab:end').at(-1).player === 1 && of('grab:end').at(-1).reason === 'release', JSON.stringify({grabbedOne,stillNotP2,both,only2,end:of('grab:end').at(-1)}));
+    [player,p2].forEach((p,index) => { p.body.collisionFilter.mask = masks[index]; });
 
     // ---- leaving the map ends a grab (no stuck state); then back to the neutral kid
     quiet();
@@ -349,6 +356,7 @@ export const skates = {
     intent.move.x = 0;
     ctx.particles.emit = emit;
     grabs.random = Math.random;
+    grabs.pool.forEach((t, i) => { t.speed = t.cruise = cruises[i]; delete t.testNoYield; });
     delete ctx.surfaces.at;
     if (skatesSvc.isMounted(1)) skatesSvc.dismount(p2);
     ctx.state.replace(before);

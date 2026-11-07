@@ -46,6 +46,7 @@ export class Parking {
   }
 
   park(bike, player) {
+    if (bike.streetId) return;
     const rack = rackNear(this.racks, bike.x, bike.y, this.cfg.rackRadius);
     bike.parkState = rack ? 'locked' : 'unlocked';
     bike.awayT = 0;
@@ -85,7 +86,7 @@ export class Parking {
     for (const svc of this.services) {
       if (ctx.ownership.owns(svc.id)) continue;
       for (const item of svc.parked) {
-        if (!item.visible) continue;
+        if (!item.visible || item.streetId) continue;
         const pad = this.padlocks[n++] ??= scene.add.image(0, 0, 'lock-padlock').setScale(ctx.res.inv).setDepth(ICON_DEPTH);
         pad.setPosition(item.x, item.y + this.cfg.iconOffsetY).setVisible(true);
       }
