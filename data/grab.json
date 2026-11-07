@@ -1,0 +1,21 @@
+{
+  "_doc": "Bus and tram grabs (story 5.3, AD-23, CAP-14); the maths is vehicles/grabLogic.js, the entity entities/GrabTargets.js, the routes data/routes.json. `targets`: per vehicle kind the sprite texture and its origin (the body centre), the turn rate in degrees per second, the size in px (facing right) and the grab `zone` behind the rear edge (length behind it, reach under the back, width; px). A rider on a profile with `grab: true` (skates) who holds interact inside the zone grabs on (press only after letting go of the button since the last grab); within `armRange` px of a vehicle the interact press never gets off the skates, so holding it early works. While grabbing the rider is towed at the vehicle's speed on a rope of `ropeLength` px (pull `pullGain` per second, at most `maxPull` px/s), steering sideways swings it up to `swingMax` px at `swingSpeed` px/s (`swingBack` pulls it straight again). `duration`: seconds a grab lasts (x (1 + busGrabBonus x perkDuration)); `snapSlack`: rope stretch in px (a wall in the way) that makes the rider lose it. `failure`: hazard per second = base x (1 + speedGain x speed / refSpeed) x (1 + bumpGain x ground rattle) x (1 + swingGain x swing share) x (1 + ageGain x time / duration) x max(perkFloor, 1 - busGrabBonus x perkCut); no failure during the first `grace` seconds. `stumble`: seconds of the comic tumble after a failed grab, speed factor and number of spins. `sparkInterval`: seconds between the sparks at the rider's wheels. `bar`: size of the risk bar over the rider.",
+  "maxTargets": 4,
+  "armRange": 110,
+  "ropeLength": 16,
+  "pullGain": 8,
+  "maxPull": 220,
+  "swingMax": 14,
+  "swingSpeed": 70,
+  "swingBack": 5,
+  "snapSlack": 36,
+  "duration": 8,
+  "perkDuration": 0.4,
+  "failure": { "base": 0.013, "refSpeed": 100, "speedGain": 1, "bumpGain": 4, "swingGain": 0.8, "ageGain": 1.5, "perkCut": 0.9, "perkFloor": 0.15, "grace": 0.5 },
+  "stumble": { "time": 0.9, "speedMult": 0.2, "spins": 2 },
+  "sparkInterval": 0.07,
+  "bar": { "width": 18, "height": 3, "lift": 15 },
+  "targets": {
+    "bus": { "texture": "bus", "origin": [0.53125, 0.5], "turnRate": 200, "length": 56, "width": 22, "zone": { "length": 44, "reach": 8, "width": 30 } }
+  }
+}

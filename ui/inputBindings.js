@@ -1,7 +1,7 @@
 // Pure mapping from device state to one player's intent snapshot (AD-10, AD-18). No Phaser: ui/input.js reads
 // the devices and hands this module plain data, scripts/check-input.mjs drives it with fake devices.
 //
-// Level intents (held): move, aim, sprint, jump, manual, toolUse. `jump` is the ollie on a skateboard (the bell on a bike),
+// Level intents (held): move, aim, sprint, jump, manual, toolUse, hold (the interact button's level: hang on to a bus). `jump` is the ollie on a skateboard (the bell on a bike),
 // `manual` holds the skateboard manual balance (vehicles/skateLogic.js).
 // Edge intents (true for exactly one frame per press): interact, toolNext, toolPrev, map, weather, pause.
 // Of those, map / weather / pause are global: only a player bound with `global: true` (P1) can raise them.
@@ -30,6 +30,7 @@ export function createIntent() {
     sprint: false,
     jump: false,
     manual: false,
+    hold: false,
     interact: false,
     toolUse: false,
     toolNext: false,
@@ -125,7 +126,8 @@ export function mapIntent(intent, slot, bind, src, dz) {
   intent.manual = k('manual') || btn.manual || pb(PAD.LT);
   intent.toolUse = src.mouseDown || k('toolUse') || btn.toolUse || pb(PAD.X) || pb(PAD.RT);
 
-  edge(intent, slot, 'interact', k('interact') || btn.interact || pb(PAD.Y));
+  intent.hold = k('interact') || btn.interact || pb(PAD.Y);
+  edge(intent, slot, 'interact', intent.hold);
   edge(intent, slot, 'toolNext', k('toolNext') || btn.toolNext || pb(PAD.RB));
   edge(intent, slot, 'toolPrev', k('toolPrev') || pb(PAD.LB));
   const g = bind.global;
@@ -146,7 +148,7 @@ export function clearIntent(intent, slot) {
   intent.move.x = 0;
   intent.move.y = 0;
   intent.aim = null;
-  intent.sprint = intent.jump = intent.manual = intent.toolUse = false;
+  intent.sprint = intent.jump = intent.manual = intent.toolUse = intent.hold = false;
   intent.answer = 0;
   for (const e of EDGES) {
     intent[e] = false;

@@ -56,7 +56,8 @@ export class MovementController {
     const speedMult = this.updateStamina(dt, moving && sprintWanted);
 
     const target = moving ? mag * p.maxSpeed * this.speedMult * (surf.speed[this.profileId] ?? 1) * speedMult * this.tetherMult * this.boostMult : 0;
-    const step = p.accel * this.accelMult * surf.grip * dt;
+    const grip = surf.grip * (surf.gripMult?.[this.profileId] ?? 1); // some vehicles lose more grip on a surface than others
+    const step = p.accel * this.accelMult * grip * dt;
     this.speed = this.speed < target ? Math.min(this.speed + step, target) : Math.max(this.speed - step, target);
 
     if (moving) {
@@ -73,7 +74,7 @@ export class MovementController {
     // Start from the real velocity so walls and collisions are felt (Matter step is fixed 60 Hz).
     const vx = body.velocity.x * 60;
     const vy = body.velocity.y * 60;
-    const k = 1 - Math.exp(-p.grip * surf.grip * (1 - p.drift) * dt);
+    const k = 1 - Math.exp(-p.grip * grip * (1 - p.drift) * dt);
     this.vel.x = vx + (Math.cos(this.heading) * this.speed + this.nudgeX - vx) * k;
     this.vel.y = vy + (Math.sin(this.heading) * this.speed + this.nudgeY - vy) * k;
     this.velSpeed = Math.hypot(this.vel.x, this.vel.y);

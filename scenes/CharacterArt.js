@@ -1,10 +1,11 @@
 // Procedural art for the playable characters (CAP-12): the same figure and bike drawers as the default kid
 // (HiResArt.js), parametrised by the palette of each character in data/characters.json, so the three differ in
 // outfit colours, hair style and accessory. Per character it makes `player-<id>` (walking), `player-<id>-bike`
-// (riding), `player-<id>-skate` plus `-crouch` and `-manual` (skateboard poses) and `portrait-<id>` (character select card). Drawn on the 24x32 / 40x24 authoring grids and scaled to
+// (riding), `player-<id>-skate` plus `-crouch` and `-manual` (skateboard poses), `player-<id>-skates` plus `-pushA`, `-pushB`, `-crouch` and `-grab` (inline skates, scenes/SkatesArt.js) and `portrait-<id>` (character select card). Drawn on the 24x32 / 40x24 authoring grids and scaled to
 // the render class like the pedestrians (NpcArt.js): 2x with outline on Medium/High, 1x on Low.
 import { figure, bike, skate, OUT, lighten } from './HiResArt.js';
 import { ScaledPen } from './NpcArt.js';
+import { skates } from './SkatesArt.js';
 
 const DARK = '#2a2a35';
 
@@ -65,6 +66,7 @@ function ride(c) {
 
 const BOARD = { frame: '#e8a33a', frameDark: '#a8701c' };
 const POSES = ['', '-crouch', '-manual'];
+const SKATE_POSES = ['', '-pushA', '-pushB', '-crouch', '-grab'];
 const DEFAULT_KID = { jacket: '#e0483c', jacketDark: '#b2352c', jacketLight: '#f06a5c', pants: '#2a3f8f', hair: '#5a3a1e', hairLight: '#7a5230' };
 
 export function makeCharacterArt(scene, cfg, scale) {
@@ -83,7 +85,17 @@ export function makeCharacterArt(scene, cfg, scale) {
     skate(rider, { ...BOARD, ...o, rider: true, pose: suffix.slice(1) || 'roll' });
     finish(rider).done();
   });
+  const skatePoses = (id, o) => SKATE_POSES.forEach(suffix => {
+    const rider = new ScaledPen(scene, `${id}${suffix}`, 40, 24, f);
+    skates(rider, { ...BOARD, ...o, rider: true, pose: suffix.slice(1) });
+    finish(rider).done();
+  });
+  const pair = new ScaledPen(scene, 'skates', 40, 24, f);
+  skates(pair, BOARD);
+  finish(pair).shadow(20, 20, 12, 2.5, 0.25);
+  pair.done();
   poses('player-skate', DEFAULT_KID);
+  skatePoses('player-skates', DEFAULT_KID);
   for (const c of cfg.characters) {
     const walk = new ScaledPen(scene, `player-${c.id}`, 24, 32, f);
     figure(walk, look(c));
@@ -96,6 +108,7 @@ export function makeCharacterArt(scene, cfg, scale) {
     rider.done();
 
     poses(`player-${c.id}-skate`, ride(c));
+    skatePoses(`player-${c.id}-skates`, ride(c));
 
     const portrait = new ScaledPen(scene, `portrait-${c.id}`, 24, 32, f);
     portrait.ell(c.palette.backdrop, 12, 16, 11.5, 15.5);

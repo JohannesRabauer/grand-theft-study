@@ -5,7 +5,8 @@
     "manual": { "points": 20, "perSweet": 70, "minSweet": 0.35, "name": "trick.manual" },
     "grind": { "points": 70, "perMeter": 10, "name": "trick.grind" },
     "stairs": { "points": 60, "perStep": 30, "name": "trick.stairs" },
-    "ramp": { "points": 50, "perAir": 110, "name": "trick.ramp" }
+    "ramp": { "points": 50, "perAir": 110, "name": "trick.ramp" },
+    "grab": { "points": 30, "perSecond": 25, "name": "trick.grab" }
   },
   "combo": {
     "window": 2.5,
@@ -37,6 +38,9 @@
     "offBonus": 40,
     "offCool": 0.8,
     "descent": 0.55
+  },
+  "grab": {
+    "jumpBonus": 40
   },
   "stairs": {
     "rattleMult": 0.5,

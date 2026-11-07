@@ -3,6 +3,7 @@ import { createQuality } from '../services/quality.js';
 import { makeHiResArt } from './HiResArt.js';
 import { makeNpcArt } from './NpcArt.js';
 import { makeCharacterArt } from './CharacterArt.js';
+import { makeBusArt } from './SkatesArt.js';
 import { GameState } from '../state/GameState.js';
 import { SaveSlots } from '../state/SaveSlots.js';
 
@@ -28,6 +29,8 @@ export class BootScene extends Phaser.Scene {
     this.load.json('characters', 'data/characters.json');
     this.load.json('attr-growth', 'data/attr-growth.json');
     this.load.json('tricks', 'data/tricks.json');
+    this.load.json('grab', 'data/grab.json');
+    this.load.json('routes', 'data/routes.json');
     this.load.json('day', 'data/day.json');
     this.load.json('hud', 'data/hud.json');
     this.load.json('screens', 'data/screens.json');
@@ -79,6 +82,7 @@ export class BootScene extends Phaser.Scene {
     }
     makeNpcArt(this, this.cache.json.get('npcs'), res.scale);
     makeCharacterArt(this, characters, res.scale);
+    makeBusArt(this, res.scale);
     // The speed zoom scales the world by non-integer factors, where nearest-neighbour sampling makes
     // texels land on uneven screen pixels (shimmer). World textures are filtered bilinear instead; at
     // an exact integer zoom texels map 1:1 to pixels, so the result stays crisp. UI textures stay sharp.

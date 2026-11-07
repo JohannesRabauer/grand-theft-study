@@ -1,5 +1,6 @@
 // The trick service (AD-23, CAP-13): ctx.tricks.forPlayer(i) (also player.tricks) is one skater's trick state and Style
-// combo. It scores what the skateboard does (entities/Skateboards.js events `trick:ollie`, `trick:manual`), reads the
+// combo. It scores what the skateboard and the skates do (entities/Skateboards.js and Skates.js, events `trick:ollie`,
+// `trick:manual`, and `trick:grab` of entities/GrabTargets.js: a bus ride scores by its length, a jump off it earns a bonus), reads the
 // rails, benches, ramps and stairs of the map (the only reader of their grind data, AD-28) and drives the rider on them.
 // The maths is vehicles/trickCore.js, the numbers data/tricks.json.
 //
@@ -21,11 +22,12 @@ import { drawTrickObjects, release } from './trickArt.js';
 const GRIND_TYPES = new Set(['rail', 'bench']);
 
 export class TrickSystem {
-  constructor(scene, ctx, cfg, skateboards) {
+  // `rollers`: the services that carry trick riders (Skateboards and Skates instances).
+  constructor(scene, ctx, cfg, rollers) {
     this.scene = scene;
     this.ctx = ctx;
     this.cfg = cfg;
-    this.boards = skateboards;
+    this.rollers = rollers;
     this.slots = Array.from({ length: ctx.maxPlayers }, (_, index) => ({
       index, combo: createCombo(), state: 'roll', flight: '', steps: 0, rail: null, s: 0, dir: 1, speed: 0, travel: 0,
       skip: null, skipFor: 0, rattling: false, rattleIn: 0, dustIn: 0, sparkIn: 0, fireIn: 0
@@ -41,7 +43,8 @@ export class TrickSystem {
     const { events } = ctx;
     events.on('trick:ollie', e => (e.phase === 'start' ? this.onTakeOff(e) : this.onLanded(e)));
     events.on('trick:manual', e => { if (e.phase === 'end') this.onManualEnd(e); });
-    events.on('player:vehicle', e => { if (e.id !== 'skateboard') this.clean(this.slots[e.player]); });
+    events.on('trick:grab', e => { if (e.phase === 'end' && e.score) this.score(this.slots[e.player], 'grab', { seconds: e.time, bonus: e.reason === 'jump' ? cfg.grab.jumpBonus : 0 }); });
+    events.on('player:vehicle', e => { if (!rollers.some(r => r.id === e.id)) this.clean(this.slots[e.player]); });
     events.on('player:caught', e => this.bail(this.slots[e.player], 'caught'));
     events.on('world:leave', () => { for (const slot of this.slots) this.clean(slot); });
     ctx.tricks = this;
@@ -50,6 +53,9 @@ export class TrickSystem {
   }
 
   forPlayer(index) { return this.slots[index]; }
+
+  // The roller service player `index` is riding (null on foot or a bike).
+  rollerOf(index) { return this.rollers.find(r => r.isMounted(index)) ?? null; }
 
   // ---- map
   loadMap() {
@@ -148,14 +154,15 @@ export class TrickSystem {
     this.bank(slot, false, 'off');
   }
 
-  // ---- per frame (after Skateboards.update)
+  // ---- per frame (after Skateboards.update and Skates.update)
   update(dt) {
     const { players } = this.ctx;
     this.time += dt;
     for (let i = 0; i < players.length; i++) {
       const slot = this.slots[i];
-      if (!this.boards.isMounted(i) || players[i].pinned) { slot.state = 'roll'; continue; }
-      this.step(dt, players[i], slot, this.boards.riders[i].skate);
+      const roller = this.rollerOf(i);
+      if (!roller || players[i].pinned) { slot.state = 'roll'; continue; }
+      this.step(dt, players[i], slot, roller.riders[i].skate);
     }
   }
 
@@ -173,7 +180,7 @@ export class TrickSystem {
       slot.rattling = grounded && this.rattle(dt, p, slot);
     }
     slot.speed = m.velSpeed;
-    if (tickCombo(c, cfg, dt, s.air > 0 || s.grind || s.manual || slot.rattling)) this.bank(slot, false, 'timeout');
+    if (tickCombo(c, cfg, dt, s.air > 0 || s.grind || s.manual || slot.rattling || p.grabbing)) this.bank(slot, false, 'timeout');
     slot.state = slot.rail ? 'grind' : s.air > 0 ? (slot.flight === 'stairs' ? 'stairs-jump' : slot.flight === 'ramp' ? 'ramp' : 'ollie') : s.manual ? 'manual' : 'roll';
     if (isActive(c) && c.mult >= cfg.combo.fireMult) this.fire(dt, p, s, slot);
   }
@@ -187,7 +194,7 @@ export class TrickSystem {
       if (r === slot.skip && slot.skipFor > 0) continue; // just jumped off this one
       if (!captureRail(r.path, r.half, cfg.grind.angle, p.x, p.y, m.heading, hit)) continue;
       const { events } = this.ctx;
-      this.boards.beginGrind(p);
+      this.rollerOf(p.index).beginGrind(p);
       slot.rail = r;
       slot.s = hit.s;
       slot.dir = hit.dir;
@@ -237,7 +244,7 @@ export class TrickSystem {
     const id = slot.rail.id;
     if (reason === 'ollie') { slot.skip = slot.rail; slot.skipFor = cfg.grind.offCool; }
     slot.rail = null;
-    if (reason === 'end') this.boards.finishGrind(p);
+    if (reason === 'end') this.rollerOf(slot.index).finishGrind(p);
     const meters = (slot.travel / this.ctx.map.tileSize) * this.ctx.map.metersPerTile;
     this.score(slot, 'grind', { meters, bonus: reason === 'ollie' ? cfg.grind.offBonus : 0 });
     this.ctx.events.emit('trick:grind', { player: slot.index, phase: 'end', rail: id, reason, meters, x: p.x, y: p.y });
@@ -246,7 +253,7 @@ export class TrickSystem {
   // A grind cut short (bail, got off, map change): no score.
   dropGrind(slot, p) {
     slot.rail = null;
-    if (this.boards.isMounted(slot.index)) this.boards.finishGrind(p);
+    this.rollerOf(slot.index)?.finishGrind(p);
   }
 
   // ---- ramps and stairs
@@ -259,7 +266,7 @@ export class TrickSystem {
       r.in[slot.index] = inside ? 1 : 0;
       if (!entered || !grounded || s.manual || m.velSpeed < k.minSpeed || !facing(r.dir, m.heading, k.angle)) continue;
       const air = rampAirtime(this.cfg, r.height, m.velSpeed);
-      this.boards.launch(p, air, r.height * k.liftScale);
+      this.rollerOf(p.index).launch(p, air, r.height * k.liftScale);
       slot.flight = 'ramp';
       this.ctx.events.emit('trick:ramp', { player: p.index, phase: 'start', x: p.x, y: p.y, airtime: air, height: r.height });
     }

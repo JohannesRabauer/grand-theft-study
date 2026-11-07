@@ -49,7 +49,7 @@ export const characters = {
     become('mehmet');
     assert('Mehmet: own look, starts on his skateboard, trick and stick perks', player.sprite.texture.key === 'player-mehmet' && player.startVehicle === 'skateboard' && player.perks.trickMultiplier > 1 && player.perks.stickThrowRange > 1);
     become('jonas');
-    assert('Jonas: own look, skates fall back to running, bus and talk perks', player.sprite.texture.key === 'player-jonas' && player.startVehicle === 'foot' && player.perks.busGrabBonus > 0 && player.perks.talkDownBonus > 0);
+    assert('Jonas: own look, starts on skates, bus and talk perks', player.sprite.texture.key === 'player-jonas' && player.startVehicle === 'skates' && player.perks.busGrabBonus > 0 && player.perks.talkDownBonus > 0);
     player.setVehicle('bike');
     assert('the bike look is the character own', player.sprite.texture.key === 'player-jonas-bike');
     player.setVehicle('foot');

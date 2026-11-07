@@ -18,6 +18,8 @@ export class Player {
     this.profiles = profiles;
     const profile = profiles[profileId];
     this.vehicle = profileId;
+    this.grabbing = false; // hanging on to a bus (entities/GrabTargets.js)
+    this.stumbling = false; // the comic tumble after a failed grab
     this.vehicleSwapped = false; // set by setVehicle, cleared at the start of each frame: one mount or dismount per interact press
     this.character = null;
     this.perks = {};
@@ -96,18 +98,21 @@ export class Player {
     this.ctx.particles.emit('leaves', this.x, this.y - 4, { count: 1 });
   }
 
+  // Riders face their heading; facing west they mirror instead of rotating past 90 degrees, so they never appear upside down.
+  faceHeading() {
+    const h = this.move.heading;
+    const west = Math.cos(h) < 0;
+    this.sprite.setFlipX(west).setRotation(west ? h + (h > 0 ? -Math.PI : Math.PI) : h);
+  }
+
   update(dt) {
     const i = this.ctx.input.intents[this.index];
     const m = this.move;
     m.update(dt, i.move.x, i.move.y, i.sprint);
     this.sprite.setPosition(this.x, this.y);
     this.sprite.setDepth(this.y);
-    if (m.profile.faceHeading) {
-      // facing west: mirror instead of rotating past 90 degrees, so the rider never appears upside down
-      const h = m.heading;
-      const west = Math.cos(h) < 0;
-      this.sprite.setFlipX(west).setRotation(west ? h + (h > 0 ? -Math.PI : Math.PI) : h);
-    } else if (i.move.x) this.sprite.setFlipX(i.move.x < 0);
+    if (m.profile.faceHeading) this.faceHeading();
+    else if (i.move.x) this.sprite.setFlipX(i.move.x < 0);
 
     this.updateHidden(dt);
     if (m.surface !== this.lastSurface) {

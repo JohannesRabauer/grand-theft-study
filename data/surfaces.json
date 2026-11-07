@@ -6,7 +6,8 @@
       "bike": 1.0,
       "skateboard": 1.0,
       "bully-foot": 1.0,
-      "bully-bike": 1.0
+      "bully-bike": 1.0,
+      "skates": 1.0
     },
     "rattle": 0.0,
     "particle": "dust-grey"
@@ -18,10 +19,14 @@
       "bike": 0.6,
       "skateboard": 0.4,
       "bully-foot": 0.9,
-      "bully-bike": 0.6
+      "bully-bike": 0.6,
+      "skates": 0.26
     },
     "rattle": 0.6,
-    "particle": "dust-sand"
+    "particle": "dust-sand",
+    "gripMult": {
+      "skates": 0.6
+    }
   },
   "grass": {
     "grip": 0.75,
@@ -30,10 +35,14 @@
       "bike": 0.55,
       "skateboard": 0.35,
       "bully-foot": 0.8,
-      "bully-bike": 0.55
+      "bully-bike": 0.55,
+      "skates": 0.22
     },
     "rattle": 0.2,
-    "particle": "grass-bits"
+    "particle": "grass-bits",
+    "gripMult": {
+      "skates": 0.5
+    }
   },
   "puddle": {
     "grip": 0.5,
@@ -42,10 +51,14 @@
       "bike": 0.5,
       "skateboard": 0.5,
       "bully-foot": 0.6,
-      "bully-bike": 0.5
+      "bully-bike": 0.5,
+      "skates": 0.45
     },
     "rattle": 0.0,
-    "particle": "splash"
+    "particle": "splash",
+    "gripMult": {
+      "skates": 0.6
+    }
   },
   "snow": {
     "grip": 0.5,
@@ -54,10 +67,14 @@
       "bike": 0.5,
       "skateboard": 0.45,
       "bully-foot": 0.7,
-      "bully-bike": 0.5
+      "bully-bike": 0.5,
+      "skates": 0.4
     },
     "rattle": 0.0,
-    "particle": "snow-puff"
+    "particle": "snow-puff",
+    "gripMult": {
+      "skates": 0.5
+    }
   },
   "ice": {
     "grip": 0.15,
@@ -66,10 +83,14 @@
       "bike": 1.0,
       "skateboard": 1.0,
       "bully-foot": 1.0,
-      "bully-bike": 1.0
+      "bully-bike": 1.0,
+      "skates": 0.9
     },
     "rattle": 0.0,
-    "particle": "ice-chips"
+    "particle": "ice-chips",
+    "gripMult": {
+      "skates": 0.8
+    }
   },
   "wall": {
     "grip": 1.0,
@@ -78,7 +99,8 @@
       "bike": 1.0,
       "skateboard": 1.0,
       "bully-foot": 1.0,
-      "bully-bike": 1.0
+      "bully-bike": 1.0,
+      "skates": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -91,7 +113,8 @@
       "bike": 1.05,
       "skateboard": 1.05,
       "bully-foot": 1.0,
-      "bully-bike": 1.05
+      "bully-bike": 1.05,
+      "skates": 1.05
     },
     "rattle": 0.0,
     "particle": "dust-grey"
@@ -103,7 +126,8 @@
       "bike": 0.85,
       "skateboard": 0.8,
       "bully-foot": 1.0,
-      "bully-bike": 0.85
+      "bully-bike": 0.85,
+      "skates": 0.95
     },
     "rattle": 0.0,
     "particle": "dust-sand"
@@ -115,7 +139,8 @@
       "bike": 1.0,
       "skateboard": 1.1,
       "bully-foot": 1.0,
-      "bully-bike": 1.0
+      "bully-bike": 1.0,
+      "skates": 1.12
     },
     "rattle": 0.0,
     "particle": "dust-grey"
@@ -127,7 +152,8 @@
       "bike": 1.0,
       "skateboard": 1.0,
       "bully-foot": 1.0,
-      "bully-bike": 1.0
+      "bully-bike": 1.0,
+      "skates": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -140,7 +166,8 @@
       "bike": 1.0,
       "skateboard": 1.0,
       "bully-foot": 1.0,
-      "bully-bike": 1.0
+      "bully-bike": 1.0,
+      "skates": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -153,7 +180,8 @@
       "bike": 1.0,
       "skateboard": 1.0,
       "bully-foot": 1.0,
-      "bully-bike": 1.0
+      "bully-bike": 1.0,
+      "skates": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -166,7 +194,8 @@
       "bike": 1.0,
       "skateboard": 1.0,
       "bully-foot": 1.0,
-      "bully-bike": 1.0
+      "bully-bike": 1.0,
+      "skates": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -179,7 +208,8 @@
       "bike": 1.0,
       "skateboard": 1.0,
       "bully-foot": 1.0,
-      "bully-bike": 1.0
+      "bully-bike": 1.0,
+      "skates": 1.0
     },
     "rattle": 0.0,
     "particle": null,
@@ -192,7 +222,8 @@
       "bike": 1.0,
       "skateboard": 1.0,
       "bully-foot": 1.0,
-      "bully-bike": 1.0
+      "bully-bike": 1.0,
+      "skates": 1.0
     },
     "rattle": 0.0,
     "particle": null,

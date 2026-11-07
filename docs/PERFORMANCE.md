@@ -191,6 +191,10 @@ logic cost but Medium worst case stays at about 0.5 ms, six times below the 3 ms
 assumed 6x). Heap retained after GC did not grow. The scenario drives a bike through skatepark and old town, so the crowd
 there is the one around a moving player (despawn and respawn included).
 
+## Story 5.3: buses and the bus grab
+
+Two buses (pooled, `data/routes.json`, cap `maxTargets` 4) move along a route as kinematic SENSOR bodies; per frame that is two route lookups, two `Body.setPosition` calls and a distance test per skating player, with sprites culled outside the view plus 96 px. The rope, risk bar and zone hint share one Graphics that is only cleared and redrawn while a skater is near a bus or hanging on. Bench (headless Edge, Medium, scenario "e everything"): 0.19 ms average, 0.4 ms p95 per update; `GrabTargets` does not appear among the allocation hot spots (`--alloc all --tier medium`).
+
 ## Manual phone test protocol (for the user)
 
 Needs: the PC and the phone on the same Wi-Fi.

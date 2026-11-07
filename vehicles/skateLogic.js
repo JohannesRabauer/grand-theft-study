@@ -5,7 +5,7 @@
 //
 // Ollie: a fresh jump press on the ground starts a short hop. The airtime grows a little with speed, `height` is a
 // half sine (px) the sprite is lifted by, and `air > 0` is the span in which low obstacles are skipped.
-// Manual: a fresh press of the manual intent at speed starts it with the balance needle at `startAt`. Holding
+// Manual (only for profiles with a `manual` block): a fresh press of the manual intent at speed starts it with the balance needle at `startAt`. Holding
 // raises the needle, letting go lowers it; inside the sweet window [sweetLo, sweetHi] the board is balanced (speed
 // boost, `sweet` time counts), held too long it tips over 1 and the player simply drops back to rolling. No penalty
 // beyond a short cooldown. An ollie ends a manual.
@@ -39,7 +39,7 @@ export function stepSkate(s, cfg, dt, inp) {
   s.jumpPrev = inp.jump;
   s.manualPrev = inp.manual;
   const o = cfg.ollie;
-  const m = cfg.manual;
+  const m = cfg.manual; // absent on profiles without a manual (skates)
 
   if (s.air > 0) {
     s.air -= dt;
@@ -66,7 +66,7 @@ export function stepSkate(s, cfg, dt, inp) {
     return s.flags;
   }
 
-  if (!s.manual && manualEdge && s.manualCool <= 0 && inp.speed >= m.minSpeed) {
+  if (m && !s.manual && manualEdge && s.manualCool <= 0 && inp.speed >= m.minSpeed) {
     s.manual = true;
     s.meter = m.startAt;
     s.manualTime = s.sweet = 0;

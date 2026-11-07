@@ -16,6 +16,7 @@
     "goal": { "shape": "rect", "inWall": false, "reach": true, "fields": {} },
     "bike": { "shape": "point", "inWall": false, "fields": {} },
     "skateboard": { "shape": "point", "inWall": false, "fields": {} },
+    "skates": { "shape": "point", "inWall": false, "fields": {} },
     "hiding": { "shape": "rect", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["hedge", "dumpster", "phone-booth"], "required": true } } },
     "turf": { "shape": "rect", "inWall": true, "fields": {} },
     "bully-spawn": { "shape": "point", "inWall": false, "fields": {} },

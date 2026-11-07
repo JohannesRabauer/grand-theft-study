@@ -1,7 +1,7 @@
 {
-  "_doc": "The three playable kids (CAP-12). Attributes are 0..10 (growth in data/attr-growth.json); `modifiers` turns attributes into gameplay numbers per point around `pivot`; `perks` are numeric strengths read by their systems (aimPrecision: slingshot spread cut, bullyTargetWeight: how much more bullies prefer this kid, trickMultiplier: Style payout, stickThrowRange: stick tool range, forgetHomeworkChance: school chore roll, busGrabBonus: grab-target window, talkDownBonus: bully talk-down roll, musicArtBonus: music/art minigame score). A start vehicle without a profile in data/vehicles.json (rollerskates until story 5.3) falls back to foot. `palette` feeds the shared player art in scenes/CharacterArt.js.",
+  "_doc": "The three playable kids (CAP-12). Attributes are 0..10 (growth in data/attr-growth.json); `modifiers` turns attributes into gameplay numbers per point around `pivot`; `perks` are numeric strengths read by their systems (aimPrecision: slingshot spread cut, bullyTargetWeight: how much more bullies prefer this kid, trickMultiplier: Style payout, stickThrowRange: stick tool range, forgetHomeworkChance: school chore roll, busGrabBonus: grab-target window, talkDownBonus: bully talk-down roll, musicArtBonus: music/art minigame score). A start vehicle without a profile in data/vehicles.json or outside `playerVehicles` falls back to foot. `palette` feeds the shared player art in scenes/CharacterArt.js.",
   "attrMax": 10,
-  "playerVehicles": ["foot", "bike", "skateboard"],
+  "playerVehicles": ["foot", "bike", "skateboard", "skates"],
   "attributeOrder": ["wissen", "tempo", "ausdauer", "charme", "ordnung", "zielen"],
   "perkDefaults": {
     "aimPrecision": 0,
@@ -54,7 +54,7 @@
       "name": "Jonas",
       "title": "character.jonas.title",
       "attributes": { "wissen": 6, "tempo": 6, "ausdauer": 5, "charme": 9, "ordnung": 4, "zielen": 6 },
-      "startVehicle": "rollerskates",
+      "startVehicle": "skates",
       "perks": { "forgetHomeworkChance": 0.15, "busGrabBonus": 0.5, "talkDownBonus": 0.4, "musicArtBonus": 0.3, "bullyTargetWeight": 0.9 },
       "perkText": "character.jonas.perks",
       "quips": ["character.jonas.quip1", "character.jonas.quip2", "character.jonas.quip3"],

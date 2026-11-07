@@ -11,7 +11,7 @@ export class Caught {
     this.scene = scene;
     this.ctx = ctx;
     this.cfg = cfg;
-    this.rides = rides; // Bikes and Skateboards
+    this.rides = rides; // Bikes, Skateboards and Skates
     this.slots = Array.from({ length: ctx.maxPlayers }, () => ({ active: false, t: 0, jumpPrev: false }));
     this.count = 0; // players currently caught
     ctx.events.on('bully:caught-contact', ev => this.trigger(ev.player ?? 0));

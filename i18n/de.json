@@ -96,7 +96,7 @@
   "attr.ordnung": "Ordnung",
   "attr.zielen": "Zielen",
   "vehicle.skateboard": "Skateboard",
-  "vehicle.rollerskates": "Rollschuhe",
+  "vehicle.skates": "Inliner",
   "character.lena.title": "Die Streberin",
   "character.lena.perks": "Präzisions-Schleuder. Rüpel haben sie öfter auf dem Kieker.",
   "character.lena.quip1": "Ich hab einen Plan. Und einen Plan B. Und eine Checkliste.",
@@ -379,5 +379,10 @@
   "trick.grind": "Grind",
   "trick.stairs": "Treppensprung",
   "trick.ramp": "Rampenflug",
-  "trick.rattle": "Rumpel-Rumpel!"
+  "trick.rattle": "Rumpel-Rumpel!",
+  "trick.grab": "Bus-Ride",
+  "grab.hint": "Bus voraus! Halte F gedrückt, wenn du hinten im gelben Feld bist.",
+  "grab.fail": "Hoppla! Griff verloren, Digga!",
+  "grab.tired": "Arme müde! Du lässt los.",
+  "grab.lost": "Das Seil hat sich verhakt."
 }

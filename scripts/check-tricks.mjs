@@ -208,7 +208,7 @@ function world(objects, riders = 1, perks = [1]) {
     add: { image: () => noop },
     matter: { body: { setPosition(b, p) { b.position.x = p.x; b.position.y = p.y; }, setVelocity(b, v) { b.velocity.x = v.x; b.velocity.y = v.y; } } }
   };
-  const boards = { riders: [], isMounted: () => true };
+  const boards = { id: 'skateboard', riders: [], isMounted: () => true };
   for (let i = 0; i < riders; i++) {
     const skate = createSkate();
     boards.riders.push({ skate });
@@ -223,7 +223,7 @@ function world(objects, riders = 1, perks = [1]) {
   boards.launch = (p, air, peak) => startAir(boards.riders[p.index].skate, air, peak);
   boards.beginGrind = p => startGrind(boards.riders[p.index].skate);
   boards.finishGrind = p => endGrind(boards.riders[p.index].skate, tcfg);
-  const sys = new TrickSystem(scene, ctx, cfg, boards);
+  const sys = new TrickSystem(scene, ctx, cfg, [boards]);
   // one frame as entities/Skateboards.js + GameScene do it: intents -> skate logic -> events -> trick system -> kinematics
   const frame = (i, input = {}) => {
     const p = players[i];

@@ -9,22 +9,26 @@
 // as { player, phase: 'start' | 'end', x, y, ... } (ollie end = landing with `airtime`; manual end carries `time`,
 // `sweet` seconds in the balance window and a `reason`) for vehicles/TrickSystem.js, which also asks this class to
 // launch the rider off a ramp or put it on a rail (launch, beginGrind, finishGrind). Rattle: surfaces with `rattle` in data/surfaces.json shake the rider sprite.
+// Skates (entities/Skates.js) are the same service with another profile id, map object and poses (`kind`); `rivals` are the
+// other mountable things (bikes, the other roller): the nearest one wins an interact press.
 import { CAT, MASK } from '../physics/categories.js';
 import { LAND, MANUAL, MANUAL_END, OLLIE, createSkate, endGrind, resetSkate, startAir, startGrind, stepSkate } from '../vehicles/skateLogic.js';
 
-const ID = 'skateboard';
 const PROP_FREE = MASK.PLAYER & ~CAT.PROP;
 
 export class Skateboards {
   // `bikes`: a bike standing closer than a board wins the interact press, so a board lying next to a bike never blocks it.
-  constructor(scene, ctx, bikes) {
+  // `kind`: { id: profile id, object: map object type, texture: the lying item }.
+  constructor(scene, ctx, bikes, kind = { id: 'skateboard', object: 'skateboard', texture: 'skateboard' }) {
     this.scene = scene;
     this.ctx = ctx;
-    this.bikes = bikes;
-    this.profile = ctx.players[0].profiles[ID];
+    this.kind = kind;
+    this.id = kind.id;
+    this.rivals = [bikes];
+    this.profile = ctx.players[0].profiles[kind.id];
     this.fx = this.profile.fx;
     this.parked = []; // boards lying around, plus those being ridden (hidden)
-    this.riders = Array.from({ length: ctx.maxPlayers }, () => ({ mounted: null, skate: createSkate(), shadow: null, pose: '', clackIn: 0 }));
+    this.riders = Array.from({ length: ctx.maxPlayers }, () => ({ mounted: null, skate: createSkate(), shadow: null, pose: '', clackIn: 0, pushT: 0 }));
     this.time = 0;
     this.loadMap();
     ctx.world.register(this);
@@ -34,7 +38,7 @@ export class Skateboards {
     const { ctx } = this;
     const ts = ctx.map.tileSize;
     for (const o of ctx.map.objects) {
-      if (o.type === 'skateboard') this.parked.push(this.scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, 'skateboard').setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts));
+      if (o.type === this.kind.object) this.parked.push(this.scene.add.image((o.x + 0.5) * ts, (o.y + 0.5) * ts, this.kind.texture).setScale(ctx.res.inv).setDepth((o.y + 0.5) * ts));
     }
   }
 
@@ -54,33 +58,39 @@ export class Skateboards {
       if (player.pinned) continue; // a caught player's presses belong to the caught frame
       const r = this.riders[player.index];
       const i = input.intents[player.index];
-      if (r.mounted && player.vehicle !== ID) this.dismount(player); // switched away by something else
-      if (i.interact && !player.vehicleSwapped) {
+      if (r.mounted && player.vehicle !== this.id) this.dismount(player); // switched away by something else
+      if (i.interact && !player.vehicleSwapped && !this.ctx.grabs.claims(player.index)) { // an early press near a bus is a grab, not a dismount
         if (r.mounted) this.dismount(player); else if (player.vehicle === 'foot') this.tryMount(player);
       }
       if (r.mounted) this.ride(dt, player, r, i);
     }
   }
 
-  tryMount(player) {
+  // The lying item closest to `player` within mount range (null when none) and its distance.
+  nearest(player) {
     let best = null;
     let bestD = this.fx.mountRange;
     for (const b of this.parked) {
       const d = Math.hypot(b.x - player.x, b.y - player.y);
       if (b.visible && d <= bestD) { best = b; bestD = d; }
     }
-    if (!best || this.bikes.nearest(player).dist < bestD) return;
-    best.setVisible(false);
-    this.riders[player.index].mounted = best;
-    player.setVehicle(ID);
+    return { item: best, dist: bestD };
+  }
+
+  tryMount(player) {
+    const { item, dist } = this.nearest(player);
+    if (!item || this.rivals.some(r => r.nearest(player).dist < dist)) return;
+    item.setVisible(false);
+    this.riders[player.index].mounted = item;
+    player.setVehicle(this.id);
   }
 
   // The player starts the game already on a board of their own (a character's start vehicle).
   giveBoard(player) {
-    const board = this.scene.add.image(player.x, player.y, 'skateboard').setScale(this.ctx.res.inv).setVisible(false);
+    const board = this.scene.add.image(player.x, player.y, this.kind.texture).setScale(this.ctx.res.inv).setVisible(false);
     this.parked.push(board);
     this.riders[player.index].mounted = board;
-    player.setVehicle(ID);
+    player.setVehicle(this.id);
   }
 
   // The board stays where the rider let go of it.
@@ -115,6 +125,12 @@ export class Skateboards {
     this.endAir(player);
   }
 
+  // Texture suffix of the rider's pose: crouched for a hop, nose up in a manual, else rolling.
+  poseFor(dt, player, r, s, i) {
+    const poses = this.profile.poses;
+    return s.air > 0 || s.grind || (i.jump && !s.manual) ? poses.crouch : s.manual ? poses.manual : '';
+  }
+
   ride(dt, player, r, i) {
     const { events, surfaces, particles, quality } = this.ctx;
     const m = player.move;
@@ -146,8 +162,7 @@ export class Skateboards {
     }
 
     // pose, lift and ground shadow
-    const poses = this.profile.poses;
-    const pose = s.air > 0 || s.grind || (i.jump && !s.manual) ? poses.crouch : s.manual ? poses.manual : '';
+    const pose = this.poseFor(dt, player, r, s, i);
     if (pose !== r.pose) {
       r.pose = pose;
       player.sprite.setTexture(player.textureFor(this.profile) + pose);

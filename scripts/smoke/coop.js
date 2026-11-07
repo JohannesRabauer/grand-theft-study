@@ -142,13 +142,13 @@ export const coopCommute = {
   name: 'coopCommute',
   run(game, assert, env) {
     const { h, step } = env;
-    // ---- start a co-op run from the menu: Jonas (on foot) and Lena (her bike) ----
+    // ---- start a co-op run from the menu: Jonas (his skates) and Lena (her bike) ----
     const { gs, ui, ctx } = startCoop(game, env);
     const [p1, p2] = ctx.players;
     const cam = gs.cameras.main;
     const scale = ctx.res.scale;
     assert('the coop flag starts two players with their own characters and intents', ctx.players.length === 2 && p1.character.id === 'jonas' && p2.character.id === 'lena' && ctx.input.intents[0] !== ctx.input.intents[1] && ctx.state.shared.flags.coop === true);
-    assert('each starts with its own vehicle: P1 on foot, P2 on the bike', p1.vehicle === 'foot' && p2.vehicle === 'bike' && gs.bikes.isMounted(1) && !gs.bikes.isMounted(0));
+    assert('each starts with its own vehicle: P1 on skates, P2 on the bike', p1.vehicle === 'skates' && p2.vehicle === 'bike' && gs.skates.isMounted(0) && gs.bikes.isMounted(1) && !gs.bikes.isMounted(0));
     const spawn = ctx.map.objects.find(o => o.type === 'spawn' && o.id === 'player');
     const off = gs.zoomCfg.coop.spawnOffsets;
     const sx = (spawn.x + 0.5) * ctx.map.tileSize;

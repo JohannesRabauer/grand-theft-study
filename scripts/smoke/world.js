@@ -22,7 +22,7 @@ export const worldDoors = {
     player.teleport(T(door.x + 1), T(door.y));
     step(30);
     const before = { bodies: mapBodies(gs), children: gs.children.length, textures: gs.textures.getTextureKeys().length, pools: [...ctx.pools.byName.keys()].join(), props: ctx.props.props.length, ammo: gs.ammo.items.length, flags: gs.flags.flags.length, bikes: gs.bikes.parked.length };
-    const townZones = gs.zones.zones.filter(z => z.body).length;
+    const townZones = gs.zones.zones.filter(z => z.body).length + ctx.grabs.pool.filter(t => t.active).length; // sensors: zones and the bus bodies
     const townProps = ctx.props.props.filter(p => p.alive).length;
     assert('before the trip the town has props, ammo, flags, a bike and sensors', before.props >= 15 && before.ammo >= 8 && before.flags >= 2 && before.bikes >= 1 && townZones >= 5, JSON.stringify(before));
     press('interact');

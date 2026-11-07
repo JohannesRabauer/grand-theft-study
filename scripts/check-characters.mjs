@@ -27,7 +27,7 @@ const row = c => order.map(a => c.attributes[a]);
 assert.deepEqual(row(by.lena), [9, 5, 5, 5, 8, 8]);
 assert.deepEqual(row(by.mehmet), [5, 9, 9, 6, 3, 5]);
 assert.deepEqual(row(by.jonas), [6, 6, 5, 9, 4, 6]);
-assert.deepEqual(cfg.characters.map(c => c.startVehicle), ['bike', 'skateboard', 'rollerskates']);
+assert.deepEqual(cfg.characters.map(c => c.startVehicle), ['bike', 'skateboard', 'skates']);
 assert.deepEqual(cfg.characters.map(c => c.name), ['Lena', 'Mehmet', 'Jonas']);
 const pal = cfg.characters.map(c => c.palette);
 for (const k of ['jacket', 'hair', 'hairStyle', 'accessory', 'frame']) assert.equal(new Set(pal.map(p => p[k])).size, 3, `palette.${k} differs per character`);
@@ -95,8 +95,10 @@ assert.ok(!ruleMatches({ filter: { source: 'slingshot' } }, { source: 'bump' }))
 // ---- start vehicle fallback
 assert.equal(resolveStartVehicle('bike', cfg, profiles), 'bike');
 assert.equal(resolveStartVehicle('skateboard', cfg, profiles), 'skateboard', 'Mehmet rides his board');
-assert.equal(resolveStartVehicle('rollerskates', cfg, profiles), 'foot', 'no skates profile yet: run');
-assert.equal(resolveStartVehicle('rollerskates', cfg, { ...profiles, rollerskates: {} }), 'foot', 'not a player vehicle until the config lists it');
+assert.equal(resolveStartVehicle('skates', cfg, profiles), 'skates', 'Jonas rolls on his skates');
+assert.equal(resolveStartVehicle('rollerskates', cfg, profiles), 'foot', 'unknown ids run');
+assert.equal(resolveStartVehicle('skates', cfg, { ...profiles, skates: undefined }), 'foot', 'no profile: run');
+assert.equal(resolveStartVehicle('skates', { ...cfg, playerVehicles: ['foot'] }, profiles), 'foot', 'not a player vehicle until the config lists it');
 assert.equal(resolveStartVehicle(undefined, cfg, profiles), 'foot');
 
 // ---- state, service and hooks together
@@ -122,6 +124,7 @@ const rig = (character) => {
   assert.equal(player.look.bike, 'player-mehmet-bike');
   assert.equal(player.startVehicle, 'skateboard', 'Mehmet starts on the board');
   assert.equal(player.look.skate, 'player-mehmet-skate');
+  assert.equal(player.look.skates, 'player-mehmet-skates');
   assert.ok(player.looked);
   near(player.move.speedMult, 1.24);
   near(player.move.staminaSize, 1 + 0.08 * 4);

@@ -4,6 +4,8 @@ import { WallStreamer } from '../physics/WallStreamer.js';
 import { Input } from '../ui/input.js';
 import { Bikes } from '../entities/Bike.js';
 import { Skateboards } from '../entities/Skateboards.js';
+import { Skates } from '../entities/Skates.js';
+import { GrabTargets } from '../entities/GrabTargets.js';
 import { TrickSystem } from '../vehicles/TrickSystem.js';
 import { Player } from '../entities/Player.js';
 import { installPlayers, startPlayers } from '../entities/players.js';
@@ -87,7 +89,11 @@ export class GameScene extends Phaser.Scene {
     }
     this.bikes = new Bikes(this, ctx);
     this.skateboards = new Skateboards(this, ctx, this.bikes);
-    this.tricks = new TrickSystem(this, ctx, cache.get('tricks'), this.skateboards); // AD-23
+    this.skates = new Skates(this, ctx, this.bikes);
+    this.skateboards.rivals.push(this.skates);
+    this.skates.rivals.push(this.skateboards);
+    this.grabs = new GrabTargets(this, ctx, cache.get('routes'), cache.get('grab')); // AD-23: before the first mount, Skates asks it
+    this.tricks = new TrickSystem(this, ctx, cache.get('tricks'), [this.skateboards, this.skates]); // AD-23
     for (const p of ctx.players) this.mountStartVehicle(p);
     ctx.frozen = false; // true while the caught frame or a freezing screen is up: the world stands still, UIScene keeps running
     this.caughtFrozen = false;
@@ -103,7 +109,7 @@ export class GameScene extends Phaser.Scene {
     this.ammo = new AmmoPickups(this, ctx, cache.get('tool'));
     this.flags = new Flags(this, ctx, wcfg.flag);
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
-    this.caught = new Caught(this, ctx, cache.get('chase').caught, [this.bikes, this.skateboards]);
+    this.caught = new Caught(this, ctx, cache.get('chase').caught, [this.bikes, this.skateboards, this.skates]);
     this.rig = new CameraRig(ctx, this.zoomCfg); // AD-18: focus, fit zoom and tether of all players
     this.markers = new PlayerMarkers(this, ctx, this.zoomCfg.coop);
     this.streamer = new WallStreamer(this, ctx, cache.get('quality').wallRadius);
@@ -159,10 +165,11 @@ export class GameScene extends Phaser.Scene {
     return player;
   }
 
-  // The character's start vehicle; anything but the bike and the skateboard (skates until story 5.3) means on foot.
+  // The character's start vehicle; anything but the bike, the skateboard and the skates means on foot.
   mountStartVehicle(player) {
     if (player.startVehicle === 'bike') this.bikes.giveBike(player);
     else if (player.startVehicle === 'skateboard') this.skateboards.giveBoard(player);
+    else if (player.startVehicle === 'skates') this.skates.giveBoard(player);
   }
 
   // Debug helper behind SCHULWEG_GAME.addPlayer(): a second player at the first one's position, driven by
@@ -290,7 +297,9 @@ export class GameScene extends Phaser.Scene {
     for (const p of this.ctx.players) p.toolbelt.update(dt);
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
+    this.grabs.update(dt);
     this.skateboards.update(dt);
+    this.skates.update(dt);
     this.tricks.update(dt);
     this.bikes.update(dt);
     this.zones.update();

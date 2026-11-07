@@ -96,7 +96,7 @@
   "attr.ordnung": "Order",
   "attr.zielen": "Aim",
   "vehicle.skateboard": "Skateboard",
-  "vehicle.rollerskates": "Roller skates",
+  "vehicle.skates": "Inline skates",
   "character.lena.title": "The Overachiever",
   "character.lena.perks": "Precision slingshot. Bullies pick on her more often.",
   "character.lena.quip1": "I have a plan. And a plan B. And a checklist.",
@@ -379,5 +379,10 @@
   "trick.grind": "Grind",
   "trick.stairs": "Stair gap",
   "trick.ramp": "Big air",
-  "trick.rattle": "Rattle rattle!"
+  "trick.rattle": "Rattle rattle!",
+  "trick.grab": "Bus ride",
+  "grab.hint": "Bus ahead! Hold F while you are in the yellow zone at its back.",
+  "grab.fail": "Oops! Lost your grip, bro!",
+  "grab.tired": "Arms tired! You let go.",
+  "grab.lost": "The rope snagged."
 }

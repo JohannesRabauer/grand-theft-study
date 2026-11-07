@@ -25,7 +25,7 @@ export const comboValue = c => Math.round(c.base * c.mult);
 export function trickPoints(cfg, id, info = {}) {
   const t = cfg.tricks[id];
   return t.points + (t.perAir ?? 0) * (info.air ?? 0) + (t.perSweet ?? 0) * (info.sweet ?? 0) + (t.perStep ?? 0) * (info.steps ?? 0)
-    + (t.perMeter ?? 0) * (info.meters ?? 0) + (info.bonus ?? 0);
+    + (t.perMeter ?? 0) * (info.meters ?? 0) + (t.perSecond ?? 0) * (info.seconds ?? 0) + (info.bonus ?? 0);
 }
 
 // Adds a trick to the chain: variety (not one of the last two tricks) scores more and grows the multiplier faster, the same

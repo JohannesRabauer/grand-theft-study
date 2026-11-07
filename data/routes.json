@@ -1,0 +1,86 @@
+{
+  "_doc": "Looping road routes of vehicles that can be grabbed or driven by (CAP-14; the traffic epic reuses and extends this). `map`: the map id the route belongs to; `kind`: key into `targets` of data/grab.json; `count` vehicles are spread evenly along the loop; `speed` px/s; `points` tile coordinates (x.5/y.5 = tile centres, continuous values allowed) of a closed polyline. Main road of the town: the eastbound lane is y 57 (south), the westbound lane y 55, half-circles turn at both ends.",
+  "routes": [
+    {
+      "id": "main-road",
+      "map": "town",
+      "kind": "bus",
+      "count": 2,
+      "speed": 145,
+      "points": [
+        [
+          7,
+          57
+        ],
+        [
+          82,
+          57
+        ],
+        [
+          82.383,
+          56.924
+        ],
+        [
+          82.707,
+          56.707
+        ],
+        [
+          82.924,
+          56.383
+        ],
+        [
+          83.0,
+          56.0
+        ],
+        [
+          82.924,
+          55.617
+        ],
+        [
+          82.707,
+          55.293
+        ],
+        [
+          82.383,
+          55.076
+        ],
+        [
+          82,
+          55
+        ],
+        [
+          7,
+          55
+        ],
+        [
+          6.617,
+          55.076
+        ],
+        [
+          6.293,
+          55.293
+        ],
+        [
+          6.076,
+          55.617
+        ],
+        [
+          6.0,
+          56.0
+        ],
+        [
+          6.076,
+          56.383
+        ],
+        [
+          6.293,
+          56.707
+        ],
+        [
+          6.617,
+          56.924
+        ]
+      ]
+    }
+  ]
+}
