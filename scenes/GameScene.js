@@ -23,6 +23,7 @@ import { DayClock } from '../services/DayClock.js';
 import { Weather } from '../physics/Weather.js';
 import { ParticleHub } from '../particles/ParticleHub.js';
 import { Props } from '../entities/Prop.js';
+import { NeighborDogs } from '../entities/NeighborDogs.js';
 import { Flags } from '../entities/Flag.js';
 import { Park } from '../entities/Park.js';
 import { ChaseDirector } from '../ai/ChaseDirector.js';
@@ -114,6 +115,7 @@ export class GameScene extends Phaser.Scene {
     ctx.particles = new ParticleHub(this, ctx, cache.get('particles'));
     this.props = new Props(this, ctx, cache.get('props'));
     this.ammo = new AmmoPickups(this, ctx, cache.get('tool'));
+    this.dogs = new NeighborDogs(this, ctx, cache.get('dogs')); // story 6.1: free dogs that fetch thrown sticks
     this.flags = new Flags(this, ctx, wcfg.flag);
     this.park = new Park(this, ctx, cache.get('park')); // story 5.4: skatepark art and hint signs
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
@@ -153,6 +155,7 @@ export class GameScene extends Phaser.Scene {
     ctx.day.start();
     if (window.SCHULWEG_GAME) { // ?debug and ?bench
       window.SCHULWEG_GAME.addPlayer = () => this.addDebugPlayer();
+      window.SCHULWEG_GAME.spawnDog = (x, y, state) => ctx.dogs.spawn(x, y, state); // a free dog (CHASE by default)
       window.SCHULWEG_GAME.startMinigame = (id, opts) => ctx.minigames.start(id, opts); // resolves with the result (AD-20)
       window.SCHULWEG_GAME.setCoop = (on) => { state.dispatch('coop.set', { on }); this.scene.restart(); }; // restarts the run with or without the second player
     }
@@ -324,6 +327,7 @@ export class GameScene extends Phaser.Scene {
     this.followCamera(dt);
     this.crowd.update(dt);
     this.props.update(dt);
+    this.dogs.update(dt);
     this.flags.update(dt);
     this.ctx.particles.update(dt);
     this.streamer.update();

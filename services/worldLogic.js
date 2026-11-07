@@ -7,6 +7,9 @@
 
 const MAP_KEYS = ['tileSize', 'metersPerTile', 'indoor', 'legend', 'rows', 'objects'];
 
+// Surface a perched prop sits on: cans on a fence, frisbees and kites stuck in a tree.
+export const perchSurface = (o) => (o.kind === 'frisbee' || o.kind === 'kite-stuck' ? 'tree' : 'fence');
+
 export const objectKinds = (catalog) => Object.keys(catalog.types);
 
 // Tile cells covered by an object (point, rect or the cells along a rail path).
@@ -143,7 +146,7 @@ export function validateMap(id, map, env) {
       if (x < 0 || y < 0 || x >= W || y >= H) { errors.push(`${id}: ${o.type} ${o.id} is out of bounds at ${x},${y}`); continue; }
       if (def.inWall === true || walkable(x, y)) continue;
       if (def.inWall === 'perch' && o.perch) {
-        if (surface(x, y) !== 'fence') errors.push(`${id}: perched ${o.type} ${o.id} must sit on a fence`);
+        if (surface(x, y) !== perchSurface(o)) errors.push(`${id}: perched ${o.type} ${o.id} must sit on a ${perchSurface(o)}`);
       } else errors.push(`${id}: ${o.type} ${o.id} lies in a wall at ${x},${y}`);
     }
   }

@@ -5,7 +5,7 @@
 // Run: node scripts/check-map.mjs
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { validateWorld } from '../services/worldLogic.js';
+import { validateWorld, perchSurface } from '../services/worldLogic.js';
 
 const load = (p) => JSON.parse(readFileSync(new URL(`../data/${p}`, import.meta.url), 'utf8'));
 const surfaces = load('surfaces.json');
@@ -58,12 +58,14 @@ assert.deepEqual(of('turf').map(o => o.id).sort(), ['schoolyard-back', 'skatepar
 assert.ok(of('ammo').length >= 8, 'at least 8 ammo pickups');
 assert.ok(of('bully-spawn').length >= 3, 'at least 3 bully spawns');
 assert.ok(of('prop').length >= 15, 'about 15 props');
-assert.ok(of('prop').every(o => ['cone', 'can', 'crate', 'ball', 'trashcan'].includes(o.kind)), 'prop kinds');
+assert.ok(of('prop').every(o => ['cone', 'can', 'crate', 'ball', 'trashcan', 'frisbee', 'kite-stuck'].includes(o.kind)), 'prop kinds');
+assert.equal(of('prop').filter(o => o.kind === 'frisbee' && o.perch).length, 2, 'two frisbees stuck up in trees');
+assert.equal(of('prop').filter(o => o.kind === 'kite-stuck' && o.perch).length, 1, 'one kite stuck in a tree');
 for (const o of objects) {
   for (const [x, y] of cells(o)) {
     assert.ok(x >= 0 && y >= 0 && x < W && y < H, `${o.id} out of bounds`);
     if (o.type === 'turf') continue; // the skatepark contains ramps (walls) by design
-    if (o.perch) { assert.equal(surf(x, y), 'fence', `perched ${o.id} must sit on a fence`); continue; } // cans on a fence
+    if (o.perch) { assert.equal(surf(x, y), perchSurface(o), `perched ${o.id} must sit on a ${perchSurface(o)}`); continue; } // cans on a fence, frisbees and kites in a tree
     assert.ok(walkable(x, y), `${o.type} ${o.id} lies in a wall at ${x},${y}`);
   }
 }

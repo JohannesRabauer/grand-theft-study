@@ -8,3 +8,14 @@ export class Tool {
   update(dt, intent, equipped) {}
   use(...args) {}
 }
+
+// Aim at the pointer / stick point; without one, face the way the player last walked. Updates the unit vector `dir`.
+export function updateAimDir(dir, player, intent) {
+  const ax = intent.aim ? intent.aim.x - player.x : intent.move.x;
+  const ay = intent.aim ? intent.aim.y - player.y : intent.move.y;
+  const m = Math.hypot(ax, ay);
+  if (m > (intent.aim ? 4 : 0.2)) {
+    dir.x = ax / m;
+    dir.y = ay / m;
+  }
+}

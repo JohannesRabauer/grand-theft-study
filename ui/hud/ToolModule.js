@@ -2,7 +2,7 @@ import { HudModule } from './HudModule.js';
 import { uiText } from '../uiKit.js';
 import { sliceOf } from './layout.js';
 
-// The bound player's current tool and ammo (bottom centre); a wind arrow with strength appears above it while charging.
+// The bound player's current tool and its ammo or status (bottom centre); a wind arrow with strength appears above it while charging.
 export class ToolModule extends HudModule {
   constructor(scene, ctx, opts) {
     super(scene, ctx, opts);
@@ -25,7 +25,9 @@ export class ToolModule extends HudModule {
   show() {
     const { ctx } = this;
     const t = this.player.toolbelt.current;
-    this.tool.setText(ctx.t('hud.tool', { name: ctx.t(`tool.${t.id}`), n: t.ammo, max: t.max }));
+    const name = ctx.t(`tool.${t.id}`);
+    // a tool with one retrievable item (the throwing stick) shows where that item is instead of a count
+    this.tool.setText(t.status ? ctx.t('hud.toolStatus', { name, status: ctx.t(`tool.status.${t.status}`) }) : ctx.t('hud.tool', { name, n: t.ammo, max: t.max }));
     this.tool.setColor(t.ammo === 0 ? '#ff8a7a' : '#ffffff');
   }
 

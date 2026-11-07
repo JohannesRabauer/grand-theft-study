@@ -3,6 +3,8 @@
 import assert from 'node:assert/strict';
 import { CAT, MASK } from '../physics/categories.js';
 import * as bodies from '../physics/bodies.js';
+import { contactCounts } from '../tools/stickLogic.js';
+import { readFileSync } from 'node:fs';
 
 const names = Object.keys(CAT);
 const bits = Object.values(CAT);
@@ -31,6 +33,18 @@ for (const a of names) for (const b of names) {
   const hitOneWay = (MASK[a] & CAT[b]) !== 0 || (MASK[b] & CAT[a]) !== 0;
   assert.equal(hit, hitOneWay, `${a}/${b} masks are not symmetric`);
 }
+
+// The throwing stick (story 6.1) flies as a PROJECTILE body; of everything it overlaps, only PROP and STATIC contacts count,
+// at any height, and its sensor mask never contains a person or animal category.
+const stick = JSON.parse(readFileSync(new URL('../data/tool.json', import.meta.url), 'utf8')).throwingStick;
+for (const n of names) {
+  for (const h of [0, stick.arcHeight]) {
+    for (const perched of [false, true]) {
+      if (contactCounts(stick, h, CAT[n], perched)) assert.ok(['PROP', 'STATIC'].includes(n), `the stick must not touch ${n}`);
+    }
+  }
+}
+for (const n of ['PLAYER', 'BULLY', 'NPC', 'ANIMAL']) assert.equal(contactCounts(stick, 0, CAT[n], true), false, `the stick passes ${n}`);
 
 // Factories, against a fake scene that records what Matter would create.
 const made = [];

@@ -1,4 +1,4 @@
-import { Tool } from './Tool.js';
+import { Tool, updateAimDir } from './Tool.js';
 import { CAT, MASK } from '../physics/categories.js';
 import { addProjectile } from '../physics/bodies.js';
 
@@ -98,7 +98,7 @@ export class Slingshot extends Tool {
     this.updateShots(dt);
     if (!equipped) return;
     this.cool -= dt;
-    this.updateAimDir(intent);
+    updateAimDir(this.dir, this.player, intent);
     if (intent.toolUse && this.ammo > 0 && this.cool <= 0) {
       this.charging = true;
       this.power = Math.min(1, this.power + dt / this.cfg.chargeSeconds);
@@ -106,18 +106,6 @@ export class Slingshot extends Tool {
     } else if (this.charging) {
       if (this.power >= this.cfg.minPower && this.ammo > 0) this.use(this.power);
       this.endCharge();
-    }
-  }
-
-  // Aim at the pointer / stick point; without one, face the way the player last walked.
-  updateAimDir(intent) {
-    const { player } = this;
-    const ax = intent.aim ? intent.aim.x - player.x : intent.move.x;
-    const ay = intent.aim ? intent.aim.y - player.y : intent.move.y;
-    const m = Math.hypot(ax, ay);
-    if (m > (intent.aim ? 4 : 0.2)) {
-      this.dir.x = ax / m;
-      this.dir.y = ay / m;
     }
   }
 

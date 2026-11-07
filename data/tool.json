@@ -1,4 +1,5 @@
 {
+  "belt": ["slingshot", "throwing-stick"],
   "slingshot": {
     "startAmmo": 5,
     "maxAmmo": 12,
@@ -18,6 +19,27 @@
     "spreadDeg": 4,
     "assistDeg": 4,
     "assistRange": 150
+  },
+  "throwingStick": {
+    "chargeSeconds": 1.0,
+    "minPower": 0.2,
+    "cooldown": 0.3,
+    "minRange": 60,
+    "maxRange": 220,
+    "lifeMin": 0.55,
+    "lifeMax": 1.15,
+    "mass": 1.0,
+    "drag": 0.25,
+    "windPush": 90,
+    "radius": 3,
+    "muzzle": 8,
+    "startHeight": 6,
+    "arcHeight": 26,
+    "clearHeight": 10,
+    "spin": 16,
+    "spreadDeg": 5,
+    "pickupRadius": 12,
+    "hitRadiusMul": 1.5
   },
   "pickup": { "radius": 10, "respawn": 40 },
   "ammo": {

@@ -1,0 +1,15 @@
+{
+  "_doc": "Free-roaming dogs (story 6.1; epic 7 builds the chasing neighbor dog on them). States: CALM stands, CHASE trots after the nearest player and stops `stopDistance` away (never hurts), FETCH is driven by ai/DogFetch.js. `fetch`: range = how far from the dog a landed stick must be, pickup = distance at which it grabs the stick, dropDistance = how far from the thrower it lets go, speed / returnSpeed in px/s, happy = seconds of celebrating, giveUp = seconds before a fetch is dropped.",
+  "pool": 3,
+  "texture": "npc-dog",
+  "accel": 8,
+  "mouth": { "x": 6, "y": -3 },
+  "kinds": {
+    "neighbor-dog": {
+      "radius": 3,
+      "chaseSpeed": 70,
+      "stopDistance": 10,
+      "fetch": { "range": 170, "pickup": 5, "dropDistance": 16, "speed": 105, "returnSpeed": 85, "happy": 2.2, "giveUp": 12 }
+    }
+  }
+}

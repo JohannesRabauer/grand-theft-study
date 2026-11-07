@@ -24,7 +24,7 @@
     } },
     "bully-spawn": { "shape": "point", "inWall": false, "fields": {} },
     "prop": { "shape": "point", "inWall": "perch", "fields": {
-      "kind": { "type": "enum", "values": ["cone", "can", "crate", "ball", "trashcan"], "required": true },
+      "kind": { "type": "enum", "values": ["cone", "can", "crate", "ball", "trashcan", "frisbee", "kite-stuck"], "required": true },
       "perch": { "type": "bool" }
     } },
     "ammo": { "shape": "point", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["pebble", "chestnut", "acorn"], "required": true } } },

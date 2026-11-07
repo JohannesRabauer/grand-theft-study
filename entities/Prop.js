@@ -6,9 +6,9 @@
 // pushed by wind; the number awake never exceeds the tier's `maxProps`.
 // AD-7: wind-affected kinds get a force scaled by mass from ctx.wind.vector.
 // Emits `prop:hit` ({ prop, speed, radius, source, player, dist }) on strong impacts (radius = how far bullies hear it, optional;
-// a slingshot pebble adds source 'slingshot', the shooter's player index and the shot distance in px);
-// crates break into debris. Slingshot pebbles call `knock`; props with `perch` (cans on a fence) are
-// static until knocked.
+// a tool adds its source ('slingshot', 'stick'), the player index and the shot distance in px; a thrown stick clatters
+// louder: its `radiusMul` widens the radius). Crates break into debris. Tools call `knock`; props with `perch` (cans on a
+// fence, frisbees and kites stuck in trees) are static until knocked and then fall to the ground (`perchFly` seconds free of walls).
 import { addCircle, addRect, setPropFlying } from '../physics/bodies.js';
 import { CAT } from '../physics/categories.js';
 
@@ -86,7 +86,7 @@ export class Props {
   hit(p, speed, shot) {
     const { events, particles } = this.ctx;
     const { k, body } = p;
-    events.emit('prop:hit', { prop: p, speed, radius: k.hitRadius, source: shot?.source, player: shot?.player, dist: shot?.dist });
+    events.emit('prop:hit', { prop: p, speed, radius: k.hitRadius && k.hitRadius * (shot?.radiusMul ?? 1), source: shot?.source, player: shot?.player, dist: shot?.dist });
     if ((k.breakSpeed && speed >= k.breakSpeed) || p.hp <= 0) {
       p.alive = false;
       p.sprite.setVisible(false);
@@ -101,15 +101,15 @@ export class Props {
     if (k.debris) particles.emit('debris', body.position.x, body.position.y, { count: Math.ceil(k.debris / 2) });
   }
 
-  // A slingshot pebble hit `p` travelling in direction (dx, dy): a push of `knock` px/s, one point
-  // of damage for props with hp, and a perched prop falls off its perch. `shot` ({ source, player, dist }) is passed on to `prop:hit`.
+  // A tool (slingshot pebble, thrown stick) hit `p` travelling in direction (dx, dy): a push of `knock` px/s, one point
+  // of damage for props with hp, and a perched prop falls off its perch. `shot` ({ source, player, dist, radiusMul? }) is passed on to `prop:hit`.
   knock(p, dx, dy, shot) {
     if (!p.alive) return;
     const { k, body } = p;
     if (body.isStatic) {
       this.matter.body.setStatic(body, false);
       setPropFlying(body, true);
-      p.flyT = this.cfg.perchFly;
+      p.flyT = k.perchFly ?? this.cfg.perchFly;
     }
     this.sleeping.set(body, false);
     this.matter.body.setVelocity(body, { x: (dx * k.knock) / 60, y: (dy * k.knock) / 60 });
