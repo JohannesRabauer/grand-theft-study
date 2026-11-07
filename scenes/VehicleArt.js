@@ -6,6 +6,35 @@ import { ScaledPen } from './NpcArt.js';
 
 const OUTLINE = '#16161e';
 
+// Top-down kick scooter: narrow deck, two wheels and a wide T-bar, facing right.
+export function scooter(p, o) {
+  p.px('#16161e', 3, 10, 5, 4);
+  p.px('#16161e', 31, 10, 5, 4);
+  p.px(o.frameDark, 7, 9, 24, 6);
+  p.px(o.frame, 8, 10, 22, 4);
+  p.px('#d7e6ed', 10, 10, 16, 1);
+  p.px('#4d6474', 29, 3, 3, 18);
+  p.px('#c4d8e4', 30, 4, 1, 16);
+  p.px('#202c38', 28, 2, 5, 4);
+  p.px('#202c38', 28, 18, 5, 4);
+  if (!o.rider) return;
+  const low = o.pose === 'crouch';
+  p.px(o.pants, 8, 10, 12, 4);
+  p.px('#252735', 8, 11, 5, 3);
+  p.px(o.pants, low ? 9 : 5, 17, 10, 3);
+  p.ell(o.jacketDark, 17, 12.5, 5, low ? 6 : 7.5);
+  p.ell(o.jacket, 16.6, 11.8, 4.5, low ? 5.3 : 6.8);
+  p.px(o.jacketLight, 13, 8, 1, 7);
+  for (const y of [4, 17]) {
+    p.px(o.jacket, 18, y, 11, 3);
+    p.px('#f2c9a0', 29, y, 3, 3);
+  }
+  p.ell(o.hair, 17.5, 12, 4.7, 4.7);
+  p.px(o.hairLight, 14, 9, 4, 1);
+  p.px('#f2c9a0', 21, 10, 2, 4);
+  o.cap?.(p);
+}
+
 // 9 x 11 padlock: shackle on top (lifted and shifted when open), body below.
 function lock(scene, scale, key, body, open) {
   const p = new ScaledPen(scene, key, 9, 11, scale);

@@ -18,6 +18,11 @@ function skate(p, o, x, y, shear, len = 11) {
   }
   p.px(lighten(o.frame, 0.35), x + len - 3, Math.round(y + shear * (len - 3)), 3, 1);
   for (const k of [-1, 2, 5, 8, 11]) p.px('#c8c8d2', x + k, Math.round(y + shear * k) + 1, 1, 1);
+  if (o.inline) {
+    for (const k of [0, 3, 6, 9]) p.px('#edf3fa', x + k, Math.round(y + shear * k) + 3, 2, 2);
+    p.px('#233c70', x + 2, Math.round(y + shear * 2) - 1, 4, 3);
+    p.px('#9edfea', x + 3, Math.round(y + shear * 3), 2, 1);
+  }
 }
 
 export function skates(p, o) {

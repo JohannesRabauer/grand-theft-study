@@ -4,6 +4,8 @@
 // shop purchase, race win, the garage find, then bike racks (locked bike, safe from theft), an unlocked bike borrowed with
 // accelerated timers (the thief walks to it, rides it to a hideout, phone toast, mission trigger, objective arrow, a guard
 // raises Aerger), a scared-off thief, the rescue, and ownership in a save and in a map reload.
+import { makeCharacterArt } from '../../scenes/CharacterArt.js';
+import { MASK } from '../../physics/categories.js';
 export const vehicles = {
   name: 'vehicles',
   run(game, assert, env) {
@@ -35,7 +37,7 @@ export const vehicles = {
     ctx.particles.emit = function (name, ...a) { if (name === 'spark') sparks.n++; return emit.call(this, name, ...a); };
     const setOwned = list => ctx.state.replace({ ...ctx.state.data, shared: { ...ctx.state.data.shared, ownedVehicles: list } });
     const owned = () => [...ctx.state.shared.ownedVehicles].sort().join();
-    const services = [gs.bikes, gs.skateboards, gs.skates];
+    const services = gs.mountables;
     const onFoot = () => { for (const s of services) if (s.isMounted(0)) s.dismount(player); step(2); };
     const at = (tx, ty) => { player.teleport(T(tx), T(ty)); gs.snapCamera(); ctx.chase.reset(); step(3); };
     const lying = id => ctx.map.objects.find(o => o.id === id);
@@ -183,7 +185,7 @@ export const vehicles = {
     step(3);
     const back = gs.bikes.parked.find(b => b.bikeId === 'bike1');
     assert('back in the town the stolen bike stands at its hideout and not at home too', gs.bikes.parked.filter(b => b.bikeId === 'bike1').length === 1 && theft.stolen === back && Math.abs(back.x - T(70)) < 1 && Math.abs(back.y - T(40)) < 1 && arrow.bike === true);
-    assert('the padlocks follow ownership after the reload (skateboards locked, skates and bike free)', visiblePads().length === gs.skateboards.parked.filter(b => b.visible).length && visiblePads().every(p => gs.skateboards.parked.some(b => Math.abs(b.x - p.x) < 1)), `${visiblePads().length}`);
+    assert('the padlocks follow ownership after the reload (all unowned rides locked, skates and bike free)', visiblePads().length === lockedItems() && visiblePads().every(p => services.filter(s => !ctx.ownership.owns(s.id)).some(s => s.parked.some(b => b.visible && Math.abs(b.x - p.x) < 1))), `${visiblePads().length}`);
 
     // ---- clean up for whatever runs next
     ctx.state.dispatch('flags.set', { key: 'stolenBike', value: null });
@@ -194,5 +196,124 @@ export const vehicles = {
     ctx.particles.emit = emit;
     at(7, 51);
     onFoot();
+  }
+};
+
+export const newRides = {
+  name: 'newRides',
+  run(game, assert, env) {
+    const { step } = env;
+    const prev = game.scene.getScene('Game');
+    if (!prev.ctx.state.players[0].character) prev.ctx.state.dispatch('player.setCharacter', { player: 0, character: 'helena' });
+    prev.ctx.state.dispatch('coop.set', { on: true });
+    prev.scene.restart();
+    step(4);
+    let gs = game.scene.getScene('Game'), ctx = gs.ctx;
+    if (ctx.world.id !== 'town') ctx.world.load('town', 'from-home');
+    ctx.input.update = () => {};
+    const [p1, p2] = ctx.players;
+    const onFoot = p => { for (const s of gs.mountables) if (s.isMounted(p.index)) s.dismount(p); };
+    for (const p of ctx.players) { onFoot(p); ctx.input.intents[p.index].aim = null; }
+    const intent = ctx.input.intents[0], other = ctx.input.intents[1];
+    const press = () => { intent.interact = true; step(1); intent.interact = false; step(1); };
+    const log = [];
+    ctx.events.on('vehicle:refused', e => log.push(e));
+    const oldOwned = ctx.state.shared.ownedVehicles.filter(id => !['scooter', 'rollerblades'].includes(id));
+    ctx.state.replace({ ...ctx.state.data, shared: { ...ctx.state.shared, ownedVehicles: oldOwned } });
+    const oldProgress = JSON.stringify(ctx.state.players);
+
+    for (const service of [gs.scooters, gs.rollerblades]) {
+      const id = service.id;
+      const item = service.parked.find(b => b.visible);
+      p1.teleport(item.x, item.y, 0);
+      p2.teleport(item.x + 50, item.y);
+      gs.snapCamera(); ctx.chase.reset(); step(2);
+      assert(`${id}: ordinary reachable display has a locked pad`, !!item && gs.parking.padlocks.some(p => p.visible && Math.abs(p.x - item.x) < 1));
+      press();
+      assert(`${id}: unowned interaction refuses without hiding or mounting`, p1.vehicle === 'foot' && item.visible && !service.isMounted(0) && log.at(-1)?.id === id);
+      ctx.state.dispatch('wallet.earn', { cents: 7000, reason: 'smoke' });
+      assert(`${id}: purchase uses validated ownership`, ctx.state.dispatch('shop.buyVehicle', { id }) && ctx.ownership.owns(id));
+      p2.teleport(item.x, item.y);
+      intent.interact = other.interact = true;
+      step(1);
+      intent.interact = other.interact = false;
+      assert(`${id}: simultaneous co-op interaction mounts one copy only`, service.riders[0].mounted === item && !service.isMounted(1) && !item.visible && p1.vehicle === id && p2.vehicle === 'foot');
+      assert(`${id}: riding keeps character appearance and earned attributes`, p1.sprite.texture.key === `player-${p1.character.id}-${id}` && JSON.stringify(ctx.state.players) === oldProgress);
+      const fromX = p1.x, fromX2 = p2.x;
+      intent.move.x = 1; other.move.x = -1;
+      step(18);
+      assert(`${id}: both players move independently through their own intents`, p1.x > fromX + 3 && p2.x < fromX2 - 3 && p1.move.profileId === id && p2.move.profileId === 'foot', `rider dx ${p1.x - fromX}, partner dx ${p2.x - fromX2}`);
+      intent.move.x = 0; intent.move.y = -1;
+      step(12);
+      assert(`${id}: direction intent turns the rider`, p1.move.heading < -0.4);
+      intent.move.y = other.move.x = 0;
+      intent.jump = true; step(1); intent.jump = false;
+      assert(`${id}: jump uses its crouch pose and trick service`, service.riders[0].skate.air > 0 && p1.sprite.texture.key.endsWith('-crouch') && gs.tricks.rollerOf(0) === service);
+      const mounted = service.riders[0].mounted;
+      ctx.world.load('test-room', 'from-town'); step(2);
+      assert(`${id}: map travel retains the active item and rider`, service.riders[0].mounted === mounted && service.parked.includes(mounted) && !mounted.visible && p1.vehicle === id);
+      press();
+      assert(`${id}: fresh interact dismounts and clears pose and prop mask`, p1.vehicle === 'foot' && mounted.visible && !service.isMounted(0) && service.riders[0].skate.air === 0 && p1.body.collisionFilter.mask === MASK.PLAYER && !service.riders[0].shadow.visible);
+      p1.teleport(mounted.x, mounted.y);
+      p2.teleport(mounted.x + 50, mounted.y);
+      press();
+      assert(`${id}: dismounted item remains mountable`, service.riders[0].mounted === mounted && p1.vehicle === id);
+      gs.caught.trigger(0);
+      gs.caught.respawn(0);
+      assert(`${id}: caught lifecycle dismounts without stale collision or sprite`, p1.vehicle === 'foot' && !service.isMounted(0) && mounted.visible && !p1.pinned && p1.body.collisionFilter.mask === MASK.PLAYER && !service.riders[0].shadow.visible);
+      ctx.world.load('town', 'from-test-room'); step(2);
+    }
+
+    // Draw in isolated canvases: both supported render scales, every character and requested suffix.
+    const chars = gs.cache.json.get('characters');
+    for (const scale of [1, 2]) {
+      const canvases = new Map();
+      const scene = { textures: { createCanvas(key, w, h) {
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvases.set(key, canvas);
+        return { getContext: () => canvas.getContext('2d'), refresh() {} };
+      } } };
+      makeCharacterArt(scene, chars, scale);
+      for (const id of ['scooter', 'rollerblades']) {
+        const profile = p1.profiles[id];
+        const suffixes = ['', profile.poses.crouch, ...(profile.poses.push ?? [])];
+        const keys = [id, ...['player', ...chars.characters.map(c => `player-${c.id}`)].flatMap(prefix => suffixes.map(s => `${prefix}-${id}${s}`))];
+        const pixels = key => canvases.get(key)?.getContext('2d').getImageData(0, 0, 20 * scale, 12 * scale).data;
+        assert(`${id}: scale ${scale} draws parked, default and every character pose`, keys.every(key => {
+          const c = canvases.get(key);
+          return c?.width === 20 * scale && c.height === 12 * scale && pixels(key).some((v, i) => i % 4 === 3 && v > 0);
+        }));
+        const looks = chars.characters.map(c => Array.from(pixels(`player-${c.id}-${id}`)).join());
+        assert(`${id}: scale ${scale} preserves distinct character looks`, new Set(looks).size === chars.characters.length);
+      }
+    }
+
+    // Resume real v6 morning preparation through the menu's Continue path.
+    const day = ctx.day.day;
+    ctx.state.dispatch('clock.set', { day, minute: 420, phase: 'morning' });
+    for (const p of ctx.players) {
+      ctx.state.dispatch('home.startDay', { player: p.index, day });
+      ctx.state.dispatch('home.breakfast', { player: p.index, day });
+      ctx.state.dispatch('bag.set', { player: p.index, day, items: ['pencil-case', 'homework'] });
+    }
+    ctx.state.dispatch('xp.add', { player: 0, amount: 120 });
+    const expected = JSON.stringify(ctx.state.players);
+    const owned = [...ctx.state.shared.ownedVehicles].sort().join();
+    assert('new rides and v6 morning state save', ctx.saves.save(3));
+    ctx.events.emit('game:quit'); step(4);
+    game.menuNav.play(); game.menuNav.continueSlot(3); step(4);
+    gs = game.scene.getScene('Game'); ctx = gs.ctx;
+    ctx.input.update = () => {};
+    assert('Continue preserves new unlocks, all prior player progress and morning preparation', ctx.world.id === 'home' && ctx.day.phase === 'morning' && [...ctx.state.shared.ownedVehicles].sort().join() === owned && JSON.stringify(ctx.state.players) === expected);
+    assert('Continue does not change starting vehicles or mount rides in the kitchen', ctx.players.every(p => p.vehicle === 'foot') && ctx.players.map(p => p.startVehicle).every(id => !['scooter', 'rollerblades'].includes(id)));
+    ctx.saves.delete(3);
+    ctx.world.load('town', 'from-home');
+    for (const p of ctx.players) {
+      for (const s of gs.mountables) if (s.isMounted(p.index)) s.dismount(p);
+      p.teleport(120 + p.index * 30, 824);
+    }
+    for (const id of ctx.state.cfg.vehicleIds) ctx.ownership.unlock(id, 'garage');
+    ctx.chase.reset(); step(2);
   }
 };

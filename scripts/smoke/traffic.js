@@ -34,7 +34,7 @@ export const traffic = {
     const grabs = ctx.grabs;
     const tr = ctx.traffic;
     const slotOf = p => tr.slots[p.index];
-    const rides = [gs.bikes, gs.skateboards, gs.skates];
+    const rides = gs.mountables;
     const log = [];
     const handlers = ['traffic:hit', 'sfx:play', 'ui:toast', 'loot:collected', 'grab:start', 'grab:end', 'npc:react'].map(n => {
       const fn = e => log.push([n, e]);
@@ -172,7 +172,7 @@ export const traffic = {
     assert('the bus bodies are sensors: they never collide with pedestrians or animals', grabs.pool.every(t => t.body.isSensor && !(t.body.collisionFilter.mask & (CAT.NPC | CAT.ANIMAL))));
 
     // ---- riding into the side hits; the vehicle is flung off and lies there to be mounted again
-    for (const [id, ride, give] of [['bike', gs.bikes, p => gs.bikes.giveBike(p)], ['skateboard', gs.skateboards, p => gs.skateboards.giveBoard(p)], ['skates', gs.skates, p => gs.skates.giveBoard(p)]]) {
+    for (const [id, ride, give] of [['bike', gs.bikes, p => gs.bikes.giveBike(p)], ...gs.rollers.map(ride => [ride.id, ride, p => ride.giveBoard(p)])]) {
       calm();
       give(player);
       player.move.speedMult = 1; // the timing of the crossing is tuned for the plain profile speed, whoever the kid is

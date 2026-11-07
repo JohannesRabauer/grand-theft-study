@@ -111,12 +111,15 @@ export class GameScene extends Phaser.Scene {
     this.bikes = new Bikes(this, ctx);
     this.skateboards = new Skateboards(this, ctx, this.bikes);
     this.skates = new Skates(this, ctx, this.bikes);
-    this.skateboards.rivals.push(this.skates);
-    this.skates.rivals.push(this.skateboards);
-    this.parking = new Parking(this, ctx, cache.get('theft'), [this.bikes, this.skateboards, this.skates]); // story 5.5: racks, locks, padlocks
+    this.scooters = new Skateboards(this, ctx, this.bikes, { id: 'scooter', object: 'scooter', texture: 'scooter' });
+    this.rollerblades = new Skates(this, ctx, this.bikes, { id: 'rollerblades', object: 'rollerblades', texture: 'rollerblades' });
+    this.rollers = [this.skateboards, this.skates, this.scooters, this.rollerblades];
+    this.mountables = [this.bikes, ...this.rollers];
+    for (const service of this.rollers) service.rivals = this.mountables.filter(s => s !== service);
+    this.parking = new Parking(this, ctx, cache.get('theft'), this.mountables); // story 5.5: racks, locks, padlocks
     this.grabs = new GrabTargets(this, ctx, cache.get('routes'), cache.get('grab')); // AD-23: before the first mount, Skates asks it
-    this.traffic = new Traffic(this, ctx, cache.get('traffic'), [this.grabs], [this.bikes, this.skateboards, this.skates], this.parking); // story 5.6: moving buses hit players
-    this.tricks = new TrickSystem(this, ctx, cache.get('tricks'), [this.skateboards, this.skates]); // AD-23
+    this.traffic = new Traffic(this, ctx, cache.get('traffic'), [this.grabs], this.mountables, this.parking); // story 5.6: moving buses hit players
+    this.tricks = new TrickSystem(this, ctx, cache.get('tricks'), this.rollers); // AD-23
     for (const p of ctx.players) {
       if (startMap === 'home') p.deferredStartVehicle = true;
       else this.mountStartVehicle(p);
@@ -157,7 +160,7 @@ export class GameScene extends Phaser.Scene {
     this.home = new Home(this, ctx, cache.get('morning'));
     this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
     this.garage = new Garage(this, ctx);
-    this.caught = new Caught(this, ctx, cache.get('chase').caught, [this.bikes, this.skateboards, this.skates]);
+    this.caught = new Caught(this, ctx, cache.get('chase').caught, this.mountables);
     this.theft = new BikeTheft(this, ctx, cache.get('theft'), this.bikes, this.parking, cache.get('vehicles')); // needs the chase director's spawns and paths
     this.rig = new CameraRig(ctx, this.zoomCfg); // AD-18: focus, fit zoom and tether of all players
     this.markers = new PlayerMarkers(this, ctx, this.zoomCfg.coop);
@@ -355,8 +358,7 @@ export class GameScene extends Phaser.Scene {
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.grabs.update(dt);
     this.traffic.update(dt); // before the mounting services: a tumbling player cannot mount
-    this.skateboards.update(dt);
-    this.skates.update(dt);
+    for (const service of this.rollers) service.update(dt);
     this.tricks.update(dt);
     this.bikes.update(dt);
     this.garage.update();

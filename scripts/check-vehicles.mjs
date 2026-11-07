@@ -13,7 +13,7 @@ import { Pathfinder } from '../ai/Pathfinding.js';
 import { validateObject } from '../services/worldLogic.js';
 
 const read = f => JSON.parse(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'));
-const stateCfg = { ...read('data/state.json'), shop: read('data/shop.json') };
+const stateCfg = { ...read('data/state.json'), morning: read('data/morning.json'), shop: read('data/shop.json') };
 const theft = read('data/theft.json');
 const vehicles = read('data/vehicles.json');
 const chars = read('data/characters.json');
@@ -52,7 +52,7 @@ const owned = s => [...s.shared.ownedVehicles].sort();
 // ---- shop.buyVehicle: prices from data/shop.json, atomic
 {
   const prices = Object.fromEntries(stateCfg.shop.items.filter(i => i.type === 'vehicle').map(i => [i.vehicle, i.price]));
-  assert.deepEqual(prices, { skateboard: 4500, skates: 5500, bike: 6000 }, 'prices in cents');
+  assert.deepEqual(prices, { skateboard: 4500, skates: 5500, bike: 6000, scooter: 5000, rollerblades: 6500 }, 'prices in cents');
   for (const id of stateCfg.vehicleIds) assert.ok(id in prices && id in vehicles, `${id} has a price and a profile`);
   const { state, log } = fresh();
   assert.equal(state.dispatch('shop.buyVehicle', { id: 'bike' }), false, '5 euro do not buy a bike');
@@ -117,6 +117,44 @@ const owned = s => [...s.shared.ownedVehicles].sort();
 }
 
 // ---- every character's start vehicle can be unlocked
+for (const id of ['scooter', 'rollerblades']) {
+  const { state, ctx, log } = fresh();
+  assert.ok(!ctx.ownership.owns(id), `${id} is not a starting unlock`);
+  ctx.ownership.refuse(id);
+  assert.equal(log.at(-1)[1].key, 'vehicle.locked');
+  assert.equal(state.dispatch('vehicles.unlock', { id, reason: 'street-theft' }), false);
+  assert.equal(state.dispatch('shop.buyVehicle', { id }), false, `${id} needs enough money`);
+  const price = stateCfg.shop.items.find(i => i.vehicle === id).price;
+  state.dispatch('wallet.earn', { cents: price - state.shared.money, reason: 'test' });
+  assert.equal(state.dispatch('shop.buyVehicle', { id }), true);
+  assert.equal(state.shared.money, 0);
+  assert.ok(ctx.ownership.owns(id));
+  assert.equal(state.dispatch('vehicles.unlock', { id, reason: 'garage' }), false, 'no duplicate ownership');
+  assert.ok(de[`vehicle.${id}`] && en[`vehicle.${id}`], `${id} is localized`);
+  const items = map.objects.filter(o => o.type === id);
+  assert.ok(items.length > 0 && items.every(o => !o.debug), `${id} has ordinary town displays`);
+  const catalog = read('data/object-types.json');
+  assert.ok(catalog.types[id].reach, `${id} must be reachable`);
+  for (const item of items) assert.deepEqual(validateObject(item, catalog, { catalog, surfaces: read('data/surfaces.json'), tiles: read('data/tiles.json'), i18n: new Set(Object.keys(de)) }, 'town'), []);
+}
+
+{
+  const a = fresh();
+  a.state.dispatch('vehicles.unlock', { id: 'bike', reason: 'start' });
+  a.state.dispatch('xp.add', { player: 0, amount: 140, reason: 'test' });
+  a.state.dispatch('flags.set', { key: 'garageFound', value: true });
+  const before = JSON.parse(JSON.stringify(a.state.data));
+  for (const id of ['scooter', 'rollerblades']) assert.ok(a.ctx.ownership.unlock(id, 'race'));
+  assert.deepEqual(a.state.players, before.players, 'unlocking keeps attributes and morning preparation');
+  const expected = JSON.parse(JSON.stringify(a.state.data));
+  const memory = new Map();
+  const storage = { getItem: k => memory.get(k) ?? null, setItem: (k, v) => memory.set(k, String(v)), removeItem: k => memory.delete(k) };
+  assert.ok(new SaveSlots(a.state, a.events, storage).save(1));
+  const b = fresh();
+  assert.ok(new SaveSlots(b.state, b.events, storage).load(1));
+  assert.deepEqual(b.state.data, expected, 'v6 Continue keeps both new IDs and all old progress');
+}
+
 for (const c of chars.characters) assert.ok(c.startVehicle === 'foot' || stateCfg.vehicleIds.includes(c.startVehicle), `${c.id}: start vehicle ${c.startVehicle} is a known vehicle`);
 
 // ---- parking and borrowing rules

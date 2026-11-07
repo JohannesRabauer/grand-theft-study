@@ -131,6 +131,57 @@
       "landMinAir": 0.12
     }
   },
+  "scooter": {
+    "texture": "player-scooter",
+    "lookSlot": "scooter",
+    "faceHeading": true,
+    "maxSpeed": 138,
+    "accel": 190,
+    "turnRate": 220,
+    "grip": 8,
+    "drift": 0.12,
+    "radius": 5,
+    "poses": { "crouch": "-crouch" },
+    "trick": {
+      "ollie": { "airtime": 0.28, "speedGain": 0.4, "refSpeed": 130, "height": 7, "cooldown": 0.1 },
+      "grind": { "lift": 3 }
+    },
+    "fx": {
+      "mountRange": 24,
+      "clackSpeed": 45,
+      "clackInterval": 0.12,
+      "rattleJitter": 0.65,
+      "rattleMinSpeed": 28,
+      "landDust": 5,
+      "landMinAir": 0.12
+    }
+  },
+  "rollerblades": {
+    "texture": "player-rollerblades",
+    "lookSlot": "rollerblades",
+    "faceHeading": true,
+    "maxSpeed": 122,
+    "accel": 245,
+    "turnRate": 310,
+    "grip": 11,
+    "drift": 0.1,
+    "radius": 5,
+    "poses": { "crouch": "-crouch", "push": ["-pushA", "-pushB"] },
+    "push": { "interval": 0.22, "glideFrac": 0.92 },
+    "trick": {
+      "ollie": { "airtime": 0.3, "speedGain": 0.4, "refSpeed": 115, "height": 8, "cooldown": 0.1 },
+      "grind": { "lift": 3 }
+    },
+    "fx": {
+      "mountRange": 24,
+      "clackSpeed": 40,
+      "clackInterval": 0.09,
+      "rattleJitter": 1,
+      "rattleMinSpeed": 25,
+      "landDust": 5,
+      "landMinAir": 0.12
+    }
+  },
   "bully-foot": {
     "texture": "bully",
     "faceHeading": false,

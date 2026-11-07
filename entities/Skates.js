@@ -7,13 +7,13 @@
 import { Skateboards } from './Skateboards.js';
 
 export class Skates extends Skateboards {
-  constructor(scene, ctx, bikes) {
-    super(scene, ctx, bikes, { id: 'skates', object: 'skates', texture: 'skates' });
+  constructor(scene, ctx, bikes, kind = { id: 'skates', object: 'skates', texture: 'skates' }) {
+    super(scene, ctx, bikes, kind);
   }
 
   poseFor(dt, player, r, s, i) {
     const { poses, push } = this.profile;
-    if (player.grabbing) return poses.grab;
+    if (player.grabbing && poses.grab) return poses.grab;
     if (player.stumbling || s.air > 0 || s.grind || i.jump) return poses.crouch;
     const m = player.move;
     const target = this.profile.maxSpeed * m.speedMult * this.ctx.surfaces.props(m.surface).speed[this.id];

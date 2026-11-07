@@ -29,7 +29,7 @@ export class Characters {
     player.character = def;
     player.perks = resolvePerks(def, this.cfg);
     player.bullyWeight = player.perks.bullyTargetWeight;
-    player.look = def ? { walk: `player-${def.id}`, bike: `player-${def.id}-bike`, skate: `player-${def.id}-skate`, skates: `player-${def.id}-skates` } : null;
+    player.look = def ? { walk: `player-${def.id}`, bike: `player-${def.id}-bike`, skate: `player-${def.id}-skate`, skates: `player-${def.id}-skates`, scooter: `player-${def.id}-scooter`, rollerblades: `player-${def.id}-rollerblades` } : null;
     player.refreshLook();
     player.sprite.setScale(this.ctx.res.inv * (def?.spriteScale ?? 1)); // the younger kid is a bit smaller
     this.refresh(player);

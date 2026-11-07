@@ -6,6 +6,7 @@
 import { figure, bike, skate, OUT } from './HiResArt.js';
 import { ScaledPen } from './NpcArt.js';
 import { skates } from './SkatesArt.js';
+import { scooter } from './VehicleArt.js';
 
 const DARK = '#2a2a35';
 
@@ -67,6 +68,10 @@ function ride(c) {
 const BOARD = { frame: '#e8a33a', frameDark: '#a8701c' };
 const POSES = ['', '-crouch', '-manual'];
 const SKATE_POSES = ['', '-pushA', '-pushB', '-crouch', '-grab'];
+const NEW_RIDES = [
+  { id: 'scooter', draw: scooter, palette: { frame: '#39b6c0', frameDark: '#21717c' }, poses: ['', '-crouch'] },
+  { id: 'rollerblades', draw: skates, palette: { frame: '#548cec', frameDark: '#284d91', inline: true }, poses: ['', '-pushA', '-pushB', '-crouch'] }
+];
 export const DEFAULT_KID = { jacket: '#e0483c', jacketDark: '#b2352c', jacketLight: '#f06a5c', pants: '#2a3f8f', hair: '#5a3a1e', hairLight: '#7a5230' };
 
 export function makeCharacterArt(scene, cfg, scale) {
@@ -96,6 +101,20 @@ export function makeCharacterArt(scene, cfg, scale) {
   pair.done();
   poses('player-skate', DEFAULT_KID);
   skatePoses('player-skates', DEFAULT_KID);
+  const newRidePoses = (prefix, o) => {
+    for (const ride of NEW_RIDES) for (const suffix of ride.poses) {
+      const p = new ScaledPen(scene, `${prefix}-${ride.id}${suffix}`, 40, 24, f);
+      ride.draw(p, { ...ride.palette, ...o, rider: true, pose: suffix.slice(1) });
+      finish(p).done();
+    }
+  };
+  for (const ride of NEW_RIDES) {
+    const p = new ScaledPen(scene, ride.id, 40, 24, f);
+    ride.draw(p, ride.palette);
+    finish(p).shadow(20, 20, 15, 2.5, 0.25);
+    p.done();
+  }
+  newRidePoses('player', DEFAULT_KID);
   for (const c of cfg.characters) {
     const walk = new ScaledPen(scene, `player-${c.id}`, 24, 32, f);
     figure(walk, look(c));
@@ -109,6 +128,7 @@ export function makeCharacterArt(scene, cfg, scale) {
 
     poses(`player-${c.id}-skate`, ride(c));
     skatePoses(`player-${c.id}-skates`, ride(c));
+    newRidePoses(`player-${c.id}`, ride(c));
 
     const portrait = new ScaledPen(scene, `portrait-${c.id}`, 24, 32, f);
     portrait.ell(c.palette.backdrop, 12, 16, 11.5, 15.5);

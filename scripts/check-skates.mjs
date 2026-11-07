@@ -47,7 +47,7 @@ function rig(profileId, surface) {
   const matter = { body: { setVelocity(b, v) { b.velocity.x = v.x; b.velocity.y = v.y; } } };
   return new MovementController(matter, body, profileId, vehicles[profileId], { at: () => surface, props: id => surfaces[id] });
 }
-const topSpeed = (p, s) => { const mc = rig(p, s); for (let i = 0; i < 600; i++) mc.update(DT, 1, 0, false); return mc.velSpeed; };
+const topSpeed = (p, s, frames = 600) => { const mc = rig(p, s); for (let i = 0; i < frames; i++) mc.update(DT, 1, 0, false); return mc.velSpeed; };
 const timeTo = (p, s, v) => { const mc = rig(p, s); for (let i = 0; i < 600; i++) { mc.update(DT, 1, 0, false); if (mc.velSpeed >= v) return i * DT; } return Infinity; };
 for (const s of ['asphalt', 'cobble', 'grass', 'puddle', 'concrete', 'ice']) {
   const v = topSpeed('skates', s);
@@ -64,6 +64,28 @@ function turnTime(p) { // seconds to swing the heading by 180 degrees at 60 px/s
 assert.ok(turnTime('skates') < turnTime('skateboard') && turnTime('skateboard') < turnTime('bike'), 'turns in less time than board and bike');
 assert.ok(topSpeed('skates', 'cobble') < 0.5 * topSpeed('skateboard', 'asphalt') && topSpeed('skates', 'grass') < topSpeed('foot', 'asphalt'), 'cobble and grass cripple the skates');
 assert.ok(timeTo('skates', 'cobble', 20) > timeTo('skates', 'asphalt', 20), 'accelerating on cobble takes longer (less grip)');
+
+// ---- distinct new rides on the same controller, with no missing surface entries
+for (const id of ['scooter', 'rollerblades']) {
+  const p = vehicles[id];
+  assert.ok(p.faceHeading && p.lookSlot === id && p.texture === `player-${id}`);
+  assert.ok(p.trick.ollie && p.trick.grind && !p.trick.manual && !p.grab, 'new rides hop and grind, no manual or bus grab');
+  for (const [surface, s] of Object.entries(surfaces)) {
+    assert.ok(Number.isFinite(s.speed[id]) && s.speed[id] > 0, `${surface}: explicit ${id} speed`);
+    if (s.gripMult) assert.ok(Number.isFinite(s.gripMult[id]) && s.gripMult[id] > 0, `${surface}: explicit ${id} grip reaction`);
+    assert.ok(Math.abs(topSpeed(id, surface, 1800) - top(id, surface)) < 1.5, `${surface}: measured ${id} top speed`);
+  }
+  assert.ok(topSpeed(id, 'asphalt') > topSpeed(id, 'grass') * 2);
+  assert.ok(timeTo(id, 'cobble', 20) > timeTo(id, 'asphalt', 20), 'rough ground slows acceleration');
+  assert.ok(Number.isFinite(turnTime(id)), `${id} turns through 180 degrees`);
+}
+assert.ok(topSpeed('scooter', 'asphalt') > topSpeed('rollerblades', 'asphalt') + 10);
+assert.ok(topSpeed('scooter', 'grass') > topSpeed('rollerblades', 'grass') + 20);
+assert.ok(timeTo('rollerblades', 'asphalt', 60) < timeTo('scooter', 'asphalt', 60));
+assert.ok(turnTime('rollerblades') < turnTime('scooter'));
+assert.deepEqual([vehicles.bike.maxSpeed, vehicles.bike.accel, vehicles.bike.turnRate], [150, 170, 170]);
+assert.deepEqual([board.maxSpeed, board.accel, board.turnRate], [128, 150, 260]);
+assert.deepEqual([sk.maxSpeed, sk.accel, sk.turnRate], [112, 270, 340]);
 
 // ---- bus and route
 const bus = grab.targets.bus;

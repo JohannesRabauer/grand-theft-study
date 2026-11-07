@@ -3,6 +3,8 @@
   "items": [
     { "id": "vehicle-skateboard", "type": "vehicle", "vehicle": "skateboard", "price": 4500 },
     { "id": "vehicle-skates", "type": "vehicle", "vehicle": "skates", "price": 5500 },
-    { "id": "vehicle-bike", "type": "vehicle", "vehicle": "bike", "price": 6000 }
+    { "id": "vehicle-bike", "type": "vehicle", "vehicle": "bike", "price": 6000 },
+    { "id": "vehicle-scooter", "type": "vehicle", "vehicle": "scooter", "price": 5000 },
+    { "id": "vehicle-rollerblades", "type": "vehicle", "vehicle": "rollerblades", "price": 6500 }
   ]
 }

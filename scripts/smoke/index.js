@@ -17,7 +17,7 @@ import { quitAndSecondRun } from './state.js';
 import { learning } from './learning.js';
 import { grades } from './grades.js';
 import { minigames } from './minigames.js';
-import { vehicles } from './vehicles.js';
+import { vehicles, newRides } from './vehicles.js';
 import { throwingStick } from './tools.js';
 import { stick } from './stick.js';
 import { defense } from './defense.js';
@@ -27,4 +27,4 @@ import { coopMenu, coopCommute, coopChase } from './coop.js';
 import { school } from './school.js';
 import { home } from './home.js';
 
-export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, throwingStick, stick, defense, traffic, karate, school, home];
+export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, traffic, karate, school, home];

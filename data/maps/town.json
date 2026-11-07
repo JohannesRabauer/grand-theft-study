@@ -82,6 +82,8 @@
     { "type":"skateboard", "id":"board2", "x":51, "y":32 },
     { "type":"skateboard", "id":"board3", "x":55, "y":32 },
     { "type":"skates", "id":"skates1", "x":12, "y":52 },
+    { "type":"scooter", "id":"scooter1", "x":14, "y":52 },
+    { "type":"rollerblades", "id":"rollerblades1", "x":16, "y":52 },
     { "type":"skates", "id":"skates2", "x":53, "y":32 },
     { "type":"ramp", "id":"park-ramp-start", "x":48, "y":40, "w":2, "h":2, "dir":"right", "height":12 },
     { "type":"rail", "id":"park-rail-long", "points":[[55,41],[61,41]], "width":0.5 },

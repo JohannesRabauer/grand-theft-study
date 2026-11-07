@@ -54,6 +54,26 @@ Add a scenario for new player-visible behavior:
 
 Areas so far: `prototype-core` (bike ride, slingshot, weather, language, quality, pause), `chase`, `crowd`, `screens`, `players`, `characters`, `world`, `day`, `state`, `coop`, `learning`, `grades`, `minigames`.
 
+### Scooters and inline rollerblades
+
+`node scripts/check-vehicles.mjs` checks both new IDs, prices, locked feedback, invalid unlock reasons, reachable ordinary
+town displays and a full v6 save round-trip with old progress intact. `node scripts/check-skates.mjs` measures their speed
+on every surface, rough-ground acceleration and turning through the real neutral-attribute `MovementController`,
+checks explicit speed/grip entries, and retains the original bike/board/skates tuning assertions.
+
+The `newRides` scenario in `scripts/smoke/vehicles.js` checks purchase and normal interact mounts, simultaneous co-op
+contention, independent movement, character looks, turning, jump poses, map travel, dismount/remount, caught cleanup,
+every requested pose at render scales 1 and 2, and real menu Continue with v6 breakfast/bags and earlier progress.
+The `traffic` scenario exercises flinging and remounting all five ride types.
+
+```powershell
+node scripts/check-all.mjs
+node scripts/bench-cdp.mjs --url http://127.0.0.1:8087 --smoke --json ride-smoke.json
+```
+
+Inspect `smoke.pass`, `smoke.failed` and `consoleProblems` in the JSON; process exit alone is not proof of success.
+For a focused browser run: `await SCHULWEG_BENCH.smoke(['newRides'])`.
+
 The `school` scenario enters the school through its normal interact door, opens the classroom timetable, checks
 freezing and language changes, and runs the scheduled day through the existing minigame scenes and result screens.
 It checks stored lesson IDs and grades, the afternoon transition, and UI/map cleanup. Individual minigame controls
