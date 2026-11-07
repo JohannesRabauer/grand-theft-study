@@ -59,6 +59,10 @@
       "texture": "p-debris", "share": 0.03, "depth": 8600, "count": 5, "windGain": 0,
       "config": { "lifespan": { "min": 150, "max": 350 }, "speed": { "min": 40, "max": 120 }, "angle": { "min": 0, "max": 360 }, "tint": [16777215, 13160953, 16769357], "scale": { "start": 0.7, "end": 0.2 }, "alpha": { "start": 1, "end": 0 } }
     },
+    "fire": {
+      "texture": "puff", "share": 0.08, "depth": 8600, "count": 1, "windGain": 0,
+      "config": { "lifespan": { "min": 260, "max": 480 }, "speedX": { "min": -10, "max": 10 }, "speedY": { "min": -34, "max": -12 }, "scale": { "start": 0.45, "end": 0.05 }, "tint": [16769357, 16751915, 14698556], "blendMode": "ADD", "alpha": { "start": 0.95, "end": 0 } }
+    },
     "debris": {
       "texture": "p-debris", "share": 0.05, "depth": 8500, "count": 6, "windGain": 0,
       "config": { "lifespan": { "min": 400, "max": 800 }, "speed": { "min": 30, "max": 110 }, "angle": { "min": 0, "max": 360 }, "tint": [9132587, 10514490, 13148259], "rotate": { "min": 0, "max": 360 }, "scale": { "start": 1, "end": 0.5 }, "alpha": { "start": 1, "end": 0 } }

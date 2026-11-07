@@ -4,6 +4,7 @@ import { WallStreamer } from '../physics/WallStreamer.js';
 import { Input } from '../ui/input.js';
 import { Bikes } from '../entities/Bike.js';
 import { Skateboards } from '../entities/Skateboards.js';
+import { TrickSystem } from '../vehicles/TrickSystem.js';
 import { Player } from '../entities/Player.js';
 import { installPlayers, startPlayers } from '../entities/players.js';
 import { PlayerMarkers } from '../entities/PlayerMarkers.js';
@@ -86,6 +87,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.bikes = new Bikes(this, ctx);
     this.skateboards = new Skateboards(this, ctx, this.bikes);
+    this.tricks = new TrickSystem(this, ctx, cache.get('tricks'), this.skateboards); // AD-23
     for (const p of ctx.players) this.mountStartVehicle(p);
     ctx.frozen = false; // true while the caught frame or a freezing screen is up: the world stands still, UIScene keeps running
     this.caughtFrozen = false;
@@ -289,6 +291,7 @@ export class GameScene extends Phaser.Scene {
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.skateboards.update(dt);
+    this.tricks.update(dt);
     this.bikes.update(dt);
     this.zones.update();
     this.doors.update();

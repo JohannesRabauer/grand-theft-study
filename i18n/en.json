@@ -370,5 +370,14 @@
   "minigame.sport.result.ok": "Solid round, you can go faster.",
   "minigame.sport.result.low": "You hung in there! That counts, training makes you fit.",
   "minigame.sport.winner": "{name} is the fastest! You are both sports stars!",
-  "minigame.sport.tie": "A tie! A real dream team!"
+  "minigame.sport.tie": "A tie! A real dream team!",
+  "hud.style": "Style {p}  x{m}",
+  "style.banked": "Banked! +€ {v} · {xp} XP",
+  "style.saved": "Saved just in time! +€ {v} · {xp} XP",
+  "trick.ollie": "Ollie",
+  "trick.manual": "Manual",
+  "trick.grind": "Grind",
+  "trick.stairs": "Stair gap",
+  "trick.ramp": "Big air",
+  "trick.rattle": "Rattle rattle!"
 }

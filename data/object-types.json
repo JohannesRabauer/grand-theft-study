@@ -38,18 +38,18 @@
       "gap": { "type": "number" }
     } },
     "rail": { "shape": "path", "inWall": false, "fields": {
-      "points": { "type": "points", "required": true },
-      "width": { "type": "number", "required": true, "min": 0 }
+      "points": { "type": "points", "required": true, "doc": "continuous tile coordinates, [x.5, y.5] is a tile centre; a skater grinds along the polyline" },
+      "width": { "type": "number", "required": true, "min": 0, "doc": "rail thickness in tiles; the catch zone is this plus data/tricks.json grind.capture" }
     } },
     "ramp": { "shape": "rect", "inWall": true, "fields": {
-      "dir": { "type": "enum", "values": ["up", "down", "left", "right"], "required": true },
-      "height": { "type": "number", "required": true, "min": 0 }
+      "dir": { "type": "enum", "values": ["up", "down", "left", "right"], "required": true, "doc": "the direction a skater rides up it and is launched" },
+      "height": { "type": "number", "required": true, "min": 0, "doc": "launch height in px; more height, more airtime" }
     } },
     "stairs": { "shape": "rect", "inWall": false, "fields": {
-      "dir": { "type": "enum", "values": ["up", "down", "left", "right"], "required": true },
-      "steps": { "type": "int", "required": true, "min": 1 }
+      "dir": { "type": "enum", "values": ["up", "down", "left", "right"], "required": true, "doc": "the direction that goes down the stairs" },
+      "steps": { "type": "int", "required": true, "min": 1, "doc": "stairs-jump points are per step" }
     } },
-    "bench": { "shape": "rect", "inWall": false, "fields": {} },
+    "bench": { "shape": "rect", "inWall": false, "fields": {}, "doc": "its centre line along the long side is a grindable edge (data/tricks.json bench)" },
     "dojo": { "shape": "rect", "inWall": false, "fields": {} },
     "shop": { "shape": "rect", "inWall": false, "fields": { "shopId": { "type": "string", "required": true } } },
     "bakery": { "shape": "rect", "inWall": false, "fields": {} },

@@ -13,6 +13,7 @@ import { CaughtModule } from './CaughtModule.js';
 import { TouchModule } from './TouchModule.js';
 import { CoopModule } from './CoopModule.js';
 import { ToastModule } from './ToastModule.js';
+import { StyleModule } from './StyleModule.js';
 
 // Module id -> class. Later stories add a line here and an entry in data/hud.json; UIScene stays untouched.
 export const HUD_REGISTRY = {
@@ -29,7 +30,8 @@ export const HUD_REGISTRY = {
   restartNote: RestartNoteModule,
   debug: DebugModule,
   coop: CoopModule,
-  toast: ToastModule
+  toast: ToastModule,
+  style: StyleModule
 };
 
 // Builds the modules of `mode` and returns them as a Map id -> module (insertion order = creation order).

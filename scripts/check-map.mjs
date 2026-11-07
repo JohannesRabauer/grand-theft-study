@@ -40,6 +40,7 @@ for (const [ch, id] of Object.entries(legend)) {
 const surf = (x, y) => legend[rows[y]?.[x]];
 const walkable = (x, y) => x >= 0 && y >= 0 && x < W && y < H && !surfaces[surf(x, y)].solid;
 const cells = (o) => {
+  if (o.points) return o.points.map(([x, y]) => [Math.floor(x), Math.floor(y)]); // a rail: the cells of its points
   const out = [];
   for (let j = 0; j < (o.h || 1); j++) for (let i = 0; i < (o.w || 1); i++) out.push([o.x + i, o.y + j]);
   return out;

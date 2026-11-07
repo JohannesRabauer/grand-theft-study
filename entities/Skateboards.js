@@ -7,10 +7,10 @@
 // Ollie (jump intent): while airborne the player's body ignores PROP bodies (cones, cans, crates, balls, bins);
 // walls still stop it. Manual (manual intent, hold to balance, see skateLogic). Emits `trick:ollie` and `trick:manual`
 // as { player, phase: 'start' | 'end', x, y, ... } (ollie end = landing with `airtime`; manual end carries `time`,
-// `sweet` seconds in the balance window and a `reason`) for the later TrickSystem; the Mehmet perk trickMultiplier is
-// stored on the player and used there. Rattle: surfaces with `rattle` in data/surfaces.json shake the rider sprite.
+// `sweet` seconds in the balance window and a `reason`) for vehicles/TrickSystem.js, which also asks this class to
+// launch the rider off a ramp or put it on a rail (launch, beginGrind, finishGrind). Rattle: surfaces with `rattle` in data/surfaces.json shake the rider sprite.
 import { CAT, MASK } from '../physics/categories.js';
-import { LAND, MANUAL, MANUAL_END, OLLIE, createSkate, resetSkate, stepSkate } from '../vehicles/skateLogic.js';
+import { LAND, MANUAL, MANUAL_END, OLLIE, createSkate, endGrind, resetSkate, startAir, startGrind, stepSkate } from '../vehicles/skateLogic.js';
 
 const ID = 'skateboard';
 const PROP_FREE = MASK.PLAYER & ~CAT.PROP;
@@ -98,6 +98,23 @@ export class Skateboards {
 
   endAir(player) { player.body.collisionFilter.mask = MASK.PLAYER; }
 
+  // A ramp throws the rider up for `airtime` s, `peak` px high; like an ollie, props are skipped meanwhile.
+  launch(player, airtime, peak) {
+    startAir(this.riders[player.index].skate, airtime, peak);
+    player.body.collisionFilter.mask = PROP_FREE;
+  }
+
+  // From the air onto a rail: the rider is held there until finishGrind or a jump (which is the ollie of stepSkate).
+  beginGrind(player) {
+    startGrind(this.riders[player.index].skate);
+    player.body.collisionFilter.mask = PROP_FREE;
+  }
+
+  finishGrind(player) {
+    endGrind(this.riders[player.index].skate, this.profile.trick);
+    this.endAir(player);
+  }
+
   ride(dt, player, r, i) {
     const { events, surfaces, particles, quality } = this.ctx;
     const m = player.move;
@@ -130,7 +147,7 @@ export class Skateboards {
 
     // pose, lift and ground shadow
     const poses = this.profile.poses;
-    const pose = s.air > 0 || (i.jump && !s.manual) ? poses.crouch : s.manual ? poses.manual : '';
+    const pose = s.air > 0 || s.grind || (i.jump && !s.manual) ? poses.crouch : s.manual ? poses.manual : '';
     if (pose !== r.pose) {
       r.pose = pose;
       player.sprite.setTexture(player.textureFor(this.profile) + pose);
@@ -142,8 +159,9 @@ export class Skateboards {
     const sprite = player.sprite;
     sprite.y = player.y - lift;
     const shadow = r.shadow ?? (r.shadow = this.scene.add.image(0, 0, 'skate-shadow'));
+    const up = Math.min(1, s.height / cfg.ollie.height);
     shadow.setVisible(true).setPosition(player.x, player.y + 1).setRotation(sprite.rotation).setFlipX(sprite.flipX)
-      .setScale(this.ctx.res.inv * (1 - 0.3 * s.height / cfg.ollie.height)).setAlpha(1 - 0.4 * s.height / cfg.ollie.height).setDepth(player.y - 1);
+      .setScale(this.ctx.res.inv * (1 - 0.3 * up)).setAlpha(1 - 0.4 * up).setDepth(player.y - 1);
 
     // skate clack: small puffs at the rear wheels, more often (and bouncier) on rough ground
     r.clackIn -= dt;

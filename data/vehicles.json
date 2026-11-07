@@ -71,6 +71,9 @@
         "boost": 1.1,
         "cooldown": 0.4,
         "lift": 2
+      },
+      "grind": {
+        "lift": 3
       }
     },
     "fx": {

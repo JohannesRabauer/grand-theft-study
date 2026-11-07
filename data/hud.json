@@ -7,6 +7,7 @@
       { "id": "money", "scope": "shared" },
       { "id": "clock", "scope": "shared" },
       { "id": "tool", "scope": "player" },
+      { "id": "style", "scope": "player" },
       { "id": "caught", "scope": "shared" },
       { "id": "objective", "scope": "shared" },
       { "id": "touch", "scope": "shared" },

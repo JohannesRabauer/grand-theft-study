@@ -370,5 +370,14 @@
   "minigame.sport.result.ok": "Solide Runde, das geht noch schneller.",
   "minigame.sport.result.low": "Durchgehalten! Das zählt, Training macht fit.",
   "minigame.sport.winner": "{name} ist am schnellsten! Ihr seid beide Sportskanonen!",
-  "minigame.sport.tie": "Gleichstand! Ein echtes Dream-Team!"
+  "minigame.sport.tie": "Gleichstand! Ein echtes Dream-Team!",
+  "hud.style": "Style {p}  x{m}",
+  "style.banked": "Eingelocht! +€ {v} · {xp} XP",
+  "style.saved": "Gerade noch gerettet! +€ {v} · {xp} XP",
+  "trick.ollie": "Ollie",
+  "trick.manual": "Manual",
+  "trick.grind": "Grind",
+  "trick.stairs": "Treppensprung",
+  "trick.ramp": "Rampenflug",
+  "trick.rattle": "Rumpel-Rumpel!"
 }

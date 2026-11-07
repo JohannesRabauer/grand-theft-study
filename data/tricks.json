@@ -1,0 +1,63 @@
+{
+  "_doc": "Style tuning for vehicles/TrickSystem.js (AD-23, CAP-13); the maths is vehicles/trickCore.js. `tricks`: base points of one trick = points + perAir * airtime s + perSweet * balanced manual s + perStep * stairs steps + perMeter * grind metres (+ bonus). `combo`: a chain keeps going while tricks follow within `window` seconds (the timer stands still while the rider is airborne, grinding or in a manual); every trick grows the multiplier by `growth` (x the character's trickMultiplier perk); a trick unlike the last two scores x(1 + varietyPoints) and grows x(1 + varietyGrowth), the same trick twice in a row scores x repeatPoints and grows x repeatGrowth; the multiplier stops at `multMax`; `fireMult` is where the fire trail starts. `bank`: a chain is worth round(points x multiplier); it pays floor(value x centsPerPoint) cents (wallet.earn 'trick') and floor(value x xpPerPoint) XP, but a chain below `minValue` fades without a payout or a `style:banked` event. A bail (wall hit, caught, manual meter failing with a multiplier of at least `bailMinMult`) banks only `bailShare` of the value, a bail of a smaller chain banks all of it. `grind` (capture = extra px around the rail's own width where an airborne rider is caught, angle tolerance in degrees, entry speed range px/s, spark interval s and count, jump-off bonus points, offCool = seconds a rail just jumped off ignores the rider, descent = the last share of an ollie in which it can land on a rail), `stairs` (rolling down without an ollie: target speed factor, extra deceleration px/s2 down to a floor px/s, only while rolling faster than rattleMinSpeed px/s, jitter px, dust interval s; the speed needed for the jump and the angle tolerance in degrees; `rattleToast` s between comic rattle texts), `ramp` (needs speed px/s and an angle tolerance in degrees; airtime = base + perHeight x ramp height, longer when fast like the ollie; the fake lift is height x liftScale px). `bench` is the grindable edge of a bench object: inset px at both ends and its capture width px.",
+  "tricks": {
+    "ollie": { "points": 40, "perAir": 50, "name": "trick.ollie" },
+    "manual": { "points": 20, "perSweet": 70, "minSweet": 0.35, "name": "trick.manual" },
+    "grind": { "points": 70, "perMeter": 10, "name": "trick.grind" },
+    "stairs": { "points": 60, "perStep": 30, "name": "trick.stairs" },
+    "ramp": { "points": 50, "perAir": 110, "name": "trick.ramp" }
+  },
+  "combo": {
+    "window": 2.5,
+    "growth": 0.65,
+    "varietyPoints": 0.25,
+    "varietyGrowth": 0.5,
+    "repeatPoints": 0.5,
+    "repeatGrowth": 0.4,
+    "multMax": 10,
+    "fireMult": 4,
+    "history": 24
+  },
+  "bank": {
+    "centsPerPoint": 0.025,
+    "xpPerPoint": 0.01,
+    "minValue": 120,
+    "bailShare": 0.6,
+    "bailMinMult": 2,
+    "wallDrop": 0.5,
+    "wallMinSpeed": 55
+  },
+  "grind": {
+    "capture": 8,
+    "angle": 50,
+    "minSpeed": 60,
+    "maxSpeed": 140,
+    "sparkInterval": 0.045,
+    "sparkCount": 2,
+    "offBonus": 40,
+    "offCool": 0.8,
+    "descent": 0.55
+  },
+  "stairs": {
+    "rattleMult": 0.5,
+    "rattleDecel": 260,
+    "rattleFloor": 30,
+    "rattleMinSpeed": 25,
+    "jumpSpeed": 45,
+    "angle": 55,
+    "rattleJitter": 1.1,
+    "rattleDust": 0.12,
+    "rattleToast": 1.2
+  },
+  "ramp": {
+    "minSpeed": 50,
+    "angle": 55,
+    "airtime": 0.4,
+    "perHeight": 0.015,
+    "speedGain": 0.35,
+    "refSpeed": 120,
+    "liftScale": 1.3
+  },
+  "bench": { "inset": 2, "width": 0.5 },
+  "fire": { "interval": 0.035, "count": 1, "back": 9 }
+}

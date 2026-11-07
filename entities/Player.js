@@ -72,6 +72,9 @@ export class Player {
     this.move.vel.x = this.move.vel.y = 0;
   }
 
+  // This player's trick state and Style combo (ctx.tricks, vehicles/TrickSystem.js).
+  get tricks() { return this.ctx.tricks.forPlayer(this.index); }
+
   get attrs() { return this.ctx.state.players[this.index]?.attributes ?? this.ctx.state.cfg.attributes; }
 
   get x() { return this.body.position.x; }
