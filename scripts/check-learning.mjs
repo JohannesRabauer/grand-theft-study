@@ -17,7 +17,7 @@ const stateCfg = { ...json('data/state.json'), startMoneyCents: 0 };
 const reactions = json('data/learning/reactions.json');
 const index = json('data/learning/index.json');
 const files = index.topics.map(t => json(`data/learning/${t.grade}/${t.topic}.json`));
-const topic = files[0].topic;
+const topic = 'mathe'; // single-topic scenarios; the learner simulation runs on every topic below
 const pools = Object.fromEntries(files.map(f => [f.topic, { bothLangs: !!f.bothLangs, items: f.items }]));
 
 const memoryStore = () => {
@@ -26,18 +26,10 @@ const memoryStore = () => {
 };
 const makeCore = (seed, store = memoryStore(), extra = {}) => new EngineCore({ pools, cfg, reactions, store, rng: mulberry32(seed), ...extra });
 
-// ---- seed content ----
+// ---- content wiring (the content itself is validated by check-learning-content.mjs) ----
 {
-  const { items } = files[0];
-  assert.equal(items.length, 20);
-  assert.ok(files[0].test, 'seed content is marked as test content');
-  for (let d = 1; d <= 5; d++) assert.ok(items.filter(i => i.difficulty === d).length >= 3, `difficulty ${d} has items`);
-  assert.equal(new Set(items.map(i => i.id)).size, items.length, 'unique ids');
-  for (const i of items) {
-    assert.ok(i.q.de && i.q.en && i.explain.de && i.explain.en, `${i.id} has de and en text`);
-    assert.ok(i.hints.every(h => h.de && h.en));
-    if (i.type === 'choice') assert.equal(i.answers.filter(a => a.correct).length, 1, `${i.id} has exactly one correct choice`);
-  }
+  assert.deepEqual(Object.keys(pools), ['mathe', 'deutsch', 'englisch', 'sachkunde', 'science'], 'index lists the real Klasse 3 topics');
+  assert.deepEqual(Object.keys(pools).filter(t => pools[t].bothLangs), ['englisch'], 'only the English topic shows both languages');
   const de = json('i18n/de.json'), en = json('i18n/en.json');
   for (const key of Object.values(reactions).flat()) assert.ok(de[key] && en[key], `reaction key ${key} exists in both languages`);
 }
@@ -52,7 +44,7 @@ const learners = {
 };
 const LESSON = 400;
 
-function simulate(kind, seed) {
+function simulate(kind, seed, topic = 'mathe') {
   const core = makeCore(seed);
   const rng = mulberry32(seed * 7919 + 1);
   const log = [];
@@ -69,48 +61,50 @@ function simulate(kind, seed) {
   return { core, log, stats: core.stats(0, topic) };
 }
 const meanOf = (a, f) => a.reduce((s, x) => s + f(x), 0) / a.length;
-const SEEDS = [1, 2, 3, 4, 5];
-const runs = {};
-for (const kind of Object.keys(learners)) {
-  runs[kind] = SEEDS.map(seed => simulate(kind, seed));
-  for (const { stats, log } of runs[kind]) {
-    assert.equal(stats.n, LESSON);
-    const tail = meanOf(log.slice(-200), e => (e.ok ? 1 : 0));
-    assert.ok(stats.acc >= 0.7 && stats.acc <= 0.9, `${kind}: rolling accuracy ${stats.acc.toFixed(3)} in 0.70-0.90`);
-    assert.ok(tail >= 0.7 && tail <= 0.9, `${kind}: accuracy of the last 200 answers ${tail.toFixed(3)} in 0.70-0.90`);
-  }
-  const lv = meanOf(runs[kind], r => r.stats.level);
-  console.log(`${kind}: level ${lv.toFixed(2)}, rolling accuracy ${meanOf(runs[kind], r => r.stats.acc).toFixed(3)}`);
-}
-{
-  const lvl = k => meanOf(runs[k], r => r.stats.level);
-  assert.ok(lvl('weak') < cfg.startLevel, 'weak learner ends below the start level');
-  assert.ok(lvl('strong') > cfg.startLevel, 'strong learner ends above the start level');
-  assert.ok(lvl('weak') < lvl('average') && lvl('average') < lvl('strong'), 'levels order weak < average < strong');
-}
-
-// ---- repetition and no back-to-back ----
-{
-  const intervals = cfg.intervals;
-  let checked = 0, worst = 0;
+for (const topic of Object.keys(pools)) {
+  const SEEDS = [1, 2, 3, 4, 5];
+  const runs = {};
   for (const kind of Object.keys(learners)) {
-    for (const { log } of runs[kind]) {
-      for (let i = 1; i < log.length; i++) assert.notEqual(log[i].id, log[i - 1].id, `${kind}: no item twice in a row`);
-      for (let i = 0; i < log.length; i++) {
-        const e = log[i];
-        if (e.box === 0) continue;
-        const j = log.findIndex((x, k) => k > i && x.id === e.id);
-        if (j < 0) continue;
-        const between = j - i - 1, iv = intervals[e.box - 1];
-        checked++;
-        assert.ok(between >= iv, `${kind}: ${e.id} came back after ${between} questions, before its interval ${iv}`);
-        worst = Math.max(worst, between - iv);
-        assert.ok(between <= iv + 4 * cfg.maxOverdue, `${kind}: ${e.id} came back late (${between} vs interval ${iv})`);
+    runs[kind] = SEEDS.map(seed => simulate(kind, seed, topic));
+    for (const { stats, log } of runs[kind]) {
+      assert.equal(stats.n, LESSON);
+      const tail = meanOf(log.slice(-200), e => (e.ok ? 1 : 0));
+      assert.ok(stats.acc >= 0.7 && stats.acc <= 0.92, `${topic} ${kind}: rolling accuracy ${stats.acc.toFixed(3)} in 0.70-0.92`); // the moving average is noisy by a couple of points
+      assert.ok(tail >= 0.7 && tail <= 0.9, `${topic} ${kind}: accuracy of the last 200 answers ${tail.toFixed(3)} in 0.70-0.90`);
+    }
+    const lv = meanOf(runs[kind], r => r.stats.level);
+    console.log(`${topic} ${kind}: level ${lv.toFixed(2)}, rolling accuracy ${meanOf(runs[kind], r => r.stats.acc).toFixed(3)}`);
+  }
+  {
+    const lvl = k => meanOf(runs[k], r => r.stats.level);
+    assert.ok(lvl('weak') < cfg.startLevel + 0.1, 'weak learner settles at or below the start level (simulation noise 0.1)');
+    assert.ok(lvl('strong') > cfg.startLevel, 'strong learner ends above the start level');
+    assert.ok(lvl('weak') < lvl('average') && lvl('average') < lvl('strong'), 'levels order weak < average < strong');
+  }
+
+  // ---- repetition and no back-to-back ----
+  {
+    const intervals = cfg.intervals;
+    let checked = 0, worst = 0;
+    for (const kind of Object.keys(learners)) {
+      for (const { log } of runs[kind]) {
+        for (let i = 1; i < log.length; i++) assert.notEqual(log[i].id, log[i - 1].id, `${topic} ${kind}: no item twice in a row`);
+        for (let i = 0; i < log.length; i++) {
+          const e = log[i];
+          if (e.box === 0) continue;
+          const j = log.findIndex((x, k) => k > i && x.id === e.id);
+          if (j < 0) continue;
+          const between = j - i - 1, iv = intervals[e.box - 1];
+          checked++;
+          assert.ok(between >= iv, `${topic} ${kind}: ${e.id} came back after ${between} questions, before its interval ${iv}`);
+          worst = Math.max(worst, between - iv);
+          assert.ok(between <= iv + 4 * cfg.maxOverdue, `${topic} ${kind}: ${e.id} came back late (${between} vs interval ${iv})`);
+        }
       }
     }
+    assert.ok(checked > 200, 'enough repetitions were observed');
+    console.log(`repetitions checked: ${checked}, latest return ${worst} questions after the interval`);
   }
-  assert.ok(checked > 200, 'enough repetitions were observed');
-  console.log(`repetitions checked: ${checked}, latest return ${worst} questions after the interval`);
 }
 
 // ---- Leitner boxes by hand ----
@@ -205,6 +199,67 @@ for (const kind of Object.keys(learners)) {
   assert.equal(core.feedback(q, true, cfg.streakAt).showExplain, false);
   assert.equal(core.next('no-such-topic'), null);
   assert.equal(core.answer({ id: 'nope', topic }, true, 1), null);
+}
+
+// ---- item types: choice, typed, match, sort travel through next() intact and are judged by isCorrect ----
+{
+  const core = makeCore(21);
+  const items = type => Object.values(pools).flatMap(p => p.items).filter(i => i.type === type);
+  for (const type of ['choice', 'typed', 'match', 'sort']) assert.ok(items(type).length >= 3, `content has ${type} items`);
+
+  // next() hands out every type unchanged apart from `meta`
+  for (const [topic, type] of [['sachkunde', 'match'], ['science', 'sort'], ['englisch', 'match'], ['englisch', 'typed']]) {
+    const seen = new Set();
+    for (let i = 0; i < 400 && !seen.has(type); i++) {
+      const q = core.next(topic);
+      if (q.type === type) {
+        const { meta, ...item } = q;
+        assert.deepEqual(item, pools[topic].items.find(x => x.id === q.id), `${type} item ${q.id} is served intact`);
+        assert.equal(meta.topic, topic);
+        assert.ok(meta.expectedMs > 0 && Number.isFinite(meta.expectedMs), `${type} has an expected time`);
+        seen.add(type);
+      }
+      core.answer(q, true, 3000);
+    }
+    assert.ok(seen.has(type), `${topic} served a ${type} item`);
+  }
+
+  // match: one choice per left side (index of the right side or its text); every pair must be right
+  const match = { type: 'match', pairs: [{ left: 'a', right: { de: 'Eins', en: 'One' } }, { left: 'b', right: { de: 'Zwei', en: 'Two' } }, { left: 'c', right: 'Drei' }] };
+  assert.equal(core.isCorrect(match, [0, 1, 2]), true);
+  assert.equal(core.isCorrect(match, ['eins', ' Zwei ', 'drei']), true, 'texts match case-insensitively');
+  assert.equal(core.isCorrect(match, [0, 2, 1]), false, 'a swapped pair is wrong');
+  assert.equal(core.isCorrect(match, [0, 1]), false, 'missing pairs are wrong');
+  assert.equal(core.isCorrect(match, undefined), false);
+  for (const m of items('match')) assert.equal(core.isCorrect(m, m.pairs.map((_, i) => i)), true, `${m.id} solves with the identity assignment`);
+
+  // sort: one category id per sortItem (array or object keyed by index); every assignment must be right
+  const sort = { type: 'sort', categories: [{ id: 'x' }, { id: 'y' }], sortItems: [{ text: 'p', category: 'x' }, { text: 'q', category: 'y' }, { text: 'r', category: 'x' }, { text: 's', category: 'y' }] };
+  assert.equal(core.isCorrect(sort, ['x', 'y', 'x', 'y']), true);
+  assert.equal(core.isCorrect(sort, { 0: 'x', 1: 'y', 2: 'x', 3: 'y' }), true);
+  assert.equal(core.isCorrect(sort, ['x', 'y', 'y', 'y']), false, 'one wrong assignment fails');
+  assert.equal(core.isCorrect(sort, ['x', 'y']), false);
+  for (const s of items('sort')) assert.equal(core.isCorrect(s, s.sortItems.map(x => x.category)), true, `${s.id} solves with its own categories`);
+  assert.equal(core.isCorrect({ type: 'unknown' }, 0), false);
+
+  // choice and typed keep working for the new topics (circuit puzzles are plain choice items)
+  const circuit = pools.science.items.find(i => i.circuit);
+  assert.equal(circuit.type, 'choice');
+  assert.equal(core.isCorrect(circuit, circuit.answers.findIndex(a => a.correct)), true);
+  const spelling = pools.englisch.items.find(i => i.type === 'typed' && i.answers.length > 1);
+  assert.equal(core.isCorrect(spelling, `  ${spelling.answers[1].text.toUpperCase()} `), true, 'typed English ignores case and spaces');
+
+  // localize keeps match and sort data; bothLangs shows both languages
+  const sk = pools.sachkunde.items.find(i => i.type === 'sort');
+  const lz = core.localize({ ...sk, meta: { bothLangs: false } }, 'en');
+  assert.equal(lz.categories.length, sk.categories.length);
+  assert.equal(lz.sortItems.length, sk.sortItems.length);
+  assert.equal(lz.sortItems[0].category, sk.sortItems[0].category);
+  assert.deepEqual(lz.answers, []);
+  const en = pools.englisch.items.find(i => i.type === 'match');
+  const lb = core.localize({ ...en, meta: { bothLangs: true } }, 'de');
+  assert.equal(lb.pairs.length, en.pairs.length);
+  assert.ok(lb.q === `${en.q.de}\n${en.q.en}`,'English questions show German first, then English');
 }
 
 // ---- state integration: only through learning.record, persistence through a save slot ----

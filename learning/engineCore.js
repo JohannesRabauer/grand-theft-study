@@ -189,13 +189,29 @@ export class EngineCore {
     return stats;
   }
 
-  // Judges a response for 'choice' (answer index or text) and 'typed' (any accepted text) items.
+  // Judges a response by item type:
+  //   choice  answer index or text
+  //   typed   any accepted text
+  //   match   one entry per left side, in order: the index of the chosen right side (or its text); all must be right
+  //   sort    one category id per sortItem, in order (array, or object keyed by index); all must be right
   isCorrect(question, response) {
-    if (question.type === 'choice') {
-      const a = typeof response === 'number' ? question.answers[response] : question.answers.find(x => norm(this.text(x.text, 'de')) === norm(response));
-      return !!a?.correct;
+    switch (question.type) {
+      case 'choice': {
+        const a = typeof response === 'number' ? question.answers[response] : question.answers.find(x => norm(this.text(x.text, 'de')) === norm(response));
+        return !!a?.correct;
+      }
+      case 'typed':
+        return question.answers.some(a => norm(this.text(a.text, 'de')) === norm(response));
+      case 'match':
+        return question.pairs.every((p, i) => {
+          const r = response?.[i];
+          return typeof r === 'number' ? r === i : r !== undefined && r !== null && norm(this.text(p.right, 'de')) === norm(r);
+        });
+      case 'sort':
+        return question.sortItems.every((s, i) => response?.[i] === s.category);
+      default:
+        return false;
     }
-    return question.answers.some(a => norm(this.text(a.text, 'de')) === norm(response));
   }
 
   text(t, lang) { return typeof t === 'string' ? t : t[lang] ?? t.de; }
@@ -205,12 +221,18 @@ export class EngineCore {
     const other = lang === 'de' ? 'en' : 'de';
     const both = !!question.meta?.bothLangs;
     const pick = t => (both && typeof t === 'object' ? `${t[lang]}\n${t[other]}` : this.text(t, lang));
-    return {
+    const out = {
       q: pick(question.q),
       explain: pick(question.explain),
       hints: (question.hints ?? []).map(pick),
-      answers: question.answers.map(a => ({ ...a, text: a.text === undefined ? undefined : pick(a.text) }))
+      answers: (question.answers ?? []).map(a => ({ ...a, text: a.text === undefined ? undefined : pick(a.text) }))
     };
+    if (question.pairs) out.pairs = question.pairs.map(p => ({ left: pick(p.left), right: pick(p.right) }));
+    if (question.sortItems) {
+      out.categories = question.categories.map(c => ({ id: c.id, label: pick(c.label) }));
+      out.sortItems = question.sortItems.map(s => ({ text: pick(s.text), category: s.category }));
+    }
+    return out;
   }
 
   reaction(kind) {

@@ -1,5 +1,9 @@
 {
   "topics": [
-    { "grade": "grade3", "topic": "mathe-test" }
+    { "grade": "grade3", "topic": "mathe" },
+    { "grade": "grade3", "topic": "deutsch" },
+    { "grade": "grade3", "topic": "englisch" },
+    { "grade": "grade3", "topic": "sachkunde" },
+    { "grade": "grade3", "topic": "science" }
   ]
 }
