@@ -9,6 +9,7 @@ import {
   keypadable, laneX, makePlan, modeAt, moveLane, shuffle, sprintable, winnerOf
 } from '../minigames/matheCore.js';
 import { Tally, playerResult } from '../minigames/minigameCore.js';
+import { EngineCore } from '../learning/engineCore.js';
 
 const json = p => JSON.parse(readFileSync(new URL(`../${p}`, import.meta.url), 'utf8'));
 const data = json('data/minigames.json');
@@ -87,6 +88,22 @@ assert.ok(de['minigame.mathe.winner'].includes('{name}') && en['minigame.mathe.w
     const right = q.type === 'typed' ? q.answers[0].text : q.answers.find(a => a.correct).text;
     assert.equal(set.texts[set.correct], right, `${q.id}: the correct lane holds the right answer`);
   }
+}
+
+// ---- regression: a due item that does not fit the mode must not starve the question pick ----
+// The engine returns the most overdue repetition item first. MatheGame once asked for `next` 60 times and kept only
+// items that fit, so a parked non-blockable item came back every time ("mathe: no blocks question found").
+{
+  const cfg = json('data/learning.json');
+  const reactions = json('data/learning/reactions.json');
+  const fits = q => blockable(q, { maxChars: o.blockMaxChars, maxDigits: o.keypadMaxDigits });
+  const misfit = items.find(q => !fits(q));
+  assert.ok(misfit, 'the real pool has an item that does not fit blocks');
+  const stats = { n: 50, level: 3, last: null, items: { [misfit.id]: { s: 1, c: 0, b: 1, d: 10 } } }; // overdue by 40
+  const store = { get: () => structuredClone(stats), record() {} };
+  const core = new EngineCore({ pools: { mathe: { bothLangs: false, items } }, cfg, reactions, store, rng: seeded(11) });
+  assert.equal(core.next('mathe').id, misfit.id, 'the overdue item is returned first (the old failure mode)');
+  for (let i = 0; i < 200; i++) assert.ok(fits(core.next('mathe', { filter: fits })), 'the fit filter always yields a fitting question');
 }
 
 // ---- distractors and blocks ----

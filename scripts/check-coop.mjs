@@ -98,6 +98,19 @@ const settle = (th, a, b, ma, mb, seconds = 3) => { for (let t = 0; t < seconds 
   assert.deepEqual(th3.speed, [1, 1]);
 }
 {
+  // box-norm corner: the other player is diagonal, the view's vertical limit dominates. Moving at right angles to the
+  // Euclidean direction still stretches the box distance, so the leader must be slowed (it was not before the fix).
+  const th = new Tether(T, aspect);
+  const dy = T.maxDistance / aspect;
+  const a = { x: 0, y: 0 };
+  const b = { x: T.maxDistance * 0.6, y: dy * 0.95 }; // vertical box distance dominates
+  const len = Math.hypot(b.x, b.y);
+  const perp = { x: b.y / len, y: -b.x / len }; // perpendicular to the Euclidean direction, away in y
+  assert.ok(perp.y < 0 && boxDistance(b.x - a.x, b.y - (a.y + perp.y), aspect) > boxDistance(b.x, b.y, aspect), 'this move really stretches the box distance');
+  settle(th, a, { x: b.x, y: dy * 1.0 }, perp, { x: 0, y: 0 });
+  assert.ok(th.speed[0] < 0.6, `the leader is slowed at the corner (${th.speed[0].toFixed(2)})`);
+}
+{
   // smooth: while one walks away the factor never jumps by more than a few percent per frame
   const th = new Tether(T, aspect);
   const a = { x: 0, y: 0 };

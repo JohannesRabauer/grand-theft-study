@@ -3,6 +3,7 @@
 // graded result, the rewards, the learning stats, that the world unfreezes and that nothing leaks.
 import { fallMsFor } from '../../minigames/matheCore.js';
 import { beltMsFor, foldUmlauts } from '../../minigames/deutschCore.js';
+import { BOT_STYLES, botInput, scoreRun } from '../../minigames/sportCore.js';
 
 export const minigames = {
   name: 'minigames',
@@ -145,7 +146,7 @@ export const minigames = {
     const rt = await timed;
     assert('a timed round is graded and restored', rt.total >= 5 && rt.grade >= 1 && rt.grade <= 6 && rt.quit === false && ctx.frozen === false);
     assert('unknown ids and players are refused', await MG.start('nope').then(() => false, () => true) && await MG.start('quiz-demo', { players: [0, 5] }).then(() => false, () => true));
-    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 9 : 7) && ['mathe', 'deutsch', 'englisch', 'erdkunde', 'science', 'musik', 'kunst'].every(id => MG.list().some(d => d.id === id)));
+    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 10 : 8) && ['mathe', 'deutsch', 'englisch', 'erdkunde', 'science', 'musik', 'kunst', 'sport'].every(id => MG.list().some(d => d.id === id)));
 
     // ---- Mathe: both modes in one run, one player ----
     // Answers every open question of the Mathe scene through the inputs a player has: number keys (answer buttons,
@@ -1089,5 +1090,121 @@ export const minigames = {
     assert('the world is restored after two-player Kunst', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_kunst'));
     step(5);
     assert('two-player Kunst leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeKu), `${JSON.stringify(beforeKu)} -> ${JSON.stringify(snapshot())}`);
+
+    // ---- Sport: Hindernislauf (the real movement system on a course) ----
+    // Drives every runner through the intents with the clean sprint bot of sportCore (the same one that sets the par time).
+    const playSport = (scene, style = 'sprint', { stop = () => false } = {}) => {
+      const states = scene.slots.map(() => ({ sprinting: true }));
+      const out = { mx: 0, my: 0, sprint: false, jump: false };
+      for (let f = 0; f < 4200 && ctx.screens.top()?.id === 'minigame' && !scene.over && !stop(); f++) {
+        for (const slot of scene.slots) {
+          const i = intents[slot.index];
+          if (slot.runner.finished) { i.move.x = i.move.y = 0; i.sprint = false; continue; }
+          botInput(slot.runner, BOT_STYLES[style], scene.opts.bot, states[slot.i], out);
+          i.move.x = out.mx;
+          i.move.y = out.my;
+          i.sprint = out.sprint;
+          i.jump = out.jump;
+        }
+        step(1);
+        for (const slot of scene.slots) intents[slot.index].jump = false;
+      }
+      for (const slot of scene.slots) { const i = intents[slot.index]; i.move.x = i.move.y = 0; i.sprint = false; i.jump = false; }
+    };
+    const sameButTextures = (a, b) => JSON.stringify({ ...a, textures: 0 }) === JSON.stringify({ ...b, textures: 0 });
+    const beforeSp = snapshot();
+    const xpSp = state.players[0].xp;
+    const moneySp = state.shared.money;
+    const runSp = MG.start('sport', { players: [0], difficulty: 3 });
+    step(1);
+    const sps = game.scene.getScene('MG_sport');
+    assert('the Sport scene shows its title and instructions during the countdown', sps.title.text === ctx.t('minigame.sport.title') && sps.help.visible && sps.help.text.includes('Shift'));
+    env.until(() => sps.clock.phase === 'play', 400);
+    const sp0 = sps.slots[0];
+    const rnSp = sp0.runner;
+    const footProfile = game.cache.json.get('vehicles').foot;
+    assert('the runner is the real MovementController with the foot profile and the kid\'s attributes', rnSp.ctrl.profile === footProfile && Math.abs(rnSp.ctrl.speedMult - (1 + 0.06 * (ctx.players[0].attrs.tempo - 5))) < 1e-9 && Math.abs(rnSp.ctrl.staminaSize - (1 + 0.08 * (ctx.players[0].attrs.ausdauer - 5))) < 1e-9, `${rnSp.ctrl.speedMult} ${rnSp.ctrl.staminaSize}`);
+    assert('the course of difficulty 3 has cones, hurdles, a beam and five stations', sps.course.cones.length === 6 && sps.course.hurdles.length === 3 && sps.course.checkpoints.length === 5 && sp0.track.cones.length === 6 && sp0.track.hurdles.length === 3 && sp0.track.pips.length === 5);
+    assert('the HUD shows the stations and the stamina bar', sp0.score.text === ctx.t('minigame.sport.station', { n: 0, total: 5 }) && sp0.track.stamina.width > 50);
+    playSport(sps, 'sprint', { stop: () => rnSp.d > 200 });
+    const tSp = rnSp.timeMs;
+    const dSp = rnSp.d;
+    press(0, 'pause');
+    step(40);
+    assert('pausing stops the run and the clock', ctx.screens.top()?.id === 'pause' && rnSp.timeMs === tSp && rnSp.d === dSp);
+    press(0, 'pause');
+    assert('running moved the runner up the lane and drained stamina, the course scrolled with it', rnSp.d > 200 && rnSp.ctrl.stamina < 0.95 && Math.abs(sp0.track.world.y - (sp0.track.anchorY + rnSp.d)) < 1e-6 && sp0.track.stamina.width < 87, `${rnSp.d} ${rnSp.ctrl.stamina}`);
+    playSport(sps, 'sprint', { stop: () => rnSp.d > sps.course.hurdles[0].d - 150 && rnSp.hurdleState[0] === 0 && rnSp.airborne });
+    assert('a jump (confirm) clears a hurdle without a fault, with the jump height drawn', rnSp.airborne && sp0.track.sprite.y < sp0.track.anchorY - 1 && rnSp.faults === 0);
+    ctx.i18n.set('en');
+    step(2);
+    assert('a language switch re-translates the Sport texts', sp0.score.text.startsWith('Station') && sp0.track.finishLabel.text === ctx.t('minigame.sport.finishLine'));
+    ctx.i18n.set('de');
+    playSport(sps);
+    assert('the clean run finishes, shows its time and a friendly line', rnSp.finished && rnSp.faults === 0 && rnSp.checkpoint === 5 && sp0.result && sp0.track.msg.visible && sp0.track.msg.text.includes(ctx.t('minigame.sport.finishClean', { t: rnSp.effectiveSec.toFixed(1) })), `${rnSp.d} ${rnSp.checkpoint} ${sp0.track.msg.text}`);
+    assert('every station was reached and the flags turned green', sp0.track.pips.every(c => c.fillColor === 0x6fe07a) && sp0.track.flags.every(f => f[0].texture.key === 'sport-flag-done'));
+    assert('the finish hands over to the result screen after a short pause', env.until(() => ctx.screens.top()?.id === 'minigameResult', 200) >= 0);
+    step(2);
+    press(0, 'jump');
+    const rsp = await runSp;
+    assert('Sport result: standard shape, score in points, full effort', rsp.id === 'sport' && rsp.subject === 'sport' && rsp.total === 100 && rsp.effort === 1 && rsp.score === scoreRun(rnSp, sps.course, sps.par, sps.opts.scoring).score && rsp.score > 0.7 && rsp.quit === false && rsp.grade >= 1 && rsp.grade <= 6 && rsp.xp > 0 && rsp.moneyCents > 0, JSON.stringify(rsp));
+    assert('the grade comes from ctx.grades', rsp.grade === ctx.grades.preview(0, 'sport', { score: rsp.score, effort: rsp.effort, difficulty: 3 }).grade);
+    assert('Sport rewards were applied', state.players[0].xp === xpSp + rsp.xp && state.shared.money === moneySp + rsp.moneyCents);
+    assert('the world is back after Sport', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_sport'));
+    step(5);
+    assert('a whole Sport run leaks nothing (the gym textures are made once)', sameButTextures(snapshot(), beforeSp), `${JSON.stringify(beforeSp)} -> ${JSON.stringify(snapshot())}`);
+    const beforeSp2 = snapshot();
+
+    // quitting early after running straight through the cones
+    const quitSp = MG.start('sport', { players: [0], difficulty: 1 });
+    step(1);
+    const sqSp = game.scene.getScene('MG_sport');
+    env.until(() => sqSp.clock.phase === 'play', 400);
+    playSport(sqSp, 'sloppy', { stop: () => sqSp.slots[0].runner.d > sqSp.course.cones[0].d + 150 });
+    const rqSp0 = sqSp.slots[0].runner;
+    assert('running straight through the cones knocks them over: seconds are added, nothing blocks', rqSp0.knocks.cone >= 2 && rqSp0.penaltyMs >= 1000 && sqSp.slots[0].track.cones[0].texture.key === 'sport-cone-down' && rqSp0.d > sqSp.course.cones[0].d && sqSp.slots[0].track.penText.text.startsWith('+'), `${rqSp0.knocks.cone}`);
+    MG.quit();
+    const rqSp = await quitSp;
+    assert('quitting the course gives no rewards and a capped effort', rqSp.quit === true && rqSp.xp === 0 && rqSp.moneyCents === 0 && rqSp.effort <= 0.2 && ctx.frozen === false && !game.scene.isActive('MG_sport'));
+    step(5);
+
+    // two players side by side: the second kid is a trained athlete (Tempo / Ausdauer 9) and finishes measurably earlier
+    const char1 = state.players[1].character;
+    state.dispatch('player.setCharacter', { player: 1, character: 'mehmet' });
+    const duoSp = MG.start('sport', { players: [0, 1], difficulty: 3 });
+    step(1);
+    const sdSp = game.scene.getScene('MG_sport');
+    env.until(() => sdSp.clock.phase === 'play', 400);
+    const [laSp, lbSp] = sdSp.slots;
+    assert('two lanes side by side with their own course views', sdSp.slots.length === 2 && laSp.track.lx < lbSp.track.lx && laSp.runner !== lbSp.runner && laSp.track !== lbSp.track && lbSp.runner.ctrl.speedMult > laSp.runner.ctrl.speedMult);
+    playSport(sdSp, 'sprint', { stop: () => laSp.runner.finished || lbSp.runner.finished });
+    assert('the runner with Tempo 9 / Ausdauer 9 reaches the finish first', lbSp.runner.finished && !laSp.runner.finished && lbSp.runner.d > laSp.runner.d + 100, `${laSp.runner.d.toFixed(0)} ${lbSp.runner.d.toFixed(0)}`);
+    playSport(sdSp, 'sprint');
+    assert('both finish, the faster one by a clear margin, and the leader is cheered', laSp.runner.finished && lbSp.runner.finished && lbSp.runner.effectiveSec < laSp.runner.effectiveSec - 2 && sdSp.over && sdSp.banner.visible && sdSp.bannerKey.key === 'minigame.sport.winner' && ctx.screens.top()?.id === 'minigame', `${laSp.runner.effectiveSec.toFixed(1)} ${lbSp.runner.effectiveSec.toFixed(1)}`);
+    env.until(() => ctx.screens.top()?.id === 'minigameResult', 200);
+    step(2);
+    press(1, 'interact');
+    const r2sp = await duoSp;
+    state.dispatch('player.setCharacter', { player: 1, character: char1 });
+    assert('both players get a full, own result; the higher Tempo scores measurably better', r2sp.perPlayer.length === 2 && r2sp.perPlayer[1].score >= r2sp.perPlayer[0].score + 0.05 && r2sp.perPlayer.every(p => p.xp > 0 && p.effort === 1 && p.total === 100), JSON.stringify(r2sp.perPlayer.map(p => p.score)));
+    assert('the world is restored after two-player Sport', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_sport'));
+    step(5);
+    assert('two-player Sport leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeSp2), `${JSON.stringify(beforeSp2)} -> ${JSON.stringify(snapshot())}`);
+
+    // time up without finishing: the covered share counts and a kind line shows
+    const slowSp = MG.start('sport', { players: [0], difficulty: 5 });
+    step(1);
+    const swSp = game.scene.getScene('MG_sport');
+    env.until(() => swSp.clock.phase === 'play', 400);
+    playSport(swSp, 'walk', { stop: () => swSp.slots[0].runner.d > swSp.course.length * 0.4 });
+    swSp.clock.elapsedMs = swSp.clock.durationMs - 100;
+    step(12);
+    assert('the timer ends an unfinished run with a kind line and the progress counted', swSp.slots[0].result && !swSp.slots[0].runner.finished && swSp.slots[0].track.msg.text === ctx.t('minigame.sport.timeout', { n: swSp.slots[0].runner.checkpoint, total: 5 }) && ctx.screens.top()?.id === 'minigameResult');
+    step(2);
+    press(0, 'jump');
+    const rwSp = await slowSp;
+    assert('an unfinished run is graded by what it covered: effort is the share, the score stays below a finish', rwSp.effort > 0.3 && rwSp.effort < 0.6 && rwSp.score > 0 && rwSp.score < 0.4 && rwSp.total >= 30 && rwSp.xp > 0, JSON.stringify(rwSp));
+    step(5);
+    assert('an unfinished Sport run leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeSp2), `${JSON.stringify(beforeSp2)} -> ${JSON.stringify(snapshot())}`);
   }
 };

@@ -43,7 +43,10 @@ export class Tether {
     const ux = dx / len;
     const uy = dy / len;
     const mag = Math.hypot(move.x, move.y);
-    const toward = mag > 0.01 ? (move.x * ux + move.y * uy) / mag : 0; // -1 away .. 1 towards the other
+    // -1 away .. 1 towards the other, along the axis the box norm is measured on: the Euclidean direction would call
+    // a move at right angles to it neutral although it still stretches the box distance (corners of the view).
+    const alongX = Math.abs(dx) >= Math.abs(dy) * this.aspect;
+    const toward = mag > 0.01 ? (alongX ? move.x * Math.sign(dx) : move.y * Math.sign(dy)) / mag : 0;
     let target = 1;
     if (!self.pinned) {
       const pen = penalty(ratio, cfg.soft);

@@ -157,13 +157,12 @@ export class DeutschGame extends Minigame {
 
   nextQuestion(slot, mode) {
     const { opts } = this;
-    const filter = mode === 'belt' ? opts.beltTags : opts.spellTags;
+    const tags = mode === 'belt' ? opts.beltTags : opts.spellTags;
     const fits = mode === 'belt' ? beltable : q => spellable(q, { maxChars: opts.padMaxChars, maxAnswers: 4 });
-    for (let tries = 0; tries < 60; tries++) {
-      const q = this.ctx.learning.next('deutsch', { player: slot.index, context: this.context, filter });
-      if (q && fits(q)) return q;
-    }
-    throw new Error(`deutsch: no ${mode} question found`);
+    // Tags and fit in one engine filter, so a due item that does not fit cannot be returned on every try.
+    const q = this.ctx.learning.next('deutsch', { player: slot.index, context: this.context, filter: item => item.tags?.some(t => tags.includes(t)) && fits(item) });
+    if (!q) throw new Error(`deutsch: no ${mode} question found`);
+    return q;
   }
 
   answerChoice(slot, index, hints) {

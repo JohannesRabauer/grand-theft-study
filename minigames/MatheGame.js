@@ -119,11 +119,10 @@ export class MatheGame extends Minigame {
     const fits = mode === 'blocks'
       ? q => blockable(q, { maxChars: opts.blockMaxChars, maxDigits: opts.keypadMaxDigits })
       : q => sprintable(q, opts.keypadMaxDigits);
-    for (let tries = 0; tries < 60; tries++) {
-      const q = this.ctx.learning.next('mathe', { player: slot.index, context: this.context });
-      if (q && fits(q)) return q;
-    }
-    throw new Error(`mathe: no ${mode} question found`);
+    // The fit is part of the engine filter: a due (repetition) item that does not fit this mode must not be returned again and again.
+    const q = this.ctx.learning.next('mathe', { player: slot.index, context: this.context, filter: fits });
+    if (!q) throw new Error(`mathe: no ${mode} question found`);
+    return q;
   }
 
   answerChoice(slot, index, hints) {
