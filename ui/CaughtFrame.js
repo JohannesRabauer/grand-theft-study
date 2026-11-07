@@ -1,6 +1,9 @@
 // The comic "caught" frame (CAP-7), drawn procedurally in UIScene space (480x270): halftone panel,
 // a locker with the player stuffed inside, the bully with the snatched lunchbox and a speech bubble.
-// Shown on `player:caught`, hidden once every caught player has a `player:respawn`. Read-only: the world logic is entities/Caught.js.
+// One frame per player (created by CaughtModule on the first catch of that player, `index`). With one player it fills the screen;
+// with two it is scaled down (data/chase.json caught.coopScale) and sits on the caught player's HUD side (P1 left half, P2 right
+// half), so the other player keeps a clear view of the game they are still playing. Shows that player's own kid. Read-only:
+// the world logic is entities/Caught.js.
 import { uiText } from './uiKit.js';
 
 const W = 480;
@@ -12,23 +15,19 @@ const PH = 238;
 const DEPTH = 15; // above the HUD, below the pause menu
 
 export class CaughtFrame {
-  constructor(scene, ctx) {
+  constructor(scene, ctx, index = 0) {
     this.scene = scene;
     this.ctx = ctx;
+    this.index = index;
     this.items = [];
+    this.box = null; // container holding the items: scaled and placed per layout
     this.built = false;
-    this.caught = 0; // players currently shown as caught
-    this.onCaught = (ev) => { this.caught++; this.show(ev); };
-    this.onRespawn = () => { if (--this.caught <= 0) this.hide(); };
-    ctx.events.on('player:caught', this.onCaught);
-    ctx.events.on('player:respawn', this.onRespawn);
   }
 
   destroy() {
-    this.ctx.events.off('player:caught', this.onCaught);
-    this.ctx.events.off('player:respawn', this.onRespawn);
     for (const o of this.items) o.destroy();
     this.items.length = 0;
+    this.box?.destroy();
   }
 
   // Created on first use, then reused (only texts change between showings).
@@ -36,7 +35,8 @@ export class CaughtFrame {
     const { scene, ctx } = this;
     this.built = true;
     this.makeHalftone();
-    const add = (o) => { o.setDepth(DEPTH).setVisible(false); this.items.push(o); return o; };
+    this.box = scene.add.container(0, 0).setDepth(DEPTH);
+    const add = (o) => { o.setVisible(false); this.box.add(o); this.items.push(o); return o; };
     const text = (x, y, size, color, stroke, origin = 0.5) => add(uiText(scene, x, y, '', {
       fontFamily: 'monospace', fontSize: `${size}px`, fontStyle: 'bold', color, stroke: '#000000', strokeThickness: stroke, align: 'center'
     }).setOrigin(origin));
@@ -122,6 +122,9 @@ export class CaughtFrame {
     this.lost.setText(lost > 0 ? ctx.t('caught.lost', { v: `${v(lost)} €` }) : ctx.t('caught.nothing'));
     this.prompt.setText(ctx.t(`caught.continue.${ctx.input.type}`));
     this.kid.setTexture(this.sharpCopy(ctx.players[player]?.look?.walk ?? 'player')); // the caught kid's own look
+    const coop = ctx.players.length > 1;
+    const k = coop ? ctx.chase.cfg.caught.coopScale : 1;
+    this.box.setScale(k).setPosition(coop ? (this.index ? W / 2 : 0) + (W / 2 - W * k) / 2 : 0, coop ? (H - H * k) / 2 : 0);
     for (const o of this.items) o.setVisible(true);
   }
 

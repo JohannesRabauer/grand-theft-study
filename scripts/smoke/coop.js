@@ -1,21 +1,27 @@
 // Smoke scenarios: coop. Each export is { name, run(game, assert, env) }; registered in scripts/smoke/index.js.
+
+// Restarts the game as a co-op run from the menu (Jonas on foot, Lena on her bike); the intents are driven by hand.
+function startCoop(game, env) {
+  const { step } = env;
+  const old = game.scene.getScene('Game').ctx;
+  old.state.dispatch('player.setCharacter', { player: 0, character: 'jonas' });
+  old.state.dispatch('coop.set', { on: true });
+  old.events.emit('game:quit');
+  step(4);
+  game.scene.getScene('Menu').scene.start('Game');
+  step(4);
+  const ctx = game.scene.getScene('Game').ctx;
+  ctx.input.update = () => {};
+  return { gs: game.scene.getScene('Game'), ui: game.scene.getScene('UI'), ctx };
+}
+
 // AD-18: a real two-player start (coop flag), the tether and the camera rig on the commute route.
 export const coopCommute = {
   name: 'coopCommute',
   run(game, assert, env) {
     const { h, step } = env;
     // ---- start a co-op run from the menu: Jonas (on foot) and Lena (her bike) ----
-    const old = game.scene.getScene('Game').ctx;
-    old.state.dispatch('player.setCharacter', { player: 0, character: 'jonas' });
-    old.state.dispatch('coop.set', { on: true });
-    old.events.emit('game:quit');
-    step(4);
-    game.scene.getScene('Menu').scene.start('Game');
-    step(4);
-    const gs = game.scene.getScene('Game');
-    const ui = game.scene.getScene('UI');
-    const ctx = gs.ctx;
-    ctx.input.update = () => {};
+    const { gs, ui, ctx } = startCoop(game, env);
     const [p1, p2] = ctx.players;
     const cam = gs.cameras.main;
     const scale = ctx.res.scale;
@@ -90,6 +96,138 @@ export const coopCommute = {
     assert('a pinned partner does not block: the other still moves and stays within the view limit', Math.abs(p1.y - startY) > 30 && worst < 1.3, `max ratio ${worst.toFixed(2)}`);
     p2.pinned = false;
     p2.move.tetherMult = 1;
+    ctx.state.dispatch('coop.set', { on: false });
+    step(2);
+  }
+};
+
+// AD-18: the chase with two players. One shared level, bullies pick the nearest visible player and stick to it, each
+// player is caught and respawns on its own while the other plays on, the wallet is debited once per catch, and the
+// level only drops when every player is hidden (or far).
+export const coopChase = {
+  name: 'coopChase',
+  run(game, assert, env) {
+    const { step, until } = env;
+    const { gs, ui, ctx } = startCoop(game, env);
+    const [p1, p2] = ctx.players;
+    const chase = ctx.chase;
+    const log = [];
+    for (const n of ['player:caught', 'player:respawn', 'chase:level']) ctx.events.on(n, e => log.push([n, e]));
+    const n = (name, pred = () => true) => log.filter(e => e[0] === name && pred(e[1])).length;
+    const ts = ctx.map.tileSize;
+    const px = (t) => t * ts;
+    const at = (p, x, y) => { gs.matter.body.setPosition(p.body, { x, y }); gs.matter.body.setVelocity(p.body, { x: 0, y: 0 }); p.move.speed = 0; p.sprite.setPosition(x, y); };
+    const active = () => chase.bullies.filter(b => b.active);
+    const place = (b, x, y, toward) => {
+      gs.matter.body.setPosition(b.body, { x, y });
+      b.sprite.setPosition(x, y);
+      b.move.heading = Math.atan2(toward.y - y, toward.x - x);
+      chase.fsm.enter(b, 'CHASE');
+      b.alerted = false;
+    };
+    const money = () => ctx.state.shared.money;
+    const loss = chase.cfg.caught.lossCents;
+    const frames = ui.hud.get('caught');
+    p1.bullyWeight = p2.bullyWeight = 1;
+    step(30);
+    assert('co-op run: two players, one shared level, no bullies yet', ctx.players.length === 2 && chase.level === 0 && active().length === 0);
+
+    // ---- either player's turf raises the shared level; two players get one extra bully, within the tier cap ----
+    at(p2, px(55), px(39));
+    at(p1, px(49), px(39));
+    step(2);
+    assert('both stand in the skatepark turf: level 1', chase.level === 1 && n('chase:level', e => e.reason === 'turf') >= 1, `level ${chase.level}`);
+    assert('co-op spawns one extra bully (2 at level 1), within the Medium cap', active().length === 2 && active().length <= ctx.quality.tier.maxBullies, `bullies ${active().length}`);
+    assert('they spawned outside the view that holds both players', active().every(b => !chase.onScreen(b.x, b.y, 0)));
+
+    // ---- target: the nearest visible player, and it sticks (hysteresis) ----
+    const [b, extra] = active();
+    chase.pool.release(extra);
+    at(p1, px(49), px(39));
+    at(p2, px(55), px(39));
+    const midX = (p1.x + p2.x) / 2;
+    place(b, midX + 12, px(39) + 40, p2); // a little nearer to P2
+    step(2);
+    assert('the bully targets the nearer visible player (P2)', b.target === p2 && b.sees, `target ${b.target?.index}`);
+    place(b, midX - 3, px(39) + 40, p1); // now only slightly nearer to P1: hysteresis keeps P2
+    step(2);
+    assert('hysteresis: a barely nearer second player does not steal the target', b.target === p2, `target ${b.target?.index}`);
+    place(b, p1.x + 20, px(39) + 40, p1); // clearly nearer to P1
+    step(2);
+    assert('a clearly nearer player becomes the target', b.target === p1, `target ${b.target?.index}`);
+
+    // ---- P1 is caught while P2 plays on; the wallet is debited once ----
+    chase.spawn('foot'); // a second chaser, near P2 and not touching it
+    const c2 = active().find(x => x !== b);
+    const holdC2 = () => place(c2, p2.x + 60, p2.y + 20, p2); // keeps the chaser near P2 without touching it
+    holdC2();
+    const m0 = money();
+    const y0 = p2.y;
+    const x0 = p2.x;
+    place(b, p1.x + 5, p1.y, p1);
+    const caught = until(() => n('player:caught') >= 1, 120);
+    assert('P1 is caught by contact', caught >= 0 && n('player:caught', e => e.player === 0) === 1, `${caught} frames`);
+    assert('only P1 is pinned and out of play, the world keeps running', p1.pinned && !p1.alive && !p2.pinned && p2.alive && !ctx.frozen, `frozen ${ctx.frozen}`);
+    assert('the shared wallet lost exactly one fine, once', money() === m0 - loss, `money ${m0} -> ${money()}`);
+    assert('the caught frame shows on the left half for P1 only', frames.frames[0].items[0].visible && frames.frames[0].box.x === 0 && frames.frames[0].box.scaleX < 1 && !frames.frames[1]?.items[0]?.visible);
+    assert('the catching bully gives up', b.state === 'GIVE_UP');
+    ctx.input.intents[1].move.x = -1; // P2 rides off on the bike, away from its chaser
+    until(() => false, 40, holdC2);
+    ctx.input.intents[1].move.x = 0;
+    assert('P2 keeps moving while P1 stands still', Math.hypot(p2.x - x0, p2.y - y0) > 10 && Math.abs(p1.x - px(49)) < 30, `P2 moved ${Math.hypot(p2.x - x0, p2.y - y0).toFixed(0)}`);
+    assert('the other bully keeps the chase on: level stays', chase.level >= 1 && c2.active && c2.state !== 'GIVE_UP', `level ${chase.level} ${c2.state}`);
+    assert('no second debit while P1 stands caught', money() === m0 - loss);
+    const home = gs.caught.home;
+    const off = gs.zoomCfg.coop.spawnOffsets[0];
+    const back = until(() => n('player:respawn', e => e.player === 0) >= 1, 400, holdC2);
+    assert('P1 respawns at the spawn point (beside it), alive and free', back >= 0 && Math.hypot(p1.x - (home.x + off[0]), p1.y - (home.y + off[1])) < 24 && p1.alive && !p1.pinned && !gs.bikes.isMounted(0), `${back} frames`);
+    assert('P1 frame is hidden again, P2 never lost control', !frames.frames[0].items[0].visible && !p2.pinned && p2.alive);
+
+    // ---- P2 is caught as the last chaser: level resets (nobody chases any more) ----
+    at(p1, px(49), px(39));
+    at(p2, px(55), px(39));
+    place(c2, p2.x + 5, p2.y, p2);
+    const m1 = money();
+    until(() => n('player:caught') >= 2, 120);
+    assert('P2 is caught on its own: pinned, debited once more', p2.pinned && !p2.alive && !p1.pinned && money() === m1 - loss, `money ${m1} -> ${money()}`);
+    assert('no bully chases any more: the shared level resets', chase.level === 0 && n('chase:level', e => e.level === 0 && e.reason === 'caught') >= 1, `level ${chase.level}`);
+    assert('P2 frame sits on the right half', frames.frames[1].items[0].visible && frames.frames[1].box.x >= 240);
+
+    // ---- both caught: the world freezes; the first respawn lets the world run again ----
+    chase.lvl.lockout = 0;
+    chase.lvl.set(1, 'smoke');
+    const c3 = active()[0];
+    place(c3, p1.x + 5, p1.y, p1);
+    until(() => n('player:caught') >= 3, 120);
+    assert('everyone caught: the world stands still', p1.pinned && p2.pinned && ctx.frozen);
+    until(() => n('player:respawn') >= 2, 400);
+    assert('the first respawn unfreezes the world while the other stays pinned', !ctx.frozen && p1.pinned !== p2.pinned, `pinned ${p1.pinned}/${p2.pinned}`);
+    until(() => n('player:respawn') >= 3, 400);
+    assert('both are back and free', !p1.pinned && !p2.pinned && p1.alive && p2.alive && !ctx.frozen);
+
+    // ---- hiding: one hidden, the other seen keeps the level; both hidden drops it ----
+    step(10);
+    chase.lvl.lockout = 0;
+    chase.cfg.bully.catchRadius = -1; // the chaser stays near without ending the run
+    chase.lvl.set(1, 'smoke');
+    for (const x of active().slice(1)) chase.pool.release(x);
+    const hb = active()[0];
+    const dumpster = ctx.map.objects.find(o => o.id === 'dumpster-skate');
+    const hedge = ctx.map.objects.find(o => o.id === 'hedge-east');
+    const mid = (z) => [px(z.x + z.w / 2), px(z.y + z.h / 2)];
+    at(p2, px(55), px(39));
+    at(p1, ...mid(dumpster));
+    const hold = () => place(hb, p2.x + 40, p2.y + 10, p2);
+    hold();
+    const t0 = until(() => chase.escapes[0].done === 'hidden', 600, hold);
+    assert('P1 hides while P2 stays in sight: P1 is safe, the chase goes on', t0 >= 0 && chase.hiddenFor(p1) && !chase.hiddenFor(p2) && chase.level >= 1 && chase.escapes[1].done === null, `${t0} frames, level ${chase.level}`);
+    step(60);
+    assert('the level holds while one player is still exposed', chase.level >= 1 && !chase.hidden);
+    at(p2, ...mid(hedge));
+    const t1 = until(() => chase.level === 0, 900);
+    assert('both hidden: the shared level drops', t1 >= 0 && chase.level === 0, `${t1} frames, level ${chase.level}`);
+    chase.cfg.bully.catchRadius = 9;
+    until(() => active().length === 0, 1500);
     ctx.state.dispatch('coop.set', { on: false });
     step(2);
   }

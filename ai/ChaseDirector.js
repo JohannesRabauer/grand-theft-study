@@ -2,12 +2,18 @@
 // bullies. It listens on ctx.events for `turf:enter|leave`, `bully:bump` and `prop:hit`, and
 // emits `chase:level` { level, reason } and `chase:seen` (bool). Exposed as ctx.chase:
 //   level, seen, hidden (every player hidden), hiddenFor(player), hideProgress (0..1 while the hide timer runs), cool(seconds) (level falls to 0 after that long, bullies give up), reset()
-//   (level 0, bullies removed at once). Thresholds are in ai/ChaseLevel.js + data/chase.json.
-// Bullies target the nearest player they can see; contact with a bully emits `bully:caught-contact` { bully, player }
-// (the player's index) and puts it in CAUGHT. The Ärger level is shared by all players.
+//   (level 0, bullies removed at once), playerCaught() (called by entities/Caught.js). Thresholds are in ai/ChaseLevel.js + data/chase.json.
+// Bullies target the nearest player they can see (with hysteresis); contact with a bully emits `bully:caught-contact` { bully, player }
+// (the player's index) and puts it in CAUGHT. The Ärger level is shared by all players (AD-18). Co-op rules (data/chase.json `coop`):
+//  - the level rises from the turf or bumps of either player;
+//  - it falls only when EVERY player in play is safe, judged per player by its own Escape timers (hidden long enough, or far and
+//    unseen): one player hiding while the other is seen or close keeps the chase, and so does a hider whose partner is still near a bully;
+//  - a caught player leaves play for its frame (Player.alive = false, pinned): the catching bully gives up, the other bullies carry on,
+//    and the level clears once no bully is chasing any more (or at once when nobody is left in play, as with one player).
 import { ChaseLevel } from './ChaseLevel.js';
 import { Pathfinder } from './Pathfinding.js';
 import { Escape } from './Escape.js';
+import { escapeVerdict, wantedKinds, offView } from './chaseLogic.js';
 import { Perception } from './Perception.js';
 import { BullyFSM, S } from './BullyFSM.js';
 import { BullyPool } from '../entities/Bully.js';
@@ -24,7 +30,9 @@ export class ChaseDirector {
     this.perception = new Perception(ctx, cfg.perception, this.nav);
     this.fsm = new BullyFSM(this);
     this.pool = new BullyPool(scene, ctx, this);
-    this.escape = new Escape(cfg.escape);
+    this.escapes = Array.from({ length: ctx.maxPlayers }, () => new Escape(cfg.escape)); // one per player
+    this.alive = new Uint8Array(ctx.maxPlayers);
+    this.nearestBully = new Float64Array(ctx.maxPlayers); // per player: distance to the closest bully
     this.lvl = new ChaseLevel(cfg.level, cfg.chaseEnabled, (level, reason) => this.onLevel(level, reason));
     this.spawns = this.readSpawns();
     this.seen = false;
@@ -58,7 +66,12 @@ export class ChaseDirector {
   get bullies() { return this.pool.list; }
   get hidden() { return this.perception.hidden; }
   hiddenFor(p) { return this.perception.hiddenFor(p); }
-  get hideProgress() { return this.escape.progress; }
+  // Hide timer of the slowest player in play (the level drops when the last one is done).
+  get hideProgress() {
+    let min = 1;
+    for (const p of this.ctx.alivePlayers()) min = Math.min(min, this.escapes[p.index].progress);
+    return min;
+  }
 
   // The level reacts to turf while any player stands in it.
   onTurf(player, inside) {
@@ -78,7 +91,7 @@ export class ChaseDirector {
     for (const b of this.pool.list) this.pool.release(b);
     this.lvl.clear('reset');
     this.lvl.lockout = 0;
-    this.escape.reset();
+    for (const e of this.escapes) e.reset();
     this.setSeen(false);
   }
 
@@ -89,7 +102,7 @@ export class ChaseDirector {
       return;
     }
     // top up to the kinds this level wants (never past the tier cap); bullies already out stay
-    const want = this.cfg.level.spawnByLevel[level].slice(0, this.ctx.quality.tier.maxBullies);
+    const want = wantedKinds(this.cfg.level, level, this.ctx.players.length > 1, this.ctx.quality.tier.maxBullies);
     for (const b of this.pool.list) {
       if (!b.active || b.state === S.GIVE_UP) continue;
       const i = want.indexOf(b.kind);
@@ -98,7 +111,15 @@ export class ChaseDirector {
     for (const kind of want) this.spawn(kind);
   }
 
-  // A bully appears at the nearest spawn point that is outside the camera view and runs for the player.
+  // A caught player has left play (Caught.js): the bully that got it gives up, the others keep chasing whoever is left.
+  // Nobody left in play, or no bully still after anyone: the chase is over.
+  playerCaught() {
+    if (this.ctx.alivePlayers().length === 0) { this.reset(); return; }
+    for (const b of this.pool.list) if (b.active && b.state === S.CAUGHT) this.fsm.enter(b, S.GIVE_UP);
+    if (this.lvl.level > 0 && !this.pool.list.some(b => b.active && b.state !== S.GIVE_UP)) this.lvl.clear('caught');
+  }
+
+  // A bully appears at the nearest spawn point that is outside the camera view and runs for the nearest player.
   spawn(kind) {
     const p = this.pickSpawn();
     if (!p) return null; // a map without bully spawns (an interior) has no chase
@@ -114,7 +135,12 @@ export class ChaseDirector {
 
   pickSpawn() {
     const cam = this.scene.cameras.main;
-    const need = Math.hypot(cam.width, cam.height) / cam.zoom / 2 + this.cfg.spawn.margin;
+    const margin = this.cfg.spawn.margin;
+    const need = Math.hypot(cam.width, cam.height) / cam.zoom / 2 + margin;
+    const hw = cam.width / cam.zoom / 2;
+    const hh = cam.height / cam.zoom / 2;
+    const cx = cam.scrollX + cam.width / 2; // the view around both players
+    const cy = cam.scrollY + cam.height / 2;
     const sep = this.cfg.spawn.minSeparation;
     let best = null;
     let bestD = Infinity;
@@ -123,7 +149,7 @@ export class ChaseDirector {
     for (const s of this.spawns) {
       const d = this.nearestDist(s.x, s.y);
       if (d > farD) { farD = d; far = s; }
-      if (d < need || d >= bestD || this.occupied(s, sep)) continue;
+      if (d < need || d >= bestD || !offView(s.x, s.y, cx, cy, hw, hh, margin) || this.occupied(s, sep)) continue;
       bestD = d;
       best = s;
     }
@@ -186,14 +212,18 @@ export class ChaseDirector {
     this.nav.update();
     const { particles, quality, events } = this.ctx;
     const c = this.cfg.bully;
+    const { players } = this.ctx;
+    const near = this.nearestBully;
+    near.fill(Infinity);
     let seen = false;
-    let nearest = Infinity;
+    let seenMask = 0; // players some bully sees
     for (const b of this.pool.list) {
       if (!b.active) continue;
       this.fsm.update(b, dt);
       b.step(dt);
-      if (b.state !== S.CAUGHT) nearest = Math.min(nearest, this.nearestDist(b.x, b.y));
+      if (b.state !== S.CAUGHT) for (let i = 0; i < players.length; i++) near[i] = Math.min(near[i], Math.hypot(players[i].x - b.x, players[i].y - b.y));
       if (b.sees) seen = true;
+      seenMask |= b.seenMask;
       if (b.state === S.CHASE) {
         b.steamIn -= dt;
         if (b.steamIn <= 0 && this.onScreen(b.x, b.y, 16)) {
@@ -214,7 +244,14 @@ export class ChaseDirector {
       } else if (d >= c.bumpRadius) b.bumped = false;
     }
     this.setSeen(seen);
-    const gone = this.escape.update(dt, this.lvl.level > 0, this.perception.hidden, seen, nearest);
+    const active = this.lvl.level > 0;
+    for (let i = 0; i < players.length; i++) {
+      const p = players[i];
+      this.alive[i] = p.alive !== false ? 1 : 0;
+      if (this.alive[i]) this.escapes[i].update(dt, active, this.perception.hiddenFor(p), (seenMask >> i & 1) === 1, near[i]);
+      else this.escapes[i].reset();
+    }
+    const gone = escapeVerdict(this.escapes, this.alive, players.length);
     if (gone) this.lvl.clear(gone);
     if (this.dbg) this.drawDebug();
   }

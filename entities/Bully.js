@@ -22,7 +22,8 @@ export class Bully {
     this.state = 'IDLE';
     this.t = 0;
     this.sees = false;
-    this.target = null; // the nearest visible player this frame
+    this.target = null; // the player it chases: the best visible one, kept while it stays reasonably close
+    this.seenMask = 0; // bit per player index this bully sees right now
     this.lost = 0;
     this.lastX = 0; this.lastY = 0; // last known player position
     this.targetX = 0; this.targetY = 0; // distraction / give-up destination
@@ -52,6 +53,7 @@ export class Bully {
     this.t = 0;
     this.sees = false;
     this.target = null;
+    this.seenMask = 0;
     this.lost = 0;
     this.steamIn = 0;
     this.pathLen = this.pathIdx = 0;

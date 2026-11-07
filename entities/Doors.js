@@ -54,7 +54,7 @@ export class Doors {
         const now = this.contains(d, players[i]);
         const entered = now && !d.inside[i];
         d.inside[i] = now ? 1 : 0;
-        if (now && ((entered && d.o.auto) || input.intents[i].interact)) {
+        if (now && !players[i].pinned && ((entered && d.o.auto) || input.intents[i].interact)) {
           events.emit('world:enter-request', { map: d.o.to, entry: d.o.entry, door: d.o.id, player: i });
           return;
         }

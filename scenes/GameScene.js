@@ -271,7 +271,7 @@ export class GameScene extends Phaser.Scene {
       this.ctx.particles.update(dt);
       return;
     }
-    for (const p of this.ctx.players) p.update(dt);
+    for (const p of this.ctx.players) if (p.pinned) p.hold(); else p.update(dt);
     for (const p of this.ctx.players) p.toolbelt.update(dt);
     this.ammo.update(dt);
     this.bikes.update(dt);

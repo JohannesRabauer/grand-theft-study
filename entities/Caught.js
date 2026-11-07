@@ -1,9 +1,11 @@
-// Getting caught (CAP-7), per player. On `bully:caught-contact` { player } the world freezes (ctx.frozen, set
-// through the scene) while UIScene shows the comic frame; that player loses a little money, the chase is
-// reset (director.reset: level 0, bullies back to the pool) and, after `seconds` or on that player's
-// interact / a fresh jump press, they are dismounted and put back at home. The world stays frozen until every
-// caught player is back. Emits `player:caught` { player, lost, money } (cents) and `player:respawn`
-// { player, x, y }; the loss is a `wallet.spend` on ctx.state (AD-16).
+// Getting caught (CAP-7), per player (AD-18). On `bully:caught-contact` { player } that player is pinned (Player.pinned:
+// it stands still, the co-op tether lets the other go on) and out of play (Player.alive = false: bullies and the crowd
+// ignore it) while UIScene shows the comic frame for it; it loses a little money from the shared wallet, once per catch
+// (a `wallet.spend` on ctx.state, AD-16), and ctx.chase.playerCaught() decides about the chase (the level resets only when no bully is
+// chasing any more). After `seconds` or on that player's interact / a fresh jump press it is dismounted and put back at home
+// (beside the spawn point in co-op, camera.json coop.spawnOffsets). The world freezes only while EVERY player is caught
+// (always, with one player); otherwise the other keeps playing. Emits `player:caught` { player, lost, money } (cents) and
+// `player:respawn` { player, x, y }.
 export class Caught {
   constructor(scene, ctx, cfg, bikes) {
     this.scene = scene;
@@ -28,8 +30,12 @@ export class Caught {
     this.count++;
     const lost = Math.min(ctx.state.shared.money, cfg.lossCents);
     if (lost > 0) ctx.state.dispatch('wallet.spend', { cents: lost, reason: 'caught' });
-    this.scene.freeze(true);
-    ctx.chase.reset();
+    const player = ctx.players[index];
+    player.pinned = true;
+    player.alive = false;
+    player.hold();
+    if (this.count >= ctx.players.length) this.scene.freeze(true);
+    ctx.chase.playerCaught();
     ctx.events.emit('player:caught', { player: index, lost, money: ctx.state.shared.money });
   }
 
@@ -50,12 +56,17 @@ export class Caught {
     const { ctx, scene } = this;
     const player = ctx.players[index];
     if (this.bikes.isMounted(index)) this.bikes.dismount(player); // the bike stays where the player was caught
-    const { x, y } = this.home;
+    const coop = ctx.players.length > 1;
+    const off = coop ? scene.zoomCfg.coop.spawnOffsets[index] : [0, 0];
+    const x = this.home.x + off[0];
+    const y = this.home.y + off[1];
     player.teleport(x, y);
-    if (index === 0) scene.cameras.main.centerOn(x, y);
+    if (!coop) scene.cameras.main.centerOn(x, y); // with two players the rig eases the view over
     ctx.particles.emit('dust', x, y, { count: 14 });
     this.slots[index].active = false;
-    if (--this.count === 0) scene.freeze(false);
+    player.pinned = false;
+    player.alive = true;
+    if (--this.count < ctx.players.length) scene.freeze(false);
     ctx.events.emit('player:respawn', { player: index, x, y });
   }
 }

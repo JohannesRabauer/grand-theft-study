@@ -2,7 +2,8 @@
 //  - hiding: hidden, unseen and no bully within `stumbleRadius` for `hideSeconds` -> 'hidden'
 //    (any sighting or a bully stumbling close resets the timer and the level stays);
 //  - distance: unseen and farther than `farDistance` from every bully for `farSeconds` -> 'escaped'.
-// `update` returns the reason once a timer completes, else null.
+// `update` returns the reason once a timer completes, else null. One instance per player (AD-18): the director
+// ends the chase only when every player in play is `done` (ai/chaseLogic.js escapeVerdict).
 export class Escape {
   constructor(cfg) {
     this.cfg = cfg;
@@ -11,6 +12,9 @@ export class Escape {
   }
 
   get progress() { return Math.min(1, this.hideT / this.cfg.hideSeconds); }
+
+  // The reason this player is safe right now, else null.
+  get done() { return this.hideT >= this.cfg.hideSeconds ? 'hidden' : this.farT >= this.cfg.farSeconds ? 'escaped' : null; }
 
   reset() { this.hideT = this.farT = 0; }
 

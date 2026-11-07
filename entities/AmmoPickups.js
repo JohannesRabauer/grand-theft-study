@@ -40,7 +40,7 @@ export class AmmoPickups {
         continue;
       }
       for (const player of players) {
-        if (Math.hypot(player.x - it.x, player.y - it.y) > r) continue;
+        if (player.pinned || Math.hypot(player.x - it.x, player.y - it.y) > r) continue;
         const sling = player.toolbelt.tools.find(t => t.id === 'slingshot');
         if (!sling || sling.ammo >= sling.max) continue; // stays on the ground while the magazine is full
         const amount = this.cfg.ammo[it.kind].amount;

@@ -17,7 +17,7 @@ export class ObjectiveArrow {
     this.msg = uiText(scene, sw / 2, 60, ctx.t('msg.arrived'), { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 })
       .setOrigin(0.5).setDepth(10).setVisible(false);
     this.onReached = (ev) => {
-      if (this.playerIndex !== null && ev.player !== this.playerIndex) return;
+      if ((this.playerIndex !== null && ev.player !== this.playerIndex) || this.done) return; // the shared arrow shows the arrival once
       this.done = true;
       this.arrow.setVisible(false);
       this.text.setVisible(false);

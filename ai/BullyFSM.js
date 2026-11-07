@@ -1,9 +1,11 @@
 // Bully state machine (AD-12): IDLE, CHASE, SEARCH, DISTRACTED, GIVE_UP, CAUGHT.
 // One stateless instance drives every bully; per-bully data lives on the Bully (state, t, lastX/Y).
 // Numbers come from data/chase.json `bully`. A bully's target is the visible player with the best targetScore
-// (nearest, but a player's bullyWeight makes it count as closer: Lena draws bullies more often) (`b.target`);
+// (nearest, but a player's bullyWeight makes it count as closer: Lena draws bullies more often) (`b.target`), with hysteresis
+// (data `coop.switchRatio`) so it sticks to its target; `b.seenMask` has a bit for every player it sees (not only the target);
 // CAUGHT only stops the bully (the director has already emitted `bully:caught-contact`).
 import { targetScore } from '../characters/attributes.js';
+import { pickTarget } from './chaseLogic.js';
 
 export const S = { IDLE: 'IDLE', CHASE: 'CHASE', SEARCH: 'SEARCH', DISTRACTED: 'DISTRACTED', GIVE_UP: 'GIVE_UP', CAUGHT: 'CAUGHT' };
 
@@ -11,6 +13,8 @@ export class BullyFSM {
   constructor(director) {
     this.d = director;
     this.cfg = director.cfg.bully;
+    this.switchRatio = director.cfg.coop.switchRatio;
+    this.scores = new Float64Array(director.ctx.maxPlayers);
   }
 
   enter(b, state) {
@@ -28,6 +32,7 @@ export class BullyFSM {
     const c = this.cfg;
     b.t += dt;
     const target = b.state !== S.CAUGHT && b.state !== S.GIVE_UP ? this.nearestVisible(b) : null;
+    if (!target) b.seenMask = 0;
     b.target = target;
     b.sees = target !== null;
     // A freshly spawned bully was called to where the player was; it does not give up on the way,
@@ -74,19 +79,21 @@ export class BullyFSM {
     }
   }
 
-  // The preferred player this bully can see right now (nearest by targetScore), or null.
+  // The preferred player this bully can see right now (best targetScore, sticking to the current target), or null.
   nearestVisible(b) {
     const chasing = b.state === S.CHASE;
     const players = this.d.ctx.alivePlayers();
-    let best = null;
-    let bestD = Infinity;
+    const { scores } = this;
+    scores.fill(Infinity);
+    b.seenMask = 0;
     for (let i = 0; i < players.length; i++) {
       const p = players[i];
       if (!this.d.perception.sees(b, p, chasing)) continue;
-      const d = targetScore((p.x - b.x) * (p.x - b.x) + (p.y - b.y) * (p.y - b.y), p.bullyWeight);
-      if (d < bestD) { bestD = d; best = p; }
+      b.seenMask |= 1 << p.index;
+      scores[p.index] = targetScore((p.x - b.x) * (p.x - b.x) + (p.y - b.y) * (p.y - b.y), p.bullyWeight);
     }
-    return best;
+    const pick = pickTarget(scores, scores.length, b.target ? b.target.index : -1, this.switchRatio);
+    return pick < 0 ? null : this.d.ctx.players[pick];
   }
 
   // A prop was hit at (x, y) (radius: how far it is heard, default distractRadius): bullies in range that are not watching the player go and look.

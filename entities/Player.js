@@ -62,6 +62,13 @@ export class Player {
     this.sprite.setPosition(x, y);
   }
 
+  // Held in place while pinned (a caught frame in a game where the other player goes on): no movement, no steering.
+  hold() {
+    this.matter.body.setVelocity(this.body, { x: 0, y: 0 });
+    this.move.speed = 0;
+    this.move.vel.x = this.move.vel.y = 0;
+  }
+
   get attrs() { return this.ctx.state.players[this.index]?.attributes ?? this.ctx.state.cfg.attributes; }
 
   get x() { return this.body.position.x; }

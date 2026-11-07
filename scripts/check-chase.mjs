@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { Pathfinder } from '../ai/Pathfinding.js';
 import { ChaseLevel } from '../ai/ChaseLevel.js';
 import { Escape } from '../ai/Escape.js';
+import { pickTarget, escapeVerdict, wantedKinds, offView } from '../ai/chaseLogic.js';
 
 const load = (p) => JSON.parse(readFileSync(new URL(`../data/${p}`, import.meta.url), 'utf8'));
 const map = load('maps/town.json');
@@ -143,5 +144,72 @@ step(1, e.farSeconds - 0.1, true, false, false, e.farDistance + 1);
 step(1, 0.1, true, false, false, e.farDistance - 1);
 assert.equal(es.farT, 0, 'a bully coming close resets the distance timer');
 assert.equal(step(1, 100, true, false, true, e.farDistance + 1), null, 'being seen blocks the distance cool-down');
+
+// ---- two players (AD-18): target choice with hysteresis, escape rule across players, spawn counts, off-screen spawns
+{
+  const sw = chase.coop.switchRatio;
+  assert.ok(sw > 0 && sw < 1, 'switchRatio is a share below 1');
+  const INF = Infinity;
+  assert.equal(pickTarget([INF, INF], 2, -1, sw), -1, 'nobody visible: no target');
+  assert.equal(pickTarget([400, INF], 2, -1, sw), 0, 'the only visible player is chosen');
+  assert.equal(pickTarget([900, 400], 2, -1, sw), 1, 'no current target: the nearest visible wins');
+  assert.equal(pickTarget([900, 400], 2, 0, sw), 1, 'a clearly nearer player takes over');
+  assert.equal(pickTarget([400, 380], 2, 0, sw), 0, 'hysteresis: a barely nearer player does not flip the target');
+  assert.equal(pickTarget([380, 400], 2, 1, sw), 1, 'and the other way round');
+  assert.equal(pickTarget([INF, 400], 2, 0, sw), 1, 'the current target out of sight: the visible one is taken');
+  // no flip-flopping while two players trade places by a few percent every frame
+  let cur = 0;
+  let flips = 0;
+  for (let f = 0; f < 600; f++) {
+    const wob = 1 + 0.15 * Math.sin(f / 7);
+    const next = pickTarget([400 * wob, 400 / wob], 2, cur, sw);
+    if (next !== cur) flips++;
+    cur = next;
+  }
+  assert.equal(flips, 0, 'similar distances never make the bully flip');
+  assert.equal(pickTarget([500], 1, 0, sw), 0, 'one player: unchanged');
+
+  // level cooling across players: every player in play has to be safe on its own timers
+  const eCfg = chase.escape;
+  const mkEsc = () => [new Escape(eCfg), new Escape(eCfg)];
+  const tick = (es, i, secs, hidden, seen, nearest) => es[i].update(secs, true, hidden, seen, nearest);
+  let es = mkEsc();
+  tick(es, 0, eCfg.hideSeconds + 0.1, true, false, 100);
+  tick(es, 1, eCfg.hideSeconds + 0.1, false, true, 100);
+  assert.equal(escapeVerdict(es, [1, 1], 2), null, 'one hides, the other is seen: the chase goes on');
+  tick(es, 1, eCfg.hideSeconds + 0.1, true, false, 100);
+  assert.equal(escapeVerdict(es, [1, 1], 2), 'hidden', 'both hidden long enough: the level may drop');
+  es = mkEsc();
+  tick(es, 0, eCfg.hideSeconds + 0.1, true, false, 100);
+  tick(es, 1, eCfg.farSeconds + 0.1, false, false, eCfg.farDistance + 1);
+  assert.equal(escapeVerdict(es, [1, 1], 2), 'escaped', 'one hidden, one far and unseen: both are safe');
+  assert.equal(escapeVerdict(es, [1, 0], 2), 'hidden', 'a caught player (not in play) does not count');
+  assert.equal(escapeVerdict(es, [0, 0], 2), null, 'nobody in play: no verdict');
+  tick(es, 0, 0.1, true, true, 100); // sighted again
+  assert.equal(escapeVerdict(es, [1, 1], 2), null, 'being seen again resets that player and keeps the chase');
+  assert.equal(escapeVerdict([new Escape(eCfg)], [1], 1), null, 'one player: nothing done yet');
+
+  // spawn counts: at most +1 bully in co-op, never past the tier cap, single player untouched
+  const L = chase.level;
+  assert.deepEqual(wantedKinds(L, 1, false, 3), ['foot'], 'one player level 1: as before');
+  assert.deepEqual(wantedKinds(L, 2, false, 3), ['foot', 'bike', 'foot'], 'one player level 2: as before');
+  assert.equal(wantedKinds(L, 1, true, 3).length, 2, 'co-op level 1: one extra bully');
+  for (const lv of [0, 1, 2]) {
+    const plus = (L.coopExtraByLevel[lv] ?? []).length;
+    assert.ok(plus <= 1, `level ${lv} adds at most one bully`);
+    for (const cap of [2, 3, 4]) {
+      assert.ok(wantedKinds(L, lv, true, cap).length <= cap, `co-op level ${lv} respects cap ${cap}`);
+      assert.ok(wantedKinds(L, lv, true, cap).length - wantedKinds(L, lv, false, cap).length <= 1, 'at most +1 over the single-player count');
+    }
+  }
+  assert.equal(wantedKinds(L, 2, true, 3).length, 3, 'capped at the Medium tier');
+  assert.equal(wantedKinds(L, 0, true, 3).length, 0, 'level 0 wants nobody');
+
+  // off-screen spawns are judged on the view that holds both players
+  assert.equal(offView(0, 0, 0, 0, 240, 135, 40), false, 'in the middle of the view');
+  assert.equal(offView(270, 0, 0, 0, 240, 135, 40), false, 'inside the margin');
+  assert.equal(offView(281, 0, 0, 0, 240, 135, 40), true, 'beyond the margin on x');
+  assert.equal(offView(0, 200, 0, 0, 240, 135, 40), true, 'beyond the margin on y');
+}
 
 console.log(`chase checks passed: path ${n} tiles, A* avg ${avg.toFixed(3)} ms, p99 ${worst.toFixed(3)} ms; level events ${log.length}`);

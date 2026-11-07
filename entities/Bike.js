@@ -44,6 +44,7 @@ export class Bikes {
   update(dt) {
     const { players, input } = this.ctx;
     for (const player of players) {
+      if (player.pinned) continue; // a caught player's presses belong to the caught frame
       const r = this.riders[player.index];
       const i = input.intents[player.index];
       if (i.interact) r.mounted ? this.dismount(player) : this.tryMount(player);

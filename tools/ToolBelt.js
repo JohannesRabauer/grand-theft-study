@@ -1,5 +1,7 @@
 import { Slingshot } from './Slingshot.js';
 
+const IDLE = { move: { x: 0, y: 0 }, aim: null, toolUse: false, toolNext: false, toolPrev: false };
+
 // One belt per player (player.toolbelt): holds the tools and cycles through them with that player's
 // toolNext / toolPrev intents; emits `tool:changed` { player, id }. Only the slingshot exists so far.
 export class ToolBelt {
@@ -23,7 +25,9 @@ export class ToolBelt {
   }
 
   update(dt) {
-    const i = this.ctx.input.intents[this.player.index];
+    // a pinned player (caught frame) drops the charge without firing; shots in flight finish
+    if (this.player.pinned) this.current.unequip();
+    const i = this.player.pinned ? IDLE : this.ctx.input.intents[this.player.index];
     if (i.toolNext) this.cycle(1);
     if (i.toolPrev) this.cycle(-1);
     // every tool updates so shots in flight finish after a switch

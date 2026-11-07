@@ -4,7 +4,8 @@
     "turfSecondsPerLevel": 8,
     "bumpCooldown": 1.5,
     "lockoutAfterClear": 5,
-    "spawnByLevel": [[], ["foot"], ["foot", "bike", "foot"]]
+    "spawnByLevel": [[], ["foot"], ["foot", "bike", "foot"]],
+    "coopExtraByLevel": [[], ["foot"], ["foot"]]
   },
   "kinds": {
     "foot": "bully-foot",
@@ -20,11 +21,16 @@
   "caught": {
     "lossCents": 100,
     "seconds": 2.5,
+    "coopScale": 0.5,
     "minSeconds": 0.8
   },
   "spawn": {
     "margin": 40,
     "minSeparation": 24
+  },
+  "coop": {
+    "_doc": "Two players share ONE Ärger level. Level rises from the turf or bumps of either player. It falls only when EVERY player in play is safe (escape: hidden hideSeconds, or far and unseen farSeconds, judged per player): one player hiding while the other is seen or close keeps the chase. A caught player leaves the chase (the catching bully goes GIVE_UP); the level clears once no bully is chasing any more. level.coopExtraByLevel adds at most one bully per level when two play, never past the quality maxBullies. switchRatio: a bully changes its target only when another visible player scores below this share of its current target's score (squared distance / weight^2), so it does not flip-flop.",
+    "switchRatio": 0.6
   },
   "bully": {
     "idleSeconds": 0.6,
