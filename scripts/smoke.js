@@ -4,6 +4,7 @@
 // getting caught and respawning, slingshot, weather, language, quality, pause, back to menu and a
 // second run. Every step asserts game state; console errors and exceptions fail the run.
 import { CAT } from '../physics/categories.js';
+import { TestScreen } from '../ui/screens/TestScreen.js';
 
 const FRAME = 1000 / 60;
 
@@ -39,6 +40,7 @@ export async function runSmoke(game, h) {
     const gs = game.scene.getScene('Game');
     const ui = game.scene.getScene('UI');
     const ctx = gs.ctx;
+    const hud = (id) => ui.hud.get(id);
     check('game and UI scenes running', game.scene.isActive('Game') && game.scene.isActive('UI') && !!ctx);
     ctx.input.update = () => {};
     const intent = ctx.input.intent;
@@ -86,7 +88,7 @@ export async function runSmoke(game, h) {
     check('rode to the school (goal:reached)', ride >= 0 && count('goal:reached') === 1, `${ride} frames, top ${topSpeed.toFixed(0)} px/s, at ${player.x.toFixed(0)},${player.y.toFixed(0)}`);
     check('no �rger on the road', ctx.chase.level === 0 && live('bullies') === 0);
     check('never inside a wall tile on the way', wallViolations === 0, `${wallViolations} frames`);
-    check('arrow shows arrival message', ui.arrow.done && ui.arrow.msg.visible);
+    check('arrow shows arrival message', hud('objective').arrow.done && hud('objective').arrow.msg.visible);
 
     // ---- skatepark turf: chase starts ----
     const turf = ctx.map.objects.find(o => o.type === 'turf' && o.id === 'skatepark');
@@ -100,7 +102,7 @@ export async function runSmoke(game, h) {
     check('bully count within the Medium cap', live('bullies') <= ctx.quality.tier.maxBullies);
     step(180);
     check('Medium never exceeds 3 bullies at level 2', live('bullies') <= 3 && ctx.chase.level <= 2, `level ${ctx.chase.level}, bullies ${live('bullies')}`);
-    check('HUD shows chase level', ui.angerBars && ctx.chase.level >= 1);
+    check('HUD shows chase level', hud('anger').bars && ctx.chase.level >= 1);
 
     // ---- hide and escape (teleport: bullies are far, the hedge is the hiding spot) ----
     const hedge = ctx.map.objects.find(o => o.type === 'hiding' && o.id === 'hedge-park');
@@ -117,12 +119,12 @@ export async function runSmoke(game, h) {
     h.teleport(gs, ctx, turf.x + 2, turf.y + 2);
     const caught = until(() => count('player:caught') >= 1, 4000, () => { intent.move.x = intent.move.y = 0; });
     check('caught by a bully', caught >= 0, `${caught} frames`);
-    check('world frozen, money -1, frame shown', ctx.frozen && ctx.state.shared.money === 400 && ui.caughtFrame.items.length > 0 && ui.caughtFrame.items[0].visible, `money ${ctx.state.shared.money}`);
+    check('world frozen, money -1, frame shown', ctx.frozen && ctx.state.shared.money === 400 && hud('caught').frame.items.length > 0 && hud('caught').frame.items[0].visible, `money ${ctx.state.shared.money}`);
     check('chase reset on catch', ctx.chase.level === 0 && live('bullies') === 0);
     const home = gs.caught.home;
     const resp = until(() => count('player:respawn') >= 1, 400);
     check('respawned at home on foot', resp >= 0 && Math.hypot(player.x - home.x, player.y - home.y) < 24 && !ctx.frozen && player.vehicle === 'foot' && !gs.bikes.mounted, `${resp} frames`);
-    check('caught frame hidden again', !ui.caughtFrame.items[0].visible);
+    check('caught frame hidden again', !hud('caught').frame.items[0].visible);
     step(30);
 
     // ---- pedestrians (AD-15) ----
@@ -177,13 +179,13 @@ export async function runSmoke(game, h) {
 
     // ---- day clock (no slot: freeplay) ----
     check('freeplay clock stands at its data time', ctx.day.mode === 'freeplay' && ctx.day.time === '07:45' && ctx.day.phase === 'commute', `${ctx.day.mode} ${ctx.day.time}`);
-    check('HUD shows the time and the phase', ui.clockTime.text === '07:45' && ui.clockPhase.text.includes(ctx.t('day.phase.commute')), `${ui.clockTime.text} / ${ui.clockPhase.text}`);
+    check('HUD shows the time and the phase', hud('clock').time.text === '07:45' && hud('clock').phase.text.includes(ctx.t('day.phase.commute')), `${hud('clock').time.text} / ${hud('clock').phase.text}`);
 
     // ---- language ----
-    const before = ui.stamina.text;
+    const before = hud('status').stamina.text;
     ctx.i18n.set(savedLang === 'de' ? 'en' : 'de');
     step(2);
-    check('language switch re-texts the HUD', ui.stamina.text === ctx.t('hud.stamina') && ui.stamina.text !== before, `${before} -> ${ui.stamina.text}`);
+    check('language switch re-texts the HUD', hud('status').stamina.text === ctx.t('hud.stamina') && hud('status').stamina.text !== before, `${before} -> ${hud('status').stamina.text}`);
     ctx.i18n.set(savedLang);
     step(2);
 
@@ -208,6 +210,31 @@ export async function runSmoke(game, h) {
     step(30);
     intent.move.x = 0;
     check('resumed', !gs.paused && player.x !== px, `paused ${gs.paused}, x ${px.toFixed(1)} -> ${player.x.toFixed(1)}, world ${gs.matter.world.enabled}, frozen ${ctx.frozen}`);
+
+    // ---- screen stack: pause via the intent, exclusive input, nested freezes ----
+    intent.pause = true;
+    step(1);
+    intent.pause = false;
+    check('pause intent opens the pause screen and freezes the world', ui.screens.top()?.id === 'pause' && gs.paused && ctx.frozen);
+    intent.pause = true;
+    step(1);
+    intent.pause = false;
+    check('pause intent closes it again', !ui.screens.top() && !ctx.frozen && !gs.paused);
+    const px0 = player.x;
+    const a = ui.screens.push(new TestScreen(ui, ctx, ui.screens, 'test'));
+    const b = ui.screens.push(new TestScreen(ui, ctx, ui.screens, 'test', 40));
+    intent.move.x = 1;
+    step(20);
+    check('test screens freeze the world and only the top one gets input', ctx.frozen && player.x === px0 && b.received === 20 && a.received === 0, `x ${player.x.toFixed(1)}, top ${b.received}, below ${a.received}`);
+    intent.move.x = 0;
+    intent.pause = true;
+    step(1);
+    intent.pause = false;
+    check('popping the top screen keeps the world frozen for the one below', ui.screens.top() === a && ctx.frozen);
+    intent.pause = true;
+    step(1);
+    intent.pause = false;
+    check('popping the last freezing screen restores the world', !ui.screens.top() && !ctx.frozen);
 
     // ---- crowd cleanup ----
     crowd.clear();

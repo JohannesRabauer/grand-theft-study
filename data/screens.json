@@ -1,0 +1,5 @@
+{
+  "pause": { "freezesWorld": true },
+  "test": { "freezesWorld": true },
+  "testHint": { "freezesWorld": false }
+}

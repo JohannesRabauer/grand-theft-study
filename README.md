@@ -66,6 +66,7 @@ node scripts/check-chase.mjs      # pathfinding, level rules, escape rules
 node scripts/check-crowd.mjs      # crowd spawn rules, caps, reaction geometry
 node scripts/check-state.mjs      # state store, actions, save slots, migrations
 node scripts/check-day.mjs        # day clock: phases, events, autosave, restore, weather schedule, tint
+node scripts/check-ui.mjs         # screen stack (top-only input, counted world freeze), HUD module list
 node scripts/bench-cdp.mjs --url http://localhost:8080          # CPU cost per update, all scenarios and tiers (headless Edge/Chrome)
 node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke  # scripted whole-game smoke test
 ```
@@ -174,7 +175,7 @@ ctx.state (`state/GameState.js`) owns everything that gets saved: a versioned tr
 | `services/` | `DayClock.js` + `dayTime.js` (day clock, AD-17); `quality.js`: active quality tier, render resolution class, persistence, `quality:changed`, `quality:restart` |
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |
 | `data/` | Tuning JSON, `maps/town.json` (ASCII grid, objects in tile coordinates) |
-| `ui/` | `input.js` (intent snapshot), HUD, `scaling.js` (integer scaling), `uiKit.js` (UI camera, crisp text) |
+| `ui/` | `input.js` (intent snapshot), `hud/` (HUD modules, listed per mode in `data/hud.json`, registered in `hud/index.js`), `ScreenStack.js` + `screens/` (overlays; `data/screens.json` says which freeze the world), `scaling.js` (integer scaling), `uiKit.js` (UI camera, crisp text) |
 | `scripts/` | `check-*.mjs` and `check-all.mjs`, `bench.js` / `smoke.js` (loaded by `?bench`), `bench-cdp.mjs` (headless runner) |
 | `docs/` | `PERFORMANCE.md`: benchmark results, optimizations, manual phone test |
 

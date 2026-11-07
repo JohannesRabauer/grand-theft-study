@@ -57,7 +57,8 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this, ctx, (spawn.x + 0.5) * ts, (spawn.y + 0.5) * ts, cache.get('vehicles'), 'foot');
     ctx.player = this.player;
     this.bikes = new Bikes(this, ctx);
-    ctx.frozen = false; // set during the caught frame: the world stands still, UIScene keeps running
+    ctx.frozen = false; // true while the caught frame or a freezing screen is up: the world stands still, UIScene keeps running
+    this.caughtFrozen = false;
     this.zones = new Zones(this, ctx);
     ctx.zones = this.zones;
     const wcfg = cache.get('weather');
@@ -97,7 +98,7 @@ export class GameScene extends Phaser.Scene {
     this.followCamera(1);
     this.crowd = new CrowdDirector(this, ctx, cache.get('npcs')); // after the camera: it prefills the view
 
-    // UIScene asks for pause / quit through events; the world is only changed here.
+    // UIScene asks for pause (a freezing screen is open) / quit through events; the world is only changed here.
     this.paused = false;
     this.physAcc = 0;
     events.on('game:pause', () => this.setPaused(true));
@@ -208,12 +209,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   freeze(on) {
-    this.ctx.frozen = on;
+    this.caughtFrozen = on;
     this.syncWorld();
   }
 
   syncWorld() {
-    if (this.paused || this.ctx.frozen) this.matter.world.pause(); else this.matter.world.resume();
+    this.ctx.frozen = this.paused || this.caughtFrozen;
+    if (this.ctx.frozen) this.matter.world.pause(); else this.matter.world.resume();
   }
 
   // Fixed-step Matter without the library runner (its frame-delta smoothing sorted and sliced a
@@ -231,7 +233,6 @@ export class GameScene extends Phaser.Scene {
   update(time, delta) {
     const dt = Math.min(delta, 50) / 1000;
     this.ctx.input.update();
-    if (this.ctx.input.intent.pause) this.ctx.events.emit('ui:pause-toggle');
     if (this.paused) return;
     this.stepPhysics(delta);
     if (this.ctx.input.intent.weather) this.ctx.weather.toggle();

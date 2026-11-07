@@ -27,7 +27,13 @@ export class ObjectiveArrow {
       scene.time.delayedCall(4000, () => this.msg.setVisible(false));
     };
     ctx.events.on('goal:reached', this.onReached);
-    scene.events.once('shutdown', () => ctx.events.off('goal:reached', this.onReached));
+  }
+
+  destroy() {
+    this.ctx.events.off('goal:reached', this.onReached);
+    this.arrow.destroy();
+    this.text.destroy();
+    this.msg.destroy();
   }
 
   update() {

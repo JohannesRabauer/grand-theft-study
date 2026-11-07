@@ -28,7 +28,8 @@ export class ButtonMenu {
     });
     this.onKey = e => this.key(e.code);
     scene.input.keyboard.on('keydown', this.onKey);
-    scene.events.once('shutdown', () => scene.input.keyboard.off('keydown', this.onKey));
+    this.onShutdown = () => scene.input.keyboard.off('keydown', this.onKey);
+    scene.events.once('shutdown', this.onShutdown);
     this.refresh();
   }
 
@@ -39,6 +40,7 @@ export class ButtonMenu {
   destroy() {
     this.active = false;
     this.scene.input.keyboard.off('keydown', this.onKey);
+    this.scene.events.off('shutdown', this.onShutdown);
     for (const o of this.objects) o.destroy();
   }
 

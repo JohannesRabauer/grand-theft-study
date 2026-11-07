@@ -17,14 +17,17 @@ export class CaughtFrame {
     this.ctx = ctx;
     this.items = [];
     this.built = false;
-    const onCaught = (ev) => this.show(ev);
-    const onRespawn = () => this.hide();
-    ctx.events.on('player:caught', onCaught);
-    ctx.events.on('player:respawn', onRespawn);
-    scene.events.once('shutdown', () => {
-      ctx.events.off('player:caught', onCaught);
-      ctx.events.off('player:respawn', onRespawn);
-    });
+    this.onCaught = (ev) => this.show(ev);
+    this.onRespawn = () => this.hide();
+    ctx.events.on('player:caught', this.onCaught);
+    ctx.events.on('player:respawn', this.onRespawn);
+  }
+
+  destroy() {
+    this.ctx.events.off('player:caught', this.onCaught);
+    this.ctx.events.off('player:respawn', this.onRespawn);
+    for (const o of this.items) o.destroy();
+    this.items.length = 0;
   }
 
   // Created on first use, then reused (only texts change between showings).

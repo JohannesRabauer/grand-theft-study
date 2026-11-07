@@ -23,7 +23,13 @@ export class TouchControls {
     this.buttons = cfg.buttons.map(b => ({ ...b, pointer: null, gfx: drawButton(scene, b) }));
     this.group = [this.joyBase, this.joyKnob, ...this.buttons.map(b => b.gfx)];
     this.shown = true;
-    scene.input.on('pointerdown', p => this.onDown(p));
+    this.onPointerDown = p => this.onDown(p);
+    scene.input.on('pointerdown', this.onPointerDown);
+  }
+
+  destroy() {
+    this.scene.input.off('pointerdown', this.onPointerDown);
+    for (const g of this.group) g.destroy();
   }
 
   onDown(p) {
