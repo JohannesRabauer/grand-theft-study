@@ -1,5 +1,5 @@
 {
-  "_doc": "Bindings per player (AD-18); keys are KeyboardEvent.code values. P1 (global: true) is the only player whose map/weather/pause raise the global intents. Gamepads: the first pad drives P2 when two or more players are active, otherwise P1; the second pad drives P1. Touch controls always drive P1. `manual` (hold: skateboard balance) is C or Left Ctrl for P1, / for P2, LT on a pad, and a touch button that only shows while the active vehicle has tricks (`when`). `jump` is the ollie on a skateboard. aim: mouse = cursor, touch drag or right stick; stick = right stick only, otherwise the shot goes the way the player last moved. With one player, the soloShare actions of the other bindings are merged into P1 (arrow keys and Right Shift also steer).",
+  "_doc": "Bindings per player (AD-18); keys are KeyboardEvent.code values. P1 (global: true) is the only player whose map/weather/pause raise the global intents. Gamepads: the first pad drives P2 when two or more players are active, otherwise P1; the second pad drives P1. Touch controls always drive P1. `manual` (hold: skateboard balance) is C or Left Ctrl for P1, / for P2, LT on a pad, and a touch button that only shows while the active vehicle has tricks (`when`). `jump` is the ollie on a skateboard. `defend` (hold: block; press while walking: dodge roll) and `kiai` (press) are the karate moves (story 6.3): R and V for P1, ; and ' for P2, X and a right-stick click on a pad (X no longer fires the tool; RT does), two small touch buttons (shield, burst) that drive P1. aim: mouse = cursor, touch drag or right stick; stick = right stick only, otherwise the shot goes the way the player last moved. With one player, the soloShare actions of the other bindings are merged into P1 (arrow keys and Right Shift also steer).",
   "deadzone": 0.2,
   "aimReach": 80,
   "aimDragMin": 8,
@@ -55,6 +55,12 @@
           "KeyE"
         ],
         "toolUse": [],
+        "defend": [
+          "KeyR"
+        ],
+        "kiai": [
+          "KeyV"
+        ],
         "map": [
           "KeyM"
         ],
@@ -116,6 +122,12 @@
         "toolUse": [
           "Numpad0"
         ],
+        "defend": [
+          "Semicolon"
+        ],
+        "kiai": [
+          "Quote"
+        ],
         "map": [],
         "weather": [],
         "pause": [],
@@ -148,6 +160,20 @@
       "x": 378,
       "y": 236,
       "r": 22
+    },
+    {
+      "id": "defend",
+      "icon": "shield",
+      "x": 392,
+      "y": 120,
+      "r": 17
+    },
+    {
+      "id": "kiai",
+      "icon": "kiai",
+      "x": 340,
+      "y": 176,
+      "r": 17
     },
     {
       "id": "manual",

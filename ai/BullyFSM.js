@@ -1,4 +1,5 @@
-// Bully state machine (AD-12): IDLE, CHASE, SEARCH, DISTRACTED, GIVE_UP, CAUGHT.
+// Bully state machine (AD-12): IDLE, CHASE, SEARCH, DISTRACTED, GIVE_UP, CAUGHT, and STUMBLE (story 6.3, AD-24: a comic scripted step back
+// after a block or a Kiai, no force and no damage; afterwards the bully goes on in `b.resume`).
 // One stateless instance drives every bully; per-bully data lives on the Bully (state, t, lastX/Y).
 // Numbers come from data/chase.json `bully`. A bully's target is the visible player with the best targetScore
 // (nearest, but a player's bullyWeight makes it count as closer: Lena draws bullies more often) (`b.target`), with hysteresis
@@ -7,7 +8,7 @@
 import { targetScore } from '../characters/attributes.js';
 import { pickTarget } from './chaseLogic.js';
 
-export const S = { IDLE: 'IDLE', CHASE: 'CHASE', SEARCH: 'SEARCH', DISTRACTED: 'DISTRACTED', GIVE_UP: 'GIVE_UP', CAUGHT: 'CAUGHT' };
+export const S = { IDLE: 'IDLE', CHASE: 'CHASE', SEARCH: 'SEARCH', DISTRACTED: 'DISTRACTED', GIVE_UP: 'GIVE_UP', CAUGHT: 'CAUGHT', STUMBLE: 'STUMBLE' };
 
 export class BullyFSM {
   constructor(director) {
@@ -74,9 +75,25 @@ export class BullyFSM {
         b.goTo(b.targetX, b.targetY);
         if ((b.t >= c.giveUpMinSeconds && !this.d.onScreen(b.x, b.y, c.despawnMargin)) || b.t >= c.giveUpMaxSeconds) this.d.despawn(b, 'gave-up');
         break;
+      case S.STUMBLE:
+        b.stop();
+        b.stumbleStep(dt);
+        if (b.t >= b.stumbleDuration) this.enter(b, b.resume);
+        break;
       default: // CAUGHT
         b.stop();
     }
+  }
+
+  // Send a bully stumbling away from (fromX, fromY): `o` = { duration, step, distance }. It picks up its old business afterwards
+  // (a bully that had just spawned starts chasing). A stumble in progress restarts but keeps what comes after it.
+  stumble(b, fromX, fromY, o) {
+    if (b.state === S.CAUGHT || b.state === S.GIVE_UP) return false;
+    const resume = b.state === S.STUMBLE ? b.resume : b.state === S.IDLE ? S.CHASE : b.state;
+    this.enter(b, S.STUMBLE);
+    b.resume = resume;
+    b.beginStumble(fromX, fromY, o);
+    return true;
   }
 
   // The preferred player this bully can see right now (best targetScore, sticking to the current target), or null.
@@ -99,7 +116,7 @@ export class BullyFSM {
   // A prop was hit at (x, y) (radius: how far it is heard, default distractRadius): bullies in range that are not watching the player go and look.
   distract(b, x, y, radius) {
     const c = this.cfg;
-    if (b.state === S.CAUGHT || b.state === S.GIVE_UP) return false;
+    if (b.state === S.CAUGHT || b.state === S.GIVE_UP || b.state === S.STUMBLE) return false;
     if (b.sees && !c.distractWhileSeen) return false;
     if (Math.hypot(x - b.x, y - b.y) > (radius ?? c.distractRadius)) return false;
     b.targetX = x;

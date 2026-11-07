@@ -1,23 +1,23 @@
 // Pure mapping from device state to one player's intent snapshot (AD-10, AD-18). No Phaser: ui/input.js reads
 // the devices and hands this module plain data, scripts/check-input.mjs drives it with fake devices.
 //
-// Level intents (held): move, aim, sprint, jump, manual, toolUse, hold (the interact button's level: hang on to a bus). `jump` is the ollie on a skateboard (the bell on a bike),
+// Level intents (held): move, aim, sprint, jump, manual, toolUse, defend (karate: hold to block, press while walking to dodge), hold (the interact button's level: hang on to a bus). `jump` is the ollie on a skateboard (the bell on a bike),
 // `manual` holds the skateboard manual balance (vehicles/skateLogic.js).
-// Edge intents (true for exactly one frame per press): interact, toolNext, toolPrev, map, weather, pause.
+// Edge intents (true for exactly one frame per press): interact, toolNext, toolPrev, kiai (karate shout), map, weather, pause.
 // Of those, map / weather / pause are global: only a player bound with `global: true` (P1) can raise them.
 // `answer` (0 = none, 1-4) is the number key pressed this frame, for minigame answer choices.
-export const EDGES = ['interact', 'toolNext', 'toolPrev', 'map', 'weather', 'pause'];
-// Standard gamepad mapping: A, B, X, Y, LB, RB, LT, RT, Back, Start, d-pad.
-export const PAD = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
+export const EDGES = ['interact', 'toolNext', 'toolPrev', 'kiai', 'map', 'weather', 'pause'];
+// Standard gamepad mapping: A, B, X, Y, LB, RB, LT, RT, Back, Start, stick clicks, d-pad.
+export const PAD = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, LSTICK: 10, RSTICK: 11, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
 export const ANSWER_KEYS = ['answer1', 'answer2', 'answer3', 'answer4'];
-export const ACTIONS = ['left', 'right', 'up', 'down', 'sprint', 'jump', 'manual', 'interact', 'toolPrev', 'toolNext', 'toolUse', 'map', 'weather', 'pause', ...ANSWER_KEYS];
+export const ACTIONS = ['left', 'right', 'up', 'down', 'sprint', 'jump', 'manual', 'interact', 'toolPrev', 'toolNext', 'toolUse', 'defend', 'kiai', 'map', 'weather', 'pause', ...ANSWER_KEYS];
 
 export function createTouchState() {
   return {
     move: { x: 0, y: 0 },
     aimDir: { x: 0, y: 0 },
     aiming: false,
-    btn: { jump: false, manual: false, toolUse: false, sprint: false, interact: false, toolNext: false, pause: false }
+    btn: { jump: false, manual: false, toolUse: false, defend: false, kiai: false, sprint: false, interact: false, toolNext: false, pause: false }
   };
 }
 
@@ -33,6 +33,8 @@ export function createIntent() {
     hold: false,
     interact: false,
     toolUse: false,
+    defend: false,
+    kiai: false,
     toolNext: false,
     toolPrev: false,
     map: false,
@@ -124,12 +126,14 @@ export function mapIntent(intent, slot, bind, src, dz) {
   intent.sprint = k('sprint') || btn.sprint || pb(PAD.B);
   intent.jump = k('jump') || btn.jump || pb(PAD.A);
   intent.manual = k('manual') || btn.manual || pb(PAD.LT);
-  intent.toolUse = src.mouseDown || k('toolUse') || btn.toolUse || pb(PAD.X) || pb(PAD.RT);
+  intent.toolUse = src.mouseDown || k('toolUse') || btn.toolUse || pb(PAD.RT);
+  intent.defend = k('defend') || btn.defend || pb(PAD.X);
 
   intent.hold = k('interact') || btn.interact || pb(PAD.Y);
   edge(intent, slot, 'interact', intent.hold);
   edge(intent, slot, 'toolNext', k('toolNext') || btn.toolNext || pb(PAD.RB));
   edge(intent, slot, 'toolPrev', k('toolPrev') || pb(PAD.LB));
+  edge(intent, slot, 'kiai', k('kiai') || btn.kiai || pb(PAD.RSTICK));
   const g = bind.global;
   edge(intent, slot, 'map', g && (k('map') || pb(PAD.BACK)));
   edge(intent, slot, 'weather', g && k('weather'));
@@ -148,7 +152,7 @@ export function clearIntent(intent, slot) {
   intent.move.x = 0;
   intent.move.y = 0;
   intent.aim = null;
-  intent.sprint = intent.jump = intent.manual = intent.toolUse = intent.hold = false;
+  intent.sprint = intent.jump = intent.manual = intent.toolUse = intent.defend = intent.hold = false;
   intent.answer = 0;
   for (const e of EDGES) {
     intent[e] = false;

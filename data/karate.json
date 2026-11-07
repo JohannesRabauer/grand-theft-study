@@ -1,0 +1,53 @@
+{
+  "_doc": "Karate defense (story 6.3, AD-24, CAP-19). Non-violent: block, dodge and Kiai stance; bullies only stumble back, nothing is hurt. `belts` is the stat table per belt id (the player's belt is state.players[i].karate.belt; the white belt is the baseline, later belts add rows): kiaiRadius (px), kiaiCooldown (s), blockWindow (s a block can be held before the guard drops), dodgeDistance (px), dodgeCooldown (s), stumbleDuration (s a stumbling bully is out), aergerReduction (Aerger levels a Kiai that stumbled a bully takes off, only while the level is within chase.json level.defendMaxLevel). Mut (courage) is the 0..1 pool every move spends: blockCost per absorbed contact (a parry is free), blockDrain per second of holding, dodgeCost, kiaiCost; it refills at `regen` per second after `regenDelay`. Timings: parryWindow = a contact in the first seconds of a block is a parry (+parryXp), dodgeTime / dodgeGrace = roll length and extra invulnerable time, kiaiTime = shout stance, recover* = the pause after a move (a dropped guard is slower). moveMult scales walking speed per state. Stumble: `step` is how long the scripted step backwards lasts (the rest of stumbleDuration the bully is dizzy), `kiaiDistance` / `bounceDistance` how far, `bounceScale` shortens the block bounce; wobbleHz / wobbleRad the sway. Bubbles: how many speech bubbles the module may show at once.",
+  "defaultBelt": "white",
+  "belts": [
+    {
+      "id": "white",
+      "kiaiRadius": 72,
+      "kiaiCooldown": 6,
+      "blockWindow": 1.4,
+      "dodgeDistance": 46,
+      "dodgeCooldown": 1.2,
+      "stumbleDuration": 1.6,
+      "aergerReduction": 1
+    }
+  ],
+  "mut": {
+    "regen": 0.16,
+    "regenDelay": 0.9,
+    "blockCost": 0.22,
+    "blockDrain": 0.08,
+    "blockStartMin": 0.1,
+    "dodgeCost": 0.18,
+    "kiaiCost": 0.35
+  },
+  "timing": {
+    "parryWindow": 0.15,
+    "parryXp": 2,
+    "dodgeTime": 0.28,
+    "dodgeGrace": 0.12,
+    "dodgeMinMove": 0.3,
+    "kiaiTime": 0.5,
+    "recoverTime": 0.18,
+    "guardDownRecover": 0.5
+  },
+  "moveMult": { "IDLE": 1, "BLOCK": 0.35, "DODGE": 0, "KIAI": 0, "RECOVER": 0.7 },
+  "stumble": {
+    "step": 0.5,
+    "kiaiDistance": 40,
+    "bounceDistance": 24,
+    "bounceScale": 0.6,
+    "wobbleHz": 7,
+    "wobbleRad": 0.22,
+    "starInterval": 0.18
+  },
+  "fx": {
+    "ringSeconds": 0.55,
+    "shoutSeconds": 0.8,
+    "bubbleSeconds": 1.3,
+    "maxBubbles": 8,
+    "dodgeSpin": 2
+  },
+  "hint": { "flag": "defenseHint" }
+}

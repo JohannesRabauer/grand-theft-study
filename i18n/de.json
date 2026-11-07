@@ -412,5 +412,17 @@
   "stick.bushNothing": "Nur Blätter und ein sehr verwirrter Käfer.",
   "stick.pinataBurst": "Die Piñata platzt! Bonbons für alle, Digga!",
   "loot.sticker": "Ein Sticker! Der kommt ins Album.",
-  "loot.homework": "Das verlorene Hausaufgabenheft! Ab zur Lehrerin damit."
+  "loot.homework": "Das verlorene Hausaufgabenheft! Ab zur Lehrerin damit.",
+  "hud.courage": "Mut",
+  "defense.kiaiShout": "KIAI!",
+  "defense.gasp": "Oha!",
+  "defense.block": "Nicht mit mir!",
+  "defense.parry": "Volle Parade!",
+  "defense.bully.block": "Hmpf!",
+  "defense.bullyKiai.1": "Autsch... äh, uff!",
+  "defense.bullyKiai.2": "Huch?! Wer war das?",
+  "defense.bullyKiai.3": "Ich wollte eh gerade gehen!",
+  "toast.defenseHint": "Tipp: Mit R blocken, mit V das Kiai!",
+  "toast.defenseHintTouch": "Tipp: Der Schild-Knopf blockt, der Kiai-Knopf brüllt los!",
+  "toast.defenseHintPad": "Tipp: X blockt, Klick auf den rechten Stick macht das Kiai!"
 }

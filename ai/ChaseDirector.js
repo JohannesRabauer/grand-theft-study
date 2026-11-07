@@ -18,7 +18,7 @@ import { Perception } from './Perception.js';
 import { BullyFSM, S } from './BullyFSM.js';
 import { BullyPool } from '../entities/Bully.js';
 
-const STATE_COLORS = { IDLE: 0xaaaaaa, CHASE: 0xff4d4d, SEARCH: 0xffc24d, DISTRACTED: 0x4dd2ff, GIVE_UP: 0x9a9a9a, CAUGHT: 0xff4dff };
+const STATE_COLORS = { IDLE: 0xaaaaaa, CHASE: 0xff4d4d, SEARCH: 0xffc24d, DISTRACTED: 0x4dd2ff, GIVE_UP: 0x9a9a9a, CAUGHT: 0xff4dff, STUMBLE: 0xffe14d };
 
 export class ChaseDirector {
   constructor(scene, ctx, cfg, profiles) {
@@ -87,6 +87,16 @@ export class ChaseDirector {
 
   cool(seconds) { this.lvl.cool(seconds); }
 
+  // Story 6.3: the defense module lowers the level. `reason` is for the log only. Returns whether the level changed.
+  defend(reason, amount) { return this.lvl.defend(amount, this.cfg.level.defendMaxLevel); }
+
+  // Story 6.3: a bully stumbles away from (x, y) (see BullyFSM.stumble); emits `bully:stumble` { bully (pool id), x, y, reason }.
+  stumble(b, x, y, o, reason) {
+    if (!this.fsm.stumble(b, x, y, o)) return false;
+    this.ctx.events.emit('bully:stumble', { bully: b.id, x: b.x, y: b.y, reason });
+    return true;
+  }
+
   reset() {
     for (const b of this.pool.list) this.pool.release(b);
     this.lvl.clear('reset');
@@ -98,7 +108,11 @@ export class ChaseDirector {
   onLevel(level, reason) {
     this.ctx.events.emit('chase:level', { level, reason });
     if (level === 0) {
-      for (const b of this.pool.list) if (b.active && b.state !== S.CAUGHT) this.fsm.enter(b, S.GIVE_UP);
+      for (const b of this.pool.list) {
+        if (!b.active || b.state === S.CAUGHT) continue;
+        if (b.state === S.STUMBLE) b.resume = S.GIVE_UP; // finish the comic step first, then walk off
+        else this.fsm.enter(b, S.GIVE_UP);
+      }
       return;
     }
     // top up to the kinds this level wants (never past the tier cap); bullies already out stay
@@ -210,7 +224,8 @@ export class ChaseDirector {
   update(dt) {
     this.lvl.update(dt);
     this.nav.update();
-    const { particles, quality, events } = this.ctx;
+    const { ctx } = this;
+    const { particles, quality, events } = ctx;
     const c = this.cfg.bully;
     const { players } = this.ctx;
     const near = this.nearestBully;
@@ -231,11 +246,12 @@ export class ChaseDirector {
           particles.emit('anger', b.x, b.y - c.steamOffsetY);
         }
       }
-      if (b.state === S.CAUGHT) continue;
+      if (b.state === S.CAUGHT || b.state === S.STUMBLE) continue;
       const player = this.contactPlayer(b);
       if (!player) continue; // a hidden player is not noticed or bumped
       const d = Math.hypot(player.x - b.x, player.y - b.y);
       if (d < c.catchRadius && b.state !== S.GIVE_UP) {
+        if (ctx.defense?.contact(player.index, b)) continue; // blocked, parried or dodged: no catch
         this.fsm.enter(b, S.CAUGHT);
         events.emit('bully:caught-contact', { bully: b, player: player.index });
       } else if (d < c.bumpRadius && b.state !== S.CHASE) {

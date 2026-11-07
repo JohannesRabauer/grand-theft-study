@@ -50,7 +50,7 @@ const TOP = {
   headphones(p) { p.px(DARK, 16, 7, 1, 10); p.px(DARK, 15, 5, 4, 3); p.px(DARK, 15, 16, 4, 3); }
 };
 
-function look(c) {
+export function look(c) {
   const o = c.palette;
   return {
     ...o,
@@ -67,7 +67,7 @@ function ride(c) {
 const BOARD = { frame: '#e8a33a', frameDark: '#a8701c' };
 const POSES = ['', '-crouch', '-manual'];
 const SKATE_POSES = ['', '-pushA', '-pushB', '-crouch', '-grab'];
-const DEFAULT_KID = { jacket: '#e0483c', jacketDark: '#b2352c', jacketLight: '#f06a5c', pants: '#2a3f8f', hair: '#5a3a1e', hairLight: '#7a5230' };
+export const DEFAULT_KID = { jacket: '#e0483c', jacketDark: '#b2352c', jacketLight: '#f06a5c', pants: '#2a3f8f', hair: '#5a3a1e', hairLight: '#7a5230' };
 
 export function makeCharacterArt(scene, cfg, scale) {
   const f = scale / 2;

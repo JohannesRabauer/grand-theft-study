@@ -28,6 +28,7 @@ import { Flags } from '../entities/Flag.js';
 import { Park } from '../entities/Park.js';
 import { ChaseDirector } from '../ai/ChaseDirector.js';
 import { Caught } from '../entities/Caught.js';
+import { DefenseController } from '../defense/DefenseController.js';
 import { ToolBelt } from '../tools/ToolBelt.js';
 import { AmmoPickups } from '../entities/AmmoPickups.js';
 import { LootDrops } from '../entities/LootDrops.js';
@@ -131,6 +132,7 @@ export class GameScene extends Phaser.Scene {
     this.flags = new Flags(this, ctx, wcfg.flag);
     this.park = new Park(this, ctx, cache.get('park')); // story 5.4: skatepark art and hint signs
     this.chase = new ChaseDirector(this, ctx, cache.get('chase'), cache.get('vehicles'));
+    this.defense = new DefenseController(this, ctx, cache.get('karate')); // story 6.3: block, dodge, Kiai; the chase director asks it before a catch
     this.garage = new Garage(this, ctx);
     this.caught = new Caught(this, ctx, cache.get('chase').caught, [this.bikes, this.skateboards, this.skates]);
     this.theft = new BikeTheft(this, ctx, cache.get('theft'), this.bikes, this.parking, cache.get('vehicles')); // needs the chase director's spawns and paths
@@ -321,6 +323,7 @@ export class GameScene extends Phaser.Scene {
     }
     for (const p of this.ctx.players) if (p.pinned) p.hold(); else p.update(dt);
     for (const p of this.ctx.players) p.toolbelt.update(dt);
+    this.defense.update(dt);
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.grabs.update(dt);

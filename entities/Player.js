@@ -85,6 +85,9 @@ export class Player {
     this.move.vel.x = this.move.vel.y = 0;
   }
 
+  // This player's karate defense slot (ctx.defense, defense/DefenseController.js).
+  get defense() { return this.ctx.defense.forPlayer(this.index); }
+
   // This player's trick state and Style combo (ctx.tricks, vehicles/TrickSystem.js).
   get tricks() { return this.ctx.tricks.forPlayer(this.index); }
 

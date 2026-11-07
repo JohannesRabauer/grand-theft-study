@@ -1,5 +1,6 @@
 import { addCircle } from '../physics/bodies.js';
 import { MovementController } from '../vehicles/MovementController.js';
+import { stumbleDelta, stumbleWobble } from '../defense/defenseCore.js';
 
 // A bully: sprite + BULLY body + MovementController, steered along cached A* paths (or straight
 // when the way is clear). Kind (foot or bike) is only a movement profile from data/vehicles.json
@@ -33,6 +34,17 @@ export class Bully {
     this.goalX = 0; this.goalY = 0; this.goalTile = -1; this.sinceRepath = 0;
     this.bumped = false;
     this.alerted = false;
+    this.id = -1; // index in the pool (events name bullies by it)
+    this.resume = 'CHASE'; // what it does after a stumble (ai/BullyFSM.js)
+    this.stumbleDuration = 0;
+    this.stumbleStepT = 1;
+    this.stumbleDist = 0;
+    this.wobbleHz = 0; this.wobbleRad = 0;
+    this.stumbleX = 0; this.stumbleY = 0; // unit vector away from whatever sent it stumbling
+    this.swayed = false;
+    this.starIn = 0; // next dizzy star while stumbling (defense/DefenseController.js)
+    this.wobble = 0; // sprite sway while stumbling (radians)
+    this.pos = { x: 0, y: 0 };
   }
 
   get x() { return this.body.position.x; }
@@ -50,6 +62,7 @@ export class Bully {
     this.scene.matter.body.setVelocity(this.body, { x: 0, y: 0 });
     this.scene.matter.world.add(this.body);
     this.active = true;
+    this.swayed = false;
     this.t = 0;
     this.sees = false;
     this.target = null;
@@ -78,6 +91,41 @@ export class Bully {
   }
 
   stop() { this.mx = this.my = 0; }
+
+  // Story 6.3: a stumble is a scripted step back along the line away from (fromX, fromY), applied as plain position changes
+  // (never a force, so nothing else is pushed), checked against walls. `o` = { duration, step (seconds), distance (px), wobbleHz, wobbleRad }.
+  beginStumble(fromX, fromY, o) {
+    const dx = this.x - fromX;
+    const dy = this.y - fromY;
+    const l = Math.hypot(dx, dy) || 1;
+    this.stumbleX = dx ? dx / l : 1;
+    this.stumbleY = dx ? dy / l : 0;
+    this.stumbleDuration = o.duration;
+    this.stumbleStepT = o.step;
+    this.stumbleDist = o.distance;
+    this.wobbleHz = o.wobbleHz;
+    this.wobbleRad = o.wobbleRad;
+    this.stop();
+    this.move.speed = 0;
+    this.move.vel.x = this.move.vel.y = 0;
+    this.pos.x = this.pos.y = 0;
+    this.scene.matter.body.setVelocity(this.body, this.pos); // standing still: it is only ever moved by the scripted step
+  }
+
+  // One frame of the stumble (called with `t` already advanced by dt).
+  stumbleStep(dt) {
+    const d = stumbleDelta(Math.max(0, this.t - dt), dt, this.stumbleStepT, this.stumbleDist);
+    if (d > 0) {
+      const nx = this.x + this.stumbleX * d;
+      const ny = this.y + this.stumbleY * d;
+      if (this.chase.nav.clearFor(this.x, this.y, nx, ny, this.body.circleRadius)) {
+        this.pos.x = nx;
+        this.pos.y = ny;
+        this.scene.matter.body.setPosition(this.body, this.pos);
+      }
+    }
+    this.wobble = stumbleWobble(this.t, this.stumbleDuration, this.wobbleHz, this.wobbleRad);
+  }
 
   // Steer toward (x, y): straight when the way is clear, otherwise along the cached path, asking
   // for a fresh one every `repathInterval` or when the goal moved to another tile.
@@ -146,11 +194,17 @@ export class Bully {
     this.mx = this.my = 0;
     const s = this.sprite;
     s.setPosition(this.x, this.y).setDepth(this.y);
-    if (m.profile.faceHeading) {
+    if (this.state === 'STUMBLE') {
+      s.setRotation(this.wobble);
+      this.swayed = true;
+    } else if (m.profile.faceHeading) {
       const h = m.heading;
       const west = Math.cos(h) < 0;
       s.setFlipX(west).setRotation(west ? h + (h > 0 ? -Math.PI : Math.PI) : h);
-    } else if (Math.abs(m.vel.x) > 4) s.setFlipX(m.vel.x < 0);
+    } else {
+      if (this.swayed) { s.setRotation(0); this.swayed = false; }
+      if (Math.abs(m.vel.x) > 4) s.setFlipX(m.vel.x < 0);
+    }
   }
 }
 
@@ -161,7 +215,11 @@ export class BullyPool {
     this.ctx = ctx;
     this.list = [];
     const max = ctx.quality.maxOf('maxBullies');
-    for (let i = 0; i < max; i++) this.list.push(new Bully(scene, ctx, chase, 'bully-foot'));
+    for (let i = 0; i < max; i++) {
+      const b = new Bully(scene, ctx, chase, 'bully-foot');
+      b.id = i;
+      this.list.push(b);
+    }
     ctx.pools.register('bullies', this);
   }
 

@@ -35,6 +35,20 @@ export class ChaseLevel {
     this.set(Math.min(this.max, this.level + 1), 'bump');
   }
 
+  // A Kiai (story 6.3) takes `amount` levels off, but only while the level is 1..maxLevel (data level.defendMaxLevel; epic 7 may raise it).
+  // Reaching 0 ends the chase like any clear. The turf timer is pulled back so the same turf does not lift the level again at once.
+  // Returns whether the level changed.
+  defend(amount, maxLevel) {
+    if (!this.enabled || this.level < 1 || this.level > maxLevel || amount < 1) return false;
+    const to = Math.max(0, this.level - Math.floor(amount));
+    if (to === 0) this.clear('defend');
+    else {
+      this.turfTime = Math.min(this.turfTime, (to - 1) * this.cfg.turfSecondsPerLevel);
+      this.set(to, 'defend');
+    }
+    return true;
+  }
+
   cool(seconds) {
     this.coolIn = Math.max(0, seconds);
     if (!this.coolIn) this.clear('cooled');

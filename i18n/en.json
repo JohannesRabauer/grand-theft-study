@@ -412,5 +412,17 @@
   "stick.bushNothing": "Just leaves and one very confused beetle.",
   "stick.pinataBurst": "The pinata bursts! Candy for everyone, bro!",
   "loot.sticker": "A sticker! Into the album it goes.",
-  "loot.homework": "The lost homework notebook! Take it to the teacher."
+  "loot.homework": "The lost homework notebook! Take it to the teacher.",
+  "hud.courage": "Courage",
+  "defense.kiaiShout": "KIAI!",
+  "defense.gasp": "Whoa!",
+  "defense.block": "Not with me!",
+  "defense.parry": "Perfect parry!",
+  "defense.bully.block": "Hmpf!",
+  "defense.bullyKiai.1": "Ouch... I mean, oof!",
+  "defense.bullyKiai.2": "Whoa?! Who did that?",
+  "defense.bullyKiai.3": "I was leaving anyway!",
+  "toast.defenseHint": "Tip: block with R, shout a Kiai with V!",
+  "toast.defenseHintTouch": "Tip: the shield button blocks, the Kiai button shouts!",
+  "toast.defenseHintPad": "Tip: X blocks, click the right stick for the Kiai!"
 }

@@ -8,6 +8,7 @@
 // The character's attribute multipliers (speedMult, accelMult, staminaSize, staminaRegen; characters/Characters.js)
 // scale top speed, acceleration, the stamina tank (drain time) and its refill rate; all are 1 for a neutral kid.
 // A trick can scale the target speed through boostMult.
+// The karate defense (defense/DefenseController.js) scales walking through defenseMult (a block is slow, a shout stands still).
 // In co-op the tether scales the target speed (tetherMult) and adds a small pull velocity (nudgeX/Y).
 const DEG = Math.PI / 180;
 
@@ -37,6 +38,7 @@ export class MovementController {
     this.nudgeX = 0;
     this.nudgeY = 0;
     this.boostMult = 1; // short speed boosts from tricks (vehicles/skateLogic.js); 1 otherwise
+    this.defenseMult = 1; // 1 unless blocking, dodging or shouting
   }
 
   // Switch profile (mount/dismount) keeping heading, speed and velocity so the change is seamless.
@@ -55,7 +57,7 @@ export class MovementController {
     const moving = mag > 0.01;
     const speedMult = this.updateStamina(dt, moving && sprintWanted);
 
-    const target = moving ? mag * p.maxSpeed * this.speedMult * (surf.speed[this.profileId] ?? 1) * speedMult * this.tetherMult * this.boostMult : 0;
+    const target = moving ? mag * p.maxSpeed * this.speedMult * (surf.speed[this.profileId] ?? 1) * speedMult * this.tetherMult * this.boostMult * this.defenseMult : 0;
     const grip = surf.grip * (surf.gripMult?.[this.profileId] ?? 1); // some vehicles lose more grip on a surface than others
     const step = p.accel * this.accelMult * grip * dt;
     this.speed = this.speed < target ? Math.min(this.speed + step, target) : Math.max(this.speed - step, target);

@@ -3,12 +3,12 @@
 // each set of bubbles registers its pool under `name`.
 export class SpeechBubbles {
   constructor(scene, ctx, max, name = 'bubbles') {
-    const res = Math.round(ctx.res.scale * 2); // glyphs are drawn at twice the screen scale and shown at 1/that
+    const res = Math.round(ctx.res.scale * 2); // glyphs are drawn at twice the screen scale (Text keeps its logical size); shown at 6 world px
     this.items = [];
     for (let i = 0; i < max; i++) {
       const text = scene.add.text(0, 0, '', {
         fontFamily: 'monospace', fontSize: '8px', color: '#16161e', backgroundColor: '#ffffff', padding: { x: 3, y: 2 }, resolution: res
-      }).setOrigin(0.5, 1).setScale(1 / res).setDepth(9500).setVisible(false);
+      }).setOrigin(0.5, 1).setScale(0.75).setDepth(9500).setVisible(false);
       this.items.push({ text, owner: null, left: 0 });
     }
     this.max = max;

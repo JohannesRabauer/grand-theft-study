@@ -5,6 +5,7 @@ import { makeStickArt } from './StickArt.js';
 import { makeHiResArt } from './HiResArt.js';
 import { makeNpcArt } from './NpcArt.js';
 import { makeCharacterArt } from './CharacterArt.js';
+import { makeDefenseArt } from './DefenseArt.js';
 import { makeBusArt } from './SkatesArt.js';
 import { makeVehicleArt } from './VehicleArt.js';
 import { GameState } from '../state/GameState.js';
@@ -27,6 +28,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('props', 'data/props.json');
     this.load.json('chase', 'data/chase.json');
     this.load.json('tool', 'data/tool.json');
+    this.load.json('karate', 'data/karate.json');
     this.load.json('npcs', 'data/npcs.json');
     this.load.json('dogs', 'data/dogs.json');
     this.load.json('stick-world', 'data/stick-world.json');
@@ -93,6 +95,7 @@ export class BootScene extends Phaser.Scene {
     makeToolArt(this, res.scale);
     makeStickArt(this, res.scale, this.cache.json.get('stick-world'), this.cache.json.get('neighbors'));
     makeCharacterArt(this, characters, res.scale);
+    makeDefenseArt(this, characters, res.scale);
     makeBusArt(this, res.scale);
     makeVehicleArt(this, res.scale);
     // The speed zoom scales the world by non-integer factors, where nearest-neighbour sampling makes

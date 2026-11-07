@@ -156,6 +156,13 @@ function drawButton(scene, b) {
     case 'manual': // board with its nose up
       g.lineStyle(3, 0xffffff, 1).beginPath().moveTo(-k, k * 0.5).lineTo(k * 0.2, k * 0.5).lineTo(k, -k * 0.7).strokePath();
       break;
+    case 'shield': // kite shield
+      g.fillTriangle(-k, -k * 0.7, k, -k * 0.7, 0, k * 1.1).fillRect(-k, -k, 2 * k, k * 0.5);
+      break;
+    case 'kiai': // shout burst: three rays
+      g.beginPath().moveTo(-k, -k).lineTo(-k * 0.2, -k * 0.2).moveTo(k, -k).lineTo(k * 0.2, -k * 0.2).moveTo(0, -k * 1.2).lineTo(0, -k * 0.3).strokePath();
+      g.fillCircle(0, k * 0.5, k * 0.45);
+      break;
     case 'pause':
       g.fillRect(-k * 0.8, -k, k * 0.6, k * 2).fillRect(k * 0.2, -k, k * 0.6, k * 2);
       break;

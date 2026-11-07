@@ -4,6 +4,7 @@
     "turfSecondsPerLevel": 8,
     "bumpCooldown": 1.5,
     "lockoutAfterClear": 5,
+    "defendMaxLevel": 2,
     "spawnByLevel": [[], ["foot"], ["foot", "bike", "foot"]],
     "coopExtraByLevel": [[], ["foot"], ["foot"]]
   },
