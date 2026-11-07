@@ -4,92 +4,27 @@
 # ///
 """tickets — read a ticket tree and answer what is next.
 
-A container folder holds its ticket file, `tickets.toml`, flat leaf files named `<type>-<slug>.md`,
-and the builds' plan files. An epic's `tickets.toml` lists its planned leaves as `[[entry]]` tables
-(`id`, `type`, `title`, `after`, and whatever else the plan records); an initiative's lists its
-epics as `[[epic]]` tables (`id`, `slug`, `after = [{epic, needs}]`). Tables are in build order.
-`id` names an entry for good and is never reused: a number, or letters and digits such as `6a`, and
-`6` and `"6"` are one id. A leaf file carries it in frontmatter, which is how the file joins its
-entry. An entry needs no leaf file to start. A ticket needs refining before it starts when it is a
-bug, its entry says `refine = true`, or it has no entry. A leaf file's frontmatter adds
-`tracker_status` and `refined`; its `after` and `hitl` replace the entry's, absent reading as empty,
-and a difference from the entry is `drift` on the row, which gives the file's and the entry's
-value of each field that differs. An entry's `unknown` is a question to settle before the ticket starts;
-once the entry is pulled it is the `Unknown:` lines of the file's Notes. A row carries it, and next holds
-the ticket under `blocked` until it is gone. A row also carries `plan_checkpoint` and `done_checkpoint`
-when the entry sets them: the orchestrator of an unattended run reads them, and no build does. `risk`
-(low, medium, high) is the ticket's proposed risk, the leaf file's once it is pulled; the build settles it
-in its plan.
+The tree's layout, the plan file, who writes each `status`, and how it becomes a board `state` are in
+the repo's `tools/ticket-tree-rules.md`; the keys of an entry and an epic table, and the forms `after`
+takes, are in the skill's `assets/tickets-template.toml`. Each command's `--help` says what it reads
+and returns.
 
-A plan is any other `.md` whose frontmatter has `ticket` and whose `type` is not a leaf type. A
-`ticket` that is an id joins the entry with that id in the plan's folder; any other string joins the
-leaf file with that stem (a backlog leaf). A plan is never a row of its own. It holds the ticket's
-`status`, `assignee`, `blocked_at`, and `blocked_reason`; a leaf file's own fields are read only when
-the ticket has no plan, and a plan with no `assignee` key leaves the leaf file's. A plan whose `ticket`
-names nothing is skipped, and one whose `status` is unknown blocks its ticket; next and status list both
-under `problems`.
+What this script decides itself: a leaf file joins its entry through the `id` in its frontmatter (`6`
+and `"6"` are one id); a plan joins through `ticket`, an entry id or a backlog file's stem, and is
+never a row. A leaf file's `after` and `hitl` replace the entry's, absent reading as empty; a
+difference is `drift` on the row. A prerequisite is met when it is done or in review, a dropped one
+still blocks, and an epic file's own `after` waits for that epic to be done. A plan whose `ticket`
+names nothing is skipped and one whose `status` is unknown blocks its ticket; both are listed under
+`problems`. A moved entry takes the destination's next id and goes last there; the folder it left keeps
+that id from coming back, and every `after` naming it is rewritten.
 
-`status` is draft, ready-for-dev, in-progress, in-review, or built from the builds (built is their
-last: the build finished and nobody has called it done), blocked from build-auto, done from the
-user or an orchestrator through mark, or dropped; absent means no build has started.
-On a tracker store `tracker_status` mirrors the tracker's word (backlog, in-progress, review, done,
-dropped). A ticket's `state` is `planned` with no file and no plan, else `tracker_status`, else
-derived from `status`: absent, draft, ready-for-dev -> backlog; in-progress, blocked -> in-progress;
-in-review, built -> review; done; dropped.
-
-`after` lists real prerequisites: a sibling's id (a number bare, since a quoted number is a tracker
-id; an id with a letter quoted), or a quoted string that is `<epic id>.<entry id>` for an entry in
-another epic of the same initiative, `epic-<slug>` for that whole epic, a sibling's file name, or a
-tracker id. An epic file's own `after` names epics and holds every ticket under it; rows show it as `gated_by`. A dropped prerequisite still blocks.
-
-On an initiative, or an epic it lists, next and status report `unpinned_after` (a declared epic
-`after` no entry of the waiting epic pins), `undeclared_after` (an entry's `after` into an epic its
-own epic does not declare), and `order_conflict` (an epic that waits on one later in build order).
-status's `epics` rows carry the declared `after` with its `needs`, and the epic file's own gate as
-`gated_by`.
-
-  next   [<dir>]                 tickets whose prerequisites are done or in review, grouped by state, in
-                                 build order; an epic's own `after` waits for that epic to be done. A
-                                 `blocked` row's `waiting_on` lists its unmet prerequisites
-  status [<dir>]                 every ticket in build order, what it blocks, counts by state, longest chain,
-                                 `next_id` (the id a new ticket in the folder takes: one past the highest
-                                 number used, or `next_id` at the top of its `tickets.toml` when that is
-                                 higher)
-  find   [<dir>] <ref>           the one ticket a reference names, with its entry's text fields (empty once
-                                 the entry is pulled: the file holds them) and the absolute paths
-                                 `epic_file` (its container's file), `story_file` (null until pulled), and
-                                 `plan` (where its plan is or goes)
-  pull   <dir> <id>              write entry id's leaf file: `after` and `hitl` always, other fields only
-                                 when the entry sets them; no status
-  mark   [<dir>] <ref> <status> [--assignee <who>] [--blocked <reason>]
-                                 set a ticket's status in its plan, creating a frontmatter-only plan when
-                                 there is none; --blocked sets blocked_at and blocked_reason, else both are
-                                 cleared (repo store only)
-  mirror [<dir>]                 write what a tracker returned into leaf files, pulling a file when the
-                                 entry has none. Stdin is a JSON array, one object per ticket: `ref` (or
-                                 `tracker_id` alone, for a ticket that already carries it) and any of
-                                 `tracker_id`, `remote`, `tracker_status`, `assignee`, `after`. Only the
-                                 keys given are written, and never `status` (tracker stores only)
-
-`<dir>` is an epic folder, a backlog folder, or an initiative folder (all its epics). `<ref>` is
-`<epic id>.<entry id>`, an entry id inside an epic folder (one with a letter, from any folder), a
-tracker id, a file name, or an unbroken phrase from the title that matches one ticket. Each row of
-next, status, and find carries `ref`, a reference find resolves in the folder the command ran on.
-`--project-root` names the project holding `_bmad/` when the tickets live outside it. A relative
-`<dir>` that is not a folder under the working directory is looked up under `{output_folder}`, then
-the active initiative, then the project root, so an epic's folder name alone finds it.
-
-With no `<dir>`, next, status, find, mark, and mirror run on the active initiative,
-`{output_folder}/{active_initiative}`. next and status then also report `backlog`, the same view of
-`{output_folder}/backlog` when that folder exists, each row's `ref` its file name; find, mark, and mirror
-look there for a ticket the initiative does not hold.
 The project root is `--project-root`, else the first folder at or above the working directory that
-holds `_bmad/`. `active_initiative` and `output_folder` (`[core]`) come from the
-BMad config, merged by the project's `_bmad/scripts/config_utils.py`. `{project-root}` is
-substituted, and a relative path is taken from the project root.
+holds `_bmad/`; `output_folder` and `active_initiative` come from the merged BMad config. A relative
+`<dir>` that is not under the working directory is looked up under `{output_folder}`, then the
+active initiative, then the project root.
 
-Output is one JSON object on stdout. Exit 0 on success, 1 on a malformed tree, 2 when
-the store forbids the operation.
+Output is one JSON object on stdout. Exit 0 on success, 1 on a malformed tree, 2 when the store
+forbids the operation.
 """
 
 import argparse
@@ -524,6 +459,11 @@ def _resolve(tree: dict) -> None:
                 if key not in by_key:
                     raise TicketError(f"{where}: after {ref!r} names no entry in {slug}")
             if key is None and EPIC_RE.match(text):
+                if text in tree["epic_ids"] and text not in containers:
+                    raise TicketError(
+                        f"{where}: after {ref!r} names an epic {BREAKDOWN} lists that has no folder yet; "
+                        f"create {text}/{text}.md first"
+                    )
                 if text not in containers:
                     raise TicketError(f"{where}: after {ref!r} names no epic in this initiative")
                 key = text
@@ -866,8 +806,14 @@ def _folder(args) -> Path:
         backlog = (tickets_root(root) / "backlog").resolve()
         args.backlog = backlog if backlog.is_dir() and backlog != folder else None
         return folder
-    folder = Path(args.dir).resolve()
-    root = None if folder.is_dir() or Path(args.dir).is_absolute() else project_root_for(args, Path.cwd())
+    return locate_dir(args, args.dir)
+
+
+def locate_dir(args, name: str) -> Path:
+    """A `<dir>` argument as a folder: as given, else under the store, the active initiative, or the project root."""
+    folder = Path(name).resolve()
+    root = None if folder.is_dir() or Path(name).is_absolute() else project_root_for(args, Path.cwd())
+    bases = []
     if root is not None:
         try:
             bases = [tickets_root(root), root]
@@ -879,10 +825,12 @@ def _folder(args) -> Path:
             except TicketError:  # none set: the store and the project root
                 pass
         for base in bases:
-            if (base / args.dir).is_dir():
-                return (base / args.dir).resolve()
+            if (base / name).is_dir():
+                return (base / name).resolve()
     if not folder.is_dir():
-        raise TicketError(f"not a folder: {folder}")
+        looked = [] if Path(name).is_absolute() else [Path.cwd(), *bases]
+        where = f" (looked under {', '.join(str(p) for p in looked)})" if looked else ""
+        raise TicketError(f"not a folder: {name}{where}")
     return folder
 
 
@@ -969,18 +917,22 @@ def status_view(folder: Path) -> dict:
         **({"problems": tree["problems"]} if tree["problems"] else {}),
     }
     if tree["scope"] is None:
-        out["epics"] = [
-            {
-                "slug": slug,
-                "id": tree["epic_ids"].get(slug),
-                "status": c["status"],
-                "after": declared.get(slug, []),
-                "gated_by": c["after"],
-                "blocks": [ref(b, None, tree) for b in blocks.get(slug, [])],
-                "next_id": next_id(tree, slug),
-            }
-            for slug, c in tree["containers"].items()
-        ]
+        # The declared epics in build order, folder or not, then any folder the breakdown does not list.
+        out["epics"] = []
+        for slug in [*declared, *sorted(s for s in tree["containers"] if s not in declared)]:
+            row = {"slug": slug, "id": tree["epic_ids"].get(slug), "after": declared.get(slug, [])}
+            c = tree["containers"].get(slug)
+            if c is None:
+                row["folder"] = None
+            else:
+                row.update(
+                    folder=slug,
+                    status=c["status"],
+                    gated_by=c["after"],
+                    blocks=[ref(b, None, tree) for b in blocks.get(slug, [])],
+                    next_id=next_id(tree, slug),
+                )
+            out["epics"].append(row)
     else:
         out["next_id"] = next_id(tree, tree["scope"])
     return out
@@ -1002,7 +954,7 @@ PULLED = """---
 
 {description}
 
-## Acceptance Criteria
+## Requirements
 
 Verify: {verify}
 
@@ -1261,6 +1213,22 @@ def by_tracker_id(tree: dict, tracker_id: str) -> dict:
     return hits[0]
 
 
+def container_named(tree: dict, name: str, by_ref: bool) -> dict | None:
+    """The container whose tracker id, or with a `ref` whose folder, is `name`: its folder and its file's status."""
+    low = name.lower()
+    for folder in [*tree["folders"].values(), *([tree["initiative"]] if tree["initiative"] else [])]:
+        path = folder / f"{folder.name}.md"
+        if not path.is_file():
+            continue
+        fm = parse_frontmatter(read_text(path), lenient=True)
+        tracker_id = str(fm.get("tracker_id", "") or "")
+        if fm.get("type") in CONTAINER_TYPES and (
+            (tracker_id and tracker_id.lower() == low) or (by_ref and folder.name.lower() == low)
+        ):
+            return {"folder": folder.name, "status": str(fm.get("status", "") or "")}
+    return None
+
+
 def cmd_mirror(args) -> dict:
     """Write what the tracker returned into each ticket's leaf file; never `status`, which is the build's."""
     folder = _folder(args)
@@ -1278,7 +1246,7 @@ def cmd_mirror(args) -> dict:
             folders.append(args.backlog)
         except (TicketError, OSError, ValueError):  # a backlog that cannot be read holds no match
             pass
-    work, unmatched, seen = [], [], set()
+    work, unmatched, containers, seen = [], [], [], set()
     for n, item in enumerate(items, 1):
         name = item.get("ref", item.get("tracker_id"))
         where = f"item {n} ({name!r})"
@@ -1289,18 +1257,23 @@ def cmd_mirror(args) -> dict:
         if isinstance(name, bool) or not isinstance(name, (int, str)) or name == "":
             raise TicketError(f"item {n}: give a ref, or the tracker_id of a ticket that already carries it")
         values = _mirror_values(item, where)
-        hit = miss = None
+        hit = miss = container = None
         for tree in trees:
             try:
                 # A tracker id alone never falls back to an entry id or a title that happens to match it.
                 t = resolve_ticket(tree, str(name)) if "ref" in item else by_tracker_id(tree, str(name))
             except NoMatch as e:
                 miss = miss or e
+                container = container or container_named(tree, str(name), "ref" in item)
                 continue
             hit = (t, tree)
             break
         if hit is None:
-            unmatched.append({"ref": name, "error": str(miss)})
+            if container:
+                # A container's file is Sofia's to edit; the row shows what the tracker says against it.
+                containers.append({"ref": name, **container, "tracker_status": item.get("tracker_status", "")})
+            else:
+                unmatched.append({"ref": name, "error": str(miss)})
             continue
         if id(hit[0]) in seen:
             raise TicketError(f"{where}: {ref_name(*hit)} is named twice")
@@ -1332,7 +1305,237 @@ def cmd_mirror(args) -> dict:
                 pass
         # The discovery procedure needs `unmatched` even when a known ticket's `after` named one of them.
         raise TicketError(f"nothing was mirrored: {e}", **({"unmatched": unmatched} if unmatched else {})) from e
-    return {"folder": folder.name, "store": store, "mirrored": mirrored, "unmatched": unmatched}
+    return {
+        "folder": folder.name,
+        "store": store,
+        "mirrored": mirrored,
+        "containers": containers,
+        "unmatched": unmatched,
+    }
+
+
+TABLE_RE = re.compile(r"^[ \t]*\[\[(entry|epic)\]\][ \t]*(?:#.*)?$", re.M)
+ID_LINE_RE = re.compile(r"^([ \t]*id[ \t]*=[ \t]*)(\S+)(.*)$", re.M)
+AFTER_LINE_RE = re.compile(r"^([ \t]*after[ \t]*=[ \t]*)\[(.*?)\](.*)$", re.M)
+NEXT_ID_LINE_RE = re.compile(r"^[ \t]*next_id[ \t]*=.*$", re.M)
+
+
+def split_tables(text: str) -> tuple[str, list[str]]:
+    """A breakdown's text as the lines before its first table and one string per `[[entry]]` or `[[epic]]`."""
+    starts = [m.start() for m in TABLE_RE.finditer(text)]
+    if not starts:
+        return text, []
+    return text[: starts[0]], [text[a:b] for a, b in zip(starts, [*starts[1:], len(text)], strict=True)]
+
+
+def parse_table(block: str) -> tuple[str, dict]:
+    data = tomllib.loads(block)
+    kind = "entry" if "entry" in data else "epic"
+    row = data[kind][0]
+    row["id"] = _id(row.get("id"))
+    return kind, row
+
+
+def list_text(values: list, toml: bool) -> str:
+    """A list as `tickets.toml` or a leaf's frontmatter reads it back: numbers bare, strings quoted."""
+    return (
+        "["
+        + ", ".join(
+            str(v) if isinstance(v, int) else (json.dumps(v, ensure_ascii=False) if toml else quoted(v)) for v in values
+        )
+        + "]"
+    )
+
+
+def set_after_line(block: str, current: list, new: list, where: str) -> str:
+    m = AFTER_LINE_RE.search(block)
+    try:
+        if not m or tomllib.loads(f"after = [{m.group(2)}]")["after"] != current:
+            raise ValueError
+    except ValueError:
+        raise TicketError(f"{where}: `after` must sit on one line to be rewritten") from None
+    return block[: m.start()] + m.group(1) + list_text(new, toml=True) + m.group(3) + block[m.end() :]
+
+
+def cmd_move(args) -> dict:
+    """Move an entry, with its leaf file and plan, to another folder, rewriting ids and every `after` that names it."""
+    src, dest = locate_dir(args, args.src), locate_dir(args, args.to)
+    tree = load_tree(src)
+    t = resolve_ticket(tree, args.ref)
+    old = tree["folders"][t["epic"]]
+    if old.resolve() == dest.resolve():
+        raise TicketError(f"{ref_name(t, tree)} is already in {dest.name}")
+    toml_old = old / BREAKDOWN
+    head, tables = split_tables(read_text(toml_old)) if toml_old.is_file() else ("", [])
+    parsed = [parse_table(b) for b in tables]
+    moved = next((i for i, (kind, row) in enumerate(parsed) if kind == "entry" and row["id"] == t["id"]), None)
+    if moved is None:
+        raise TicketError(f"{ref_name(t, tree)} has no entry in {old.name}/{BREAKDOWN}; move moves entries")
+    dest_tree = load_tree(dest)
+    if dest_tree["scope"] is None:
+        raise TicketError(f"{dest.name} holds epics, not entries")
+    new_id = next_id(dest_tree, dest.name)
+    floor = next_id(tree, old.name)
+    same = tree["initiative"] is not None and dest.resolve().parent == tree["initiative"].resolve()
+    old_epic_id = tree["epic_ids"].get(old.name) if same else None
+    dest_epic_id = tree["epic_ids"].get(dest.name) if same else None
+    slugs = {i: s for s, i in tree["epic_ids"].items()}
+    mates = [o for o in tree["tickets"] if o["epic"] == old.name]
+
+    def is_sibling(e, o) -> bool:
+        if isinstance(e, int) and not isinstance(e, bool):
+            return o["id"] == e
+        return isinstance(e, str) and (
+            (isinstance(o["id"], str) and o["id"] == e) or bool(o["file"] and e in (o["file"], o["file"][:-3]))
+        )
+
+    def names_moved(e, folder: Path) -> bool:
+        if folder.resolve() == old.resolve() and is_sibling(e, t):
+            return True
+        m = CROSS_RE.match(e) if isinstance(e, str) else None
+        return bool(m and slugs.get(_id(m.group(1))) == old.name and _id(m.group(2)) == t["id"])
+
+    def new_ref(folder: Path, where: str):
+        if folder.resolve() == dest.resolve():
+            return new_id
+        if dest_epic_id is None:
+            raise TicketError(
+                f"{where}: names the moved entry, but {dest.name} has no id in the initiative's {BREAKDOWN} to name it by"
+            )
+        return f"{dest_epic_id}.{new_id}"
+
+    def own_ref(e, where: str):
+        mate = next((o for o in mates if o is not t and is_sibling(e, o)), None)
+        if mate is not None:
+            if old_epic_id is None or mate["id"] is None:
+                raise TicketError(f"{where}: after {e!r} names a ticket in {old.name} that {dest.name} cannot name")
+            return f"{old_epic_id}.{mate['id']}"
+        m = CROSS_RE.match(e) if isinstance(e, str) else None
+        if m and same and slugs.get(_id(m.group(1))) == dest.name:
+            return _id(m.group(2))
+        return e
+
+    # Every change is computed first; files are written only when all of them are known.
+    toml_writes: dict[Path, str] = {}
+    fm_writes: list[tuple[Path, dict]] = []
+    rewritten = []
+    folders = list(tree["folders"].values())
+    if all(f.resolve() != dest.resolve() for f in folders):
+        folders.append(dest)
+    for folder in folders:
+        is_old = folder.resolve() == old.resolve()
+        path = folder / BREAKDOWN
+        if path.is_file():
+            f_head, f_tables = (head, list(tables)) if is_old else split_tables(read_text(path))
+            changed = False
+            for i, block in enumerate(f_tables):
+                kind, row = parse_table(block)
+                if kind != "entry" or (is_old and i == moved):
+                    continue
+                where = f"{folder.name}/{BREAKDOWN} entry {row['id']}"
+                after = _list(row.get("after"), where)
+                new = [new_ref(folder, where) if names_moved(e, folder) else e for e in after]
+                if new != after:
+                    f_tables[i] = set_after_line(block, after, new, where)
+                    rewritten.append({"where": where, "after": new})
+                    changed = True
+            if is_old:
+                f_tables.pop(moved)
+                if NEXT_ID_LINE_RE.search(f_head):
+                    f_head = NEXT_ID_LINE_RE.sub(f"next_id = {floor}", f_head, count=1)
+                else:
+                    f_head = f_head.rstrip("\n") + ("\n\n" if f_head.strip() else "") + f"next_id = {floor}\n\n"
+                changed = True
+            if changed:
+                toml_writes[path] = f_head + "".join(f_tables)
+        for path in sorted(folder.glob("*.md")):
+            if is_old and path.name == t["file"]:
+                continue
+            fm = parse_frontmatter(read_text(path), lenient=True)
+            if fm.get("type") not in LEAF_TYPES and not (
+                fm.get("type") in CONTAINER_TYPES and path.name == f"{folder.name}.md"
+            ):
+                continue
+            where = f"{folder.name}/{path.name}"
+            after = _list(fm.get("after"), where)
+            new = [new_ref(folder, where) if names_moved(e, folder) else e for e in after]
+            if new != after:
+                fm_writes.append((path, {"after": list_text(new, toml=False)}))
+                rewritten.append({"where": where, "after": new})
+    block = tables[moved]
+    where = f"{dest.name}/{BREAKDOWN} entry {new_id}"
+    block = ID_LINE_RE.sub(lambda m: f"{m.group(1)}{new_id}{m.group(3)}", block, count=1)
+    after = _list(parsed[moved][1].get("after"), where)
+    new = [own_ref(e, where) for e in after]
+    if new != after:
+        block = set_after_line(block, after, new, where)
+        rewritten.append({"where": where, "after": new})
+    toml_dest = dest / BREAKDOWN
+    if toml_dest in toml_writes:
+        existing = toml_writes[toml_dest]
+    else:
+        existing = read_text(toml_dest) if toml_dest.is_file() else ""
+    toml_writes[toml_dest] = (existing.rstrip("\n") + "\n\n" if existing.strip() else "") + block.strip("\n") + "\n"
+    moves = []
+    for name, values in (
+        (t["file"], {"id": str(new_id), "parent": dest.name}),
+        (t.get("plan"), {"ticket": str(new_id)}),
+    ):
+        if not name:
+            continue
+        if (dest / name).exists():
+            raise TicketError(f"{dest.name}/{name} exists already")
+        if name == t["file"]:
+            fm = parse_frontmatter(read_text(old / name))
+            after = _list(fm.get("after"), f"{old.name}/{name}")
+            new = [own_ref(e, f"{old.name}/{name}") for e in after]
+            if new != after:
+                values["after"] = list_text(new, toml=False)
+                rewritten.append({"where": f"{dest.name}/{name}", "after": new})
+        moves.append((old / name, dest / name, values))
+
+    backup: dict[Path, bytes | None] = {}
+
+    def keep(path: Path) -> None:
+        if path not in backup:
+            backup[path] = path.read_bytes() if path.exists() else None
+
+    try:
+        for path, text in toml_writes.items():
+            keep(path)
+            path.write_text(text, encoding="utf-8")
+        for path, values in fm_writes:
+            keep(path)
+            edit_frontmatter(path, values)
+        for source, target, values in moves:
+            keep(source)
+            keep(target)
+            target.write_bytes(source.read_bytes())
+            edit_frontmatter(target, values)
+            source.unlink()
+        for folder in (dest, old):
+            load_tree(folder)
+    except (TicketError, OSError, ValueError) as e:
+        for path, raw in backup.items():
+            try:
+                if raw is None:
+                    path.unlink(missing_ok=True)
+                else:
+                    path.write_bytes(raw)
+            except OSError:  # keep restoring the rest; the first failure is the one reported
+                pass
+        raise TicketError(f"nothing was moved: {e}") from e
+    return {
+        "from": old.name,
+        "to": dest.name,
+        "old_id": t["id"],
+        "id": new_id,
+        "ref": f"{dest_epic_id}.{new_id}" if dest_epic_id is not None else str(new_id),
+        "file": t["file"],
+        "plan": t.get("plan"),
+        "next_id": {old.name: floor},
+        "rewritten": rewritten,
+    }
 
 
 REF_HELP = """<ref> is `<epic id>.<entry id>`, an entry id inside an epic folder (one with a letter, from any
@@ -1365,7 +1568,9 @@ Output: `tickets` (each with `status`, `tracker_status`, `state`, `blocks`, and 
 `after` or `hitl` differs from the entry's, with both values), `counts` by state, `next_id` (the id a new
 ticket in the folder takes: one past the highest number used, or `next_id` at the top of the folder's
 `tickets.toml` when that is higher; on an initiative, in each `epics` row), `longest_remaining_chain`, and
-on an initiative `epics` with each epic's declared `after`.""",
+on an initiative `epics`: one row per epic its `tickets.toml` lists, in build order, then any epic folder
+it does not list, each with its declared `after`. A listed epic with no folder yet has `folder` null and
+no `status`, `gated_by`, `blocks`, or `next_id`.""",
     "find": f"""The one ticket a reference names.
 
 {DIR_HELP}
@@ -1397,9 +1602,24 @@ Stdin is a JSON array, one object per ticket: `ref` (or `tracker_id` alone, whic
 that already carries that id) and any of `tracker_id`, `remote`, `tracker_status` ({", ".join(STATES)}),
 `assignee`, and `after` (a list: a number is a sibling's id, a string any other prerequisite form, a
 tracker id included). Only the keys given are written, an empty string removes the line, and `status` is
-never written. An entry with no leaf file is pulled first. A ticket the tree does not hold is listed under
-`unmatched` and the rest are written; values that would leave the tree unreadable write nothing, and the
-error then still lists `unmatched`.""",
+never written. An entry with no leaf file is pulled first. A published container, named by its folder or
+its tracker id, is listed under `containers` with its file's `status` and the `tracker_status` given, and
+nothing is written to it. A ticket the tree does not hold is listed under `unmatched` and the rest are
+written; values that would leave the tree unreadable write nothing, and the error then still lists
+`unmatched`.""",
+    "move": f"""Move an entry to another folder, with its leaf file and plan.
+
+<from> and <to> are folders as <dir> is for the other commands; <ref> names an entry in <from>.
+{REF_HELP}
+
+The entry takes <to>'s `next_id` as its id and goes last in <to>'s `tickets.toml`; reorder it by hand when
+build order needs it. <from> keeps `next_id` atop its `tickets.toml` so the old id never returns. The leaf
+file and plan move with it, the file's `id` and `parent` and the plan's `ticket` set. Every `after` naming
+the entry is rewritten (a former sibling now says `<epic id>.<id>`) and its own `after` follows; `covers`
+is untouched. When any of it fails, nothing is written.
+
+Output: `from`, `to`, `old_id`, `id`, `ref` (as find on the initiative resolves it), `file`, `plan`,
+`next_id` (what <from> now keeps), and `rewritten`, one `where` and `after` per line rewritten.""",
 }
 
 
@@ -1453,6 +1673,16 @@ def main() -> int:
     )
     p.add_argument("dir", nargs="?", help="default: the active initiative")
     p.set_defaults(func=cmd_mirror)
+    p = sub.add_parser(
+        "move",
+        help="move an entry, its leaf file, and its plan to another folder",
+        description=HELP["move"],
+        formatter_class=raw,
+    )
+    p.add_argument("src", metavar="from", help="the folder holding the entry")
+    p.add_argument("ref")
+    p.add_argument("to", help="the folder it goes to")
+    p.set_defaults(func=cmd_move)
     args = parser.parse_args()
     try:
         print(json.dumps(args.func(args), ensure_ascii=False, default=str))

@@ -1,4 +1,41 @@
 [[entry]]
+id = 6
+type = "story"
+title = "A bigger connected open world with explorable neighborhoods"
+description = "Expands free roaming with at least two distinct connected neighborhoods, loops, shortcuts, landmarks and street-vehicle spawn points. At least doubles reachable walkable area compared with the current 96 by 64 town, rather than padding the map with inaccessible scenery. Keeps home, school, dojo, shops, skatepark, existing routes and entrances reachable and preserves shared-camera co-op."
+verify = "A flood-fill/connectivity check and solo/co-op browser routes prove both neighborhoods and all existing destinations are reachable, the walkable-area threshold is met, stolen rides cross the new routes, and map transitions, Continue and Medium performance budgets still hold."
+covers = ["CAP-31", "CAP-4"]
+after = ["1.7", "5.8"]
+hitl = false
+risk = "high"
+refine = true
+references = ["../initiative-schulweg-game.md#notes", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-28", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-8"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Traffic: cars, buses, tram and vans"
+description = "Adds visibly driving pooled cars alongside buses, the tram with its bell and delivery vans across the old town and 12.6's connected neighborhoods. Vehicles follow connected road routes, turn, yield and recover from blocked traffic without clipping buildings or deadlocking. Adds readable crossings and comic non-violent hits while retaining safe rear grabs."
+verify = "Cars complete road circuits in both directions, turn and yield at crossings, clean up on map exit and remain within the traffic cap; player collisions use the existing cartoon tumble cooldown, and pedestrians, animals and a valid rear grab remain unharmed."
+covers = ["CAP-31", "CAP-4"]
+after = [6, "5.6"]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-8"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Physics objects: swings, signs, bridge, kites, carts, dominoes, flotsam"
+description = "Adds linked-segment swings, signs, a rope bridge, kites and flags, shopping carts on slopes, crate dominoes and canal floating objects across the existing town and new neighborhoods. Makes exploration interactive rather than decorative: at least six distinct player-triggered interactions give immediate visible or audible feedback, clear device-aware prompts and repeatable free-roam play without requiring a lesson or quest."
+verify = "Each reacts to the player, wind or impacts within the prop cap; browser routes exercise at least six interaction types across the old and new world, repeat them without leaking objects or rewards, and verify independent co-op interaction and cleanup on map exit."
+covers = ["CAP-31"]
+after = [6, 4]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-7", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-8"]
+
+[[entry]]
 id = 1
 type = "story"
 title = "Season and weather cycle with snow and ice"
@@ -23,30 +60,6 @@ risk = "low"
 references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-8", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-9"]
 
 [[entry]]
-id = 3
-type = "story"
-title = "Physics objects: swings, signs, bridge, kites, carts, dominoes, flotsam"
-description = "Adds linked-segment swings, signs, a rope bridge, kites and flags, shopping carts on slopes, crate dominoes and canal floating objects."
-verify = "Each reacts to the player, wind or impacts within the prop cap."
-covers = ["CAP-31"]
-after = []
-hitl = false
-risk = "medium"
-references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-7", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-8"]
-
-[[entry]]
-id = 4
-type = "story"
-title = "Traffic: cars, buses, tram and vans"
-description = "Adds pooled cars, buses, the tram with its bell and delivery vans with comic non-violent hits."
-verify = "Traffic moves and a hit gives a cartoon tumble with item scatter and time loss."
-covers = ["CAP-31", "CAP-4"]
-after = []
-hitl = false
-risk = "medium"
-references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-8"]
-
-[[entry]]
 id = 5
 type = "story"
 title = "Pigeons, cats and crowd extras"
@@ -57,4 +70,3 @@ after = []
 hitl = false
 risk = "low"
 references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-8", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-15"]
-

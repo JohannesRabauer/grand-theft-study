@@ -22,7 +22,7 @@ after = [{ epic = 1, needs = "the stories pinned in its entries' after" }]
 id = 4
 slug = "epic-minigames"
 title = "Lesson minigames"
-covers = ["CAP-7", "CAP-5", "CAP-12"]
+covers = ["CAP-7", "CAP-5", "CAP-12", "CAP-23", "CAP-33"]
 after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epic = 3, needs = "the stories pinned in its entries' after" }]
 
 [[epic]]
@@ -71,15 +71,15 @@ after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epi
 id = 11
 slug = "epic-hud-settings"
 title = "HUD, minimap, phone and parent settings"
-covers = ["CAP-26", "CAP-28", "CAP-20"]
-after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epic = 3, needs = "the stories pinned in its entries' after" }, { epic = 9, needs = "the stories pinned in its entries' after" }]
+covers = ["CAP-26", "CAP-28", "CAP-20", "CAP-7", "CAP-23", "CAP-32", "CAP-12", "CAP-6"]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epic = 2, needs = "character ages in 2.1 for independent difficulty defaults" }, { epic = 3, needs = "the stories pinned in its entries' after" }, { epic = 4, needs = "minigame lifecycle in 4.1 for readable instructions" }, { epic = 9, needs = "the stories pinned in its entries' after" }]
 
 [[epic]]
 id = 12
 slug = "epic-living-world"
 title = "Seasons, weather and a living town"
 covers = ["CAP-30", "CAP-31", "CAP-4"]
-after = [{ epic = 1, needs = "the stories pinned in its entries' after" }]
+after = [{ epic = 1, needs = "the stories pinned in its entries' after" }, { epic = 5, needs = "street-vehicle interactions in 5.8 and safe traffic collisions in 5.6" }]
 
 [[epic]]
 id = 13

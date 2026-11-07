@@ -70,3 +70,27 @@ hitl = false
 risk = "medium"
 references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-23"]
 
+[[entry]]
+id = 7
+type = "story"
+title = "Rideable scooters and inline rollerblades"
+description = "Adds a scooter and inline rollerblade profiles, recognizable art and names, distinct movement and surface behaviour, mounting/dismounting, ownership and saved unlocks; existing bikes, skateboards and roller skates retain their behaviour."
+verify = "Each new vehicle can be obtained, mounted, ridden and dismounted with keyboard, touch and gamepad, survives save/Continue, and works independently for both co-op players without a movement or ownership regression."
+covers = ["CAP-13", "CAP-14", "CAP-16"]
+after = [3, 5]
+hitl = false
+risk = "medium"
+references = ["../initiative-schulweg-game.md#notes", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-23"]
+
+[[entry]]
+id = 8
+type = "story"
+title = "Steal parked street vehicles during free roaming"
+description = "Places identifiable unattended bikes, skateboards, inline rollerblades and scooters in the open world and lets the player take and immediately ride them through ordinary interaction. Uses a separate street-vehicle lifecycle from 5.5's bully borrowing the player's bike, explains controls and witnessed comic consequences, and handles returning, abandoning, map changes, save/Continue and simultaneous co-op attempts without duplication."
+verify = "All four requested vehicle types can be taken and ridden from street spawns without a shop or lesson; one object cannot be claimed by both players, persistence cannot duplicate it, and consequences are non-graphic and cannot harm pedestrians or animals."
+covers = ["CAP-16"]
+after = [5, 7, "1.7"]
+hitl = false
+risk = "high"
+refine = true
+references = ["../initiative-schulweg-game.md#notes", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-22", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-23"]

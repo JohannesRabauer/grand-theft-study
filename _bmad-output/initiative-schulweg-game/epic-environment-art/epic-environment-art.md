@@ -37,5 +37,7 @@ Visual rendering of existing map data only. Not map layout, collision or gamepla
 
 ## Notes
 
+- Playtest confirmation: 2026-11-07 the user again requested smoother ground transitions and proper houses/fences. Already covered by entries 15.1 (ground transitions and water), 15.2 (houses/buildings/doors) and 15.3 (fences/hedges/street furniture); no duplicate stories added.
+
 - Decision: 2026-11-07 user playtest: the blocks are fine but houses, doors, fences, water and ground transitions do not look right.
 - Decision: 2026-11-07 priority revised by the user: build after the gameplay-access work (school day, lessons, quests, shops).

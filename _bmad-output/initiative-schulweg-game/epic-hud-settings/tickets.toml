@@ -11,6 +11,30 @@ risk = "low"
 references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
 
 [[entry]]
+id = 6
+type = "story"
+title = "Important text waits for explicit acknowledgement"
+description = "Audits instructions, learning explanations, lesson introductions/results, dialogue and major messages so players can read indefinitely before explicitly continuing; relevant timers pause, held input cannot dismiss text, and slower co-op readers are not rushed."
+verify = "Important screens remain visible beyond their former timeout, accept explicit keyboard/touch/gamepad confirmation, then restore clocks and gameplay correctly; incidental toasts stay non-blocking."
+covers = ["CAP-26", "CAP-7", "CAP-23", "CAP-32"]
+after = ["1.4", "4.1"]
+hitl = false
+risk = "medium"
+references = ["../initiative-schulweg-game.md#notes", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-27", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-20"]
+
+[[entry]]
+id = 5
+type = "story"
+title = "Contextual gameplay explanations"
+description = "Adds plentiful first-use and situational explanations for bullies and spotting, defense, hiding, tools, skating, vehicle ownership and tricks, with active-device controls, co-op guidance and revisitable help."
+verify = "A new player receives relevant localized explanations, can acknowledge and revisit them, and repeat hints do not spam or obscure play."
+covers = ["CAP-26", "CAP-20", "CAP-23", "CAP-32"]
+after = ["1.4", 6]
+hitl = false
+risk = "medium"
+references = ["../initiative-schulweg-game.md#notes", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
+
+[[entry]]
 id = 2
 type = "story"
 title = "Minimap with spotted radius"
@@ -46,3 +70,15 @@ hitl = false
 risk = "low"
 references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
 
+[[entry]]
+id = 7
+type = "story"
+title = "Age-based difficulty independent of character choice"
+description = "Uses character ages as per-player difficulty defaults and lets players explicitly choose a difficulty age/level independently of their character, consistently across relevant learning/minigame surfaces while preserving adaptivity, progress and Klasse 3 scope."
+verify = "Character defaults, independent overrides, saved settings, co-op independence and adaptivity behave consistently; the age mapping and relationship to parent settings are explained in DE/EN."
+covers = ["CAP-12", "CAP-6", "CAP-28", "CAP-23"]
+after = [4, "2.1", "3.1"]
+hitl = false
+risk = "medium"
+refine = true
+references = ["../initiative-schulweg-game.md#notes", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-19", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]

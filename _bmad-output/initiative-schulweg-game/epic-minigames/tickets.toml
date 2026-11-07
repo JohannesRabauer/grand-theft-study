@@ -82,3 +82,15 @@ hitl = false
 risk = "medium"
 references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-20"]
 
+[[entry]]
+id = 8
+type = "bug"
+title = "Deutsch input cleanup and controller parity"
+description = "Reproduces and fixes the on-screen letter pad remaining after manual typing/submission, question or mode changes and scene exit; provides a fair controller spelling interaction or device-aware timing/scoring without weakening learning objectives."
+verify = "Keyboard, touch, gamepad, device switching and mixed-device co-op tests cover pad visibility, repeated rounds and cleanup, and controller spelling throughput/scoring is no longer substantially penalized by letter navigation."
+covers = ["CAP-7", "CAP-23", "CAP-33"]
+after = [3]
+hitl = false
+risk = "medium"
+refine = true
+references = ["../initiative-schulweg-game.md#notes", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-20", "../architecture-schulweg-game/architecture-schulweg-game.md#ad-10"]
