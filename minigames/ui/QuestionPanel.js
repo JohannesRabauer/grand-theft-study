@@ -14,6 +14,7 @@ export class QuestionPanel {
   constructor(scene, ctx, rect, { depth = 10, frame = COLORS.frame, frameAlpha = 0.92, edge = null } = {}) {
     this.ctx = ctx;
     this.externalHints = false;
+    this.showFact = false; // a minigame with fun facts sets it: a wrong answer then also shows the item's `fact`
     this.rect = rect;
     this.onChoose = null;
     this.q = null;
@@ -39,6 +40,7 @@ export class QuestionPanel {
     const own = o => { this.objects.push(o); return o; };
     const back = own(scene.add.rectangle(x, y, rect.w, rect.h, frame, frameAlpha).setOrigin(0).setDepth(depth));
     if (edge !== null) back.setStrokeStyle(3, edge);
+    this.back = back;
     const font = { fontFamily: 'monospace', color: '#ffffff' };
     this.question = own(uiText(scene, x + pad, y + 6, '', { ...font, fontSize: `${fs}px`, wordWrap: { width: wrap }, lineSpacing: 2 }).setDepth(depth + 1));
     this.rows = [];
@@ -115,6 +117,7 @@ export class QuestionPanel {
       y = this.noteYFeedback;
       text = ctx.t(fb.reaction);
       if (!fb.ok) text += `\n${correct ? `${ctx.t('minigame.correctWas', { answer: correct.text })}\n` : ''}${view.explain}`;
+      if (!fb.ok && this.showFact && view.fact) text += `\n${ctx.t('minigame.fact', { fact: view.fact })}`;
     } else if (this.hintsUsed > 0) {
       text = ctx.t('minigame.hintLine', { hint: view.hints[this.hintsUsed - 1] });
     }

@@ -145,7 +145,7 @@ export const minigames = {
     const rt = await timed;
     assert('a timed round is graded and restored', rt.total >= 5 && rt.grade >= 1 && rt.grade <= 6 && rt.quit === false && ctx.frozen === false);
     assert('unknown ids and players are refused', await MG.start('nope').then(() => false, () => true) && await MG.start('quiz-demo', { players: [0, 5] }).then(() => false, () => true));
-    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 6 : 4) && ['mathe', 'deutsch', 'englisch', 'erdkunde'].every(id => MG.list().some(d => d.id === id)));
+    assert('demos are listed only in debug sessions, real minigames always', MG.list().length === (window.SCHULWEG_DEBUG ? 7 : 5) && ['mathe', 'deutsch', 'englisch', 'erdkunde', 'science'].every(id => MG.list().some(d => d.id === id)));
 
     // ---- Mathe: both modes in one run, one player ----
     // Answers every open question of the Mathe scene through the inputs a player has: number keys (answer buttons,
@@ -691,5 +691,176 @@ export const minigames = {
     ctx.screens.top().menu.rows.find(r => r.items[0].label() === ctx.t('minigame.quit')).items[0].on();
     const rqk = await quitErdkunde;
     assert('quitting Erdkunde resolves without rewards and restores the world', rqk.quit === true && rqk.xp === 0 && ctx.frozen === false && ctx.minigames.active === null);
+    // ---- Science: Sortier-Labor, Stromkreis-Tüftler and the Quick-Quiz between the puzzles ----
+    const by = id => ctx.learning.next('science', { player: 0, filter: q => q.id === id });
+    const startScience = async (players, plan, difficulty = 3) => {
+      const run = MG.start('science', { players, difficulty });
+      step(1);
+      const scene = game.scene.getScene('MG_science');
+      scene.plan = plan;
+      return { run, scene };
+    };
+    // Plays the tasks like a player: a sorting set card by card (one wrong card for a mistake), the circuit by picking the
+    // parts, a Quick-Quiz with the number keys. Player p answers `right(p, n)` correctly (n = tasks answered so far).
+    const playScience = (scene, right, seen, { watch } = {}) => {
+      for (let f = 0; f < 6000 && ctx.screens.top()?.id === 'minigame' && !scene.over; f++) {
+        for (const slot of scene.slots) {
+          if (slot.kind) seen.add(slot.kind);
+          if (!slot.q) continue;
+          const ok = right(slot.index, slot.tally.total);
+          if (slot.kind === 'quiz') {
+            if (!slot.panel.locked) {
+              const good = slot.q.answers.findIndex(a => a.correct);
+              intents[slot.index].answer = 1 + (ok ? good : (good + 1) % slot.q.answers.length);
+            }
+          } else if (slot.locked) {
+            continue;
+          } else if (slot.kind === 'sort') {
+            const item = slot.order[slot.pos];
+            const bin = slot.set.cats.findIndex(c => c.id === slot.set.items[item].cat);
+            slot.lab.onBin(ok || slot.pos > 0 ? bin : (bin + 1) % slot.set.cats.length);
+          } else {
+            const id = ok ? slot.fix.find(x => !slot.fixed.includes(x)) : slot.cells.find(c => !slot.fix.includes(c.id)).id;
+            slot.board.onPick(slot.cells.findIndex(c => c.id === id));
+          }
+        }
+        watch?.();
+        step(1);
+        for (const slot of scene.slots) intents[slot.index].answer = 0;
+      }
+    };
+    const beforeS = snapshot();
+    const nS = learned(0);
+
+    // the input methods of the sorting game: cursor, number key, tap and drag
+    const sci1 = await startScience([0], { first: 'sort', second: 'sort', switchMs: 30000 });
+    const sciRun1 = sci1.run;
+    const ss = sci1.scene;
+    assert('the Science scene shows its title and instructions during the countdown', ss.title.text === ctx.t('minigame.science.title') && ss.help.visible && ss.help.text.length > 10);
+    env.until(() => ss.clock.phase === 'play', 400);
+    const sl = ss.slots[0];
+    assert('Sortier-Labor starts with a card, bins and the question', sl.kind === 'sort' && sl.lab.card.visible && sl.lab.word.text === sl.set.items[sl.order[0]].text && sl.lab.trays.filter(t => t.tray.visible).length === sl.set.cats.length && sl.tag.text === ctx.t('minigame.science.mode.sort'));
+    const total1 = sl.set.items.length;
+    intents[0].move.x = 1; step(1); intents[0].move.x = 0; step(1);
+    assert('the arrow keys move the bin cursor', sl.lab.focus === 1);
+    press(0, 'jump');
+    assert('confirm puts the card into the focused bin', sl.pos === 1 && sl.resp[sl.order[0]] === sl.set.cats[1].id && sl.lab.levels[1] === 1);
+    intents[0].answer = 2; step(1); intents[0].answer = 0; step(1);
+    assert('a number key picks the bin directly', sl.pos === 2 && sl.resp[sl.order[1]] === sl.set.cats[1].id);
+    sl.lab.tap(0);
+    assert('a tap on a bin drops the card there', sl.pos === 3 && sl.resp[sl.order[2]] === sl.set.cats[0].id);
+    const r1 = sl.lab.binRects[1];
+    sl.lab.card.emit('drag', null, r1.x + r1.w / 2, r1.y + r1.h / 2);
+    sl.lab.card.emit('dragend');
+    assert('dragging the card over a bin drops it there', sl.pos === 4 && sl.resp[sl.order[3]] === sl.set.cats[1].id);
+    sl.lab.card.emit('drag', null, 5, 5);
+    sl.lab.card.emit('dragend');
+    assert('dropping the card outside every bin sends it back', sl.pos === 4 && sl.lab.card.x === sl.lab.home.x && sl.lab.card.y === sl.lab.home.y);
+    while (sl.pos < total1) { const it = sl.order[sl.pos]; sl.lab.onBin(sl.set.cats.findIndex(c => c.id === sl.set.items[it].cat)); }
+    assert('the set is judged once, by the engine, after the last card', sl.tally.total === 1 && learned(0) === nS + 1 && sl.locked && !sl.lab.card.visible && sl.fb !== null && sl.note.text.length > 5);
+    assert('the bins show green or amber after the judging', sl.lab.bad !== null && sl.lab.bad.length === sl.set.cats.length);
+    ctx.i18n.set('en');
+    assert('a language switch re-translates tag, question and note', sl.tag.text === ctx.t('minigame.science.mode.sort') && sl.lab.question.text === ctx.learning.localize(sl.q, 'en').q);
+    ctx.i18n.set('de');
+    press(0, 'pause');
+    ctx.screens.top().menu.rows.find(r => r.items[0].label() === ctx.t('minigame.quit')).items[0].on();
+    const rqs = await sciRun1;
+    assert('quitting Science resolves without rewards and restores the world', rqs.quit === true && rqs.xp === 0 && ctx.frozen === false && ctx.minigames.active === null);
+
+    // the circuit puzzle by hand: two repairs, a lit bulb, a wrong pick that explains why
+    const sci2 = await startScience([0], { first: 'circuit', second: 'circuit', switchMs: 30000 });
+    const sc2 = sci2.scene;
+    sc2.nextQuestion = (slot, kind) => (kind === 'circuit' ? by('sc-062') : by('sc-003'));
+    env.until(() => sc2.clock.phase === 'play', 400);
+    const cl = sc2.slots[0];
+    assert('Stromkreis-Tüftler draws the loop with a dark bulb and labels', cl.kind === 'circuit' && cl.board.cells.length === 4 && !cl.board.lit && !cl.board.glow[0].visible && cl.board.labels[0].text.includes(ctx.t('minigame.science.cell.battery')) && !cl.lab.card.visible);
+    intents[0].move.x = 1; step(1); intents[0].move.x = 0; step(1);
+    assert('the cursor moves along the loop', cl.board.focus === 1);
+    const nC = learned(0);
+    press(0, 'jump');
+    assert('picking a needed repair closes that switch but the bulb stays dark', cl.fixed.length === 1 && cl.cells[1].state === 'closed' && !cl.board.lit && cl.note.text === ctx.t('minigame.science.circuit.partial') && learned(0) === nC);
+    intents[0].answer = 4; step(1); intents[0].answer = 0; step(1);
+    assert('the last repair lights the bulb: glow, current and one right answer for the engine', cl.board.lit && cl.board.glow[0].visible && cl.board.dots[0].visible && cl.fb?.ok === true && cl.tally.correct === 1 && learned(0) === nC + 1 && cl.locked);
+    step(30);
+    assert('the current flows while the bulb is lit', cl.board.dots[0].x !== 0 || cl.board.dots[0].y !== 0);
+    sc2.nextQuestion = () => by('sc-060');
+    env.until(() => cl.wait <= 0 && !cl.locked, 600);
+    assert('after the pause the next puzzle comes: one repair (the gap)', cl.kind === 'circuit' && !cl.locked && cl.fixed.length === 0 && !cl.board.lit && cl.q.id === 'sc-060' && cl.fix.join() === 'c2');
+    const nC2 = learned(0);
+    cl.board.onPick(0);
+    assert('a wrong pick ends the puzzle: why the current cannot flow, the explanation and the solution', cl.fb?.ok === false && cl.tally.total === 2 && learned(0) === nC2 + 1 && cl.note.text.includes(ctx.t('minigame.science.why.battery')) && cl.note.text.includes(ctx.learning.localize(cl.q).explain) && cl.board.lit && cl.board.cells[2].kind === 'wire');
+    ctx.i18n.set('en');
+    assert('the note and the labels follow a language switch', cl.note.text.includes(ctx.t('minigame.science.why.battery')) && cl.board.labels[0].text.includes(ctx.t('minigame.science.cell.battery')));
+    ctx.i18n.set('de');
+    // Quick-Quiz after the puzzles: a wrong answer shows the right one, the explanation and the fun fact
+    sc2.nextQuestion = () => by('sc-003');
+    cl.since = sc2.def.options.quizEvery;
+    cl.wait = 1;
+    step(3);
+    assert('after enough puzzles a Quick-Quiz question appears in the answer panel', cl.kind === 'quiz' && cl.panel.q?.id === 'sc-003' && cl.panel.rows[0].bg.visible && !cl.board.labels[0].visible && cl.since === 0 && cl.panel.back.visible);
+    const goodS = cl.q.answers.findIndex(a => a.correct);
+    intents[0].answer = 1 + (goodS + 1) % cl.q.answers.length; step(1); intents[0].answer = 0; step(1);
+    assert('a wrong Quick-Quiz answer: correct answer, explanation and fun fact', cl.panel.fb?.ok === false && cl.panel.note.text.includes(ctx.learning.localize(cl.q).fact) && cl.panel.note.text.includes(ctx.learning.localize(cl.q).explain) && cl.tally.total === 3);
+    press(0, 'pause');
+    ctx.screens.top().menu.rows.find(r => r.items[0].label() === ctx.t('minigame.quit')).items[0].on();
+    await sci2.run;
+    delete sc2.nextQuestion; // the scene instance is reused by the next run
+    step(5);
+    assert('Science leaks nothing after the hand-played runs', JSON.stringify(snapshot()) === JSON.stringify(beforeS), `${JSON.stringify(beforeS)} -> ${JSON.stringify(snapshot())}`);
+
+    // a whole run: sorting first, then circuits, with Quick-Quiz questions between
+    const nW = learned(0);
+    const xpW = state.players[0].xp;
+    const moneyW = state.shared.money;
+    const sci3 = await startScience([0], { first: 'sort', second: 'circuit', switchMs: 30000 }, 3);
+    const sc3 = sci3.scene;
+    env.until(() => sc3.clock.phase === 'play', 400);
+    const seenS = new Set();
+    let litChecked = false;
+    let wrongChecked = false;
+    playScience(sc3, (p, n) => n % 4 !== 3, seenS, {
+      watch: () => {
+        const slot = sc3.slots[0];
+        if (slot.kind !== 'circuit' || !slot.fb) return;
+        if (slot.fb.ok && !litChecked) { litChecked = true; assert('a solved circuit lights the bulb with a glow', slot.board.lit && slot.board.glow[0].visible); }
+        if (!slot.fb.ok && !wrongChecked) { wrongChecked = true; assert('a wrong circuit pick explains and still shows the working circuit', slot.why !== null && slot.board.lit && slot.note.text.length > 20); }
+      }
+    });
+    assert('both modes and the Quick-Quiz were played in one run', seenS.has('sort') && seenS.has('circuit') && seenS.has('quiz'), [...seenS].join());
+    step(2);
+    assert('the round ended on the result screen after about 70 s', ctx.screens.top()?.id === 'minigameResult' && sc3.clock.phase === 'done' && sc3.clock.elapsedMs >= 69000, `${ctx.screens.top()?.id} ${sc3.clock.elapsedMs}`);
+    press(0, 'jump');
+    const rs = await sci3.run;
+    assert('Science result: graded, rewarded and counted like any minigame', rs.id === 'science' && rs.subject === 'science' && rs.total >= 8 && rs.correct >= 1 && rs.correct < rs.total && rs.score > 0 && rs.score < 1
+      && rs.grade >= 1 && rs.grade <= 6 && rs.xp > 0 && rs.moneyCents > 0 && rs.ms >= 69000 && rs.quit === false, JSON.stringify(rs));
+    assert('every sorted set, circuit and quiz question went through the learning engine', learned(0) === nW + rs.total, `${learned(0)} vs ${nW + rs.total}`);
+    assert('Science rewards were applied', state.players[0].xp === xpW + rs.xp && state.shared.money === moneyW + rs.moneyCents);
+    assert('the grade comes from ctx.grades', rs.grade === ctx.grades.preview(0, 'science', { score: rs.score, effort: rs.effort, difficulty: 3 }).grade);
+    assert('the world is back after Science', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_science'));
+    step(5);
+    assert('a whole Science run leaks nothing (display objects, textures, listeners)', JSON.stringify(snapshot()) === JSON.stringify(beforeS), `${JSON.stringify(beforeS)} -> ${JSON.stringify(snapshot())}`);
+
+    // two players side by side, circuits first
+    const n0S = learned(0);
+    const n1S = learned(1);
+    const xp1S = state.players[1].xp;
+    const sci4 = await startScience([0, 1], { first: 'circuit', second: 'sort', switchMs: 30000 }, 4);
+    const sc4 = sci4.scene;
+    env.until(() => sc4.clock.phase === 'play', 400);
+    assert('two players get two areas with their own labs and streams', sc4.slots.length === 2 && sc4.slots.every(s => s.kind === 'circuit' && s.q) && sc4.slots[0].board !== sc4.slots[1].board && sc4.slots[0].rect.x < sc4.slots[1].rect.x);
+    const seenS2 = new Set();
+    playScience(sc4, (p, n) => p === 0 || n % 2 === 0, seenS2);
+    assert('both modes were played with two players', seenS2.has('sort') && seenS2.has('circuit'));
+    assert('the leader is cheered before the result screen', sc4.over && sc4.banner.visible && sc4.bannerKey.key === 'minigame.science.winner' && ctx.screens.top()?.id === 'minigame' && sc4.slots[0].tally.correct > sc4.slots[1].tally.correct);
+    env.until(() => ctx.screens.top()?.id === 'minigameResult', 200);
+    step(2);
+    press(1, 'interact');
+    const r4 = await sci4.run;
+    assert('both players get a full, own result (the lead is only cosmetic)', r4.perPlayer.length === 2 && r4.perPlayer[0].score > r4.perPlayer[1].score
+      && r4.perPlayer.every(p => p.xp > 0 && p.effort > 0.5) && r4.total === sc4.slots[0].tally.total + sc4.slots[1].tally.total);
+    assert('each player was learned separately and paid', learned(0) === n0S + sc4.slots[0].tally.total && learned(1) === n1S + sc4.slots[1].tally.total && state.players[1].xp === xp1S + r4.perPlayer[1].xp);
+    assert('the world is restored after two-player Science', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_science'));
+    step(5);
+    assert('two-player Science leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeS), `${JSON.stringify(beforeS)} -> ${JSON.stringify(snapshot())}`);
   }
 };

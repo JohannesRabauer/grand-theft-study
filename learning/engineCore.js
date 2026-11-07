@@ -240,6 +240,7 @@ export class EngineCore {
       hints: (question.hints ?? []).map(pick),
       answers: (question.answers ?? []).map(a => ({ ...a, text: a.text === undefined ? undefined : pick(a.text) }))
     };
+    if (question.fact) out.fact = pick(question.fact);
     if (question.pairs) out.pairs = question.pairs.map(p => ({ left: pick(p.left), right: pick(p.right) }));
     if (question.sortItems) {
       out.categories = question.categories.map(c => ({ id: c.id, label: pick(c.label) }));

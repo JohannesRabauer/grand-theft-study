@@ -1,5 +1,5 @@
 {
-  "_doc": "Minigame registry (AD-20). id: unique, the scene key is MG_<id>. subject: grade ledger subject. durationSeconds: the shared round timer (30-90). rewards: xp and money (cents) for a perfect round; a lesser score earns a share from minRewardShare up. expectedQuestions: the score counts against at least this many questions and effort is the share tried. topics: learning-engine topics. difficultyRange: allowed 1-5 start difficulty. debug: only listed in ?debug sessions (demos and templates). Titles come from i18n minigame.<id>.title. options: minigame-specific tuning (mathe: mix = mode strategy alternate|random|sprint|blocks with first mode and switchAt share of the round, fall = block fall time in ms from baseMs, shortened per engine difficulty level and scaled by timeFactor within min/max, combo = sparkles, celebrateMs = winner cheer, blockMaxChars/keypadMaxDigits = which items fit; deutsch: mix with modes belt|spell, belt = belt travel time in ms from baseMs like fall, beltTags/spellTags = sub-tags of the items per mode, padMaxChars = longest typed word of the letter pad; englisch: mix with modes memory|signs, memoryTags/signTags = sub-tags of the items per mode, cardMaxChars = longest card text, memory = pairs per board of single-pair items, peekMs = how long two unmatched cards stay up, maxFaults/matchFaults = remembered-card mistakes still counted as right for a pair / a whole match item, padMaxChars as in deutsch; erdkunde: mix with modes wo|capital, tags = the sachkunde sub-tags of the pool, fallbackShare = chance that a Hauptstadt-Match question is an unmapped plain choice item; map positions of items live in data/learning/grade3/geo-map.json).",
+  "_doc": "Minigame registry (AD-20). id: unique, the scene key is MG_<id>. subject: grade ledger subject. durationSeconds: the shared round timer (30-90). rewards: xp and money (cents) for a perfect round; a lesser score earns a share from minRewardShare up. expectedQuestions: the score counts against at least this many questions and effort is the share tried. topics: learning-engine topics. difficultyRange: allowed 1-5 start difficulty. debug: only listed in ?debug sessions (demos and templates). Titles come from i18n minigame.<id>.title. options: minigame-specific tuning (mathe: mix = mode strategy alternate|random|sprint|blocks with first mode and switchAt share of the round, fall = block fall time in ms from baseMs, shortened per engine difficulty level and scaled by timeFactor within min/max, combo = sparkles, celebrateMs = winner cheer, blockMaxChars/keypadMaxDigits = which items fit; deutsch: mix with modes belt|spell, belt = belt travel time in ms from baseMs like fall, beltTags/spellTags = sub-tags of the items per mode, padMaxChars = longest typed word of the letter pad; englisch: mix with modes memory|signs, memoryTags/signTags = sub-tags of the items per mode, cardMaxChars = longest card text, memory = pairs per board of single-pair items, peekMs = how long two unmatched cards stay up, maxFaults/matchFaults = remembered-card mistakes still counted as right for a pair / a whole match item, padMaxChars as in deutsch; erdkunde: mix with modes wo|capital, tags = the sachkunde sub-tags of the pool, fallbackShare = chance that a Hauptstadt-Match question is an unmapped plain choice item; map positions of items live in data/learning/grade3/geo-map.json; science: mix with modes sort|circuit, quizEvery = puzzles in a row before a Quick-Quiz question, litMs = how long a lit bulb stays after a solved circuit, factExtraMs = extra reading time after a wrong answer to an item with a fun fact).",
   "settings": {
     "countdownSeconds": 2,
     "feedbackCorrectMs": 700,
@@ -116,6 +116,25 @@
         "mix": { "strategy": "alternate", "first": "random", "switchAt": 0.5 },
         "tags": ["geo", "karte"],
         "fallbackShare": 0.25,
+        "combo": { "from": 3, "sparkleBase": 8, "sparklePerStreak": 3, "sparkleMax": 30 },
+        "celebrateMs": 1800
+      }
+    },
+    {
+      "id": "science",
+      "subject": "science",
+      "scene": "MG_science",
+      "durationSeconds": 70,
+      "rewards": { "xp": 40, "moneyCents": 60 },
+      "topics": ["science"],
+      "maxPlayers": 2,
+      "difficultyRange": [1, 5],
+      "expectedQuestions": 10,
+      "options": {
+        "mix": { "strategy": "alternate", "first": "random", "switchAt": 0.5 },
+        "quizEvery": 2,
+        "litMs": 1300,
+        "factExtraMs": 1200,
         "combo": { "from": 3, "sparkleBase": 8, "sparklePerStreak": 3, "sparkleMax": 30 },
         "celebrateMs": 1800
       }
