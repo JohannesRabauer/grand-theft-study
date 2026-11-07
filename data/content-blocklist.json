@@ -1,0 +1,15 @@
+{
+  "_doc": "Entries are base64 of the reversed, umlaut-folded lowercase word (no plain offensive words in the repo). Manage with: node scripts/check-content.mjs --add <de|en> <words|stems> <word> | --allow <word> | --encode <word>. words = whole token, stems = token start, allow = exempt tokens. textFields = keys in data/*.json whose strings are linted (data/learning/**/*.json is linted completely).",
+  "textFields": ["text", "caption", "title", "label", "line", "lines", "hint", "message", "dialog"],
+  "lists": {
+    "de": {
+      "stems": ["c3NpZWhjcw==", "aGNzcmE=", "a2NpZg==", "c2hjaXc=", "ZXp0b2Y=", "bmhvc25lcnVo", "ZXBtYWxoY3M=", "ZXR0dW4=", "dHNhcHM=", "dHJlZG5paGVi", "a2FuYWs=", "cmVnZW4=", "cmVudWVnaXo=", "bGV0aGN1d2hjcw==", "bnJvcA==", "bmV0dGl0", "Z2l0dWxi", "dGhjYWxoY3NiYQ==", "cmVrYXNzYW0=", "ZHJvbXJl", "c3NlaWhjc3Jl", "cmV0bG9m", "ZHJvbXRzYmxlcw==", "Z2FsaGNzdG90", "Z25pcmJtdQ==", "dGVvdGVn", "a2NlcnJldg=="],
+      "words": ["ZXJ1aA==", "bmVydWg=", "b2dub20=", "c29nbm9t", "eGVz", "eXhlcw==", "dGtjYW4=", "bmV0ZW90", "bGV6dGVtZWc="]
+    },
+    "en": {
+      "stems": ["a2N1Zg==", "dGlocw==", "aGN0aWI=", "ZHJhdGVy", "cmVkcnVt", "ZXJ1dHJvdA==", "cmV0aGd1YWxz", "ZWRpY2l1cw==", "bnJvcA=="],
+      "words": ["ZWxvaHNzYQ==", "dHVscw==", "ZXJvaHc=", "ZHJhdHNhYg==", "dG51Yw==", "ZGFlaGtjaWQ=", "cmVnZ2lu", "dG9nZ2Fm", "ZWxwcGlyYw==", "Y2l0c2Fwcw==", "b3N0YWY=", "eXR0YWY=", "c2luZXA=", "YW5pZ2F2", "c2Jvb2I=", "c3RpdA==", "ZWR1bg==", "ZGVrYW4=", "eGVz", "eXhlcw==", "bGF1eGVz", "ZXJvZw==", "ZXJjYXNzYW0=", "bGxpaw==", "c2xsaWs=", "ZGVsbGlr", "Z25pbGxpaw==", "Z25pYmJhdHM=", "ZGViYmF0cw=="]
+    }
+  },
+  "allow": ["ZWJtb2JoY3NyYQ==", "ZWxrY2lm", "dHRla25hYnJldGxvZg=="]
+}

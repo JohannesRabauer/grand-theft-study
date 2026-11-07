@@ -1,0 +1,40 @@
+// Shared state for the smoke scenarios: boots the game from the menu, hooks the events the scenarios count
+// and builds the stepping helpers. Scenarios receive the returned object as their third argument.
+export function createEnv(game, h, assert, savedLang) {
+  const step = n => { for (let i = 0; i < n; i++) h.stepAll(game); };
+  // ---- menu -> game ----
+  if (game.scene.isActive('Game')) game.scene.getScene('Game').scene.start('Menu'); else if (!game.scene.isActive('Menu')) game.scene.start('Menu');
+  step(3);
+  const menu = game.scene.getScene('Menu');
+  assert('menu is active', game.scene.isActive('Menu'));
+  assert('menu shows a Start button', menu.children.list.some(o => o.text === game.registry.get('app').t('menu.start') || o.list?.some?.(c => c.text === game.registry.get('app').t('menu.start'))) ||
+    menu.children.list.length > 4, `${menu.children.list.length} objects`);
+  game.registry.get('app').quality.set('medium');
+  menu.scene.start('Game'); // what the Start button does
+  step(4);
+  const gs = game.scene.getScene('Game');
+  const ui = game.scene.getScene('UI');
+  const ctx = gs.ctx;
+  const hud = (id) => ui.hud.get(id);
+  assert('game and UI scenes running', game.scene.isActive('Game') && game.scene.isActive('UI') && !!ctx);
+  ctx.input.update = () => {};
+  const intent = ctx.input.intent;
+  intent.aim = null;
+  const events = [];
+  const log = n => ctx.events.on(n, e => events.push([n, e]));
+  ['goal:reached', 'turf:enter', 'turf:leave', 'chase:level', 'player:caught', 'player:respawn', 'tool:fire', 'prop:hit', 'weather:changed', 'bike:bell', 'hide:enter', 'npc:react'].forEach(log);
+  const count = n => events.filter(e => e[0] === n).length;
+  const pools = () => [...ctx.pools.byName].map(([name, p]) => ({ name, live: p.live(), cap: p.cap }));
+  const live = name => ctx.pools.byName.get(name).live();
+  const player = ctx.players[0];
+  const { surfaces } = ctx;
+  const drive = h.makeDriver(ctx);
+  const T = t => h.tilePx(ctx, t);
+  const press = key => { intent[key] = true; step(1); intent[key] = false; };
+  // step until cond() or max frames; returns frames used or -1
+  const until = (cond, max, tick) => { for (let i = 0; i < max; i++) { tick?.(); step(1); if (cond()) return i; } return -1; };
+  const inWall = () => { if (surfaces.solid(surfaces.at(player.x, player.y))) env.wallViolations++; };
+
+  const env = { h, step, gs, ui, ctx, hud, intent, events, count, pools, live, player, surfaces, drive, T, press, until, inWall, crowd: ctx.crowd, savedLang, wallViolations: 0 };
+  return env;
+}

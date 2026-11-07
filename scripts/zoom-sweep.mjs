@@ -8,26 +8,15 @@
 //  - mad:    mean abs. difference of consecutive frames over a 0.01 step sweep; "ratio" = max over median,
 //            a smooth zoom keeps it near 1, shimmering textures or jumping sprites push it up;
 //            "roughness" = largest deviation of one step from the mean of its neighbours, relative to the median
-import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { writeFileSync } from 'node:fs';
+import { launchBrowser } from './lib/headless-browser.mjs';
 
 const arg = (n, d) => { const i = process.argv.indexOf(`--${n}`); return i < 0 ? d : process.argv[i + 1]; };
 const base = arg('url', 'http://localhost:8080');
 const tier = arg('tier', 'medium');
-const exe = [
-  'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
-  'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
-  'C:/Program Files/Google/Chrome/Application/chrome.exe'
-].find(existsSync);
-if (!exe) { console.error('no Edge or Chrome found'); process.exit(2); }
 
-const port = 9300 + Math.floor(Math.random() * 500);
-const proc = spawn(exe, [
-  '--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${mkdtempSync(join(tmpdir(), 'sweep-'))}`,
-  '--no-first-run', '--window-size=960,540', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', 'about:blank'
-], { stdio: 'ignore' });
+const browser = launchBrowser('sweep-', ['--window-size=960,540', '--disable-background-timer-throttling', '--disable-renderer-backgrounding']);
+const port = browser.port;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let ws;
 try {
@@ -122,5 +111,5 @@ try {
   delete result.shot;
   console.log(JSON.stringify(result, null, 1));
 } finally {
-  if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(proc.pid), '/T', '/F']); else proc.kill();
+  browser.close();
 }

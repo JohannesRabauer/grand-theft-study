@@ -75,6 +75,7 @@ An FPS counter shows at the top left.
 node scripts/check-all.mjs        # runs the checks below, exits non-zero on failure
 node scripts/check-collisions.mjs # collision category table
 node scripts/check-i18n.mjs       # DE/EN keys identical, every t('...') key exists
+node scripts/check-content.mjs    # kid-safe text: blocklist lint of i18n and learning text, de/en parity (see docs/TESTING.md)
 node scripts/check-map.mjs        # town map shape, objects, two routes to school
 node scripts/check-chase.mjs      # pathfinding, level rules, escape rules
 node scripts/check-crowd.mjs      # crowd spawn rules, caps, reaction geometry
@@ -87,7 +88,7 @@ node scripts/bench-cdp.mjs --url http://localhost:8080          # CPU cost per u
 node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke  # scripted whole-game smoke test
 ```
 
-`index.html?bench` loads `scripts/bench.js` and `window.SCHULWEG_BENCH` (`runAll()`, `live()`, `smoke()`); details in docs/PERFORMANCE.md.
+`index.html?bench` loads `scripts/bench.js` and `window.SCHULWEG_BENCH` (`runAll()`, `live()`, `smoke()`); details in docs/PERFORMANCE.md. How to run and extend the checks and smoke scenarios: docs/TESTING.md.
 
 ## Movement and surfaces
 

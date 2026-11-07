@@ -30,8 +30,15 @@ node scripts/bench-cdp.mjs --url http://localhost:8080 --steps 1200 --json bench
 node scripts/bench-cdp.mjs --url http://localhost:8080 --live --uncapped               # real render loop, unthrottled (CPU side only)
 node scripts/bench-cdp.mjs --url http://localhost:8080 --cpu all --tier medium         # CPU profile per function
 node scripts/bench-cdp.mjs --url http://localhost:8080 --alloc all --tier medium       # allocation profile per function
-node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke                         # whole-game smoke test (46 checks)
+node scripts/bench-cdp.mjs --url http://localhost:8080 --smoke                         # whole-game smoke test (72 checks)
 ```
+
+Cleanup: `bench-cdp.mjs` and `zoom-sweep.mjs` start Edge/Chrome through `scripts/lib/headless-browser.mjs`, which gives every run its own
+temp profile (`bench-*` / `sweep-*` in the temp folder) and always removes it again: a `try/finally` plus SIGINT, SIGTERM and process-exit
+handlers kill the exact browser process tree by PID and delete the profile, on success, on errors and on Ctrl+C. (On Windows the PID that
+`spawn` returns is only a launcher that exits at once, so the real browser root is found by its unique `--user-data-dir` and killed with
+`taskkill /T`.) Only a hard kill of node itself (Task Manager, `Stop-Process`) cannot be caught; find such leftovers by the profile
+folder name only, e.g. `Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" | ? { $_.CommandLine -match 'user-data-dir=S*\(bench|sweep)-' }`.
 
 Or open `http://localhost:8080/index.html?bench` in any browser and call `await SCHULWEG_BENCH.runAll()` in the console;
 the table also shows on the page. (Numbers from a hidden or throttled tab are fine for this CPU measure but noisy; the
