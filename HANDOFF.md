@@ -20,7 +20,7 @@ Open the printed URL (or `http://localhost:8080`). URL options: `?debug` (FPS, o
 
 Controls (P1): WASD move, Space jump/ollie/bell, Shift sprint, F mount/dismount/interact (hold near a bus rear on skates to grab), C or Left Ctrl manual, Q/E switch tool (slingshot, throwing stick, stick), mouse aim + left click, R block, V Kiai, T weather, Esc pause. P2: arrow keys, Right Shift/Right Ctrl/Enter, `;` and `'` for defend/kiai. Full table in `README.md`.
 
-Checks: `node scripts/check-all.mjs` (47 checks, must stay green). Headless smoke test: see `docs/TESTING.md` (`scripts/bench-cdp.mjs --smoke`, ~1060 checks). Performance notes: `docs/PERFORMANCE.md`.
+Checks: `node scripts/check-all.mjs` (52 checks, must stay green). Headless smoke test: see `docs/TESTING.md` (`scripts/bench-cdp.mjs --smoke`, ~1120 checks). Performance notes: `docs/PERFORMANCE.md`.
 
 ## Where the plan lives
 
@@ -39,9 +39,9 @@ Ticket board: `uv run ~/.claude/skills/bmad-ticket/scripts/tickets.py --project-
 
 ## State at handoff
 
-Branch `main` holds everything and is pushed. **53 of 86 stories are built**; 47 node checks pass and the headless smoke test passes with 1061 checks, repeatably (see "Deterministic smoke test" below).
+Branch `main` holds everything and is pushed. **59 of 86 stories are built**; 52 node checks pass and the headless smoke test passes with 1118 checks, repeatably (see "Deterministic smoke test" below).
 
-Built: epic 1 foundation, epic 2 characters and two-player co-op (2.1-2.5), epic 3 learning engine and ~900 Klasse 3 questions plus grades, epic 4 all lesson minigames (4.8 open), epic 5 skating, epic 6 tools and karate (6.1-6.4), **epic 8 the whole school day** (home and morning, commute with the 08:00 bell and tram, school interior and lessons, surprise events, afternoon/evening/bedtime, Zeugnis with promotion and the class 4 end screen), **epic 9 quest runner and missions** (9.1, 9.7, 9.8: parcel, grandma's eggs, stolen bike, lost homework, skate and bike races, Kirmes range, friendship arc), **10.1 shops** (vehicles, slingshot upgrade, hats and rings, snacks, day ticket), **11.5 contextual explanations**, **epic 15 environment art** (ground transitions, water, kerbs, fences, hedges, buildings, doors, indoor rooms, rain puddles).
+Built: epic 1 foundation, epic 2 characters and two-player co-op (2.1-2.5), epic 3 learning engine and ~900 Klasse 3 questions plus grades, epic 4 all lesson minigames (4.8 open), epic 5 skating, epic 6 tools and karate (6.1-6.4), **epic 8 the whole school day** (home and morning, commute with the 08:00 bell and tram, school interior and lessons, surprise events, afternoon/evening/bedtime, Zeugnis with promotion and the class 4 end screen), **epic 9 quest runner and missions** (9.1, 9.7, 9.8: parcel, grandma's eggs, stolen bike, lost homework, skate and bike races, Kirmes range, friendship arc), **epic 10 economy and motivation** (10.1 shops with vehicles, slingshot upgrade, hats and rings, snacks and a day ticket; 10.2 XP for activities, level-up celebration and attribute growth hooks; 10.3 29 stickers with fun facts and the album; 10.4 20 achievements and three daily streaks; 10.5 the Lernbuch), **11.1 full HUD** (level, XP bar, grade average), **11.4 parent settings** (math gate, learning difficulty, chases on/off, play-time reminder), **11.5 contextual explanations**, **epic 15 environment art** (ground transitions, water, kerbs, fences, hedges, buildings, doors, indoor rooms, rain puddles).
 
 Also done outside the board: rain puddles that sit on the surface under them, a co-op fix (a caught kid rejoins next to the sibling when home is far, so the shared camera and tether cannot get stuck), the autosave bug fix (see Gotchas).
 
@@ -49,9 +49,9 @@ Playable characters: **Helena** (12), **Kilian** (10), **Lorenz** (8); looks and
 
 ## What to build next
 
-Open stories (32 todo, 2.6 parked): 4.8 Deutsch input cleanup; 6.5 belt effects; **7.1-7.5 chase levels 3-5, e-scooter bullies, boss bully (Klasse 3 boss name and trait still unanswered), Hausmeister/ticket inspector/dog/neighbor, Charme talk-down** (the tram already emits `tram:inspector` as the hook for 7.4); **9.2 Pfand machine and bakery, 9.3 sign scanning and newspaper route, 9.4 tram map quiz and fast travel, 9.5 and 9.6 chores**; **10.2 XP and levels, 10.3 stickers, 10.4 streaks and achievements, 10.5 Lernbuch**; **11.1 full HUD, 11.2 minimap, 11.3 phone, 11.4 parent settings, 11.6 important text waits for acknowledgement (audit still open), 11.7 age-based difficulty**; 12.x living world; 13.x audio; 14.x PWA, gamepad, language review, full-day smoke test.
+Open stories (27 todo, 2.6 parked): 4.8 Deutsch input cleanup; 6.5 belt effects; **7.1-7.5 chase levels 3-5, e-scooter bullies, boss bully (Klasse 3 boss name and trait still unanswered), Hausmeister/ticket inspector/dog/neighbor, Charme talk-down** (the tram already emits `tram:inspector` as the hook for 7.4; friendship level lowers the bully count in `ai/chaseLogic.js wantedKinds`); **9.2 Pfand machine and bakery, 9.3 sign scanning and newspaper route, 9.4 tram map quiz and fast travel, 9.5 and 9.6 chores**; **11.2 minimap, 11.3 phone with messages, 11.6 important text waits for acknowledgement (the audit of every old screen is still open), 11.7 age-based difficulty** (the parent difficulty setting from 11.4 is the base); 12.1 seasons and snow, 12.2 particles, 12.5 pigeons and cats; 13.1-13.3 audio; 14.1-14.4 PWA, gamepad prompts, language review, full-day smoke test.
 
-Suggested order: 10.2-10.5 (rewards the loop that now exists), 9.2-9.6 (more things to do between school and bedtime), 11.x, then 7.x, 12-14.
+Suggested order: 9.2-9.6 (more to do between school and bedtime), 11.3/11.2, 7.x, then 12-14. The shop item, achievement, sticker and mission lists are all data files, so new content is mostly data plus texts.
 
 **Parked by the user:** story **2.6 three-player co-op** (status `draft`). Do not build until asked.
 
@@ -81,6 +81,8 @@ Earlier sessions used one Sonnet sub-agent per story (prompt shape in the git hi
 - Never kill processes by name/pattern. One early agent killed unrelated `cards-profile-*` Edge instances. The bench scripts now clean up their own headless browsers by PID; stray ones live under `%TEMP%\bench-*` / `sweep-*`.
 - **Deterministic smoke test.** `scripts/smoke.js` seeds `Math.random` per scenario, so a run is repeatable (the earlier "flaky" `worldDoors` check was luck with the unseeded traffic). If a check fails, it fails every time: debug it, do not rerun. `scripts/check-chase.mjs`'s A* timing limit is deliberately loose (5 ms).
 - Smoke scenarios share one running game. Scenarios after `quitAndSecondRun` must take the live scene (`game.scene.getScene('Game').ctx`), not `env.ctx`, which points at the first run. Put the world, clock, state and vehicle back at the end of a scenario (see `scripts/smoke/shop.js` for the pattern), and switch off what freezes the world while other scenarios run: `game.hintsOff`, `game.schoolEventsOff` and `game.trafficOff` are set in `scripts/smoke/env.js`.
+- A scenario that emits a real game event (`bike:bell`, `player:caught`, `bully:bump`) is heard by the whole game (pedestrians and buses react), so scenarios feed the service under test directly (`svc.onEvent`, `q.onEvent`). After `state.replace(...)` call `ctx.characters.refresh(player)` for each kid: the speed modifiers do not follow a replace.
+- Older scenarios pin exact numbers; new XP, growth or achievement rewards change them. `scripts/smoke/env.js` zeroes the achievement xp reward for that reason, and a few tests compare against the data (`ctx.progress.rules`).
 - `giveBike()` adds a new parked bike each time; a scenario that calls it leaks a bike object. Do not remount bikes in the middle of a scenario (the street-ride bookkeeping then differs after a map round trip).
 - **A screen that waits for confirmation eats the next key press.** Anything started automatically in the middle of play (a theft, a bus hit) must only toast; only things the player asked for (a phone call, a shop, bedtime) may open a screen. Fresh-press screens need one frame with the key released before a second press counts (`ChoiceCursor`).
 - The event emitter is shared and `GameScene` removes every listener when a run ends; anything created once at boot must re-subscribe per run (`SaveSlots.attach()` does; before that fix, autosave on phase end died after the first return to the menu).
@@ -89,7 +91,7 @@ Earlier sessions used one Sonnet sub-agent per story (prompt shape in the git hi
 - `ButtonMenu` reads keys directly (menu focus only), a known deviation from AD-10.
 - Erdkunde, Musik, Kunst, Sport and Karate lessons are graded under their own subject ids (display names exist; `data/grading.json` `subjects` stays the five that have teacher comments, a check requires strong and weak comments for each).
 - Co-op defaults (assumption, unconfirmed): money shared, grades/XP/learning per player, lessons side by side.
-- Save format is version 7 (`STATE_VERSION`); migrations exist from v0 (`state/migrations.js`). Mission, hint, shop, ticket and Zeugnis progress live in `shared.flags` and `shared.quests`, so they needed no migration.
+- Save format is version 7 (`STATE_VERSION`); migrations exist from v0 (`state/migrations.js`). Mission, hint, shop, ticket, Zeugnis, achievement, streak and parent-setting progress live in `shared.flags` and `shared.quests`, stickers in `players[i].stickers` (already in the shape), so none of it needed a migration.
 
 ## Open questions for the user
 
