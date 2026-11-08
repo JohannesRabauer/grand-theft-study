@@ -4,8 +4,43 @@
 // overlay and the temporary puddles: while it rains, dry tiles near the camera become 'puddle'
 // through the surfaces override API (AD-6), drawn by a fixed pool of tile images; when it
 // stops they dry out again, oldest first. Rain particles belong to ParticleHub (it reads this).
-// Emits `weather:changed` ({ state }).
+// Story 12.1: a third state `snow` (the winter part of the day, data/weather.json `snow`): flakes drift down, a share of open tiles gets covered
+// with snow (surface override 'snow', slows) and some of those with ice (override 'ice', very slippery); they melt away again oldest first
+// when it stops. Emits `weather:changed` ({ state }).
 import { puddleKey } from '../scenes/EnvArt.js';
+
+// The snow, ice and flake pictures, drawn once (they belong to the game, not to a run): a lumpy white cover with sparkles, a pale glassy ice
+// patch with highlight streaks, and a tiny flake. Fixed hashes, no random numbers.
+function snowTextures(scene, res) {
+  const px = 16 * res.scale;
+  const hash = n => (Math.imul(n + 1, 2654435761) >>> 0) / 4294967296;
+  const make = (key, draw, size = px) => {
+    if (scene.textures.exists(key)) return;
+    const tex = scene.textures.createCanvas(key, size, size);
+    draw(tex.getContext(), size);
+    tex.refresh();
+  };
+  for (let v = 0; v < 3; v++) {
+    make(`weather-snow-${v}`, (c, s) => {
+      c.fillStyle = 'rgba(244,248,255,0.92)';
+      for (let k = 0; k < 7; k++) { c.beginPath(); c.ellipse(s * (0.2 + hash(v * 9 + k) * 0.6), s * (0.2 + hash(v * 9 + k + 40) * 0.6), s * (0.16 + hash(k + v) * 0.14), s * (0.12 + hash(k + v + 5) * 0.12), 0, 0, Math.PI * 2); c.fill(); }
+      c.fillStyle = 'rgba(255,255,255,1)';
+      for (let k = 0; k < 6; k++) c.fillRect(Math.floor(s * hash(v * 5 + k + 90)), Math.floor(s * hash(v * 5 + k + 120)), Math.max(1, res.scale), Math.max(1, res.scale));
+      c.fillStyle = 'rgba(170,190,220,0.45)';
+      c.fillRect(0, s - Math.max(1, res.scale), s, Math.max(1, res.scale));
+    });
+  }
+  for (let v = 0; v < 2; v++) {
+    make(`weather-ice-${v}`, (c, s) => {
+      c.fillStyle = 'rgba(190,225,245,0.62)';
+      c.beginPath(); c.ellipse(s / 2, s / 2, s * (0.42 + v * 0.04), s * 0.36, 0.3 * v, 0, Math.PI * 2); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,0.85)';
+      c.lineWidth = Math.max(1, res.scale * 0.7);
+      for (let k = 0; k < 3; k++) { c.beginPath(); c.moveTo(s * (0.2 + k * 0.15), s * 0.7); c.lineTo(s * (0.4 + k * 0.15), s * 0.3); c.stroke(); }
+    });
+  }
+  make('weather-flake', (c, s) => { c.fillStyle = '#ffffff'; c.beginPath(); c.arc(s / 2, s / 2, s / 2, 0, Math.PI * 2); c.fill(); }, Math.max(2, Math.round(2 * res.scale)));
+}
 
 export class Weather {
   constructor(scene, ctx, cfg) {
@@ -19,9 +54,26 @@ export class Weather {
     this.ambientAlpha = 0;
     ctx.events.on('clock:tick', () => this.syncClock());
     this.syncClock();
+    this.rainColor = parseInt(cfg.overlayColor.slice(1), 16);
+    this.snowColor = parseInt(cfg.snow.overlayColor.slice(1), 16);
     this.overlay = scene.add.rectangle(0, 0, 1, 1, parseInt(cfg.overlayColor.slice(1), 16)).setOrigin(0).setDepth(9300).setVisible(false);
     this.wet = [];
     for (let i = 0; i < cfg.maxWet; i++) this.wet.push(scene.add.image(0, 0, 'tile-puddle').setOrigin(0).setScale(ctx.res.inv).setDepth(-0.9).setVisible(false));
+    this.snowCfg = cfg.snow;
+    this.snowTex = snowTextures(scene, ctx.res);
+    const sc = cfg.snow;
+    this.flakes = [];
+    this.fx = new Float32Array(sc.flakes);
+    this.fy = new Float32Array(sc.flakes);
+    this.fp = new Float32Array(sc.flakes);
+    for (let i = 0; i < sc.flakes; i++) {
+      const h = Math.imul(i + 1, 2654435761) >>> 0; // fixed scatter: nothing here touches Math.random, the seeded runs stay repeatable
+      this.fx[i] = (h % 1000) / 1000;
+      this.fy[i] = ((h >>> 10) % 1000) / 1000;
+      this.fp[i] = ((h >>> 20) % 628) / 100;
+      this.flakes.push(scene.add.image(0, 0, 'weather-flake').setScale(ctx.res.inv).setDepth(9298).setVisible(false));
+    }
+    this.snowIntensity = 0;
     this.tx = new Int16Array(cfg.maxWet);
     this.ty = new Int16Array(cfg.maxWet);
     this.count = 0; // wet tiles in use, oldest first in a ring starting at `head`
@@ -43,6 +95,8 @@ export class Weather {
 
   get raining() { return this.state === 'rain'; }
 
+  get snowing() { return this.state === 'snow'; }
+
   toggle() { this.set(this.raining ? 'clear' : 'rain'); }
 
   set(state) {
@@ -56,7 +110,7 @@ export class Weather {
     const { day } = this.ctx;
     if (day.weather !== this.scheduled) {
       this.scheduled = day.weather;
-      this.set(this.scheduled);
+      this.set(this.scheduled === 'snow' && window.SCHULWEG_GAME?.snowOff ? 'clear' : this.scheduled); // snowOff: test hook, the scripted school runs stay dry
     }
     const tint = day.tint;
     this.ambient.setFillStyle(tint.rgb);
@@ -74,17 +128,26 @@ export class Weather {
     }
     const target = this.raining && outdoor ? 1 : 0;
     this.intensity += Math.max(-dt / c.fade, Math.min(dt / c.fade, target - this.intensity));
+    const snowTarget = this.snowing && outdoor ? 1 : 0;
+    this.snowIntensity += Math.max(-dt / c.fade, Math.min(dt / c.fade, snowTarget - this.snowIntensity));
     const ov = this.overlay;
-    ov.setVisible(this.intensity > 0);
-    if (this.intensity > 0) {
+    const dim = this.intensity > 0 ? this.intensity : this.snowIntensity;
+    ov.setVisible(dim > 0);
+    if (dim > 0) {
       const v = this.scene.cameras.main.worldView;
-      ov.setPosition(v.x, v.y).setSize(v.width, v.height).setAlpha(c.overlayAlpha * this.intensity);
+      const snow = this.intensity <= 0;
+      ov.setFillStyle(snow ? this.snowColor : this.rainColor);
+      ov.setPosition(v.x, v.y).setSize(v.width, v.height).setAlpha((snow ? this.snowCfg.overlayAlpha : c.overlayAlpha) * dim);
     }
+    this.flurry(dt);
     this.timer -= dt;
     if (this.timer > 0) return;
     if (this.raining && outdoor) {
       this.timer = c.puddleEvery;
       this.addPuddle();
+    } else if (this.snowing && outdoor) {
+      this.timer = this.snowCfg.patchEvery;
+      this.addSnow();
     } else if (this.count > 0) {
       this.timer = c.dryEvery;
       this.dryOne();
@@ -103,6 +166,48 @@ export class Weather {
       if (x < 0 || y < 0 || x >= surfaces.cols || y >= surfaces.rowCount || surfaces.base(x, y) !== base) return null;
     }
     return base;
+  }
+
+  // Snowflakes drift down inside the camera view; positions are kept as shares of the view and moved without allocating.
+  flurry(dt) {
+    const sc = this.snowCfg;
+    const show = this.snowIntensity > 0.01;
+    const v = this.scene.cameras.main.worldView;
+    const t = this.scene.time.now / 1000;
+    for (let i = 0; i < this.flakes.length; i++) {
+      const f = this.flakes[i];
+      if (f.visible !== show) f.setVisible(show);
+      if (!show) continue;
+      this.fy[i] += (sc.fall * (0.6 + (i % 5) * 0.12) * dt) / v.height;
+      if (this.fy[i] > 1) this.fy[i] -= 1;
+      f.setPosition(v.x + this.fx[i] * v.width + Math.sin(t * 0.9 + this.fp[i]) * sc.drift, v.y + this.fy[i] * v.height).setAlpha(this.snowIntensity);
+    }
+  }
+
+  // Snow settles on open ground near the camera; some of it freezes to ice. Reuses the ring of wet tiles of the puddles.
+  addSnow() {
+    const { surfaces } = this.ctx;
+    const c = this.cfg;
+    const sc = this.snowCfg;
+    if (this.count >= c.maxWet) this.dryOne();
+    const mid = this.scene.cameras.main.midPoint;
+    const ts = surfaces.tileSize;
+    for (let tries = 0; tries < 40; tries++) {
+      const tx = Math.floor(mid.x / ts) + Math.floor((Math.random() * 2 - 1) * c.range);
+      const ty = Math.floor(mid.y / ts) + Math.floor((Math.random() * 2 - 1) * c.range);
+      if (tx < 0 || ty < 0 || tx >= surfaces.cols || ty >= surfaces.rowCount) continue;
+      if (surfaces.at(tx * ts, ty * ts) !== surfaces.base(tx, ty)) continue;
+      const h = ((tx * 73856093) ^ (ty * 19349663)) >>> 0;
+      if (!sc.wettable.includes(surfaces.base(tx, ty)) || (h % 1000) >= sc.spotShare * 1000) continue;
+      const ice = ((h >>> 8) % 1000) < sc.iceShare * 1000;
+      const i = (this.head + this.count) % c.maxWet;
+      this.tx[i] = tx;
+      this.ty[i] = ty;
+      this.count++;
+      surfaces.override(tx, ty, ice ? 'ice' : 'snow');
+      this.wet[i].setTexture(ice ? `weather-ice-${h % 2}` : `weather-snow-${h % 3}`).setPosition(tx * ts, ty * ts).setVisible(true);
+      return;
+    }
   }
 
   // A low spot within range of the camera centre, still dry, becomes a puddle.

@@ -47,7 +47,12 @@ assert.equal(sanitizeClock(cfg, { day: -2, minute: 'x' }).day, 1);
 assert.equal(sanitizeClock(cfg, undefined).minute, cfg.start);
 
 // weather schedule: deterministic per day, only inside windows, some days rain and some do not
-assert.equal(scheduledWeather(cfg, 1, parseTime('10:00')), 'clear', 'no hints during school');
+// the school window is winter: it may snow on some days, never rain (story 12.1)
+const snowyDays = [];
+for (let d = 1; d <= 60; d++) { const w = scheduledWeather(cfg, d, parseTime('10:00')); assert.ok(w === 'clear' || w === 'snow', 'winter school: clear or snow'); if (w === 'snow') snowyDays.push(d); }
+assert.ok(snowyDays.length > 20 && snowyDays.length < 55, `snow on many winter school days but not all (${snowyDays.length}/60)`);
+assert.equal(scheduledWeather(cfg, snowyDays[0], parseTime('07:00')), scheduledWeather(cfg, snowyDays[0], parseTime('07:00')));
+assert.ok(scheduledWeather(cfg, snowyDays[0], parseTime('15:00')) !== 'snow', 'no snow in the spring afternoon');
 const rainyDays = [];
 for (let d = 1; d <= 60; d++) {
   const a = scheduledWeather(cfg, d, parseTime('15:00'));

@@ -2,13 +2,25 @@
   "wind": {
     "base": 0.45,
     "gust": 0.6,
-    "periods": [37, 11, 3.7],
+    "periods": [
+      37,
+      11,
+      3.7
+    ],
     "baseAngle": 12,
     "swing": 40,
     "swingPeriod": 53,
     "startTime": 5
   },
-  "flag": { "poleHeight": 22, "segments": 6, "segWidth": 4, "turn": 3, "speed": 6, "wave": 3, "droop": 1.2 },
+  "flag": {
+    "poleHeight": 22,
+    "segments": 6,
+    "segWidth": 4,
+    "turn": 3,
+    "speed": 6,
+    "wave": 3,
+    "droop": 1.2
+  },
   "weather": {
     "fade": 2,
     "overlayColor": "#16264a",
@@ -18,6 +30,30 @@
     "maxWet": 40,
     "spotShare": 0.18,
     "range": 20,
-    "wettable": ["asphalt", "concrete", "path", "lane"]
+    "wettable": [
+      "asphalt",
+      "concrete",
+      "path",
+      "lane"
+    ],
+    "snow": {
+      "overlayColor": "#dfe9ff",
+      "overlayAlpha": 0.1,
+      "flakes": 70,
+      "fall": 38,
+      "drift": 14,
+      "patchEvery": 0.12,
+      "spotShare": 0.55,
+      "iceShare": 0.2,
+      "wettable": [
+        "asphalt",
+        "concrete",
+        "path",
+        "lane",
+        "cobble",
+        "grass"
+      ]
+    },
+    "_doc": "States: clear, rain, snow (story 12.1). Rain makes puddles (surface override puddle). Snow, only in the winter part of the day, drifts flakes and covers a share of open tiles with snow (grip 0.5) of which iceShare become ice (grip 0.15, very slippery); when it stops they melt away oldest first. The season comes from the day phase (data/day.json): autumn rain and leaves, winter snow and ice, spring and summer dry and bright."
   }
 }
