@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "depth": 9299,
+  "texture": { "key": "light-pool", "radius": 64, "steps": 5, "dither": 0.35 },
+  "ambient": { "strength": 1.15, "floor": 0.32 },
+  "poolCap": 64,
+  "sources": [
+    { "id": "park-lamp-1", "map": "town", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -29] }
+  ]
+}

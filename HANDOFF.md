@@ -16,7 +16,7 @@ npx serve .
 python -m http.server 8080
 ```
 
-Open the printed URL (or `http://localhost:8080`). URL options: `?debug` (FPS, overlays, `window.SCHULWEG_GAME` debug API), `?q=low|medium|high` (quality tier; Medium/High render 960x540, Low 480x270; changing between those classes reloads).
+Open the printed URL (or `http://localhost:8080`). URL options: `?renderer=canvas` (force Canvas, no light map or post passes), `?debug` (FPS, overlays, `window.SCHULWEG_GAME` debug API), `?q=low|medium|high` (quality tier; Medium/High render 960x540, Low 480x270; changing between those classes reloads).
 
 Controls (P1): WASD move, Space jump/ollie/bell, Shift sprint, F mount/dismount/interact (hold near a bus rear on skates to grab), C or Left Ctrl manual, Q/E switch tool (slingshot, throwing stick, stick), mouse aim + left click, R block, V Kiai, T weather, Esc pause. P2: arrow keys, Right Shift/Right Ctrl/Enter, `;` and `'` for defend/kiai. Full table in `README.md`.
 

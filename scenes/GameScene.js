@@ -16,6 +16,9 @@ import { Player } from '../entities/Player.js';
 import { installPlayers, startPlayers } from '../entities/players.js';
 import { PlayerMarkers } from '../entities/PlayerMarkers.js';
 import { CameraRig } from '../camera/CameraRig.js';
+import { LightPool } from '../render/lightMath.js';
+import { LightMap } from '../render/LightMap.js';
+import { PostFx } from '../render/PostFx.js';
 import { Zones } from '../entities/Zones.js';
 import { Doors } from '../entities/Doors.js';
 import { World } from '../services/World.js';
@@ -161,6 +164,7 @@ export class GameScene extends Phaser.Scene {
     const wcfg = cache.get('weather');
     ctx.wind = new Wind(wcfg.wind);
     ctx.day = new DayClock(ctx, cache.get('day')); // AD-17: before Weather, which reads its schedule
+    ctx.lights = new LightPool(cache.get('lighting').poolCap); // AD-31: systems add/move/release light handles here
     ctx.weather = new Weather(this, ctx, wcfg.weather);
     ctx.particles = new ParticleHub(this, ctx, cache.get('particles'));
     this.props = new Props(this, ctx, cache.get('props'));
@@ -224,6 +228,8 @@ export class GameScene extends Phaser.Scene {
     this.zoomVel = 0;
     this.focus = this.rig.focus;
     this.snapCamera();
+    this.postFx = new PostFx(this, ctx, cache.get('postfx')); // AD-31: bloom, grade and vignette on the world camera
+    this.lightMap = new LightMap(this, ctx, cache.get('lighting'), this.postFx);
     this.crowd = new CrowdDirector(this, ctx, cache.get('npcs')); // after the camera: it prefills the view
 
     // UIScene asks for pause (a freezing screen is open) / quit through events; the world is only changed here.
@@ -437,6 +443,7 @@ export class GameScene extends Phaser.Scene {
     this.dogs.update(dt);
     this.flags.update(dt);
     this.ctx.particles.update(dt);
+    this.lightMap.update(dt);
     this.streamer.update();
     this.markers.update();
     this.beltTags.update();

@@ -22,7 +22,7 @@ const res = resolveRes(quality);
 const mapIndex = await fetch('data/maps/index.json').then(r => r.json());
 
 const game = new Phaser.Game({
-  type: Phaser.AUTO,
+  type: new URLSearchParams(location.search).get('renderer') === 'canvas' ? Phaser.CANVAS : Phaser.AUTO, // ?renderer=canvas forces the Canvas fallback (no light map, no post passes)
   width: res.renderW,
   height: res.renderH,
   backgroundColor: '#000000',

@@ -213,3 +213,19 @@ Needs: the PC and the phone on the same Wi-Fi.
 - The measuring browser is headless Edge with software GL; the built-in preview pane runs at about 2 FPS and could not be used for FPS.
 - Worst cases are scripted, not played: bullies are never allowed to catch the player in the benchmark, and the map has only 20 props, so the 60-prop budget is not exercised (the 12-NPC budget is, since story 1.14).
 - Timer resolution (0.1 ms) and a shared machine make small differences (below about 0.05 ms) unreliable; `max` values are single samples.
+
+## Story 16.2: light map and post effects (CAP-35, AD-31)
+
+New per frame work on Medium and High: one 480x270 light render texture (clear plus one stamp per visible light, now 1) multiplied over the world, and two full-screen WebGL passes on the world camera (bloom with 8 taps on Medium and 16 on High, colour grade plus vignette). Low and Canvas (`?renderer=canvas`) skip all of it and keep the old tint overlay.
+
+Real render loop, headless Edge, software GL, uncapped (`node scripts/bench-cdp.mjs --url ... --live --uncapped`), ms per frame, before = commit 8330e10 served from a copy, after = this story. Frame ms avg / p95:
+
+| Scenario | Tier | Before | After |
+| --- | --- | --- | --- |
+| a idle walking | Medium | 1.18 / 1.80 | 1.19 / 2.20 |
+| e everything | Medium | 0.89 / 1.40 | 1.18 / 1.70 |
+| a idle walking | High | 1.31 / 2.20 | 1.38 / 2.10 |
+| e everything | High | 1.03 / 1.50 | 1.16 / 1.70 |
+| e everything | Low | 0.92 / 1.40 | 1.05 / 1.80 |
+
+p95 stays far below 16.7 ms on Medium and High; worst scenario Medium e p95 +21 percent (limit +25), High e +13 percent. Software GL is not a phone GPU: the two passes at 960x540 on a real phone remain unmeasured (see the phone protocol). `scripts/bench-cdp.mjs --query "&q=low"` adds URL flags to the bench page. Screenshot set `docs/shots/overhaul/after-16-2/` (night walkable luminance 0.20 and 0.22, limit 0.16).

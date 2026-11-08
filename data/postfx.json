@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "grade": { "tint": [1.0, 0.995, 0.975], "saturation": 1.05, "contrast": 1.03, "night": { "tint": [0.9, 0.96, 1.1], "saturation": 0.92 } },
+  "vignette": { "strength": 0.14, "nightExtra": 0.22, "inner": 0.45, "outer": 1.15 },
+  "bloom": { "threshold": 0.72, "intensity": 0.5, "radius": 3.5, "nightOnly": true }
+}

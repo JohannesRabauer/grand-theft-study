@@ -121,7 +121,7 @@ export class Weather {
     const c = this.cfg;
     const amb = this.ambient;
     const outdoor = !this.ctx.map.indoor;
-    amb.setVisible(outdoor && this.ambientAlpha > 0.005);
+    amb.setVisible(outdoor && this.ambientAlpha > 0.005 && !this.ctx.lights?.mapActive); // the light map (render/LightMap.js) replaces this tint overlay when it is active
     if (amb.visible) {
       const v = this.scene.cameras.main.worldView;
       amb.setPosition(v.x, v.y).setSize(v.width, v.height).setAlpha(this.ambientAlpha);

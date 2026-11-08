@@ -50,7 +50,7 @@ try {
 
   await send('Runtime.enable');
   await send('Page.enable');
-  await send('Page.navigate', { url: `${base}/index.html?bench` });
+  await send('Page.navigate', { url: `${base}/index.html?bench${arg('query', '')}` });
   let ready = false;
   for (let i = 0; i < 200 && !ready; i++) {
     await sleep(300);

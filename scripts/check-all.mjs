@@ -36,6 +36,7 @@ checks.push('check-gamepad.mjs');
 checks.push('check-tone.mjs');
 checks.push('check-balance.mjs');
 checks.push('check-lookmetrics.mjs');
+checks.push('check-lighting.mjs');
 for (const c of checks) {
   console.log(`\n== ${c}`);
   const r = spawnSync(process.execPath, [join(dir, c)], { stdio: 'inherit', cwd: join(dir, '..') });

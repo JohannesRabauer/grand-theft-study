@@ -51,6 +51,8 @@ export class BootScene extends Phaser.Scene {
     this.load.json('theft', 'data/theft.json');
     this.load.json('routes', 'data/routes.json');
     this.load.json('day', 'data/day.json');
+    this.load.json('lighting', 'data/lighting.json');
+    this.load.json('postfx', 'data/postfx.json');
     this.load.json('timetable', 'data/timetable.json');
     this.load.json('morning', 'data/morning.json');
     this.load.json('hud', 'data/hud.json');

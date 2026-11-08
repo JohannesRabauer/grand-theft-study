@@ -1,7 +1,7 @@
 // Screenshot set and look metrics (story 16.1, CAP-35). Captures a fixed shot list of the game without any debug overlay or
 // HUD into docs/shots/overhaul/<label>/ and writes metrics.json beside the images. Runs the game in a headless Edge/Chrome
 // from a tiny static server of its own, with a seeded Math.random and a fixed-step clock, so two runs give the same bytes.
-//   node scripts/shots.mjs --label before [--tier medium|low] [--only id,id]
+//   node scripts/shots.mjs --label before [--tier medium|low] [--only id,id] [--renderer canvas]
 // Without --tier both Medium and Low are captured. Node 22+.
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
@@ -20,7 +20,7 @@ const only = arg('only', '') ? arg('only').split(',') : null;
 const outDir = join(root, 'docs', 'shots', 'overhaul', label);
 
 // minutes of the day for the lighting variants (data/day.json phases)
-const TIMES = { morning: 7 * 60, day: 12 * 60, evening: 19 * 60 + 45, night: 21 * 60 + 30 };
+const TIMES = { morning: 7 * 60, day: 12 * 60, evening: 19 * 60 + 45, night: 21 * 60 + 30, dusk: 21 * 60 };
 // The fixed shot list. `at` is a district of the town map (the npc node or spawn nearest to the centre of its npc points), a map id for the interiors.
 const DISTRICTS = ['park', 'oldtown', 'road', 'school', 'market', 'riverside', 'skate', 'plaza'];
 const SHOTS = [
@@ -28,6 +28,7 @@ const SHOTS = [
   ...['morning', 'evening', 'night'].map(t => ({ id: `oldtown-${t}`, map: 'town', at: 'oldtown', time: t, weather: 'clear' })),
   { id: 'oldtown-rain', map: 'town', at: 'oldtown', time: 'day', weather: 'rain' },
   { id: 'oldtown-snow', map: 'town', at: 'oldtown', time: 'day', weather: 'snow' },
+  { id: 'lamp-dusk', map: 'town', at: 'object:park-lamp-1', time: 'dusk', weather: 'clear' }, // story 16.2: the first real light
   { id: 'park-night', map: 'town', at: 'park', time: 'night', weather: 'clear' },
   { id: 'interior-home-morning', map: 'home', time: 'morning', weather: 'clear' },
   { id: 'interior-home-night', map: 'home', time: 'night', weather: 'clear' },
@@ -78,7 +79,7 @@ async function captureTier(tier) {
     await send('Runtime.enable');
     await send('Page.enable');
     await send('Page.addScriptToEvaluateOnNewDocument', { source: SEED_SCRIPT });
-    await send('Page.navigate', { url: `${base}/index.html?debug&q=${tier}` });
+    await send('Page.navigate', { url: `${base}/index.html?debug&q=${tier}${arg('renderer', '') ? `&renderer=${arg('renderer')}` : ''}` });
     let ready = false;
     for (let i = 0; i < 100 && !ready; i++) {
       await sleep(300);
@@ -124,7 +125,8 @@ async function captureTier(tier) {
         ctx.weather.set(shot.weather);
         let x, y;
         if (shot.map === 'town') {
-          const nodes = ctx.map.objects.filter(o => o.district === shot.at && typeof o.x === 'number');
+          const obj = shot.at.startsWith('object:') ? ctx.map.objects.find(o => o.id === shot.at.slice(7)) : null;
+          const nodes = obj ? [obj] : ctx.map.objects.filter(o => o.district === shot.at && typeof o.x === 'number');
           const mx = nodes.reduce((a, o) => a + o.x, 0) / nodes.length, my = nodes.reduce((a, o) => a + o.y, 0) / nodes.length;
           const n = nodes.reduce((b, o) => Math.hypot(o.x - mx, o.y - my) < Math.hypot(b.x - mx, b.y - my) ? o : b);
           x = (n.x + 0.5) * ctx.map.tileSize; y = (n.y + 0.5) * ctx.map.tileSize;
