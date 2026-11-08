@@ -13,7 +13,15 @@ export class SaveSlots {
     this.events = events;
     this.storage = storage;
     this.activeSlot = null; // null: in-memory game, autosave does nothing
-    events.on('phase:ended', () => { if (this.activeSlot) this.save(this.activeSlot); });
+    this.onPhaseEnded = () => { if (this.activeSlot) this.save(this.activeSlot); };
+    this.attach();
+  }
+
+  // (Re)subscribes the autosave. A game run ends with events.removeAllListeners() on the shared emitter, which also removes this
+  // listener, so every new run calls attach() again; calling it twice never saves twice.
+  attach() {
+    this.events.off?.('phase:ended', this.onPhaseEnded); // (a minimal test emitter may not have off)
+    this.events.on('phase:ended', this.onPhaseEnded);
   }
 
   get count() { return this.state.cfg.slots; }

@@ -31,7 +31,8 @@ import { traffic } from './traffic.js';
 import { coopMenu, coopCommute, coopChase } from './coop.js';
 import { school } from './school.js';
 import { schoolEvents } from './school-events.js';
+import { dayFlow } from './dayflow.js';
 import { home } from './home.js';
 import { openWorld } from './open-world.js';
 
-export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, hints, commute, shop, quests, missions, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, traffic, karate, school, schoolEvents, home, openWorld];
+export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, hints, commute, shop, quests, missions, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, traffic, karate, school, schoolEvents, dayFlow, home, openWorld];

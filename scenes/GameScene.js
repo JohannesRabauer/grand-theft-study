@@ -49,6 +49,7 @@ import { School } from '../entities/School.js';
 import { Commute } from '../entities/Commute.js';
 import { Shops } from '../entities/Shops.js';
 import { Quests } from '../entities/Quests.js';
+import { DayFlow } from '../entities/DayFlow.js';
 import { Cosmetics } from '../entities/Cosmetics.js';
 import { Home } from '../entities/Home.js';
 import { morningStartMap } from '../services/Morning.js';
@@ -72,6 +73,7 @@ export class GameScene extends Phaser.Scene {
     const maps = Object.fromEntries(index.maps.map(m => [m.id, cache.get(`map-${m.id}`)]));
     // AD-2: one ctx, created once, handed to every system.
     const { events, i18n, t, quality, res, state, saves } = this.registry.get('app');
+    saves.attach(); // the previous run removed every listener of the shared emitter, including the autosave on phase:ended
     const startMap = morningStartMap(index, maps, saves, state.shared.clock);
     const map = maps[startMap];
     const ts = map.tileSize;
@@ -171,6 +173,7 @@ export class GameScene extends Phaser.Scene {
     this.shops = new Shops(this, ctx, cache.get('shop'), cache.get('input')); // story 10.1: the market shops and the bakery
     this.cosmetics = new Cosmetics(this, ctx); // story 10.1: hats and rings the players wear
     this.quests = new Quests(this, ctx, cache.get('missions'), cache.get('input')); // story 9.1: missions, phone booths, the objective
+    this.dayFlow = new DayFlow(this, ctx, cache.get('dayflow'), cache.get('input')); // story 8.5: the gate, the ride home, bedtime
     this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
     this.garage = new Garage(this, ctx);
     this.caught = new Caught(this, ctx, cache.get('chase').caught, this.mountables);

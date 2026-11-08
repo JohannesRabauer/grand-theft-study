@@ -1,0 +1,6 @@
+{
+  "_doc": "Afternoon, ride home, evening and bedtime (story 8.5, entities/DayFlow.js; story clock only). gate: when the afternoon starts, with this chance per day (from the seed and the day number) the big kids wait at the school gate if a kid is within `radius` tiles of it: the Aerger level goes to `level` and a toast warns. bedtimeWarn: clock time of the toast that bedtime is near. At the end of the evening the day is over: a good-night message with the summary is read (world frozen, explicit confirmation), parents bring a kid who is still out home, and the next morning starts at home. Texts: day.*",
+  "seed": 11,
+  "gate": { "chance": 0.7, "level": 1, "radius": 26 },
+  "bedtimeWarn": "21:30"
+}

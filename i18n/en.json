@@ -744,5 +744,14 @@
   "school.sub.2.quirk": "She always brings a snack for the clever ones.",
   "school.sub.3.name": "Mr. Whistle",
   "school.sub.3.quirk": "He whistles a little tune whenever you get it right.",
-  "school.popquiz.notice": "Surprise! A pop quiz! Show what you just learned."
+  "school.popquiz.notice": "Surprise! A pop quiz! Show what you just learned.",
+  "day.gate": "The big kids are waiting at the school gate. Be careful!",
+  "day.evening": "It is getting dark. Time to head home!",
+  "day.bedtimeSoon": "Bedtime is almost here!",
+  "day.goHome": "Go home",
+  "day.bedtime.title": "Good night!",
+  "day.bedtime.home": "You are home in time. Time to brush your teeth and sleep well!",
+  "day.bedtime.away": "It is bedtime and still dark outside. Mum and Dad pick you up and bring you home to bed.",
+  "day.bedtime.summary": "Day {day} is over. Pocket money: {money}.",
+  "day.bedtime.lessons": "{who}: {n} lessons today"
 }

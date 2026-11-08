@@ -744,5 +744,14 @@
   "school.sub.2.quirk": "Sie bringt den Schlauen immer einen Snack mit.",
   "school.sub.3.name": "Herr Pfiff",
   "school.sub.3.quirk": "Er pfeift ein Liedchen, wenn du es richtig hast.",
-  "school.popquiz.notice": "Überraschung! Ein Test aus dem Stand! Zeig, was du gerade gelernt hast."
+  "school.popquiz.notice": "Überraschung! Ein Test aus dem Stand! Zeig, was du gerade gelernt hast.",
+  "day.gate": "Die großen Kinder warten am Schultor. Sei vorsichtig!",
+  "day.evening": "Es wird dunkel. Zeit, nach Hause zu fahren!",
+  "day.bedtimeSoon": "Gleich ist Schlafenszeit!",
+  "day.goHome": "Nach Hause",
+  "day.bedtime.title": "Gute Nacht!",
+  "day.bedtime.home": "Du bist rechtzeitig zu Hause. Zähne putzen und gut schlafen!",
+  "day.bedtime.away": "Es ist Schlafenszeit und draußen ist es schon dunkel. Mama und Papa holen dich ab und bringen dich nach Hause ins Bett.",
+  "day.bedtime.summary": "Tag {day} ist vorbei. Taschengeld: {money}.",
+  "day.bedtime.lessons": "{who}: {n} Unterrichtsstunden heute"
 }

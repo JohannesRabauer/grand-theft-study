@@ -166,6 +166,24 @@ const fresh = (c = { ...cfg, startMoneyCents: 0 }) => {
   assert.equal(storage.m.size, 0, 'deleting the active slot stops autosave');
 }
 
+// a finished run removes every listener of the shared emitter: the autosave has to come back with the next run (attach)
+{
+  const { saves, events, state, storage } = fresh();
+  saves.save(1);
+  events.removeAllListeners(); // what GameScene does when a run ends
+  state.dispatch('wallet.earn', { cents: 700, reason: 'a' });
+  events.emit('phase:ended', { phase: 'school' });
+  assert.equal(JSON.parse(storage.getItem('schulweg.save.1')).shared.money, 0, 'without attach the autosave is gone (the bug this guards against)');
+  saves.attach();
+  saves.attach(); // twice is harmless
+  let writes = 0;
+  const set = storage.setItem;
+  storage.setItem = (k, v) => { writes++; set(k, v); };
+  events.emit('phase:ended', { phase: 'afternoon' });
+  assert.equal(JSON.parse(storage.getItem('schulweg.save.1')).shared.money, 700, 'after attach the autosave works again');
+  assert.equal(writes, 1, 'and saves once per phase end, however often attach ran');
+}
+
 // slot screen: startNew, backup flag, summary text
 {
   const { saves, state, storage } = fresh(cfg);

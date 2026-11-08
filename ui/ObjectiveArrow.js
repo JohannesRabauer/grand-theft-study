@@ -29,7 +29,7 @@ export class ObjectiveArrow {
     ctx.events.on('goal:reached', this.onReached);
     this.onWorld = () => this.retarget();
     ctx.events.on('world:enter', this.onWorld);
-    this.onState = (ev) => { if (ev.path === 'shared.flags.stolenBike' || ev.path === 'shared.quests' || ev.path === '') this.retarget(); };
+    this.onState = (ev) => { if (ev.path === 'shared.flags.stolenBike' || ev.path === 'shared.quests' || ev.path === 'shared.clock' || ev.path === '') this.retarget(); };
     ctx.events.on('state:changed', this.onState);
     this.retarget();
   }
@@ -42,7 +42,7 @@ export class ObjectiveArrow {
     this.mpt = ctx.map.metersPerTile;
     const goal = ctx.map.objects.find(o => o.type === 'goal');
     const bike = ctx.state.shared.flags.stolenBike;
-    const quest = ctx.quests?.objective() ?? null; // an open mission step takes the arrow over (story 9.1)
+    const quest = ctx.quests?.objective() ?? ctx.dayFlow?.objective() ?? null; // an open mission step takes the arrow over (story 9.1), after school it points home (8.5)
     this.quest = quest && quest.map === ctx.world.id ? quest : null;
     this.bike = !this.quest && !!bike && bike.map === ctx.world.id;
     this.hasGoal = !!this.quest || this.bike || !!goal;
@@ -65,7 +65,7 @@ export class ObjectiveArrow {
 
   // The mission line under the clock; a race adds its checkpoint and the seconds left. Only touches the text when it changed.
   setQuestLine(quest) {
-    const line = quest ? `${quest.title}: ${this.ctx.t(quest.text)}${quest.live ? ` (${quest.checkpoint}/${quest.total}, ${quest.timer}s)` : ''}` : '';
+    const line = quest ? `${quest.title ? `${quest.title}: ` : ''}${this.ctx.t(quest.text)}${quest.live ? ` (${quest.checkpoint}/${quest.total}, ${quest.timer}s)` : ''}` : '';
     this.questLine.setVisible(!!quest);
     if (line !== this.questLineText) { this.questLine.setText(line); this.questLineText = line; }
   }
