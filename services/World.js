@@ -1,5 +1,6 @@
 import { addStaticWall } from '../physics/bodies.js';
 import { tileKey } from '../scenes/HiResArt.js';
+import { groundKeys } from '../scenes/EnvArt.js';
 import { resolveEntry } from './worldLogic.js';
 
 const FADE_MS = 160; // quick fade-in from black after a switch
@@ -112,7 +113,8 @@ export class World {
         rt.beginDraw();
         for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) {
           const key = res.scale > 1 ? tileKey(map, x + tx, y + ty) : `tile-${map.legend[map.rows[y + ty][x + tx]]}`;
-          rt.batchDraw(key, tx * ts, ty * ts);
+          // AD-30: blended edges, shores, curbs and oriented fences come from the neighbours, drawn once here
+          for (const k of groundKeys(map, x + tx, y + ty, key)) rt.batchDraw(k, tx * ts, ty * ts);
         }
         rt.endDraw();
       }

@@ -1,0 +1,85 @@
+// Environment art (AD-30, CAP-34): the neighbour logic that decides which edge, shore, bank, curb, fence and
+// hedge textures each ground tile gets. Pure logic; the drawing itself is covered by the headless screenshots
+// and the smoke test. Also proves the art changes no map data and that every real map yields only known keys.
+// Run: node scripts/check-envart.mjs
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { groundKeys, prepareEnvArtForTest } from '../scenes/EnvArt.js';
+
+prepareEnvArtForTest({ grass: 4, asphalt: 4, cobble: 3, path: 3, concrete: 4, water: 3 });
+const mk = (...rows) => ({ legend: { A: 'asphalt', L: 'lane', C: 'cobble', G: 'grass', p: 'path', S: 'concrete', W: 'water', T: 'tree', F: 'fence', H: 'hedge', '#': 'wall', w: 'wood' }, rows });
+const at = (map, x, y) => groundKeys(map, x, y, `base-${map.legend[map.rows[y][x]]}`);
+const has = (keys, re) => keys.some(k => re.test(k));
+
+// grass bleeds onto asphalt, never the other way round
+let m = mk('GGG', 'GAA', 'GAA');
+assert.equal(at(m, 1, 1)[0], 'base-asphalt', 'the base texture comes first and is unchanged');
+assert.ok(has(at(m, 1, 1), /^env-edge-grass-n-/) && has(at(m, 1, 1), /^env-edge-grass-w-/), 'asphalt gets grass edges on its grass sides');
+assert.deepEqual(at(m, 0, 1), ['base-grass'], 'grass is the higher surface and gets no edge from asphalt');
+m = mk('AAA', 'AAA', 'AAG');
+assert.ok(has(at(m, 1, 1), /^env-edgec-grass-se-/), 'an outer corner with grass only on the diagonal gets a corner piece');
+
+// kerb: concrete over asphalt and lane, grass over concrete
+m = mk('SSA', 'SSL', 'SSG');
+assert.ok(has(at(m, 2, 0), /^env-edge-concrete-w-/), 'asphalt gets a kerb along the pavement');
+assert.ok(has(at(m, 2, 1), /^env-edge-concrete-w-/), 'the cycle lane gets a kerb too');
+assert.ok(has(at(m, 1, 2), /^env-edge-grass-e-/), 'pavement gets grass fringe from the lawn beside it');
+
+// ranks: cobble over concrete, path over cobble
+m = mk('CCS', 'ppC');
+assert.ok(has(at(m, 2, 0), /^env-edge-cobble-w-/), 'concrete gets cobble edges');
+assert.ok(has(at(m, 0, 0), /^env-edge-path-s-/), 'cobble gets path edges');
+
+// water: shore on the water, bank on the land, rounded convex corners, deep centre
+m = mk('SSSSS', 'SWWWS', 'SWWWS', 'SWWWS', 'SSSSS');
+assert.ok(has(at(m, 2, 1), /^env-shore-n-/), 'water shows shallow water and foam along its north bank');
+assert.ok(has(at(m, 2, 0), /^env-bank-stone-s-/), 'hard land gets a stone coping towards the water');
+assert.ok(has(at(mk('GGG', 'GWG', 'GGG'), 1, 0), /^env-bank-mud-s-/), 'soft land gets a mud bank');
+assert.ok(has(at(mk('SSS', 'SWS', 'SSS'), 1, 1), /^env-round-concrete-nw$/), 'a convex water corner is rounded using the land texture');
+const big = mk('SSSSSSS', 'SWWWWWS', 'SWWWWWS', 'SWWWWWS', 'SWWWWWS', 'SWWWWWS', 'SSSSSSS');
+assert.ok(has(at(big, 3, 3), /^env-deep$/), 'open water far from the shore is shaded deeper');
+assert.ok(!has(at(big, 3, 1), /^env-deep$/), 'water next to the shore is not');
+const canal = mk('SWWS', 'SWWS', 'SWWS');
+assert.ok(has(at(canal, 1, 1), /^env-shore-w-/) && !has(at(canal, 1, 1), /^env-bank-/), 'water tiles never get banks');
+
+// fences: orientation follows the neighbours, the ground under them blends
+m = mk('GGG', 'SFS', 'SFS', 'SFS');
+assert.ok(has(at(m, 1, 2), /^env-fence-v$/), 'a fence run along a column is drawn vertically');
+m = mk('GGGG', 'SFFF', 'SSSS');
+assert.ok(has(at(m, 2, 1), /^env-fence-h$/), 'a fence run along a row is drawn horizontally');
+assert.ok(has(at(m, 2, 1), /^env-edge-grass-n-/), 'the pavement under a fence still blends with the lawn behind it');
+m = mk('SFS', 'FFF', 'SFS');
+assert.ok(has(at(m, 1, 1), /^env-fence-x$/), 'a fence junction draws both directions');
+assert.ok(has(at(mk('SSS', 'SFS', 'SSS'), 1, 1), /^env-fence-h$/), 'a lone fence section defaults to horizontal');
+assert.ok(has(at(mk('HHH', 'SSS'), 1, 1), /^env-shadow-hedge$/), 'a hedge casts a shadow on the tile south of it');
+
+// hedges: only the top of a run gets the dark cap, only the bottom gets the base shadow
+m = mk('SSS', 'SHS', 'SHS', 'SHS', 'SSS');
+assert.match(at(m, 1, 1)[0], /^env-hedge-10-/, 'hedge top');
+assert.match(at(m, 1, 2)[0], /^env-hedge-00-/, 'hedge middle');
+assert.match(at(m, 1, 3)[0], /^env-hedge-01-/, 'hedge bottom');
+
+// surfaces without blending rules stay untouched (indoor floors, walls, trees, bounds)
+m = mk('#ww#', '#ww#', '#TT#');
+assert.deepEqual(at(m, 1, 0), ['base-wood'], 'floors are unchanged');
+assert.deepEqual(at(m, 0, 0), ['base-wall'], 'walls are unchanged');
+assert.deepEqual(at(m, 1, 2), ['base-tree'], 'tree tiles are unchanged');
+assert.deepEqual(at(mk('G'), 0, 0), ['base-grass'], 'a one tile map has no neighbours and no edges');
+
+// every real map: only known key families, the base stays first, and nothing here touched the grid
+const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|shadow|hedge))/;
+let tiles = 0;
+let extra = 0;
+for (const f of readdirSync(new URL('../data/maps/', import.meta.url)).filter(n => n.endsWith('.json') && n !== 'index.json')) {
+  const map = JSON.parse(readFileSync(new URL(`../data/maps/${f}`, import.meta.url), 'utf8'));
+  const before = JSON.stringify(map.rows);
+  for (let y = 0; y < map.rows.length; y++) for (let x = 0; x < map.rows[0].length; x++) {
+    const keys = groundKeys(map, x, y, 'base-x');
+    tiles++;
+    extra += keys.length - 1;
+    for (const k of keys) assert.match(k, known, `${f} ${x},${y}: unexpected key ${k}`);
+    assert.ok(keys.length <= 14, `${f} ${x},${y}: ${keys.length} layers is more than a tile should ever need`);
+  }
+  assert.equal(JSON.stringify(map.rows), before, `${f}: art must not modify map data`);
+}
+console.log(`envart ok: transitions, kerbs, shores and banks, round corners, oriented fences and hedges; ${tiles} map tiles give ${extra} extra layers`);

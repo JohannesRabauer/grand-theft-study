@@ -12,6 +12,7 @@ import { makeVehicleArt } from './VehicleArt.js';
 import { GameState } from '../state/GameState.js';
 import { SaveSlots } from '../state/SaveSlots.js';
 import { streetCatalog } from '../vehicles/streetLogic.js';
+import { makeEnvArt } from './EnvArt.js';
 import { makeExpansionArt } from './ExpansionArt.js';
 
 export class BootScene extends Phaser.Scene {
@@ -113,6 +114,7 @@ export class BootScene extends Phaser.Scene {
     makeBusArt(this, res.scale);
     makeVehicleArt(this, res.scale);
     makeExpansionArt(this, res.scale);
+    makeEnvArt(this, tiles, this.cache.json.get('map-town').tileSize * res.scale); // AD-30: edges, shores, fences, hedges
     // The speed zoom scales the world by non-integer factors, where nearest-neighbour sampling makes
     // texels land on uneven screen pixels (shimmer). World textures are filtered bilinear instead; at
     // an exact integer zoom texels map 1:1 to pixels, so the result stays crisp. UI textures stay sharp.
