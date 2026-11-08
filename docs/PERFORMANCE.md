@@ -229,3 +229,18 @@ Real render loop, headless Edge, software GL, uncapped (`node scripts/bench-cdp.
 | e everything | Low | 0.92 / 1.40 | 1.05 / 1.80 |
 
 p95 stays far below 16.7 ms on Medium and High; worst scenario Medium e p95 +21 percent (limit +25), High e +13 percent. Software GL is not a phone GPU: the two passes at 960x540 on a real phone remain unmeasured (see the phone protocol). `scripts/bench-cdp.mjs --query "&q=low"` adds URL flags to the bench page. Screenshot set `docs/shots/overhaul/after-16-2/` (night walkable luminance 0.20 and 0.22, limit 0.16).
+
+## Story 16.3: time-of-day mood and street lights (CAP-35, AD-31)
+
+New per frame work: `render/StreetLights.js` walks 86 fixed lights (74 street lamps, 4 park lamps, 8 signs), culls them to the camera and holds the visible lit ones in the light pool (fixed lights get `maxLights - 10`, headlights, tail lights and bike lamps the reserve of 10, so the count never passes the tier cap; Medium 24, High 48). The lamp posts are 74 y-sorted images plus a lit head image each (only visible while lit and on screen; they also glow on Low and Canvas). Nothing allocates per frame (`scripts/check-lighting.mjs` checks the loop). Update cost in the `runAll` bench is unchanged (0.004 ms avg on Medium, same allocation per step).
+
+Real render loop, headless Edge, software GL, uncapped, ms per frame avg / p95 (`--live --uncapped`; `&minute=1290` in `--query` runs the scenarios at 21:30; timer resolution is 0.1 ms). Same machine and session: epic baseline 8330e10, after 16.2 (83cacde) and this story:
+
+| Scenario | Tier | 8330e10 | 16.2 | 16.3 day | 16.3 at 21:30 |
+| --- | --- | --- | --- | --- | --- |
+| a idle walking | Medium | 0.58 / 0.80 | 0.60 / 0.80 | 0.65 / 0.90 | 0.64 / 0.90 |
+| e everything | Medium | 0.56 / 0.80 | 0.60 / 0.80 | 0.67 / 0.90 | 0.67 / 0.90 |
+| a idle walking | High | 0.59 / 0.80 | 0.68 / 1.00 | 0.69 / 1.00 | 0.64 / 0.90 |
+| e everything | High | 0.58 / 0.80 | 0.64 / 0.90 | 0.66 / 0.90 | 0.68 / 0.90 |
+
+Worst case Medium e: average +20 percent over the epic baseline, p95 0.9 against 0.8 ms (+12 percent), far below 16.7 ms. The mood is the same cost by day and at night (headlights, lamps and the extra lights are a few stamp draws). Software GL is not a phone GPU; the phone measurement stays open.

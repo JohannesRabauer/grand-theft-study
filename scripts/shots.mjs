@@ -33,7 +33,8 @@ const SHOTS = [
   { id: 'interior-home-morning', map: 'home', time: 'morning', weather: 'clear' },
   { id: 'interior-home-night', map: 'home', time: 'night', weather: 'clear' },
   { id: 'interior-school-day', map: 'school', time: 'day', weather: 'clear' },
-  { id: 'interior-dojo-day', map: 'dojo', time: 'day', weather: 'clear' }
+  { id: 'interior-dojo-day', map: 'dojo', time: 'day', weather: 'clear' },
+  ...DISTRICTS.flatMap(d => ['evening', 'night'].filter(t => d !== 'oldtown' && !(d === 'park' && t === 'night')).map(t => ({ id: `${d}-${t}`, map: 'town', at: d, time: t, weather: 'clear' }))), // story 16.3: lamps, signs and headlights in every district
 ].filter(s => !only || only.includes(s.id));
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.css': 'text/css', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml' };
@@ -148,13 +149,13 @@ async function captureTier(tier) {
           if (id && !ctx.surfaces.solid(id)) walk.push({ x: (tx * ts - v.x) * z, y: (ty * ts - v.y) * z, w: ts * z, h: ts * z });
         }
         const metrics = computeLookMetrics(data, W, H, walk);
-        return { size: W + 'x' + H, map: ctx.world.id, minute: ctx.day.minute, weather: ctx.weather.state, walkTiles: walk.length, metrics, png: off.toDataURL('image/png') };
+        return { size: W + 'x' + H, map: ctx.world.id, minute: ctx.day.minute, weather: ctx.weather.state, walkTiles: walk.length, lights: ctx.lights.count, lightLimit: ctx.lights.limit, metrics, png: off.toDataURL('image/png') };
       })()`);
       const png = Buffer.from(r.png.split(',')[1], 'base64');
       const file = `${shot.id}-${tier}.png`;
       writeFileSync(join(outDir, file), png);
-      out.push({ id: shot.id, tier, file, size: r.size, map: r.map, minute: r.minute, weather: r.weather, hash: sha(png), metrics: r.metrics });
-      console.log(`${tier} ${shot.id}: seam ${r.metrics.longestSeamPx}px, flat ${r.metrics.largestFlatAreaPx}px2, walk lum p5 ${r.metrics.walkableLuminanceP5}`);
+      out.push({ id: shot.id, tier, file, size: r.size, map: r.map, minute: r.minute, weather: r.weather, lights: r.lights, lightLimit: r.lightLimit, hash: sha(png), metrics: r.metrics });
+      console.log(`${tier} ${shot.id}: seam ${r.metrics.longestSeamPx}px, flat ${r.metrics.largestFlatAreaPx}px2, walk lum p5 ${r.metrics.walkableLuminanceP5}, lights ${r.lights}/${r.lightLimit}`);
     }
     return out;
   } finally {

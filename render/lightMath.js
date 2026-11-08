@@ -46,6 +46,35 @@ export function ambientFor(tint, cfg, out = { r: 1, g: 1, b: 1 }) {
 export const ambientRgb = c => (Math.round(c.r * 255) << 16) | (Math.round(c.g * 255) << 8) | Math.round(c.b * 255);
 export const darkness = c => Math.max(0, 1 - (0.299 * c.r + 0.587 * c.g + 0.114 * c.b));
 
+// ---- lamp schedules (story 16.3): street lamps and signs switch on at dusk and off at dawn, each a little earlier or later
+// than the next (`jitter` 0..1 is the lamp's own offset), so the street does not light up in one frame.
+const hash01 = (a, b) => {
+  let h = Math.imul(a + 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + 0x7f4a7c15, 0xc2b2ae35);
+  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d);
+  h = Math.imul(h ^ (h >>> 12), 0x297a2d39);
+  return ((h ^ (h >>> 15)) >>> 0) / 4294967296;
+};
+
+// Is a lamp with this jitter lit at `minute`? `sched`: { on, onSpread, off, offSpread } in game minutes. Lit from `on` in the
+// evening until `off` the next morning (the day clock runs from the morning to bedtime, so both windows are in one day).
+export function lampLit(minute, sched, jitter) {
+  return minute >= sched.on + jitter * sched.onSpread || minute < sched.off + jitter * sched.offSpread;
+}
+
+export const WARMUP_CELL = 0.4; // seconds; a lamp changes its state at most once per cell (2.5 Hz, under the 3 Hz limit)
+
+// Light level 0..1 of a lamp `since` seconds after it was switched on: a short flicker that settles (`warm` seconds), then 1.
+export function warmupLevel(since, warm, seed = 0) {
+  if (since >= warm) return 1;
+  if (since < 0) return 0;
+  const ramp = since / warm;
+  const on = hash01(seed, Math.floor(since / WARMUP_CELL)) < 0.25 + ramp * 0.75;
+  return on ? 0.5 + 0.5 * ramp : 0.12;
+}
+
+// Lights a tier may spend on fixed things (lamps, signs): the tier limit minus the reserve kept for moving lights.
+export const fixedBudget = (limit, reserve) => Math.max(0, limit - reserve);
+
 // The light pool: `cap` slots, `limit` of them usable (the quality tier). add() returns a handle or null when full.
 export class LightPool {
   constructor(cap) {
@@ -69,6 +98,7 @@ export class LightPool {
     s.handle = {
       get alive() { return s.at >= 0; },
       move(x, y) { s.x = x; s.y = y; return this; },
+      setIntensity(v) { s.intensity = v; return this; },
       set(p) { for (const k in p) if (k in s && k !== 'at' && k !== 'i' && k !== 'handle') s[k] = p[k]; return this; },
       release() { pool.#release(s); }
     };

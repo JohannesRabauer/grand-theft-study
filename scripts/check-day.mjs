@@ -63,8 +63,8 @@ for (let d = 1; d <= 60; d++) {
 assert.ok(rainyDays.length > 10 && rainyDays.length < 40, `afternoon rain on some days only (${rainyDays.length}/60)`);
 assert.equal(scheduledWeather(cfg, rainyDays[0], parseTime('13:30')), 'clear', 'outside the hint window it is dry');
 
-// tint: warm dawn, neutral day, orange evening, dark bedtime
-assert.ok(tintAt(cfg, parseTime('06:30')).alpha > 0.1 && tintAt(cfg, parseTime('06:30')).rgb === 0xff9a55);
+// tint: cool dawn, neutral day, golden then orange evening, dark bedtime
+assert.ok(tintAt(cfg, parseTime('06:30')).alpha > 0.1 && tintAt(cfg, parseTime('06:30')).rgb === 0x9db4ff);
 assert.equal(tintAt(cfg, parseTime('12:00')).alpha, 0, 'daylight is neutral');
 assert.ok(tintAt(cfg, parseTime('19:30')).alpha > 0.1);
 assert.ok(tintAt(cfg, parseTime('21:59')).alpha > 0.4, 'bedtime is dark');

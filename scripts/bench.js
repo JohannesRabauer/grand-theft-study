@@ -32,6 +32,11 @@ async function startGame(game, tier) {
   if (!ctx || !ui.ctx) throw new Error('game did not start');
   ctx.input.update = () => {}; // intents are scripted
   ctx.input.intent.aim = null;
+  const minute = +new URLSearchParams(location.search).get('minute'); // &minute=1290 benchmarks at 21:30 (lamps, headlights, night passes)
+  if (minute) {
+    ctx.state.dispatch('clock.set', { day: 1, minute, phase: ctx.day.cfg.phases.find(p => minute >= p.start && minute < p.end).id });
+    ctx.events.emit('clock:tick', ctx.day.snapshot());
+  }
   return { gs, ui, ctx, game };
 }
 

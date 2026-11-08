@@ -5,8 +5,6 @@
 // Systems never create sprites: they ask ctx.lights (a LightPool, render/lightMath.js) for a handle.
 import { ambientFor, ambientRgb, darkness, lightPixels } from './lightMath.js';
 
-const hex = s => parseInt(s.slice(1), 16);
-
 export class LightMap {
   constructor(scene, ctx, cfg, postFx) {
     this.scene = scene;
@@ -18,7 +16,6 @@ export class LightMap {
     this.rgb = 0xffffff;
     this.dark = 0;
     this.time = 0;
-    this.sourceHandles = [];
     ctx.lights.mapActive = false;
     this.w = ctx.res.w; // base resolution (480x270), not the render size
     this.h = ctx.res.h;
@@ -26,10 +23,8 @@ export class LightMap {
     const refresh = () => { this.#refreshAmbient(); this.#apply(); };
     ctx.events.on('clock:tick', () => this.#refreshAmbient());
     ctx.events.on('quality:changed', refresh);
-    ctx.events.on('world:enter', () => { this.#wire(); this.#apply(); });
-    ctx.events.on('world:leave', () => this.#unwire());
+    ctx.events.on('world:enter', () => this.#apply());
     this.#refreshAmbient();
-    this.#wire();
     this.#apply();
   }
 
@@ -66,24 +61,6 @@ export class LightMap {
     this.rgb = ambientRgb(this.amb);
     this.dark = darkness(this.amb);
     this.postFx?.setNight(this.dark);
-  }
-
-  // The configured fixed lights of this map (data/lighting.json `sources`): street lamps and the like.
-  #wire() {
-    const { ctx, cfg } = this;
-    const ts = ctx.map.tileSize;
-    for (const s of cfg.sources) {
-      if (s.map !== ctx.world.id) continue;
-      const o = ctx.map.objects.find(m => m.id === s.id);
-      if (!o) continue;
-      const h = ctx.lights.add({ x: (o.x + 0.5) * ts + s.offset[0], y: (o.y + 0.5) * ts + 3 + s.offset[1], radius: s.radius, color: hex(s.color), intensity: s.intensity, flicker: s.flicker });
-      if (h) this.sourceHandles.push(h);
-    }
-  }
-
-  #unwire() {
-    for (const h of this.sourceHandles) h.release();
-    this.sourceHandles.length = 0;
   }
 
   update(dt) {

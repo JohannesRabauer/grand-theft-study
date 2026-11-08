@@ -18,6 +18,7 @@ import { PlayerMarkers } from '../entities/PlayerMarkers.js';
 import { CameraRig } from '../camera/CameraRig.js';
 import { LightPool } from '../render/lightMath.js';
 import { LightMap } from '../render/LightMap.js';
+import { StreetLights } from '../render/StreetLights.js';
 import { PostFx } from '../render/PostFx.js';
 import { Zones } from '../entities/Zones.js';
 import { Doors } from '../entities/Doors.js';
@@ -230,6 +231,7 @@ export class GameScene extends Phaser.Scene {
     this.snapCamera();
     this.postFx = new PostFx(this, ctx, cache.get('postfx')); // AD-31: bloom, grade and vignette on the world camera
     this.lightMap = new LightMap(this, ctx, cache.get('lighting'), this.postFx);
+    this.streetLights = new StreetLights(this, ctx, cache.get('lighting'), this.lightMap); // story 16.3: lamps, signs, headlights
     this.crowd = new CrowdDirector(this, ctx, cache.get('npcs')); // after the camera: it prefills the view
 
     // UIScene asks for pause (a freezing screen is open) / quit through events; the world is only changed here.
@@ -444,6 +446,7 @@ export class GameScene extends Phaser.Scene {
     this.flags.update(dt);
     this.ctx.particles.update(dt);
     this.lightMap.update(dt);
+    this.streetLights.update(dt);
     this.streamer.update();
     this.markers.update();
     this.beltTags.update();

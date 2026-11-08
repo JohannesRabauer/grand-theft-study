@@ -2,9 +2,48 @@
   "schema": 1,
   "depth": 9299,
   "texture": { "key": "light-pool", "radius": 64, "steps": 5, "dither": 0.35 },
-  "ambient": { "strength": 1.15, "floor": 0.32 },
+  "ambient": { "strength": 1.0, "floor": 0.32 },
   "poolCap": 64,
+  "schedules": {
+    "street": { "on": "19:00", "onSpread": 30, "off": "06:35", "offSpread": 25, "warm": 1.2 },
+    "sign": { "on": "18:30", "onSpread": 20, "off": "06:50", "offSpread": 15, "warm": 0.8 }
+  },
+  "street": {
+    "radius": 58, "color": "#ffc47a", "intensity": 1, "variants": 3,
+    "head": [[4.5, -33], [-4.5, -33], [0, -35]],
+    "lamps": { "town": [
+        [12,5], [32,5], [43,5], [111,7], [127,7], [144,7], [97,10], [156,13],
+        [21,14], [55,14], [120,16], [135,16], [106,17], [147,20], [13,23], [28,23],
+        [42,23], [97,24], [80,28], [156,28], [106,31], [97,38], [156,40], [86,42],
+        [110,47], [124,47], [6,52], [36,52], [64,52], [100,52], [156,54], [117,56],
+        [131,56], [142,56], [16,59], [27,59], [45,59], [74,59], [85,59], [61,67],
+        [114,67], [134,67], [153,69], [7,70], [19,76], [34,76], [45,76], [78,76],
+        [92,76], [107,76], [121,76], [143,76], [7,82], [81,87], [144,87], [16,89],
+        [153,95], [44,98], [62,98], [77,98], [99,98], [113,98], [128,98], [142,98],
+        [7,101], [153,106], [17,107], [28,107], [55,107], [70,107], [86,107], [106,107],
+        [120,107], [135,107]
+    ] }
+  },
   "sources": [
-    { "id": "park-lamp-1", "map": "town", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -29] }
-  ]
+    { "id": "park-lamp-1", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -29] },
+    { "id": "park-lamp-2", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -29] },
+    { "id": "park-lamp-3", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -29] },
+    { "id": "park-lamp-4", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -29] }
+  ],
+  "signs": [
+    { "id": "market-workshop", "map": "town", "schedule": "sign", "radius": 44, "color": "#ffb347", "intensity": 0.9, "offset": [0, -10] },
+    { "id": "market-bakery", "map": "town", "schedule": "sign", "radius": 44, "color": "#ffb347", "intensity": 0.9, "offset": [0, -10] },
+    { "id": "market-newsstand", "map": "town", "schedule": "sign", "radius": 34, "color": "#ffd9a0", "intensity": 0.85, "offset": [0, -10] },
+    { "id": "riverside-tram-stop", "map": "town", "schedule": "sign", "radius": 38, "color": "#bfe3ff", "intensity": 0.85, "offset": [0, -16] },
+    { "id": "market-tram-stop", "map": "town", "schedule": "sign", "radius": 38, "color": "#bfe3ff", "intensity": 0.85, "offset": [0, -12] },
+    { "id": "home-tram-stop", "map": "town", "schedule": "sign", "radius": 38, "color": "#bfe3ff", "intensity": 0.85, "offset": [0, -12] },
+    { "id": "school-tram-stop", "map": "town", "schedule": "sign", "radius": 38, "color": "#bfe3ff", "intensity": 0.85, "offset": [0, -12] },
+    { "id": "dojo-sign", "map": "town", "schedule": "sign", "radius": 36, "color": "#ffd9a0", "intensity": 0.8, "offset": [0, -8] }
+  ],
+  "vehicles": {
+    "darkness": 0.12, "reserve": 10,
+    "head": { "radius": 32, "ahead": 12, "color": "#fff1c8", "intensity": 0.9 },
+    "tail": { "radius": 15, "behind": 2, "color": "#ff5a46", "intensity": 0.75 },
+    "bike": { "radius": 36, "ahead": 14, "color": "#fff1c8", "intensity": 0.85 }
+  }
 }
