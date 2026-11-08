@@ -257,6 +257,16 @@ export class BootScene extends Phaser.Scene {
       px('#1a1a1a', 7, 3, 2, 1);
       px('#1a1a1a', 5, 5, 2, 1);    // frown
     });
+    mk('bully-scooter', 20, 12, px => {
+      px('#1a1a1a', 1, 6, 4, 2);
+      px('#1a1a1a', 15, 6, 4, 2);
+      px('#2fb5c8', 3, 6, 14, 1);   // deck
+      px('#888888', 15, 2, 1, 6);   // handlebar post
+      px('#5a2a7a', 7, 3, 5, 5);    // hoodie
+      px('#f2c9a0', 12, 3, 3, 1);
+      px('#f2c9a0', 8, 3, 3, 3);    // head
+      px('#1a1a1a', 7, 3, 3, 3);    // cap
+    });
     mk('bully-bike', 20, 12, px => {
       px('#1a1a1a', 1, 5, 5, 2);
       px('#1a1a1a', 14, 5, 5, 2);

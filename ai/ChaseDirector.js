@@ -30,6 +30,7 @@ export class ChaseDirector {
     this.perception = new Perception(ctx, cfg.perception, this.nav);
     this.fsm = new BullyFSM(this);
     this.pool = new BullyPool(scene, ctx, this);
+    this.exposed = 0; // seconds the kids cannot hide after a lookout spotted them (story 7.2)
     this.escapes = Array.from({ length: ctx.maxPlayers }, () => new Escape(cfg.escape)); // one per player
     this.alive = new Uint8Array(ctx.maxPlayers);
     this.nearestBully = new Float64Array(ctx.maxPlayers); // per player: distance to the closest bully
@@ -101,6 +102,7 @@ export class ChaseDirector {
     for (const b of this.pool.list) this.pool.release(b);
     this.lvl.clear('reset');
     this.lvl.lockout = 0;
+    this.exposed = 0;
     for (const e of this.escapes) e.reset();
     this.setSeen(false);
   }

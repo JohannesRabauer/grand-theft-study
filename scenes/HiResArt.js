@@ -541,6 +541,10 @@ function makeBikes(scene) {
   const rider = { jacket: '#e0483c', jacketDark: '#b2352c', jacketLight: '#f06a5c', hair: '#5a3a1e', hairLight: '#7a5230' };
   mk('bike', { frame: '#3b7dd8', frameDark: '#24508f' });
   mk('player-bike', { rider: true, frame: '#3b7dd8', frameDark: '#24508f', ...rider });
+  mk('bully-scooter', {
+    rider: true, frame: '#2fb5c8', frameDark: '#1c7482', jacket: '#5a2a7a', jacketDark: '#411c5a', jacketLight: '#7a3fa0', hair: '#1a1a1a', hairLight: '#3a3a48',
+    cap: p => { p.px('#0c0c0c', 21, 8, 3, 8); p.px('#2c2c2c', 21, 9, 2, 1); }
+  });
   mk('bully-bike', {
     rider: true, frame: '#c8352f', frameDark: '#8a1f1b', jacket: '#5a2a7a', jacketDark: '#411c5a', jacketLight: '#7a3fa0', hair: '#1a1a1a', hairLight: '#3a3a48',
     cap: p => { p.px('#0c0c0c', 21, 8, 3, 8); p.px('#2c2c2c', 21, 9, 2, 1); }

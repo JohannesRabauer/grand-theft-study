@@ -12,6 +12,7 @@ export class Perception {
 
   // Is this player hidden right now (in a hiding spot and nearly still)?
   hiddenFor(p) {
+    if (this.ctx.chase?.exposed > 0) return false; // a lookout spotted the kids: hiding spots do not work for a while (story 7.2)
     return this.ctx.zones.hiding[p.index] > 0 && p.move.velSpeed < this.cfg.hideSpeed;
   }
 

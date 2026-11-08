@@ -27,6 +27,36 @@ export const chaseLevels = {
     assert('from level 3 the bullies that see the player head for different points', aims.length >= Math.min(2, out.length) && new Set(aims).size === aims.length, aims.join(' | '));
     ctx.chase.lvl.set(2, 'smoke');
     ctx.chase.reset();
+
+    // ---- story 7.2: e-scooters are faster than foot bullies, lookouts spot and expose
+    const prof = game.cache.json.get('vehicles');
+    const sp = k => prof[ctx.chase.cfg.kinds[k]].maxSpeed;
+    assert('an e-scooter bully is faster than a bike bully and a foot bully', sp('scooter') > sp('bike') && sp('bike') > sp('foot'));
+    ctx.chase.lvl.set(5, 'smoke');
+    step(3);
+    assert('level 5 brings e-scooter bullies when the quality tier has room for them', ctx.chase.bullies.filter(b => b.active && b.kind === 'scooter').length > 0 || cap < 3, ctx.chase.bullies.map(b => b.kind).join(','));
+    ctx.chase.reset();
+    step(5);
+    const home = { x: player.x, y: player.y };
+    const spots = [];
+    ctx.events.on('lookout:spotted', e => spots.push(e));
+    game.lookoutsOff = false;
+    const lo = ctx.lookouts.spots[0];
+    player.teleport(lo.x + 30, lo.y + 10);
+    gs.snapCamera();
+    step(2);
+    assert('a player inside the radius is spotted: event, gang called, kids exposed', spots.length === 1 && spots[0].id === lo.id && ctx.chase.level >= 1 && ctx.chase.exposed > 0, `${spots.length} ${ctx.chase.level} ${ctx.chase.exposed}`);
+    step(30);
+    assert('the same lookout rests before it spots again', spots.length === 1);
+    assert('while exposed hiding does not count', ctx.chase.exposed > 0 && !ctx.chase.perception.hiddenFor(player));
+    ctx.chase.reset();
+    ctx.chase.exposed = 0;
+    player.teleport(home.x, home.y);
+    gs.snapCamera();
+    step(5);
+    lo.rest = 0;
+    game.lookoutsOff = true;
+
     step(200);
     assert('the chase is reset and the bullies gone', ctx.chase.level === 0 && live('bullies') === 0, `${ctx.chase.level} ${live('bullies')}`);
   }

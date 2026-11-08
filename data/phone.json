@@ -12,6 +12,7 @@
     { "id": "friend-route", "from": "friend", "on": "activity:done", "match": { "id": "route" } },
     { "id": "friend-tram", "from": "friend", "on": "tram:unlocked" },
     { "id": "bully-seen", "from": "bully", "on": "chase:level", "min": { "level": 1 }, "perDay": true },
+    { "id": "bully-lookout", "from": "bully", "on": "lookout:spotted", "perDay": true },
     { "id": "bully-caught", "from": "bully", "on": "bully:caught-contact", "perDay": true }
   ]
 }

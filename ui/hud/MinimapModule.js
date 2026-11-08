@@ -77,6 +77,8 @@ export class MinimapModule extends HudModule {
     gfx.clear();
     const goal = this.objective();
     if (goal) gfx.fillStyle(0xffe14d).fillCircle(x0 + goal.x * s, y0 + goal.y * s, 2.5).lineStyle(1, 0x000000).strokeCircle(x0 + goal.x * s, y0 + goal.y * s, 2.5);
+    const lr = ctx.chase?.cfg?.lookout?.radius ?? 0;
+    for (const o of ctx.map.objects) if (lr && o.type === 'lookout') gfx.lineStyle(1, 0xff9a3a, 0.5).strokeCircle(x0 + (o.x + 0.5) * s, y0 + (o.y + 0.5) * s, (lr / ts) * s);
     const view = ctx.chase?.cfg?.perception?.viewDistance ?? 0;
     for (const b of ctx.chase?.bullies ?? []) {
       if (!b.active) continue;

@@ -192,6 +192,16 @@
     "drift": 0,
     "radius": 5
   },
+  "bully-scooter": {
+    "texture": "bully-scooter",
+    "faceHeading": true,
+    "maxSpeed": 165,
+    "accel": 240,
+    "turnRate": 230,
+    "grip": 8,
+    "drift": 0.15,
+    "radius": 5
+  },
   "bully-bike": {
     "texture": "bully-bike",
     "faceHeading": true,

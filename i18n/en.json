@@ -1025,5 +1025,7 @@
   "parent.age.p2": "Challenge age, player 2",
   "parent.age.auto": "Like character ({n})",
   "parent.age.years": "{n} years",
-  "parent.age.explain": "The challenge age sets how hard the questions and how tight the times are for one child, on top of the learning difficulty above. It starts with the age of the character and can be changed without changing the character. The questions stay for class 3 and keep adapting to the answers."
+  "parent.age.explain": "The challenge age sets how hard the questions and how tight the times are for one child, on top of the learning difficulty above. It starts with the age of the character and can be changed without changing the character. The questions stay for class 3 and keep adapting to the answers.",
+  "lookout.spotted": "A lookout spotted you and called the gang!",
+  "phone.msg.bully-lookout": "Our lookout saw you! We are coming!"
 }

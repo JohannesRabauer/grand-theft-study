@@ -244,3 +244,19 @@ console.log(`chase checks passed: path ${n} tiles, A* avg ${avg.toFixed(3)} ms, 
   assert.ok(out.x < 300 && out.x > 100, 'a standing target is approached from the bully side');
   assert.equal(interceptPoint(g, 6, 300, 300, 2, 0, 100, 300, out), out, 'slots wrap around and the shared point is returned');
 }
+
+// ---- story 7.2: e-scooter bullies and lookouts
+{
+  const prof = load('vehicles.json');
+  const speed = k => prof[chase.kinds[k]].maxSpeed;
+  assert.ok(chase.kinds.scooter && prof['bully-scooter'], 'the e-scooter kind has a profile');
+  assert.ok(speed('scooter') > speed('bike') && speed('bike') > speed('foot'), `scooter ${speed('scooter')} > bike ${speed('bike')} > foot ${speed('foot')}`);
+  for (const list of chase.level.spawnByLevel) for (const k of list) assert.ok(chase.kinds[k], `kind ${k} has a profile name`);
+  assert.ok(chase.level.spawnByLevel.slice(4).every(l => l.includes('scooter')), 'levels 4 and 5 bring e-scooters');
+  assert.ok(!chase.level.spawnByLevel.slice(0, 4).some(l => l.includes('scooter')), 'and nothing earlier does');
+  const lo = chase.lookout;
+  assert.ok(lo.radius > chase.perception.senseRadius && lo.raise >= 1 && lo.cooldown > lo.exposeSeconds, 'sane lookout numbers');
+  const spots = map.objects.filter(o => o.type === 'lookout');
+  assert.ok(spots.length >= 2, 'the town has lookouts');
+  for (const o of spots) assert.ok(!['wall', 'water', 'tree', 'fence', 'hedge'].includes(map.legend[map.rows[o.y][o.x]]), `${o.id} stands on open ground`);
+}

@@ -5,8 +5,15 @@
     "bumpCooldown": 1.5,
     "lockoutAfterClear": 5,
     "defendMaxLevel": 2,
-    "spawnByLevel": [[], ["foot"], ["foot", "bike", "foot"], ["foot", "bike", "foot", "bike"], ["foot", "bike", "foot", "bike", "foot"], ["foot", "bike", "foot", "bike", "foot", "bike"]],
+    "spawnByLevel": [[], ["foot"], ["foot", "bike", "foot"], ["foot", "bike", "foot", "bike"], ["foot", "bike", "scooter", "bike", "foot"], ["foot", "scooter", "bike", "scooter", "foot", "bike"]],
     "coopExtraByLevel": [[], ["foot"], ["foot"], ["foot"], ["foot"], ["foot"]]
+  },
+  "lookout": {
+    "_doc": "Phone lookouts (story 7.2, entities/Lookouts.js): the map objects `lookout` stand and watch with a phone. A player on foot or riding inside `radius` px who is not hidden is spotted: the lookout emits lookout:spotted, calls the gang (the Aerger level rises by `raise`, at least to 1) and exposes the player for `exposeSeconds` (hiding spots do not work meanwhile). A lookout needs `cooldown` seconds before it spots again.",
+    "radius": 90,
+    "raise": 1,
+    "cooldown": 14,
+    "exposeSeconds": 6
   },
   "gang": {
     "_doc": "Gang tactics (story 7.1): from `fromLevel` on the bullies that can see their target do not all run straight at it. Each takes a slot (its place among the bullies out): `ahead` is how far in front of the target it aims in units of `leadPx` along the target's running direction (or from the bully's side when the target stands still), `side` how far to the left (+) or right (-) in units of `flankPx`. So one runs straight, one cuts the way off, two come from the sides. Within `closeIn` px they all go for the target itself.",
@@ -19,6 +26,7 @@
   },
   "kinds": {
     "foot": "bully-foot",
+    "scooter": "bully-scooter",
     "bike": "bully-bike"
   },
   "escape": {
