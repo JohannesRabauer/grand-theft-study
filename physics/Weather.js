@@ -5,6 +5,8 @@
 // through the surfaces override API (AD-6), drawn by a fixed pool of tile images; when it
 // stops they dry out again, oldest first. Rain particles belong to ParticleHub (it reads this).
 // Emits `weather:changed` ({ state }).
+import { puddleKey } from '../scenes/EnvArt.js';
+
 export class Weather {
   constructor(scene, ctx, cfg) {
     this.scene = scene;
@@ -19,7 +21,7 @@ export class Weather {
     this.syncClock();
     this.overlay = scene.add.rectangle(0, 0, 1, 1, parseInt(cfg.overlayColor.slice(1), 16)).setOrigin(0).setDepth(9300).setVisible(false);
     this.wet = [];
-    for (let i = 0; i < cfg.maxWet; i++) this.wet.push(scene.add.image(0, 0, 'tile-puddle').setOrigin(0).setScale(ctx.res.inv).setDepth(-0.9).setAlpha(0.85).setVisible(false));
+    for (let i = 0; i < cfg.maxWet; i++) this.wet.push(scene.add.image(0, 0, 'tile-puddle').setOrigin(0).setScale(ctx.res.inv).setDepth(-0.9).setVisible(false));
     this.tx = new Int16Array(cfg.maxWet);
     this.ty = new Int16Array(cfg.maxWet);
     this.count = 0; // wet tiles in use, oldest first in a ring starting at `head`
@@ -89,7 +91,21 @@ export class Weather {
     }
   }
 
-  // A random dry tile within range of the camera centre becomes a puddle.
+  // Puddles gather in low spots, not everywhere: a fixed minority of tiles (by coordinate hash) that lie inside an
+  // area of one surface, so they never straddle a kerb, edge or door mat.
+  spot(tx, ty) {
+    const { surfaces } = this.ctx;
+    const base = surfaces.base(tx, ty);
+    if (!this.cfg.wettable.includes(base) || ((((tx * 73856093) ^ (ty * 19349663)) >>> 0) % 1000) >= this.cfg.spotShare * 1000) return null;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const x = tx + dx;
+      const y = ty + dy;
+      if (x < 0 || y < 0 || x >= surfaces.cols || y >= surfaces.rowCount || surfaces.base(x, y) !== base) return null;
+    }
+    return base;
+  }
+
+  // A low spot within range of the camera centre, still dry, becomes a puddle.
   addPuddle() {
     const { surfaces } = this.ctx;
     const c = this.cfg;
@@ -97,17 +113,20 @@ export class Weather {
     const mid = this.scene.cameras.main.midPoint;
     const ts = surfaces.tileSize;
     const r = c.range;
-    for (let tries = 0; tries < 8; tries++) {
+    for (let tries = 0; tries < 40; tries++) {
       const tx = Math.floor(mid.x / ts) + Math.floor((Math.random() * 2 - 1) * r);
       const ty = Math.floor(mid.y / ts) + Math.floor((Math.random() * 2 - 1) * r);
       if (tx < 0 || ty < 0 || tx >= surfaces.cols || ty >= surfaces.rowCount) continue;
-      if (surfaces.at(tx * ts, ty * ts) !== surfaces.base(tx, ty) || !c.wettable.includes(surfaces.base(tx, ty))) continue;
+      if (surfaces.at(tx * ts, ty * ts) !== surfaces.base(tx, ty)) continue;
+      const base = this.spot(tx, ty);
+      const key = base && puddleKey(base, tx, ty);
+      if (!key || !this.scene.textures.exists(key)) continue;
       const i = (this.head + this.count) % c.maxWet;
       this.tx[i] = tx;
       this.ty[i] = ty;
       this.count++;
       surfaces.override(tx, ty, 'puddle');
-      this.wet[i].setPosition(tx * ts, ty * ts).setVisible(true);
+      this.wet[i].setTexture(key).setPosition(tx * ts, ty * ts).setVisible(true);
       return;
     }
   }

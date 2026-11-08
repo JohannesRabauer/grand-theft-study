@@ -158,7 +158,7 @@ export const traffic = {
     for (const p of ctx.players) place(p, bus.x + 40, bus.y - 80); // the view (and so the pedestrian) stays near the road
     gs.snapCamera();
     ctx.crowd.fill(true);
-    const npc = ctx.crowd.list.find(n => n.active && !n.sitting);
+    const npc = ctx.crowd.list.find(n => n.active && !n.sitting && n.role === 'walk' && n.node >= 0); // a walker on a route (forcing WALK on a ball kid or bench sitter has no node to steer to)
     const dog = ctx.dogs.spawn(bus.x + 150, bus.y + 6, 'CALM');
     gs.matter.body.setPosition(npc.body, { x: bus.x + 70, y: bus.y + 6 });
     npc.cool = 0;

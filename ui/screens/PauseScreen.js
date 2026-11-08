@@ -23,6 +23,7 @@ export class PauseScreen {
     this.objects = [dim, this.title, this.slot, this.mode, this.belts];
     const rows = [
       { items: [{ label: () => ctx.t('pause.resume'), on: () => this.close() }] },
+      { items: [{ label: () => ctx.t('pause.help'), on: () => ctx.openHelp?.() }] },
       ...settingsRows(ctx),
       ...(ctx.minigames?.active ? [{ items: [{ label: () => ctx.t('minigame.quit'), on: () => ctx.minigames.quit() }] }] : []),
       { items: [{ label: () => ctx.t('pause.menu'), on: () => ctx.events.emit('game:quit') }] }

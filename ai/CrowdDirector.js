@@ -374,7 +374,8 @@ export class CrowdDirector {
     const flee = n.state === S.FLEE;
     const moving = !n.sitting && (flee || n.t > r.seconds - r.stepSeconds);
     if (moving) n.steer(n.rx, n.ry, flee ? r.fleeSpeedPx : r.stepSpeed, dt, 12); else n.steer(0, 0, 0, dt, 10);
-    if (!flee) n.face = this.ctx.nearestPlayer(n.x, n.y).x < n.x ? -1 : 1;
+    const watched = flee ? null : this.ctx.nearestPlayer(n.x, n.y); // none while no player is active
+    if (watched) n.face = watched.x < n.x ? -1 : 1;
     if ((n.t -= dt) <= 0) {
       n.state = n.resume;
       n.t = n.state === S.STAND && (n.role === 'walk' || n.role === 'dogwalk') ? 0 : Infinity;

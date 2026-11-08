@@ -1,0 +1,19 @@
+{
+  "_doc": "Contextual explanations (story 11.5). Each hint opens once per player, the first time its event fires. `event` is a game event; `match` keeps only payloads whose fields equal the given values (a list means any of them; `$: true` matches the bare `true` of chase:seen); `who: event` addresses the player named in the payload, `all` every player. Texts are i18n keys hint.<id>.title / hint.<id>.body, and the body may use {move} {sprint} {jump} {interact} {map} {pause} {defend} {kiai} {manual} {toolPrev} {toolNext} {toolUse} for the player's real controls. `cooldownSeconds` keeps two hints from following each other at once.",
+  "cooldownSeconds": 25,
+  "hints": [
+    { "id": "welcome", "event": "clock:tick", "who": "all" },
+    { "id": "bike", "event": "player:vehicle", "match": { "id": "bike" }, "who": "event" },
+    { "id": "skateboard", "event": "player:vehicle", "match": { "id": "skateboard" }, "who": "event" },
+    { "id": "skates", "event": "player:vehicle", "match": { "id": "skates" }, "who": "event" },
+    { "id": "wheels", "event": "player:vehicle", "match": { "id": ["scooter", "rollerblades"] }, "who": "event" },
+    { "id": "tricks", "event": "trick:ollie", "who": "event" },
+    { "id": "locked", "event": "vehicle:refused", "who": "all" },
+    { "id": "chase", "event": "chase:seen", "match": { "$": true }, "who": "all" },
+    { "id": "defense", "event": "bully:bump", "who": "all" },
+    { "id": "caught", "event": "player:caught", "who": "event" },
+    { "id": "tools", "event": "ammo:pickup", "who": "event" },
+    { "id": "traffic", "event": "traffic:hit", "who": "event" },
+    { "id": "rain", "event": "weather:changed", "match": { "state": "rain" }, "who": "all" }
+  ]
+}

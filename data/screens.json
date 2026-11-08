@@ -5,6 +5,7 @@
   "timetable": { "freezesWorld": true },
   "packing": { "freezesWorld": true },
   "minigameIntroduction": { "freezesWorld": true },
+  "hint": { "freezesWorld": true },
   "test": { "freezesWorld": true },
   "testHint": { "freezesWorld": false }
 }

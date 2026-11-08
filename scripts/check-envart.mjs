@@ -4,7 +4,7 @@
 // Run: node scripts/check-envart.mjs
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { groundKeys, prepareEnvArtForTest } from '../scenes/EnvArt.js';
+import { groundKeys, prepareEnvArtForTest, puddleKey, PUDDLE_SURFACES } from '../scenes/EnvArt.js';
 
 prepareEnvArtForTest({ grass: 4, asphalt: 4, cobble: 3, path: 3, concrete: 4, water: 3 });
 const mk = (...rows) => ({ legend: { A: 'asphalt', L: 'lane', C: 'cobble', G: 'grass', p: 'path', S: 'concrete', W: 'water', T: 'tree', F: 'fence', H: 'hedge', '#': 'wall', w: 'wood' }, rows });
@@ -66,15 +66,44 @@ assert.deepEqual(at(m, 0, 0), ['base-wall'], 'walls are unchanged');
 assert.deepEqual(at(m, 1, 2), ['base-tree'], 'tree tiles are unchanged');
 assert.deepEqual(at(mk('G'), 0, 0), ['base-grass'], 'a one tile map has no neighbours and no edges');
 
+
+// interiors: plaster walls with a cap, a tiled hall, shading, rugs and a bright exit doorway; outdoor rules do not apply
+const room = {
+  indoor: true,
+  legend: { '#': 'wall', w: 'wood', s: 'concrete' },
+  rows: ['######', '#wwww#', '#wwww#', '##ss##', '#ssss#', '######'],
+  objects: [{ type: 'door', id: 'exit', x: 2, y: 4, w: 2, h: 1 }]
+};
+const inAt = (x, y, mapId = 'home') => groundKeys(room, x, y, `base-${room.legend[room.rows[y][x]]}`, mapId);
+assert.match(inAt(2, 0)[0], /^env-iface-home-/, 'a wall with floor to its south shows its plaster face');
+assert.match(inAt(0, 2)[0], /^env-icap-home$/, 'a boundary wall seen from the side is a plain cap');
+assert.match(inAt(2, 5)[0], /^env-idoor-home-l$/, 'the wall under the left door tile is the left jamb of the doorway');
+assert.match(inAt(3, 5)[0], /^env-idoor-home-r$/, 'and the right jamb under the right door tile');
+assert.ok(has(inAt(2, 4), /^env-imat-l$/) && has(inAt(3, 4), /^env-imat-r$/), 'a door mat lies in front of the doorway');
+assert.match(inAt(2, 3)[0], /^env-ihall-home-/, 'concrete indoors is a tiled hall floor, not cracked asphalt grey');
+assert.equal(inAt(1, 1)[0], 'base-wood', 'wooden floors keep their texture');
+assert.ok(has(inAt(1, 1), /^env-ishade-n$/) && has(inAt(1, 1), /^env-ishade-w$/), 'floor beside a wall is shaded where the wall stands');
+assert.ok(has(inAt(3, 2), /^env-rug-home-nw$/), 'the home has its rug, with a corner where it starts');
+assert.ok(!has(groundKeys(room, 3, 2, 'b', 'school'), /^env-rug-/), 'other rooms have none');
+assert.ok(!has(inAt(1, 1), /^env-(edge|shore|bank)/), 'no outdoor edges indoors');
+assert.match(groundKeys(room, 2, 0, 'b', 'unknown-room')[0], /^env-iface-default-/, 'an unknown room still gets the default theme');
+
+// rain puddles: only on surfaces that can hold water, four shapes, same tile -> same shape
+assert.deepEqual(PUDDLE_SURFACES.sort(), ['asphalt', 'concrete', 'lane', 'path']);
+assert.equal(puddleKey('grass', 3, 4), null, 'grass takes no puddle overlay');
+assert.equal(puddleKey('cobble', 3, 4), null, 'neither does cobble');
+assert.equal(puddleKey('asphalt', 3, 4), puddleKey('asphalt', 3, 4));
+assert.ok(new Set(Array.from({ length: 64 }, (_, i) => puddleKey('asphalt', i, i * 3))).size === 4, 'four shapes are in use');
+
 // every real map: only known key families, the base stays first, and nothing here touched the grid
-const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|shadow|hedge))/;
+const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|shadow|hedge|iface|icap|ihall|idoor|ishade|ilight|imat|rug))/;
 let tiles = 0;
 let extra = 0;
 for (const f of readdirSync(new URL('../data/maps/', import.meta.url)).filter(n => n.endsWith('.json') && n !== 'index.json')) {
   const map = JSON.parse(readFileSync(new URL(`../data/maps/${f}`, import.meta.url), 'utf8'));
   const before = JSON.stringify(map.rows);
   for (let y = 0; y < map.rows.length; y++) for (let x = 0; x < map.rows[0].length; x++) {
-    const keys = groundKeys(map, x, y, 'base-x');
+    const keys = groundKeys(map, x, y, 'base-x', f.replace('.json', ''));
     tiles++;
     extra += keys.length - 1;
     for (const k of keys) assert.match(k, known, `${f} ${x},${y}: unexpected key ${k}`);

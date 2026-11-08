@@ -15,8 +15,9 @@
     "overlayAlpha": 0.3,
     "puddleEvery": 0.3,
     "dryEvery": 0.25,
-    "maxWet": 80,
+    "maxWet": 40,
+    "spotShare": 0.18,
     "range": 20,
-    "wettable": ["asphalt", "cobble", "concrete", "path", "lane"]
+    "wettable": ["asphalt", "concrete", "path", "lane"]
   }
 }

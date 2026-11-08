@@ -114,7 +114,7 @@ export class World {
         for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) {
           const key = res.scale > 1 ? tileKey(map, x + tx, y + ty) : `tile-${map.legend[map.rows[y + ty][x + tx]]}`;
           // AD-30: blended edges, shores, curbs and oriented fences come from the neighbours, drawn once here
-          for (const k of groundKeys(map, x + tx, y + ty, key)) rt.batchDraw(k, tx * ts, ty * ts);
+          for (const k of groundKeys(map, x + tx, y + ty, key, this.id)) rt.batchDraw(k, tx * ts, ty * ts);
         }
         rt.endDraw();
       }

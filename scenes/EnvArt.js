@@ -362,6 +362,384 @@ function castShadow(kind) {
   return tmp;
 }
 
+// Rain puddles (dynamic, see physics/Weather.js): a transparent overlay so the surface underneath shows through.
+// Irregular blob (a lumpy ellipse), a darker wet halo, a sky reflection that brightens towards the top, a thin
+// shaded rim, a glint and a couple of ripple rings. Four shapes per surface so no two puddles in a row match.
+const PUDDLE_TINT = {
+  asphalt: { top: '#9fc0e0', bottom: '#4d729b', halo: [8, 12, 24, 0.34], rim: '#2c4663' },
+  lane: { top: '#b4c6de', bottom: '#6a85ad', halo: [40, 14, 18, 0.3], rim: '#3d3a52' },
+  concrete: { top: '#b5d2ea', bottom: '#6f93b6', halo: [40, 50, 62, 0.3], rim: '#41607c' },
+  path: { top: '#b9cbd6', bottom: '#7d98a8', halo: [70, 52, 24, 0.38], rim: '#5a5a52' }
+};
+export const PUDDLE_SURFACES = Object.keys(PUDDLE_TINT);
+const PUDDLE_VARIANTS = 4;
+
+function puddleTexture(surface, v) {
+  const tint = PUDDLE_TINT[surface];
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const r = rng(hash(`puddle-${surface}`) + v * 131);
+  const im = c.createImageData(U, U);
+  const a = im.data;
+  const cx = 15 + (r() - 0.5) * 5;
+  const cy = 16 + (r() - 0.5) * 5;
+  const rx = 10 + r() * 5;
+  const ry = 6 + r() * 4;
+  const tilt = (r() - 0.5) * 0.7;
+  const p1 = r() * 6;
+  const p2 = r() * 6;
+  const lump = 0.16 + r() * 0.1;
+  const top = rgbOf(tint.top);
+  const bottom = rgbOf(tint.bottom);
+  const rim = rgbOf(tint.rim);
+  const set = (x, y, col, alpha) => {
+    const o = (y * U + x) * 4;
+    a[o] = col[0]; a[o + 1] = col[1]; a[o + 2] = col[2]; a[o + 3] = Math.round(alpha * 255);
+  };
+  const ct = Math.cos(tilt);
+  const st = Math.sin(tilt);
+  const dist = (x, y) => {
+    const dx = x + 0.5 - cx;
+    const dy = y + 0.5 - cy;
+    const ex = (dx * ct + dy * st) / rx;
+    const ey = (-dx * st + dy * ct) / ry;
+    const th = Math.atan2(ey, ex);
+    return Math.hypot(ex, ey) / (1 + lump * Math.sin(2 * th + p1) + lump * 0.7 * Math.sin(3 * th + p2));
+  };
+  for (let y = 0; y < U; y++) for (let x = 0; x < U; x++) {
+    const d = dist(x, y);
+    if (d < 1) {
+      const t = Math.min(1, Math.max(0, (y - (cy - ry)) / (2 * ry))); // sky at the far (top) edge, darker below
+      const col = top.map((tv, i) => tv + (bottom[i] - tv) * t);
+      let alpha = 0.86;
+      if (d > 0.84) { set(x, y, rim, 0.9); continue; }       // rim
+      if (d > 0.74) alpha = 0.95;
+      set(x, y, col, alpha);
+    } else if (d < 1.28) {
+      const edge = (d - 1) / 0.28; // soft wet halo with a dithered fall-off
+      if (edge < 0.45 || (edge < 0.8 && (x + y) % 2 === 0) || (edge < 1 && (x * 3 + y) % 5 === 0)) set(x, y, tint.halo, tint.halo[3] * (1 - edge * 0.6));
+    }
+  }
+  c.putImageData(im, 0, 0);
+  // glint and ripple rings
+  c.fillStyle = 'rgba(255,255,255,0.7)';
+  c.fillRect(Math.round(cx - rx * 0.45), Math.round(cy - ry * 0.4), 4, 1);
+  c.fillRect(Math.round(cx - rx * 0.45) + 1, Math.round(cy - ry * 0.4) + 1, 2, 1);
+  c.strokeStyle = 'rgba(255,255,255,0.35)';
+  c.lineWidth = 1;
+  for (let i = 0; i < 2; i++) {
+    const rxp = cx + (r() - 0.5) * rx * 0.8;
+    const ryp = cy + (r() - 0.5) * ry * 0.7;
+    c.beginPath();
+    c.ellipse(rxp, ryp, 2.5 + i * 1.5, 1.2 + i * 0.7, 0, 0, Math.PI * 2);
+    c.stroke();
+  }
+  return tmp;
+}
+
+// Texture key for a rain puddle on `surface` at tile (tx, ty), or null when the surface cannot hold one.
+export function puddleKey(surface, tx, ty) {
+  if (!PUDDLE_TINT[surface]) return null;
+  let h = Math.imul(tx, 83492791) ^ Math.imul(ty, 2971215073); // mixed, so the shape does not repeat with the coordinates
+  h = Math.imul(h ^ (h >>> 15), 2246822519);
+  h ^= h >>> 13;
+  return `env-puddle-${surface}-${(h >>> 0) % PUDDLE_VARIANTS}`;
+}
+
+// -------------------------------------------------------------------------------------- interiors (AD-30)
+// Indoor maps used the outdoor brick walls, concrete and plain planks. Here they get plaster walls with a cap and a
+// skirting board (windows, pictures, lockers, a blackboard, paper screens), a tiled hall floor, soft shading where
+// floor meets wall, light patches under windows, rugs, door mats and a bright doorway for exits. All derived from
+// the grid and the door objects; the theme comes from the map id.
+const THEMES = {
+  home: { wall: '#ead9bd', cap: '#4a3b3f', base: '#6e4a33', trim: '#fff4dc', accent: '#c05a45', hall: ['#d8cdb8', '#c4b8a0'] },
+  school: { wall: '#dfe9e0', cap: '#3f4a52', base: '#58707a', trim: '#ffffff', accent: '#4f9b7a', hall: ['#cdd6d1', '#b7c2bd'] },
+  dojo: { wall: '#d9c79c', cap: '#3a2a1e', base: '#4a3322', trim: '#f5ecd2', accent: '#a43a2e', hall: ['#b79a6a', '#a88a5c'] },
+  default: { wall: '#d7d9de', cap: '#3d4350', base: '#5c6272', trim: '#ffffff', accent: '#4f7fb5', hall: ['#c9ccd2', '#b4b8c0'] }
+};
+const THEME_IDS = Object.keys(THEMES);
+const FACES = ['plain', 'window', 'picture', 'clock', 'locker', 'notice', 'board-l', 'board-m', 'board-r', 'shoji', 'scroll'];
+const RUGS = {
+  home: [{ x: 3, y: 2, w: 6, h: 5, style: 'home' }, { x: 10, y: 10, w: 4, h: 6, style: 'runner' }]
+};
+const RUG_STYLES = { home: { body: '#b5513c', band: '#f0dfb8', dark: '#7d2f27' }, runner: { body: '#3f6f8f', band: '#e8dcc0', dark: '#27465e' } };
+
+const themeOf = mapId => THEMES[mapId] ?? THEMES.default;
+const themeName = mapId => (THEMES[mapId] ? mapId : 'default');
+
+function faceVariant(mapId, tx, southId) {
+  const hall = southId === 'concrete';
+  if (mapId === 'home') return hall ? (tx % 6 === 1 ? 'picture' : tx % 9 === 5 ? 'clock' : 'plain') : (tx % 5 === 2 ? 'window' : tx % 7 === 4 ? 'picture' : 'plain');
+  if (mapId === 'school') {
+    if (hall) return tx % 6 < 3 ? 'locker' : tx % 6 === 4 ? 'notice' : tx % 6 === 5 ? 'window' : 'plain';
+    if (tx >= 13 && tx <= 18) return tx === 13 ? 'board-l' : tx === 18 ? 'board-r' : 'board-m';
+    return tx % 3 === 1 ? 'window' : tx === 3 || tx === 28 ? 'clock' : 'plain';
+  }
+  if (mapId === 'dojo') return tx % 4 === 1 ? 'shoji' : tx % 8 === 5 ? 'scroll' : 'plain';
+  return 'plain';
+}
+
+function plasterFace(c, th, seed) {
+  const r = rng(seed);
+  px(c, th.cap, 0, 0, U, 6);
+  px(c, shade(th.cap, 0.28), 0, 0, U, 1);
+  px(c, shade(th.cap, -0.3), 0, 5, U, 1);
+  px(c, th.wall, 0, 6, U, 21);
+  for (let i = 0; i < 26; i++) px(c, shade(th.wall, r() < 0.5 ? -0.05 : 0.05), Math.floor(r() * U), 7 + Math.floor(r() * 19), 2, 1);
+  px(c, 'rgba(0,0,0,0.16)', 0, 6, U, 2);
+  px(c, 'rgba(0,0,0,0.07)', 0, 8, U, 2);
+  px(c, th.base, 0, 27, U, 5);
+  px(c, shade(th.base, 0.3), 0, 27, U, 1);
+  px(c, shade(th.base, -0.35), 0, 31, U, 1);
+}
+
+function faceTile(theme, variant) {
+  const th = THEMES[theme];
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const wood = theme === 'dojo';
+  if (wood && variant !== 'shoji') { // vertical timber boards
+    plasterFace(c, th, hash(theme + variant));
+    for (let x = 0; x < U; x += 8) { px(c, shade(th.wall, -0.18), x, 6, 1, 21); px(c, shade(th.wall, 0.12), x + 1, 6, 1, 21); }
+    px(c, th.cap, 0, 6, U, 1);
+  } else plasterFace(c, th, hash(theme + variant));
+  const frame = '#f4efe2';
+  if (variant === 'window') {
+    px(c, shade(th.base, -0.1), 5, 8, 22, 17);
+    px(c, frame, 6, 9, 20, 15);
+    const sky = c.createLinearGradient(0, 10, 0, 23);
+    sky.addColorStop(0, '#8fc7ee'); sky.addColorStop(1, '#dff2ff');
+    c.fillStyle = sky; c.fillRect(8, 11, 16, 11);
+    px(c, frame, 15, 10, 2, 13); px(c, frame, 7, 16, 18, 1);
+    px(c, 'rgba(255,255,255,0.5)', 9, 12, 3, 1);
+    px(c, shade(th.base, 0.2), 4, 24, 24, 2); // sill
+    if (theme === 'home') { px(c, '#c05a45', 5, 8, 4, 16); px(c, '#c05a45', 23, 8, 4, 16); px(c, '#8a3a2e', 5, 8, 1, 16); px(c, '#8a3a2e', 26, 8, 1, 16); }
+  } else if (variant === 'picture') {
+    px(c, '#3c2a1c', 9, 9, 14, 11); px(c, '#f2ead6', 10, 10, 12, 9);
+    px(c, '#8fc7ee', 11, 11, 10, 4); px(c, '#6cae5e', 11, 15, 10, 3); px(c, '#ffd84d', 17, 12, 2, 2);
+  } else if (variant === 'clock') {
+    ell(c, '#2a2a2e', 16, 15, 7, 7); ell(c, '#f4f1e6', 16, 15, 6, 6);
+    px(c, '#222', 16, 10, 1, 5); px(c, '#222', 16, 15, 4, 1); px(c, '#c0392b', 16, 15, 1, 1);
+  } else if (variant === 'locker') {
+    const col = '#4f7fb5';
+    for (const x of [1, 17]) {
+      px(c, '#2c4a6b', x, 7, 14, 20); px(c, col, x + 1, 8, 12, 18); px(c, shade(col, 0.25), x + 1, 8, 12, 1);
+      for (let y = 10; y < 15; y += 2) px(c, '#2c4a6b', x + 3, y, 6, 1);
+      px(c, '#d8dde3', x + 10, 18, 2, 3); px(c, '#2c4a6b', x + 1, 16, 12, 1);
+    }
+  } else if (variant === 'notice') {
+    px(c, '#6e4a33', 5, 8, 22, 16); px(c, '#c9955a', 6, 9, 20, 14);
+    px(c, '#fff3b0', 8, 11, 6, 5); px(c, '#f4a6b8', 16, 10, 7, 6); px(c, '#b9e3f5', 11, 17, 8, 4); px(c, '#d33', 11, 11, 1, 1); px(c, '#d33', 19, 11, 1, 1);
+  } else if (variant.startsWith('board')) {
+    const l = variant === 'board-l';
+    const rr = variant === 'board-r';
+    px(c, '#5a3d2b', l ? 3 : 0, 8, U - (l ? 3 : 0) - (rr ? 3 : 0), 16);
+    px(c, '#27493f', l ? 4 : 0, 9, U - (l ? 4 : 0) - (rr ? 4 : 0), 13);
+    px(c, '#34594d', l ? 4 : 0, 9, U - (l ? 4 : 0) - (rr ? 4 : 0), 1);
+    px(c, '#8a6b4a', l ? 3 : 0, 22, U - (l ? 3 : 0) - (rr ? 3 : 0), 2); // chalk tray
+    if (variant === 'board-m') { for (const [x, y, w] of [[3, 12, 12], [6, 15, 18], [12, 18, 10]]) px(c, 'rgba(240,240,230,0.7)', x, y, w, 1); px(c, '#f4f1e6', 24, 22, 3, 1); }
+    if (l) px(c, 'rgba(240,240,230,0.7)', 8, 13, 10, 1);
+  } else if (variant === 'shoji') {
+    px(c, '#3a2a1e', 3, 7, 26, 20); px(c, '#f6f0dc', 4, 8, 24, 18);
+    for (const x of [10, 16, 22]) px(c, '#3a2a1e', x, 8, 1, 18);
+    for (const y of [14, 20]) px(c, '#3a2a1e', 4, y, 24, 1);
+    px(c, 'rgba(255,255,255,0.5)', 5, 9, 4, 1);
+  } else if (variant === 'scroll') {
+    px(c, '#3a2a1e', 11, 8, 10, 1); px(c, '#3a2a1e', 11, 24, 10, 2);
+    px(c, '#efe4c4', 12, 9, 8, 15);
+    for (const [y, w] of [[11, 4], [14, 5], [17, 3], [20, 4]]) px(c, '#2a1d14', 14, y, w, 2);
+    px(c, th.accent, 17, 21, 2, 2);
+  }
+  return tmp;
+}
+
+function capTile(theme) {
+  const th = THEMES[theme];
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const r = rng(hash(theme + 'cap'));
+  px(c, th.cap, 0, 0, U, U);
+  for (let i = 0; i < 30; i++) px(c, shade(th.cap, r() < 0.5 ? -0.1 : 0.1), Math.floor(r() * U), Math.floor(r() * U), 2, 1);
+  px(c, shade(th.cap, 0.22), 0, 0, U, 1);
+  px(c, shade(th.cap, -0.3), 0, U - 2, U, 2);
+  return tmp;
+}
+
+function hallFloor(theme, parity) {
+  const th = THEMES[theme];
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const r = rng(hash(theme + 'hall') + parity);
+  for (let sy = 0; sy < 2; sy++) for (let sx = 0; sx < 2; sx++) {
+    const col = th.hall[(sx + sy + parity) & 1];
+    px(c, col, sx * 16, sy * 16, 16, 16);
+    for (let i = 0; i < 14; i++) px(c, shade(col, r() < 0.5 ? -0.05 : 0.06), sx * 16 + Math.floor(r() * 15), sy * 16 + Math.floor(r() * 15), 2, 1);
+    px(c, shade(col, 0.16), sx * 16, sy * 16, 16, 1);
+    px(c, shade(col, 0.1), sx * 16, sy * 16, 1, 16);
+    px(c, shade(col, -0.2), sx * 16, sy * 16 + 15, 16, 1);
+    px(c, shade(col, -0.14), sx * 16 + 15, sy * 16, 1, 16);
+  }
+  return tmp;
+}
+
+function floorShade(side) {
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const rows = side === 'n' ? [0.38, 0.3, 0.22, 0.15, 0.09, 0.05] : [0.24, 0.14, 0.07];
+  rows.forEach((a, y) => px(c, `rgba(20,12,10,${a})`, 0, y, U, 1));
+  return tmp; // drawn for the north side and rotated for the others
+}
+
+function lightPatch() {
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  c.fillStyle = 'rgba(255,240,180,0.2)';
+  c.beginPath(); c.moveTo(6, 0); c.lineTo(26, 0); c.lineTo(31, 16); c.lineTo(11, 16); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(255,240,180,0.12)';
+  c.beginPath(); c.moveTo(11, 16); c.lineTo(31, 16); c.lineTo(31, 22); c.lineTo(16, 22); c.closePath(); c.fill();
+  return tmp;
+}
+
+// Exit doorway seen from inside: dark jambs at both ends, a bright opening between, threshold stone below.
+function doorWall(theme, part) {
+  const th = THEMES[theme];
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  px(c, th.cap, 0, 0, U, U);
+  const left = part === 'l';
+  const right = part === 'r';
+  const x0 = left ? 8 : 0;
+  const x1 = right ? U - 8 : U;
+  const g = c.createLinearGradient(0, 0, 0, U);
+  g.addColorStop(0, '#fff4c0'); g.addColorStop(1, '#fbd980');
+  c.fillStyle = g; c.fillRect(x0, 3, x1 - x0, U - 3);
+  px(c, 'rgba(255,255,255,0.45)', x0, 3, x1 - x0, 2);
+  px(c, '#2a2118', x0, 0, x1 - x0, 3);
+  if (left) { px(c, '#6e4a33', 5, 0, 4, U); px(c, '#9a7048', 5, 0, 1, U); }
+  if (right) { px(c, '#6e4a33', U - 9, 0, 4, U); px(c, '#9a7048', U - 9, 0, 1, U); }
+  px(c, '#8f8678', x0, U - 5, x1 - x0, 5); px(c, '#b3ab9d', x0, U - 5, x1 - x0, 1);
+  return tmp;
+}
+
+function doorMat(part) {
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const x0 = part === 'l' ? 4 : 0;
+  const x1 = part === 'r' ? U - 4 : U;
+  px(c, 'rgba(0,0,0,0.25)', x0, 9, x1 - x0, 18);
+  px(c, '#6b4a2e', x0, 8, x1 - x0, 17);
+  px(c, '#8a6540', x0, 8, x1 - x0, 1);
+  for (let y = 11; y < 23; y += 3) px(c, '#563a22', x0 + 1, y, x1 - x0 - 2, 1);
+  return tmp;
+}
+
+// A rug part: 'm' inner, edges n/e/s/w (drawn for n, rotated), corners nw/ne/se/sw (drawn for nw, rotated).
+function rugPart(style, part) {
+  const st = RUG_STYLES[style];
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const edge = part === 'n';
+  const corner = part === 'nw';
+  const x0 = corner ? 4 : 0;
+  const y0 = edge || corner ? 4 : 0;
+  px(c, st.body, x0, y0, U - x0, U - y0);
+  const r = rng(hash(style + part));
+  for (let i = 0; i < 22; i++) px(c, shade(st.body, r() < 0.5 ? -0.08 : 0.08), x0 + Math.floor(r() * (U - x0)), y0 + Math.floor(r() * (U - y0)), 2, 1);
+  if (part === 'm') { // faint diamond motif
+    for (let i = 0; i < 6; i++) { px(c, shade(st.body, 0.14), 16 - i, 10 + i, 1 + i * 2, 1); px(c, shade(st.body, 0.14), 16 - i, 22 - i, 1 + i * 2, 1); }
+  }
+  if (edge || corner) {
+    px(c, st.dark, x0, y0, U - x0, 1);                       // outer line
+    px(c, st.band, x0, y0 + 2, U - x0, 2);                   // band
+    px(c, st.dark, x0, y0 + 4, U - x0, 1);
+    for (let x = x0 + 1; x < U; x += 2) px(c, st.band, x, y0 - 2, 1, 2); // fringe
+  }
+  if (corner) {
+    px(c, st.dark, x0, y0, 1, U - y0);
+    px(c, st.band, x0 + 2, y0, 2, U - y0);
+    px(c, st.dark, x0 + 4, y0, 1, U - y0);
+    for (let y = y0 + 1; y < U; y += 2) px(c, st.band, x0 - 2, y, 2, 1);
+  }
+  return tmp;
+}
+
+function makeInteriorArt(scene, size) {
+  for (const theme of THEME_IDS) {
+    for (const v of FACES) emit(scene, `env-iface-${theme}-${v}`, faceTile(theme, v), size);
+    emit(scene, `env-icap-${theme}`, capTile(theme), size);
+    for (let p = 0; p < 2; p++) emit(scene, `env-ihall-${theme}-${p}`, hallFloor(theme, p), size);
+    for (const part of ['l', 'm', 'r']) emit(scene, `env-idoor-${theme}-${part}`, doorWall(theme, part), size);
+  }
+  const shadeN = floorShade('n');
+  const shadeSide = floorShade('s');
+  SIDES.forEach((s, rot) => emit(scene, `env-ishade-${s}`, s === 'n' ? shadeN : shadeSide, size, rot));
+  emit(scene, 'env-ilight', lightPatch(), size);
+  for (const part of ['l', 'm', 'r']) emit(scene, `env-imat-${part}`, doorMat(part), size);
+  for (const style of Object.keys(RUG_STYLES)) {
+    emit(scene, `env-rug-${style}-m`, rugPart(style, 'm'), size);
+    const e = rugPart(style, 'n');
+    SIDES.forEach((s, rot) => emit(scene, `env-rug-${style}-${s}`, e, size, rot));
+    const k = rugPart(style, 'nw');
+    CORNERS.forEach((s, rot) => emit(scene, `env-rug-${style}-${s}`, k, size, rot));
+  }
+}
+
+const INDOOR = new WeakMap(); // map -> { doorWalls, doorFloors } derived once from the door objects
+
+function indoorInfo(map) {
+  let info = INDOOR.get(map);
+  if (info) return info;
+  info = { doorWalls: new Map(), doorFloors: new Map() };
+  for (const o of map.objects ?? []) {
+    if (o.type !== 'door') continue;
+    for (let i = 0; i < o.w; i++) {
+      const part = o.w === 1 ? 'm' : i === 0 ? 'l' : i === o.w - 1 ? 'r' : 'm';
+      info.doorWalls.set(`${o.x + i},${o.y + o.h}`, part);
+      for (let j = 0; j < o.h; j++) info.doorFloors.set(`${o.x + i},${o.y + j}`, part);
+    }
+  }
+  INDOOR.set(map, info);
+  return info;
+}
+
+function indoorKeys(map, tx, ty, baseKey, mapId) {
+  const rows = map.rows.length;
+  const cols = map.rows[0].length;
+  const idAt = (x, y) => (x < 0 || y < 0 || x >= cols || y >= rows ? null : map.legend[map.rows[y][x]]);
+  const theme = themeName(mapId);
+  const id = idAt(tx, ty);
+  const info = indoorInfo(map);
+  if (id === 'wall') {
+    const door = info.doorWalls.get(`${tx},${ty}`);
+    if (door) return [`env-idoor-${theme}-${door}`];
+    const south = idAt(tx, ty + 1);
+    if (south && south !== 'wall') return [`env-iface-${theme}-${faceVariant(mapId, tx, south)}`];
+    return [`env-icap-${theme}`];
+  }
+  const keys = [id === 'concrete' ? `env-ihall-${theme}-${(tx + ty) & 1}` : baseKey];
+  const wallAt = (x, y) => idAt(x, y) === 'wall';
+  if (wallAt(tx, ty - 1)) keys.push('env-ishade-n');
+  if (wallAt(tx + 1, ty)) keys.push('env-ishade-e');
+  if (wallAt(tx - 1, ty)) keys.push('env-ishade-w');
+  if (wallAt(tx, ty + 1)) keys.push('env-ishade-s');
+  const above = idAt(tx, ty - 1);
+  if (above === 'wall' && ['window', 'shoji'].includes(faceVariant(mapId, tx, id))) keys.push('env-ilight');
+  for (const rug of RUGS[mapId] ?? []) {
+    const ix = tx - rug.x;
+    const iy = ty - rug.y;
+    if (ix < 0 || iy < 0 || ix >= rug.w || iy >= rug.h) continue;
+    const n = iy === 0;
+    const s = iy === rug.h - 1;
+    const w = ix === 0;
+    const e = ix === rug.w - 1;
+    const part = n && w ? 'nw' : n && e ? 'ne' : s && e ? 'se' : s && w ? 'sw' : n ? 'n' : s ? 's' : w ? 'w' : e ? 'e' : 'm';
+    keys.push(`env-rug-${rug.style}-${part}`);
+  }
+  const mat = info.doorFloors.get(`${tx},${ty}`);
+  if (mat) keys.push(`env-imat-${mat}`);
+  return keys;
+}
+
 // -------------------------------------------------------------------------------------- public API
 
 // Draws every environment texture for the current resolution. `size` is the tile texture size in pixels.
@@ -401,12 +779,14 @@ export function makeEnvArt(scene, tileDefs, size) {
     CORNERS.forEach((k, rot) => emit(scene, `env-round-${cls}-${k}`, rc, size, rot));
   }
   for (const k of ['h', 'v', 'x']) emit(scene, `env-fence-${k}`, fenceTile(k), size);
+  for (const surface of PUDDLE_SURFACES) for (let v = 0; v < PUDDLE_VARIANTS; v++) emit(scene, `env-puddle-${surface}-${v}`, puddleTexture(surface, v), size);
   emit(scene, 'env-shadow-hedge', castShadow('hedge'), size);
   emit(scene, 'env-shadow-fence', castShadow('fence'), size);
   const hedgeBase = tileDefs.hedge?.base ?? '#2e7a34';
   for (let v = 0; v < 3; v++) {
     for (const top of [0, 1]) for (const bottom of [0, 1]) emit(scene, `env-hedge-${top}${bottom}-${v}`, hedgeTile(hedgeBase, v, top, bottom), size);
   }
+  makeInteriorArt(scene, size);
   STATE.ready = true;
 }
 
@@ -429,8 +809,9 @@ const edgeVariant = (tx, ty) => (((tx * 2654435761) ^ (ty * 40503)) >>> 0) % VAR
 
 // Texture keys to draw, in order, for the tile at (tx, ty). `baseKey` is the plain tile texture the caller
 // would draw; without environment art (or on maps with no outdoor surfaces) it comes back unchanged.
-export function groundKeys(map, tx, ty, baseKey) {
+export function groundKeys(map, tx, ty, baseKey, mapId) {
   if (!STATE.ready) return [baseKey];
+  if (map.indoor) return indoorKeys(map, tx, ty, baseKey, mapId);
   const rows = map.rows.length;
   const cols = map.rows[0].length;
   const idAt = (x, y) => (x < 0 || y < 0 || x >= cols || y >= rows ? null : map.legend[map.rows[y][x]]);

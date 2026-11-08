@@ -3,6 +3,8 @@ import { createHud } from '../ui/hud/index.js';
 import { ScreenStack } from '../ui/ScreenStack.js';
 import { PauseScreen } from '../ui/screens/PauseScreen.js';
 import { TestScreen } from '../ui/screens/TestScreen.js';
+import { HintScreen } from '../ui/screens/HintScreen.js';
+import { Hints } from '../services/Hints.js';
 
 // Overlay host (AD-27): HUD modules from data/hud.json plus the screen stack. Reads only; never mutates
 // the world (AD-13). The world is frozen through game:pause / game:resume, raised by the stack.
@@ -19,6 +21,14 @@ export class UIScene extends Phaser.Scene {
     this.hudList = [...this.hud.values()];
     this.screens = new ScreenStack(cache.get('screens'), (on) => events.emit(on ? 'game:pause' : 'game:resume'));
     ctx.screens = this.screens;
+    // Story 11.5: contextual explanations open here (reading freezes the world until a fresh confirmation) and the
+    // pause menu's Help pages through all of them. Read-only for the world, like the rest of this scene.
+    const hintCfg = cache.get('hints');
+    const inputCfg = cache.get('input');
+    ctx.hints = new Hints(ctx, hintCfg, (def, audience, done) => {
+      this.screens.push(new HintScreen(this, ctx, this.screens, { mode: 'hint', ids: [def.id], audience, inputCfg, onDone: confirmed => (confirmed ? done() : ctx.hints?.abandon()) }));
+    });
+    ctx.openHelp = () => this.screens.push(new HintScreen(this, ctx, this.screens, { mode: 'browse', ids: hintCfg.hints.map(h => h.id), index: 0, inputCfg }));
     this.ducked = false;
     ctx.duckHud = (on) => { // AD-20: a minigame covers the HUD
       this.ducked = on;
@@ -45,6 +55,9 @@ export class UIScene extends Phaser.Scene {
       events.off('lang:changed', onLang);
       events.off('ui:pause-toggle', onToggle);
       this.screens.clear();
+      ctx.hints?.destroy();
+      delete ctx.hints;
+      delete ctx.openHelp;
       for (const m of this.hudList) m.destroy();
       delete ctx.screens;
       delete ctx.duckHud;

@@ -6,6 +6,7 @@ import { turfChase } from './chase.js';
 import { pedestrians, crowdCleanup } from './crowd.js';
 import { dayClock } from './day.js';
 import { screenStack } from './screens.js';
+import { hints } from './hints.js';
 import { twoPlayers } from './players.js';
 import { characters } from './characters.js';
 import { skateboard } from './skate.js';
@@ -28,4 +29,4 @@ import { school } from './school.js';
 import { home } from './home.js';
 import { openWorld } from './open-world.js';
 
-export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, traffic, karate, school, home, openWorld];
+export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, hints, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, traffic, karate, school, home, openWorld];

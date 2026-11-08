@@ -24,15 +24,29 @@ export async function runSmoke(game, h, only = null) {
   const savedLang = game.registry.get('app').i18n.lang;
   const savedTier = game.registry.get('app').quality.id;
 
+  // Traffic, crowd, loot and theft draw from Math.random (several services keep a reference to it), so an
+  // unseeded run differs every time and a red check can be luck. The run installs a seeded generator and
+  // reseeds it per scenario, so each scenario sees the same random stream whatever ran before it.
+  const origRandom = Math.random;
+  let seed = 1;
+  Math.random = () => { // mulberry32
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+
   try {
     game.loop.sleep();
     const env = createEnv(game, h, check, savedLang);
     for (const scenario of scenarios.filter(sc => !only || only.includes(sc.name))) {
+      seed = [...scenario.name].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) | 0, 7);
       try { await scenario.run(game, check, env); } catch (e) { check(`scenario ${scenario.name} finished without throwing`, false, e.stack ?? e); break; }
     }
   } catch (e) {
     check('smoke run finished without throwing', false, e.stack ?? e);
   } finally {
+    Math.random = origRandom;
     try { game.registry.get('app').i18n.set(savedLang); game.registry.get('app').quality.set(savedTier); } catch { /* ignore */ }
     console.error = origErr;
     console.warn = origWarn;
