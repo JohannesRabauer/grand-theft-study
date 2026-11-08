@@ -8,6 +8,7 @@
 //   (`tram:inspector` { player, fine }, the hook for the chaser story 7.4), charging a fine, never more than they have.
 // - Pickups: coins appear when a kid comes close to a spot (LootDrops), once per spot per run.
 import { arrival, fares, inspected, otherStop, rideTarget } from '../services/commuteLogic.js';
+import { hasDayTicket } from '../services/shopLogic.js';
 
 export class Commute {
   constructor(scene, ctx, cfg) {
@@ -71,8 +72,9 @@ export class Commute {
     const from = this.stopPos(stopObject);
     const riders = ctx.players.filter(p => p.alive && !p.pinned && p.vehicle === 'foot' && Math.hypot(p.x - from.x, p.y - from.y) <= cfg.tram.groupRadius);
     if (!riders.length) return null;
-    const tickets = fares(cfg.tram, ctx.state.shared.money, riders.length);
-    const paid = tickets.filter(Boolean).length * cfg.tram.priceCents;
+    const pass = hasDayTicket(ctx.state.shared); // a day ticket from the bakery covers everybody
+    const tickets = pass ? riders.map(() => true) : fares(cfg.tram, ctx.state.shared.money, riders.length);
+    const paid = pass ? 0 : tickets.filter(Boolean).length * cfg.tram.priceCents;
     if (paid > 0) ctx.state.dispatch('wallet.spend', { cents: paid, reason: 'tram-ticket' });
     const day = ctx.day;
     if (day.mode === 'story' && day.running) {

@@ -1,3 +1,4 @@
+import { ammoBonus } from '../services/shopLogic.js';
 import { Tool, updateAimDir } from './Tool.js';
 import { CAT, MASK } from '../physics/categories.js';
 import { addProjectile } from '../physics/bodies.js';
@@ -34,7 +35,7 @@ export class Slingshot extends Tool {
     this.player = player;
     this.cfg = cfg.slingshot;
     this.matter = scene.matter;
-    this.max = this.cfg.maxAmmo;
+    this.max = this.cfg.maxAmmo + ammoBonus(ctx.state.shared, ctx.state.cfg.shop); // the family's bought magazine upgrades (story 10.1)
     this.ammo = Math.min(this.cfg.startAmmo, this.max);
     this.power = 0;
     this.charging = false;

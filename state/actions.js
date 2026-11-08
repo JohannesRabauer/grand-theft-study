@@ -1,6 +1,7 @@
 import { createMorning, createPlayer, grantStartBelt } from './GameState.js';
 import { applyRecord, validEntry, moveKopfnote } from '../grading/gradeCore.js';
 import { safeStreetPosition, streetRecord } from '../vehicles/streetLogic.js';
+import { itemById, itemStatus, ticketKey, upgradeKey } from '../services/shopLogic.js';
 
 // Registered state actions (AD-16). Each gets a mutable draft copy, the payload and the config and
 // returns { path } (the changed path(s)) or { reject: reason }. New systems add their actions here.
@@ -117,6 +118,43 @@ export const ACTIONS = {
     unlockVehicle(s, id, 'bought', cfg);
     s.shared.money -= item.price;
     return { path: ['shared.money', 'shared.ownedVehicles'] };
+  },
+
+  // Buys any shop item that is not a vehicle (vehicles keep shop.buyVehicle): the money and what it buys change together or
+  // not at all. Cosmetics belong to `player` and are put on at once; snacks only cost money (their effect is the shop's).
+  'shop.buy'(s, { id, player = 0 }, cfg) {
+    const item = itemById(cfg.shop ?? { items: [] }, id);
+    if (!item || item.type === 'vehicle') return reject('not-for-sale');
+    if (!s.players[player]) return reject('bad-payload');
+    if (item.price > s.shared.money) return reject('insufficient-funds');
+    if (itemStatus(cfg.shop, s, player, item).owned) return reject('already-owned');
+    const path = ['shared.money'];
+    if (item.type === 'cosmetic') {
+      const c = s.players[player].cosmetics;
+      c.owned.push(item.id);
+      c.equipped[item.slot] = item.id;
+      path.push(`players.${player}.cosmetics`);
+    } else if (item.type === 'upgrade') {
+      s.shared.flags[upgradeKey(item)] = true;
+      path.push('shared.flags');
+    } else if (item.type === 'ticket') {
+      s.shared.flags[ticketKey(s.shared.clock.day)] = true;
+      path.push('shared.flags');
+    }
+    s.shared.money -= item.price;
+    return { path };
+  },
+
+  // Puts an owned cosmetic on, or takes the slot's cosmetic off with id null.
+  'cosmetics.equip'(s, { player = 0, slot, id = null }, cfg) {
+    const p = s.players[player];
+    if (!p || !cfg.shop?.slots.includes(slot)) return reject('bad-payload');
+    if (id !== null) {
+      const item = itemById(cfg.shop, id);
+      if (!item || item.type !== 'cosmetic' || item.slot !== slot || !p.cosmetics.owned.includes(id)) return reject('not-owned');
+      p.cosmetics.equipped[slot] = id;
+    } else delete p.cosmetics.equipped[slot];
+    return { path: `players.${player}.cosmetics` };
   },
 
   'flags.set'(s, { key, value = true }) {

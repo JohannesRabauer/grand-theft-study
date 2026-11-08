@@ -11,6 +11,7 @@ export class Ownership {
     const { events } = ctx;
     events.on('race:won', ev => this.unlock(ev?.vehicle, 'race'));
     events.on('state:changed', ev => {
+      if (ev.path !== 'shared.ownedVehicles') return; // an action reports one event per changed path (a purchase also changes the money): announce once
       if (ev.action === 'vehicles.unlock' && ev.payload.reason !== 'start') this.announce(ev.payload.id, ev.payload.reason);
       else if (ev.action === 'shop.buyVehicle') this.announce(ev.payload.id, 'bought');
     });

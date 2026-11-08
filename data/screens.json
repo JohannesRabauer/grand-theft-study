@@ -6,6 +6,7 @@
   "packing": { "freezesWorld": true },
   "minigameIntroduction": { "freezesWorld": true },
   "hint": { "freezesWorld": true },
+  "shop": { "freezesWorld": true },
   "test": { "freezesWorld": true },
   "testHint": { "freezesWorld": false }
 }

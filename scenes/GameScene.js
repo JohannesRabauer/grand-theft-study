@@ -47,6 +47,8 @@ import { Grades } from '../grading/Grades.js';
 import { Minigames } from '../minigames/Minigames.js';
 import { School } from '../entities/School.js';
 import { Commute } from '../entities/Commute.js';
+import { Shops } from '../entities/Shops.js';
+import { Cosmetics } from '../entities/Cosmetics.js';
 import { Home } from '../entities/Home.js';
 import { morningStartMap } from '../services/Morning.js';
 import { StreetRides } from '../entities/StreetRides.js';
@@ -165,6 +167,8 @@ export class GameScene extends Phaser.Scene {
     this.school = new School(this, ctx, cache.get('timetable'), cache.get('minigames').minigames);
     this.home = new Home(this, ctx, cache.get('morning'));
     this.commute = new Commute(this, ctx, cache.get('commute')); // story 8.2: the bell, the tram, pickups
+    this.shops = new Shops(this, ctx, cache.get('shop'), cache.get('input')); // story 10.1: the market shops and the bakery
+    this.cosmetics = new Cosmetics(this, ctx); // story 10.1: hats and rings the players wear
     this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
     this.garage = new Garage(this, ctx);
     this.caught = new Caught(this, ctx, cache.get('chase').caught, this.mountables);
@@ -362,6 +366,8 @@ export class GameScene extends Phaser.Scene {
     this.school.update();
     this.home.update();
     this.commute.update(dt);
+    this.shops.update();
+    this.cosmetics.update(dt);
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.grabs.update(dt);
