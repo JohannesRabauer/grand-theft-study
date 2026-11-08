@@ -3,6 +3,7 @@
 // order, so a new one starts from whatever state the previous one left; `env` (see env.js) has the helpers.
 import { rideToSchool, slingshot, weather, language, quality, pause } from './prototype-core.js';
 import { turfChase } from './chase.js';
+import { chaseLevels } from './chase-levels.js';
 import { pedestrians, crowdCleanup } from './crowd.js';
 import { dayClock } from './day.js';
 import { screenStack } from './screens.js';
@@ -46,4 +47,4 @@ import { zeugnis } from './zeugnis.js';
 import { home } from './home.js';
 import { openWorld } from './open-world.js';
 
-export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, hints, commute, shop, quests, missions, progress, stickers, achievements, lernbuch, parent, activities, minimap, phone, important, age, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, traffic, karate, school, schoolEvents, dayFlow, zeugnis, home, openWorld];
+export const scenarios = [rideToSchool, turfChase, chaseLevels, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, hints, commute, shop, quests, missions, progress, stickers, achievements, lernbuch, parent, activities, minimap, phone, important, age, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, traffic, karate, school, schoolEvents, dayFlow, zeugnis, home, openWorld];

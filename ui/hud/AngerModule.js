@@ -1,7 +1,7 @@
 import { HudModule } from './HudModule.js';
 import { uiText } from '../uiKit.js';
 
-const COLORS = [0xe8731c, 0xe0302a];
+const COLORS = [0xe8731c, 0xe8731c, 0xe0302a, 0xe0302a, 0xa0102a]; // one per level; the top levels get darker
 
 // Ärger meter (two bars, grey -> orange -> red), the "spotted" flag and the hide indicator with its
 // cooldown bar (fills until the level drops), all from chase state (read-only).
@@ -26,9 +26,11 @@ export class AngerModule extends HudModule {
   drawLevel(level) {
     const g = this.bars.clear();
     const { width } = this;
-    for (let i = 0; i < 2; i++) {
-      g.fillStyle(0x000000, 0.6).fillRect(width - 52 + i * 24, 12, 22, 7);
-      g.fillStyle(i < level ? COLORS[Math.min(level, 2) - 1] : 0x444444).fillRect(width - 51 + i * 24, 13, 20, 5);
+    const max = this.ctx.chase.lvl.max;
+    const step = Math.floor(48 / max); // the bars share the same 48 px however many levels there are
+    for (let i = 0; i < max; i++) {
+      g.fillStyle(0x000000, 0.6).fillRect(width - 52 + i * step, 12, step - 2, 7);
+      g.fillStyle(i < level ? COLORS[Math.min(level, COLORS.length) - 1] : 0x444444).fillRect(width - 51 + i * step, 13, step - 4, 5);
     }
   }
 

@@ -12,6 +12,21 @@ export function pickTarget(scores, n, current, switchRatio) {
   return bestScore < scores[current] * switchRatio ? best : current;
 }
 
+// Where a gang bully in `slot` heads for (story 7.1): the target (tx, ty) moving with (vx, vy), the bully at (bx, by). Different slots give
+// different points (straight, cutting ahead, from the left and right); close to the target everyone goes for it. Returns the shared `out`.
+export function interceptPoint(gang, slot, tx, ty, vx, vy, bx, by, out) {
+  const away = Math.hypot(bx - tx, by - ty);
+  if (away < gang.closeIn) { out.x = tx; out.y = ty; return out; }
+  const speed = Math.hypot(vx, vy);
+  let fx;
+  let fy;
+  if (speed > gang.minSpeed) { fx = vx / speed; fy = vy / speed; } else { fx = (bx - tx) / away; fy = (by - ty) / away; } // standing still: the bully's own side
+  const s = gang.slots[slot % gang.slots.length];
+  out.x = tx + fx * s.ahead * gang.leadPx - fy * s.side * gang.flankPx;
+  out.y = ty + fy * s.ahead * gang.leadPx + fx * s.side * gang.flankPx;
+  return out;
+}
+
 // The chase ends when EVERY player in play is safe, each by its own timer: hidden long enough or far and unseen long enough
 // (Escape.done). One player hiding while the other is still seen or close keeps the level. `escapes[i]` is player i's Escape,
 // `alive[i]` whether it is in play. Returns 'hidden' (all hid), 'escaped' (at least one got away by distance) or null.

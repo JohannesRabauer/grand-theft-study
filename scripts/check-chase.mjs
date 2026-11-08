@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { Pathfinder } from '../ai/Pathfinding.js';
 import { ChaseLevel } from '../ai/ChaseLevel.js';
 import { Escape } from '../ai/Escape.js';
-import { pickTarget, escapeVerdict, wantedKinds, offView } from '../ai/chaseLogic.js';
+import { pickTarget, escapeVerdict, wantedKinds, offView, interceptPoint } from '../ai/chaseLogic.js';
 
 const load = (p) => JSON.parse(readFileSync(new URL(`../data/${p}`, import.meta.url), 'utf8'));
 const map = load('maps/town.json');
@@ -91,7 +91,8 @@ assert.equal(lv.level, 1, 'not yet');
 lv.update(0.2);
 assert.equal(lv.level, 2, 'staying in turf -> level 2');
 lv.update(100);
-assert.equal(lv.level, 2, 'level is capped at 2');
+assert.equal(lv.max, 5, 'five levels');
+assert.equal(lv.level, 5, 'level is capped at the top level');
 
 lv = mk();
 lv.bump();
@@ -213,3 +214,33 @@ assert.equal(step(1, 100, true, false, true, e.farDistance + 1), null, 'being se
 }
 
 console.log(`chase checks passed: path ${n} tiles, A* avg ${avg.toFixed(3)} ms, p99 ${worst.toFixed(3)} ms; level events ${log.length}`);
+
+// ---- story 7.1: five levels and the gang
+{
+  const L = chase.level;
+  assert.equal(L.spawnByLevel.length, 6, 'levels 0 to 5');
+  assert.deepEqual(L.spawnByLevel.map(k => k.length), [0, 1, 3, 4, 5, 6], 'each level asks for its chasers');
+  for (let i = 1; i < 6; i++) assert.ok(L.spawnByLevel[i].length >= L.spawnByLevel[i - 1].length, 'a higher level never asks for fewer');
+  assert.equal(L.coopExtraByLevel.length, 6);
+  for (const cap of [2, 3, 4]) for (let lvl = 0; lvl <= 5; lvl++) assert.ok(wantedKinds(L, lvl, false, cap).length <= cap, `level ${lvl} respects cap ${cap}`);
+  assert.deepEqual(wantedKinds(L, 5, false, 6), L.spawnByLevel[5], 'level 5 with room for everyone');
+  assert.ok(wantedKinds(L, 5, false, 6, 3).length >= 3 && wantedKinds(L, 5, false, 6, 3).length < 6, 'friends still thin out the top level, but not to nothing');
+  const g = chase.gang;
+  assert.ok(g.fromLevel === 3 && g.slots.length >= 4);
+  const out = { x: 0, y: 0 };
+  const pts = g.slots.map((_, i) => { interceptPoint(g, i, 300, 300, 2, 0, 100, 300, out); return `${out.x.toFixed(1)},${out.y.toFixed(1)}`; });
+  assert.equal(new Set(pts).size, g.slots.length, `every slot has its own point: ${pts}`);
+  interceptPoint(g, 0, 300, 300, 2, 0, 100, 300, out);
+  assert.deepEqual([out.x, out.y], [300, 300], 'slot 0 runs straight at the target');
+  interceptPoint(g, 1, 300, 300, 2, 0, 100, 300, out);
+  assert.ok(out.x > 300 + g.leadPx * 0.9 && Math.abs(out.y - 300) < 1e-9, 'slot 1 cuts ahead along the running direction');
+  interceptPoint(g, 2, 300, 300, 2, 0, 100, 300, out);
+  const left = out.y;
+  interceptPoint(g, 3, 300, 300, 2, 0, 100, 300, out);
+  assert.ok(left > 300 && out.y < 300, 'slots 2 and 3 come from opposite sides');
+  interceptPoint(g, 1, 300, 300, 2, 0, 310, 300, out);
+  assert.deepEqual([out.x, out.y], [300, 300], 'close to the target everyone goes for it');
+  interceptPoint(g, 1, 300, 300, 0, 0, 100, 300, out);
+  assert.ok(out.x < 300 && out.x > 100, 'a standing target is approached from the bully side');
+  assert.equal(interceptPoint(g, 6, 300, 300, 2, 0, 100, 300, out), out, 'slots wrap around and the shared point is returned');
+}

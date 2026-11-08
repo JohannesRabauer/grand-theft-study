@@ -6,7 +6,7 @@
 // (data `coop.switchRatio`) so it sticks to its target; `b.seenMask` has a bit for every player it sees (not only the target);
 // CAUGHT only stops the bully (the director has already emitted `bully:caught-contact`).
 import { targetScore } from '../characters/attributes.js';
-import { pickTarget } from './chaseLogic.js';
+import { interceptPoint, pickTarget } from './chaseLogic.js';
 
 export const S = { IDLE: 'IDLE', CHASE: 'CHASE', SEARCH: 'SEARCH', DISTRACTED: 'DISTRACTED', GIVE_UP: 'GIVE_UP', CAUGHT: 'CAUGHT', STUMBLE: 'STUMBLE' };
 
@@ -16,6 +16,7 @@ export class BullyFSM {
     this.cfg = director.cfg.bully;
     this.switchRatio = director.cfg.coop.switchRatio;
     this.scores = new Float64Array(director.ctx.maxPlayers);
+    this.aim = { x: 0, y: 0 }; // the gang intercept point of the bully being updated (story 7.1), reused so nothing is allocated per frame
   }
 
   enter(b, state) {
@@ -55,7 +56,7 @@ export class BullyFSM {
         if (b.t >= c.idleSeconds || b.sees) this.enter(b, S.CHASE);
         break;
       case S.CHASE:
-        if (b.sees) b.goTo(b.target.x, b.target.y);
+        if (b.sees) this.approach(b);
         else {
           b.goTo(b.lastX, b.lastY);
           if (b.lost >= c.loseSightSeconds) this.enter(b, S.SEARCH);
@@ -83,6 +84,21 @@ export class BullyFSM {
       default: // CAUGHT
         b.stop();
     }
+  }
+
+  // The way a bully that sees its target comes: straight, or from the gang level on to its own intercept point (story 7.1).
+  approach(b) {
+    const gang = this.d.cfg.gang;
+    const t = b.target;
+    if (!gang || this.d.lvl.level < gang.fromLevel) { b.goTo(t.x, t.y); return; }
+    let slot = 0;
+    for (const o of this.d.pool.list) { if (o === b) break; if (o.active && o.state !== S.GIVE_UP) slot++; }
+    b.slot = slot;
+    const v = t.body.velocity;
+    interceptPoint(gang, slot, t.x, t.y, v.x, v.y, b.x, b.y, this.aim);
+    b.aimX = this.aim.x;
+    b.aimY = this.aim.y;
+    b.goTo(this.aim.x, this.aim.y);
   }
 
   // Send a bully stumbling away from (fromX, fromY): `o` = { duration, step, distance }. It picks up its old business afterwards

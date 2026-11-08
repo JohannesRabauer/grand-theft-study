@@ -5,8 +5,17 @@
     "bumpCooldown": 1.5,
     "lockoutAfterClear": 5,
     "defendMaxLevel": 2,
-    "spawnByLevel": [[], ["foot"], ["foot", "bike", "foot"]],
-    "coopExtraByLevel": [[], ["foot"], ["foot"]]
+    "spawnByLevel": [[], ["foot"], ["foot", "bike", "foot"], ["foot", "bike", "foot", "bike"], ["foot", "bike", "foot", "bike", "foot"], ["foot", "bike", "foot", "bike", "foot", "bike"]],
+    "coopExtraByLevel": [[], ["foot"], ["foot"], ["foot"], ["foot"], ["foot"]]
+  },
+  "gang": {
+    "_doc": "Gang tactics (story 7.1): from `fromLevel` on the bullies that can see their target do not all run straight at it. Each takes a slot (its place among the bullies out): `ahead` is how far in front of the target it aims in units of `leadPx` along the target's running direction (or from the bully's side when the target stands still), `side` how far to the left (+) or right (-) in units of `flankPx`. So one runs straight, one cuts the way off, two come from the sides. Within `closeIn` px they all go for the target itself.",
+    "fromLevel": 3,
+    "leadPx": 70,
+    "flankPx": 46,
+    "closeIn": 40,
+    "minSpeed": 0.4,
+    "slots": [ { "ahead": 0, "side": 0 }, { "ahead": 1, "side": 0 }, { "ahead": 0.5, "side": 1 }, { "ahead": 0.5, "side": -1 } ]
   },
   "kinds": {
     "foot": "bully-foot",
