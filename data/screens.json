@@ -9,6 +9,7 @@
   "shop": { "freezesWorld": true },
   "message": { "freezesWorld": true },
   "reportCard": { "freezesWorld": true },
+  "album": { "freezesWorld": true },
   "test": { "freezesWorld": true },
   "testHint": { "freezesWorld": false }
 }

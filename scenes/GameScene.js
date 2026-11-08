@@ -51,6 +51,7 @@ import { Shops } from '../entities/Shops.js';
 import { Quests } from '../entities/Quests.js';
 import { DayFlow } from '../entities/DayFlow.js';
 import { Progress } from '../characters/Progress.js';
+import { Stickers } from '../services/stickers.js';
 import { Cosmetics } from '../entities/Cosmetics.js';
 import { Home } from '../entities/Home.js';
 import { morningStartMap } from '../services/Morning.js';
@@ -176,6 +177,7 @@ export class GameScene extends Phaser.Scene {
     this.quests = new Quests(this, ctx, cache.get('missions'), cache.get('input')); // story 9.1: missions, phone booths, the objective
     this.dayFlow = new DayFlow(this, ctx, cache.get('dayflow'), cache.get('input')); // story 8.5: the gate, the ride home, bedtime
     this.progress = new Progress(ctx, cache.get('xp')); // story 10.2: xp for activities, level-up celebration
+    this.stickers = new Stickers(ctx, cache.get('stickers')); // story 10.3: the sticker collection
     this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
     this.garage = new Garage(this, ctx);
     this.caught = new Caught(this, ctx, cache.get('chase').caught, this.mountables);

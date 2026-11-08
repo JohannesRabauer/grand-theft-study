@@ -61,6 +61,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('school-events', 'data/school-events.json');
     this.load.json('dayflow', 'data/dayflow.json');
     this.load.json('xp', 'data/xp.json');
+    this.load.json('stickers', 'data/stickers.json');
     this.load.json('grading', 'data/grading.json');
     this.load.json('kopfnoten', 'data/kopfnoten.json');
     this.load.json('teacher-comments', 'data/teacher-comments.json');
@@ -92,7 +93,7 @@ export class BootScene extends Phaser.Scene {
     // the state config also knows each character's base attributes (player.setCharacter resets to them)
     const karate = this.cache.json.get('karate');
     const characterBelts = Object.fromEntries(characters.characters.filter(c => c.startBelt).map(c => [c.id, { belt: c.startBelt, points: karate.belts.find(b => b.id === c.startBelt).trainingPoints }]));
-    const stateCfg = { ...this.cache.json.get('state'), morning: this.cache.json.get('morning'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])), karateBelts: karate.belts.map(b => b.id), characterBelts, kopfnoten: this.cache.json.get('kopfnoten'), shop: this.cache.json.get('shop'), missions: this.cache.json.get('missions') };
+    const stateCfg = { ...this.cache.json.get('state'), morning: this.cache.json.get('morning'), characters: Object.fromEntries(characters.characters.map(c => [c.id, c.attributes])), karateBelts: karate.belts.map(b => b.id), characterBelts, kopfnoten: this.cache.json.get('kopfnoten'), shop: this.cache.json.get('shop'), missions: this.cache.json.get('missions'), stickers: this.cache.json.get('stickers') };
     stateCfg.worldMaps = Object.fromEntries(this.registry.get('mapIndex').maps.map(m => [m.id, this.cache.json.get(`map-${m.id}`)]));
     stateCfg.worldSurfaces = this.cache.json.get('surfaces');
     stateCfg.streetObjects = streetCatalog(stateCfg.worldMaps);

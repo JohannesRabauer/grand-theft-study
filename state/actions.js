@@ -180,6 +180,15 @@ export const ACTIONS = {
     return { path };
   },
 
+  // A sticker for a kid's album (story 10.3): once per sticker.
+  'sticker.add'(s, { player, id }, cfg) {
+    const p = s.players[player];
+    if (!p || !cfg.stickers?.stickers.some(x => x.id === id)) return reject('bad-payload');
+    if (p.stickers.includes(id)) return reject('already-owned');
+    p.stickers.push(id);
+    return { path: `players.${player}.stickers` };
+  },
+
   // Missions (story 9.1): shared.quests = { active: [{ id, step }], done: [ids] }. Started once (or once a day when it repeats),
   // advanced a step at a time and finished with the last one; the runner pays the reward.
   'quest.start'(s, { id }, cfg) {
