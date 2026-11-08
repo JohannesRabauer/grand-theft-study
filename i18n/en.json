@@ -917,5 +917,7 @@
   "lernbuch.total": "Altogether: {n} answers, {pct} right, {medals} medals",
   "lernbuch.empty": "Nothing answered yet. Play a lesson and your book fills up!",
   "lernbuch.legend": "Medal: many answers, mostly right. Red triangle: {streak} right in a row. Blue book: {learned} questions learned for good.",
-  "lernbuch.nav": "Q / E: next kid   Esc: close"
+  "lernbuch.nav": "Q / E: next kid   Esc: close",
+  "hud.level": "Level {n}",
+  "hud.average": "Avg {v}"
 }

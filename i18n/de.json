@@ -917,5 +917,7 @@
   "lernbuch.total": "Insgesamt: {n} Antworten, {pct} richtig, {medals} Medaillen",
   "lernbuch.empty": "Noch nichts beantwortet. Spiel eine Stunde und dein Buch füllt sich!",
   "lernbuch.legend": "Medaille: viele Antworten, meist richtig. Rotes Dreieck: {streak} richtige in Folge. Blaues Buch: {learned} Fragen für immer gelernt.",
-  "lernbuch.nav": "Q / E: nächstes Kind   Esc: schließen"
+  "lernbuch.nav": "Q / E: nächstes Kind   Esc: schließen",
+  "hud.level": "Stufe {n}",
+  "hud.average": "Ø {v}"
 }

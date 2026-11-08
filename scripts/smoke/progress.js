@@ -29,6 +29,17 @@ export const progress = {
     ctx.events.emit('commute:ontime', { player: 0 });
     assert('more xp inside the level is no new celebration', count('level:up') === 1);
 
+    // the HUD shows the level and the grade average of the kid (story 11.1)
+    const hud = [...ui.hud.values()].find(m => m.constructor.name === 'ProgressModule');
+    assert('the HUD shows the level after the level-up', !!hud && hud.level.text === ctx.t('hud.level', { n: p().level }), hud?.level?.text);
+    ctx.state.dispatch('grades.record', { player: 0, subject: 'mathe', score: 0.9, grade: 2, lessonId: 'hud-1', day: 77 });
+    ctx.state.dispatch('grades.record', { player: 0, subject: 'deutsch', score: 0.9, grade: 4, lessonId: 'hud-2', day: 77 });
+    assert('and the grade average from the ledger', hud.average.text === ctx.t('hud.average', { v: ctx.grades.average(0).overall.toFixed(1).replace('.', ctx.i18n.lang === 'de' ? ',' : '.') }), hud.average.text);
+    const lang0 = ctx.i18n.lang;
+    ctx.i18n.set(lang0 === 'de' ? 'en' : 'de');
+    assert('the HUD text follows the language', hud.level.text === ctx.t('hud.level', { n: p().level }));
+    ctx.i18n.set(lang0);
+
     // loading a save never celebrates
     ctx.state.replace({ ...ctx.state.data, players: ctx.state.players.map(q => ({ ...q, xp: q.xp + per, level: q.level + 1 })) });
     ctx.events.emit('commute:ontime', { player: 0 });

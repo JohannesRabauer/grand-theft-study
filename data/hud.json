@@ -2,7 +2,7 @@
   "modes": {
     "play": [
       { "id": "fps", "scope": "shared" },
-      { "id": "status", "scope": "player" },
+      { "id": "status", "scope": "player" }, { "id": "progress", "scope": "player" },
       { "id": "anger", "scope": "shared" },
       { "id": "money", "scope": "shared" },
       { "id": "clock", "scope": "shared" },
