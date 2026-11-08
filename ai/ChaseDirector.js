@@ -93,6 +93,8 @@ export class ChaseDirector {
 
   // Story 6.3: a bully stumbles away from (x, y) (see BullyFSM.stumble); emits `bully:stumble` { bully (pool id), x, y, reason }.
   stumble(b, x, y, o, reason) {
+    const boss = this.cfg.boss?.year3;
+    if (b.kind === 'boss' && boss?.trait === 'unshakable') o = { ...o, duration: o.duration * boss.stumbleMult }; // a stumble costs him less time (story 7.3)
     if (!this.fsm.stumble(b, x, y, o)) return false;
     this.ctx.events.emit('bully:stumble', { bully: b.id, x: b.x, y: b.y, reason });
     return true;
@@ -125,6 +127,14 @@ export class ChaseDirector {
       if (i >= 0) want.splice(i, 1);
     }
     for (const kind of want) this.spawn(kind);
+    const boss = this.cfg.boss?.year3;
+    if (boss && level >= boss.joinLevel && !this.pool.list.some(b => b.active && b.kind === 'boss' && b.state !== S.GIVE_UP)) {
+      const b = this.spawn('boss');
+      if (b) {
+        this.ctx.events.emit('boss:joined', { id: boss.id, trait: boss.trait, level });
+        this.ctx.events.emit('ui:toast', { key: 'boss.arrives', params: { name: this.ctx.t(boss.name) } });
+      }
+    }
   }
 
   // A caught player has left play (Caught.js): the bully that got it gives up, the others keep chasing whoever is left.

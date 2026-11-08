@@ -260,3 +260,18 @@ console.log(`chase checks passed: path ${n} tiles, A* avg ${avg.toFixed(3)} ms, 
   assert.ok(spots.length >= 2, 'the town has lookouts');
   for (const o of spots) assert.ok(!['wall', 'water', 'tree', 'fence', 'hedge'].includes(map.legend[map.rows[o.y][o.x]]), `${o.id} stands on open ground`);
 }
+
+// ---- story 7.3: the boss
+{
+  const prof = load('vehicles.json');
+  const b = chase.boss.year3;
+  assert.equal(b.joinLevel, chase.level.spawnByLevel.length - 1, 'the boss joins at the top level');
+  assert.ok(chase.kinds.boss && prof[chase.kinds.boss], 'the boss kind has a profile');
+  assert.ok(chase.boss.traits.includes(b.trait), 'the boss has one known trait');
+  assert.ok(b.stumbleMult > 0 && b.stumbleMult < 1, 'unshakable: a stumble costs him less time, but still some');
+  assert.ok(prof['bully-boss'].radius > prof['bully-foot'].radius && prof['bully-boss'].scale > 1, 'the boss is bigger');
+  assert.ok(prof['bully-boss'].maxSpeed <= prof['bully-bike'].maxSpeed, 'the boss is strong, not the fastest');
+  for (const l of chase.level.spawnByLevel) assert.ok(!l.includes('boss'), 'the boss is not in the spawn lists: he joins on top');
+  const i18n = { de: load('../i18n/de.json'), en: load('../i18n/en.json') };
+  for (const lang of ['de', 'en']) assert.ok(i18n[lang][b.name] && i18n[lang]['boss.arrives'], `${lang}: boss texts`);
+}

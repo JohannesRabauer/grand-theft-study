@@ -1027,5 +1027,7 @@
   "parent.age.years": "{n} years",
   "parent.age.explain": "The challenge age sets how hard the questions and how tight the times are for one child, on top of the learning difficulty above. It starts with the age of the character and can be changed without changing the character. The questions stay for class 3 and keep adapting to the answers.",
   "lookout.spotted": "A lookout spotted you and called the gang!",
-  "phone.msg.bully-lookout": "Our lookout saw you! We are coming!"
+  "phone.msg.bully-lookout": "Our lookout saw you! We are coming!",
+  "boss.rocco.name": "Rocco the Rowdy Boss",
+  "boss.arrives": "{name} joins the chase! He hardly lets himself be distracted."
 }

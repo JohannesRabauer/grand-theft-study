@@ -1027,5 +1027,7 @@
   "parent.age.years": "{n} Jahre",
   "parent.age.explain": "Das Anspruchsalter legt fest, wie schwer die Fragen und wie knapp die Zeiten für ein Kind sind, zusätzlich zur Lern-Schwierigkeit oben. Es startet mit dem Alter der Figur und lässt sich ändern, ohne die Figur zu ändern. Die Fragen bleiben bei Klasse 3 und passen sich weiter den Antworten an.",
   "lookout.spotted": "Ein Späher hat dich gesehen und die Bande gerufen!",
-  "phone.msg.bully-lookout": "Unser Späher hat dich gesehen! Wir kommen!"
+  "phone.msg.bully-lookout": "Unser Späher hat dich gesehen! Wir kommen!",
+  "boss.rocco.name": "Rocco, der Rowdy-Boss",
+  "boss.arrives": "{name} mischt jetzt mit! Er lässt sich kaum ablenken."
 }

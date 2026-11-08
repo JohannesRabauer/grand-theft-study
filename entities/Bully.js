@@ -13,7 +13,8 @@ export class Bully {
     this.profiles = chase.profiles;
     this.cfg = chase.cfg.bully;
     const profile = this.profiles[profileId];
-    this.sprite = scene.add.image(0, 0, profile.texture).setScale(ctx.res.inv).setVisible(false);
+    this.baseScale = ctx.res.inv;
+    this.sprite = scene.add.image(0, 0, profile.texture).setScale(this.baseScale).setVisible(false);
     this.body = addCircle(scene, 0, 0, profile.radius, 'BULLY', { frictionAir: 0, friction: 0, inertia: Infinity });
     scene.matter.world.remove(this.body);
     this.move = new MovementController(scene.matter, this.body, profileId, profile, ctx.surfaces);
@@ -57,7 +58,8 @@ export class Bully {
     this.move.speed = 0;
     this.move.heading = 0;
     this.move.vel.x = this.move.vel.y = 0;
-    this.sprite.setTexture(p.texture).setOrigin(0.5, p.faceHeading ? 0.5 : 0.8).setFlipX(false).setRotation(0).setVisible(true);
+    this.sprite.setTexture(p.texture).setOrigin(0.5, p.faceHeading ? 0.5 : 0.8).setFlipX(false).setRotation(0).setScale(this.baseScale * (p.scale ?? 1)).setVisible(true);
+    if (p.tint) this.sprite.setTint(p.tint); else this.sprite.clearTint();
     this.scene.matter.body.setPosition(this.body, { x, y });
     this.scene.matter.body.setVelocity(this.body, { x: 0, y: 0 });
     this.scene.matter.world.add(this.body);
@@ -220,7 +222,7 @@ export class BullyPool {
   constructor(scene, ctx, chase) {
     this.ctx = ctx;
     this.list = [];
-    const max = ctx.quality.maxOf('maxBullies');
+    const max = ctx.quality.maxOf('maxBullies') + 1; // the extra slot is the boss's (story 7.3), outside the quality cap
     for (let i = 0; i < max; i++) {
       const b = new Bully(scene, ctx, chase, 'bully-foot');
       b.id = i;
@@ -238,7 +240,7 @@ export class BullyPool {
   }
 
   get(kind, profileId, x, y) {
-    if (this.live() >= this.cap) return null;
+    if (kind === 'boss' ? this.list.some(o => o.active && o.kind === 'boss') : this.live() - this.list.filter(o => o.active && o.kind === 'boss').length >= this.cap) return null;
     const b = this.list.find(o => !o.active);
     if (!b) return null;
     b.activate(kind, profileId, x, y);

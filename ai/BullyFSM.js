@@ -90,9 +90,9 @@ export class BullyFSM {
   approach(b) {
     const gang = this.d.cfg.gang;
     const t = b.target;
-    if (!gang || this.d.lvl.level < gang.fromLevel) { b.goTo(t.x, t.y); return; }
+    if (!gang || this.d.lvl.level < gang.fromLevel || b.kind === 'boss') { b.goTo(t.x, t.y); return; } // the boss comes straight at the target
     let slot = 0;
-    for (const o of this.d.pool.list) { if (o === b) break; if (o.active && o.state !== S.GIVE_UP) slot++; }
+    for (const o of this.d.pool.list) { if (o === b) break; if (o.active && o.kind !== 'boss' && o.state !== S.GIVE_UP) slot++; }
     b.slot = slot;
     const v = t.body.velocity;
     interceptPoint(gang, slot, t.x, t.y, v.x, v.y, b.x, b.y, this.aim);
@@ -132,6 +132,7 @@ export class BullyFSM {
   // A prop was hit at (x, y) (radius: how far it is heard, default distractRadius): bullies in range that are not watching the player go and look.
   distract(b, x, y, radius) {
     const c = this.cfg;
+    if (b.kind === 'boss' && this.d.cfg.boss?.year3.trait === 'unshakable') return false; // the boss does not fall for noises (story 7.3)
     if (b.state === S.CAUGHT || b.state === S.GIVE_UP || b.state === S.STUMBLE) return false;
     if (b.sees && !c.distractWhileSeen) return false;
     if (Math.hypot(x - b.x, y - b.y) > (radius ?? c.distractRadius)) return false;

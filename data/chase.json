@@ -15,6 +15,11 @@
     "cooldown": 14,
     "exposeSeconds": 6
   },
+  "boss": {
+    "_doc": "The boss bully (story 7.3): one boss joins the chase from `joinLevel` on, on top of the quality cap (the pool keeps a slot for it), bigger and golden. Each year's boss has a name (i18n `name`) and ONE trait that measurably changes the chase. Klasse 3: Rocco, trait `unshakable` - props and slingshot hits do not lure him away (no distraction) and a block or Kiai sends him stumbling for only `stumbleMult` of the usual time. The name and the trait are an assumption (the user has not chosen them yet): change them here and in the i18n texts boss.<id>.*.",
+    "year3": { "id": "rocco", "joinLevel": 5, "trait": "unshakable", "stumbleMult": 0.4, "name": "boss.rocco.name" },
+    "traits": ["unshakable"]
+  },
   "gang": {
     "_doc": "Gang tactics (story 7.1): from `fromLevel` on the bullies that can see their target do not all run straight at it. Each takes a slot (its place among the bullies out): `ahead` is how far in front of the target it aims in units of `leadPx` along the target's running direction (or from the bully's side when the target stands still), `side` how far to the left (+) or right (-) in units of `flankPx`. So one runs straight, one cuts the way off, two come from the sides. Within `closeIn` px they all go for the target itself.",
     "fromLevel": 3,
@@ -27,6 +32,7 @@
   "kinds": {
     "foot": "bully-foot",
     "scooter": "bully-scooter",
+    "boss": "bully-boss",
     "bike": "bully-bike"
   },
   "escape": {
