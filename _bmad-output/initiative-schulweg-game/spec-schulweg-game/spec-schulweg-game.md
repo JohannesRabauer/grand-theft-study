@@ -122,6 +122,10 @@ A vision to realize, now proven. The Schulweg prototype showed that riding a bik
   - **intent:** The town's environment looks right and consistent: ground surfaces blend into each other with proper transitions, water has shores and depth, and houses, doors, fences, hedges and street furniture read as what they are.
   - **success:** In screenshots of every district, no surface boundary looks like a hard tile seam, water meets land with a visible bank, every building has a recognisable roof, walls, windows and an obviously usable door, and fences, hedges and walls show posts, rails or caps; the user's visual review accepts it.
 
+- **CAP-35** (added 2026-11-08, visual overhaul)
+  - **intent:** The whole game looks finished and smooth while staying pixel art: the outdoor world and every interior lose the "rectangles from a toolbox" look (organic edges, overlapping silhouettes, layered detail, set dressing), and dynamic lighting, soft shadows, shader effects and rich particles make it feel atmospheric and alive. Character and environment designs keep their current identity.
+  - **success:** A fixed before/after screenshot set (every district, every interior, morning/day/evening/night, rain and snow) shows no area that reads as plain tile-aligned rectangles; lights, shadows and post effects are visible and stay pixel-crisp (no blurry upscaling); Medium keeps 60 FPS and the update budget (AD-29); Low and Canvas fall back gracefully; night stays readable and nothing looks scary for kids; the user's visual review accepts it.
+
 ## Constraints
 
 - Base stack and architecture from the adopted spine (AD-1 to AD-15): Phaser 3.90.0 with Matter via CDN, no build step, static files, `ctx` plus events, pooled objects, collision categories, quality tiers; new systems add decisions through an architecture update, not around the spine.

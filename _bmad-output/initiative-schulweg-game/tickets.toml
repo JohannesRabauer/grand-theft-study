@@ -100,3 +100,10 @@ id = 15
 slug = "epic-environment-art"
 title = "Environment art: ground transitions, water, buildings, fences"
 covers = ["CAP-34"]
+
+[[epic]]
+id = 16
+slug = "epic-visual-overhaul"
+title = "Visual overhaul: a finished-looking pixel world with lighting, shaders and particles"
+covers = ["CAP-35", "CAP-34", "CAP-31", "CAP-30", "CAP-33"]
+after = [{ epic = 15, needs = "the AD-30 ground and building art in EnvArt.js that this epic reworks" }, { epic = 12, needs = "season, weather and particle systems that the atmosphere passes and particle overhaul extend" }]

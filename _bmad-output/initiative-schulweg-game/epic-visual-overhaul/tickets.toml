@@ -1,0 +1,216 @@
+# Epic 16: visual overhaul. Build in table order, one story at a time (shared files: GameScene.js, EnvArt.js, World.js, quality.json).
+# Every story first loads the project skill `schulweg-pixel-art` (created by entry 1) and follows AD-31 and docs/ART-BIBLE.md.
+# Every art story re-runs `node scripts/shots.mjs` and its look metrics (entry 1) and must not make a metric worse outside its own target.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Art bible, pixel-art skill, screenshot set and look metrics"
+description = "Writes docs/ART-BIBLE.md (palette ramps per material, top-left light, outline, dithering and anti-banding rules, silhouette rules that forbid tile-aligned rectangles, overlap and depth rules, light and shadow colours, particle and shader catalogue, kid-safe night look, and numeric limits: longest straight surface seam, largest uniform flat area, minimum walkable luminance at night) and turns it into the project skill .claude/skills/schulweg-pixel-art/SKILL.md (when to load, the rules, procedural drawing recipes on top of the EnvArt/HiResArt helpers, the review checklist), and adds scripts/shots.mjs, which captures a fixed shot list without the debug overlay (every district, home, school and dojo interiors, morning/day/evening/night, rain, snow; Medium and Low) into docs/shots/overhaul/<label>/ and computes the look metrics in the page (canvas pixel reads) into metrics.json, then records the before set."
+verify = "SKILL.md has valid name and description frontmatter, `node scripts/shots.mjs --label before` run twice gives identical images and metrics, docs/shots/overhaul/before/ holds the set, metrics.json and an index.md naming what looks unfinished in each shot, and a node check validates the metrics schema and limits file."
+covers = ["CAP-35"]
+after = ["15.4"]
+hitl = false
+risk = "low"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-31"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Lighting and post-effects pipeline (tracer)"
+description = "Builds render/LightMap.js (base-resolution light render texture: ambient colour and darkness from the day clock tint, additive pooled light sprites with posterized or dithered radial falloff, multiplied over the world camera and locked to the base pixel grid), render/PostFx.js (WebGL PostFXPipeline with colour grade, vignette and a bloom pass that only picks bright emissive pixels, plus the registry for per-object pipelines in render/pipelines/), ctx.lights (add/move/release handles), data/lighting.json and data/postfx.json, per-tier switches in data/quality.json and the Canvas/Low fallback to the old tint overlay, and wires one street lamp as the first real light."
+verify = "At 21:00 a headless High shot shows the dark town with one warm, pixel-stepped lamp pool and a soft vignette, the UI is not darkened or graded, `?q=low` and a forced Canvas renderer show the old tint without errors, a node check covers the light falloff and pool logic, and the bench meets the epic frame-time limit."
+covers = ["CAP-35"]
+after = [1]
+hitl = false
+risk = "high"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-31", "../../../docs/PERFORMANCE.md"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "Time-of-day mood and street light sources"
+description = "Replaces the flat day tint with graded keyframes (cool dawn, neutral day, golden evening, blue night with readable contrast) and adds lights from data through ctx.lights: street lamps that switch on at dusk with a short warm-up flicker, shop and tram-stop signs, vehicle headlights and tail lights that move with traffic and the bike lamp, pooled and culled off screen."
+verify = "Evening and night shots of every district show lamps, signs and moving headlights, the night walkable-luminance metric meets the art-bible limit, a node check covers the keyframe blending, and the active light count never exceeds the per-tier cap."
+covers = ["CAP-35"]
+after = [2]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Organic ground: noise-shaped edges, variation and decals"
+description = "Reworks the ground bake in EnvArt/World so surface borders follow a seeded noise curve instead of the tile grid (irregular grass edges, worn dirt at path corners, curved kerbs at corners), adds macro variation (grass colour patches, clover, flowers, dry spots, mowed stripes in the park; asphalt patches, cracks, manhole covers, drains, faded and fresh road markings; cobble wear; concrete slabs with joints and stains), and scatters decals from tile neighbours and a per-map seed, all baked once at map load."
+verify = "The seam and flat-area metrics of every district shot meet the art-bible limits, the zoom-sweep gap and shimmer numbers do not get worse, check-envart.mjs gains cases for the noise edge and decal placement, and check-map, check-world and check-collisions pass unchanged."
+covers = ["CAP-35", "CAP-34"]
+after = [1]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Soft shadows for sprites, buildings and trees"
+description = "Adds pixel-art soft shadows consistent with the top-left sun: contact shadows (dithered ellipse) under every player, NPC, animal, vehicle and prop, cast shadows from buildings, walls, fences and tree canopies baked at map load into a shadow layer whose length and direction follow the entry 3 time keyframes through a shader offset, ambient-occlusion darkening where walls meet the ground, and shadows that fade under night lighting; replaces the existing EnvArt castShadow code; Low keeps contact shadows only."
+verify = "Day shots show every object grounded by a shadow in one consistent direction, morning and evening shots show longer shadows than noon, no shadow covers the HUD, and the bench shows the shadow layer built once per map with no per-frame redraw."
+covers = ["CAP-35", "CAP-34"]
+after = [3, 5]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Vegetation that breaks the grid: trees, bushes, hedges"
+description = "Redraws trees as multi-tile canopies that overlap neighbouring tiles and sprites (several species and sizes, lit top-left and shaded bottom-right, trunk and root flare, seasonal variants), bushes and hedges with rounded, lumpy silhouettes and leaf texture instead of blocks, flower beds and tall grass tufts, and adds a wind sway pipeline in render/pipelines/ driven by the weather wind (Low and Canvas: a cheap tween), drawn above players where the canopy overlaps them with a see-through fade when a kid walks underneath."
+verify = "The flat-area metric no longer flags trees or hedges, canopies overlap tile borders in the shots, a headless frame sequence shows sway with wind and the fade under a canopy, and check-map, check-world and the smoke test (hiding spots, bushes) pass unchanged."
+covers = ["CAP-35", "CAP-34"]
+after = [4]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 7
+type = "story"
+title = "Building exteriors with depth, character and lit windows"
+description = "Redraws buildings in a 3/4 view with roof overhang and eaves that break the rectangular footprint, roof material per palette (tiles, slate, flat roofs with vents), gutters, drainpipes, chimneys, window sills, curtains, flower boxes, balconies, shop awnings and signage, ageing (stains, moss, plaster patches), foundations, plant beds and bins along walls, per-building variety from a seed, and emissive windows that glow warm from the evening on with a light spill on the ground through ctx.lights."
+verify = "Evening shots show lit windows with ground spill, a node check proves neighbouring buildings get different seeds and variants, door interaction and depth sorting pass the smoke test, and check-map and check-collisions confirm unchanged footprints."
+covers = ["CAP-35", "CAP-34"]
+after = [4]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 8
+type = "story"
+title = "Water shader: shores, reflections and life"
+description = "Replaces the framed water rectangle with an organic shoreline (noise edge, reeds, stones, sand and mud banks, bridge supports where present) and a water pipeline in render/pipelines/ with depth gradient, scrolling ripples, sky-tint and light reflections (lamps and windows mirrored at night), shoreline foam that laps and caustic shimmer in the shallows, plus ripple rings from ducks, fish, rain and splashes through the existing particle hub; Low and Canvas keep an animated tile fallback."
+verify = "Pond and canal shots show irregular shores and pixel-crisp animated water with night reflections, a frame sequence shows duck and rain ripples, check-map, check-world and check-collisions pass unchanged, and the bench meets the frame-time limit."
+covers = ["CAP-35", "CAP-34", "CAP-31"]
+after = [7]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 10
+type = "story"
+title = "Interiors: depth, materials, furniture and interior light"
+description = "Overhauls the home, school and dojo interiors: 3/4 walls with height, skirting boards, window frames with daylight shafts, floor materials (wood planks, tiles, linoleum, tatami, rugs) with wear, furniture variety and clutter from data per room type (shelves with books, plants, posters, kids drawings, toys, coat hooks, school desks with bags, blackboard with chalk, dojo racks and banners), corner ambient occlusion, and interior ceiling lamps and window light on the floor through ctx.lights, without changing any collision or interaction spot."
+verify = "The flat-area metric of every interior shot meets the art-bible limit, day shots show window light and night shots lamp light, and the smoke scenarios for doors, bag packing, lessons, the chore board and the dojo pass unchanged."
+covers = ["CAP-35"]
+after = [8]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 11
+type = "story"
+title = "Particle overhaul: richer, smoother, lit"
+description = "Upgrades particles/ParticleHub.js and data/particles.json: pixel-shaped multi-frame particle textures, colour-over-life ramps and easing, glowing particles that request pooled ctx.lights handles (fireflies, lantern glow, sparks, pickup sparkles), footstep and wheel dust per surface, skid and ollie puffs, chimney and exhaust smoke that drifts with wind, falling leaves and petals by season, pollen and dust motes in light shafts, splash crowns and drips, and celebration bursts (level up, sticker, achievement), with a per-tier budget and an `...Off` flag for each new always-on emitter."
+verify = "A headless frame sequence shows the new particles on every surface and weather, the particle count never exceeds maxParticles per tier, the seeded smoke test stays deterministic, and a node check covers the new emitter configs and the light-handle release."
+covers = ["CAP-35", "CAP-31"]
+after = [10, "12.2"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 9
+type = "story"
+title = "Street dressing and props"
+description = "Dresses streets, the park, the schoolyard and the skatepark with non-colliding set dressing generated from tile neighbours and object data (planters, street signs, posters on walls, parked bikes, bollards, letterboxes, hydrants, kerb weeds, leaves in gutters, chalk drawings, playground markings, recycling bins, a kiosk awning), and redraws lamps, benches, fences, bike racks and tram stops in the new style with lamp heads aligned to the entry 3 lights, respecting maxProps and culling."
+verify = "The flat-area metric of every district shot meets the art-bible limit, check-map, check-collisions and check-traffic pass unchanged, and the prop count stays within the tier caps."
+covers = ["CAP-35", "CAP-34"]
+after = [6, 11]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 12
+type = "story"
+title = "Atmosphere: rain, wet ground, fog and cloud shadows"
+description = "Adds atmosphere passes through render/PostFx.js: rain streaks with wet-ground sheen and reflections of lights on asphalt, puddle ripples, morning mist and fog banks, and drifting cloud shadows across the ground on sunny days, each driven by the weather state with smooth cross-fades and per-tier switches."
+verify = "Rain, fog and sunny shots each show their effect, a frame sequence shows weather changes cross-fading without a pop, every pass switches off per tier, and the bench meets the frame-time limit with rain at full density."
+covers = ["CAP-35", "CAP-30", "CAP-31"]
+after = [9, "12.1"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 19
+type = "story"
+title = "Atmosphere: snow cover, frost, heat shimmer and god rays"
+description = "Adds the seasonal passes: snow that settles on roofs, hedges, canopies and kerbs with sparkle, frost at the screen edge in winter, heat shimmer above asphalt on summer afternoons and god rays through tree canopies, driven by season and weather with smooth transitions and per-tier switches."
+verify = "Winter and summer shots show snow cover on roofs and hedges, frost, shimmer and god rays, transitions cross-fade without a pop, every pass switches off per tier, and the bench meets the frame-time limit."
+covers = ["CAP-35", "CAP-30"]
+after = [12]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 18
+type = "story"
+title = "Sprite shading pass: characters, NPCs, animals, vehicles"
+description = "Brings the sprites in line with the new world without changing their designs: art-bible shading ramps, a consistent top-left light with a subtle rim light, selective outlines, and emissive parts (bike lamp, vehicle lights) aligned with the light map, applied in CharacterArt, NpcArt, VehicleArt, SkatesArt and CosmeticArt."
+verify = "A side-by-side shot of every playable kid, NPC type, animal and vehicle before and after shows the same designs with the new shading, sprite sizes and anchors are unchanged (check-characters, check-vehicles and check-critters pass), and no texture key is lost."
+covers = ["CAP-35"]
+after = [19]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 13
+type = "story"
+title = "Smooth motion: camera, animation and transitions"
+description = "Makes movement feel smooth while staying pixel-crisp: sub-pixel camera smoothing with pixel-snapped rendering of world, sprites and the light map, easing look-ahead, extra in-between frames for the walk, run, skate and bike cycles of the existing characters, squash and stretch on jumps and landings, idle breathing, eased door and map transitions (iris or fade), and screen shake and hit-stop presets in data, all behind a `reducedMotion` flag this story creates (data default plus a state action) for entry 15 to wire to the Effekte setting."
+verify = "The zoom-sweep and a new camera-jitter measure show no sprite, world or light-map jitter and smoothness at least as good as before, door transitions play without a black pop, a side-by-side shot shows the characters unchanged in design, and setting reducedMotion disables shake and squash."
+covers = ["CAP-35"]
+after = [18]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 14
+type = "story"
+title = "UI visual refresh to match the new world"
+description = "Using the ui-ux-pro-max skill together with schulweg-pixel-art, restyles the HUD modules, menus, screens, speech bubbles, toasts and minimap with one pixel UI kit in ui/uiKit.js (9-slice panels with bevel and shadow, the art-bible palette, readable pixel fonts at both resolutions, an icon set, eased open and close animations, focus states for gamepad and touch), keeping AD-27 layering, i18n and every existing interaction."
+verify = "Shots of the HUD, main menu, pause, shop, phone, Lernbuch and Zeugnis show one consistent style, the ui-ux-pro-max text contrast checks pass, check-ui, check-menu, check-gamepad and check-important-text pass, and night and rain shots show the UI unaffected by lighting and post effects."
+covers = ["CAP-35"]
+after = [13]
+hitl = false
+risk = "medium"
+references = ["../architecture-schulweg-game/architecture-schulweg-game.md#ad-27"]
+
+[[entry]]
+id = 15
+type = "story"
+title = "Performance, quality tiers and the effects setting"
+description = "Profiles every new pass and emitter, tunes caps and per-tier switches in data/quality.json so every tier meets the epic frame-time limit and the AD-29 update budget, makes Low and Canvas look intentional rather than broken, adds an Effekte setting (full, reduced, off) to the settings and parent settings that drives the passes and the entry 13 reducedMotion flag, and updates docs/PERFORMANCE.md with the new numbers and the by-hand phone protocol."
+verify = "bench-cdp shows Medium and High within the frame-time limit and the update budget in the worst-case scenarios with all effects on, Low and Canvas shots render without errors, switching Effekte changes the look instantly and persists across reload, and docs/PERFORMANCE.md holds the new table."
+covers = ["CAP-35", "CAP-33"]
+after = [14]
+hitl = false
+risk = "medium"
+references = ["../../../docs/PERFORMANCE.md", "../../../docs/CROSS-BROWSER.md"]
+
+[[entry]]
+id = 16
+type = "story"
+title = "Refactor sweep"
+description = "Cleans up what the epic left behind, scoped when it starts from the plans and deferred review findings: duplicated drawing helpers between EnvArt, HiResArt and the render module, dead tint code paths, data files that grew inconsistent, and the art-bible skill updated to match what was built."
+verify = "check-all, the seeded smoke test and the bench pass unchanged, and the shots and metrics are identical before and after the sweep."
+covers = ["CAP-35"]
+after = [15]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 17
+type = "story"
+title = "Visual review with the user"
+description = "Captures the after set with scripts/shots.mjs, builds a before/after comparison page (docs/shots/overhaul/compare.html) with short headless frame sequences of evening, rain and a ride through town, walks the user through it, and turns every remark into a fix in this story or a new entry in this epic."
+verify = "The user accepts the after set, or each remark is fixed or recorded as a new entry, and the epic Done when checks are ticked in the epic file."
+covers = ["CAP-35", "CAP-34"]
+after = [16]
+hitl = true
+risk = "low"
