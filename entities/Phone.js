@@ -37,15 +37,18 @@ export class Phone {
     this.ctx.events.emit('phone:changed', { unread: 0 });
   }
 
-  // Called by the screen when it closes, so one key press never closes and reopens it in the same frame.
-  closed() { this.closedFrame = this.scene.game.getFrame(); }
+  // The screen was closed by the phone key itself: the same press, seen by the game scene a moment later, must not open it again.
+  closedByKey() {
+    this.skipOpen = true;
+    this.scene.scene.get('UI').time.delayedCall(1, () => { this.skipOpen = false; });
+  }
 
   // Opens the phone, or closes it when it is open; nothing opens over another screen.
   toggle() {
     const { ctx } = this;
     const top = ctx.screens?.top();
     if (top?.id === 'phone') { top.close(); return null; }
-    if (!ctx.screens || top || this.closedFrame === this.scene.game.getFrame()) return null; // the screen closed on this very key press
+    if (!ctx.screens || top || this.skipOpen) return null;
     return ctx.screens.push(new PhoneScreen(this.scene.scene.get('UI'), ctx, ctx.screens, this));
   }
 }

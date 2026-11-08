@@ -41,11 +41,12 @@ export class PhoneScreen {
   retext() { this.render(); }
 
   close() {
-    if (this.stack.top() === this) { this.stack.pop(); this.phone.closed(); }
+    if (this.stack.top() === this) this.stack.pop();
   }
 
   handleIntent(intent) {
-    if (intent.pause || intent.phone) { this.close(); return; }
+    if (intent.pause) { this.close(); return; }
+    if (intent.phone) { this.close(); this.phone.closedByKey(); return; }
     if (this.cursor.read(this.ctx.input.intents[0]).confirm) this.close();
   }
 
