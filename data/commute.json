@@ -1,0 +1,30 @@
+{
+  "_doc": "The commute (story 8.2). deadline: the school bell; arriving later is gently penalised (school:late feeds the Ordnung Kopfnote through data/kopfnoten.json, a toast says so kindly) and arriving in time is praised. warnings: clock times at which a toast reminds the kids. routes: three ways from home to school with their risks, as tile waypoints (checked reachable by scripts/check-commute.mjs and described in the commute tip). tram: lines pair two stops (data/maps tram-stop objects); a ticket costs priceCents per rider, riding without money risks a ticket inspector (inspectorChance) who charges fineCents and emits tram:inspector, the hook for story 7.4; the ride takes rideMinutes of game time. pickups: coins that appear when a kid comes near (radius px), once per spot per run of the game.",
+  "deadline": "08:00",
+  "warnings": ["07:50", "07:55", "07:58"],
+  "routes": [
+    { "id": "main-road", "risks": ["traffic", "buses"], "waypoints": [[8, 52], [78, 52], [82, 40], [82, 30], [78, 13]] },
+    { "id": "park", "risks": ["cobbles", "skatepark-turf"], "waypoints": [[14, 44], [14, 30], [14, 14], [60, 14], [64, 14], [78, 13]] },
+    { "id": "tram", "risks": ["ticket", "inspector"], "waypoints": [[26, 52], [72, 13], [78, 13]] }
+  ],
+  "tram": {
+    "priceCents": 120,
+    "fineCents": 240,
+    "inspectorChance": 0.4,
+    "rideMinutes": 8,
+    "boardRadius": 28,
+    "groupRadius": 120,
+    "lines": [
+      ["home-tram-stop", "school-tram-stop"],
+      ["riverside-tram-stop", "market-tram-stop"]
+    ]
+  },
+  "pickupRadius": 150,
+  "pickups": [
+    { "id": "coin-main-1", "x": 24, "y": 56, "cents": 20 },
+    { "id": "coin-main-2", "x": 60, "y": 54, "cents": 30 },
+    { "id": "coin-park-1", "x": 14, "y": 38, "cents": 20 },
+    { "id": "coin-park-2", "x": 40, "y": 14, "cents": 30 },
+    { "id": "coin-tram-1", "x": 66, "y": 14, "cents": 20 }
+  ]
+}

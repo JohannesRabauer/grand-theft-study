@@ -114,7 +114,7 @@ const twin = { ...town, rows: ['##########', '#GGGGGGGG#', '#G##G##GG#', '#G##G#
 assert.ok(pal(groundKeys(twin, 2, 2, 'b', 'town')[0]) && pal(groundKeys(twin, 5, 2, 'b', 'town')[0]), 'two buildings are both styled');
 
 // every real map: only known key families, the base stays first, and nothing here touched the grid
-const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|shadow|hedge|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot))/;
+const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|shadow|hedge|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop))/;
 let tiles = 0;
 let extra = 0;
 for (const f of readdirSync(new URL('../data/maps/', import.meta.url)).filter(n => n.endsWith('.json') && n !== 'index.json')) {

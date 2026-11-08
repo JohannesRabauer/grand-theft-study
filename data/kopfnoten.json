@@ -10,6 +10,7 @@
     { "event": "homework:forgotten", "category": "ordnung", "delta": -0.3, "reason": "homework-forgotten" },
     { "event": "homework:done", "category": "ordnung", "delta": 0.15, "reason": "homework-done" },
     { "event": "school:late", "category": "ordnung", "delta": -0.2, "reason": "late" },
+    { "event": "commute:ontime", "category": "ordnung", "delta": 0.1, "reason": "on-time" },
     { "event": "lesson:done", "category": "mitarbeit", "delta": 0.15, "min": { "effort": 0.6 }, "reason": "lesson-effort" },
     { "event": "lesson:done", "category": "mitarbeit", "delta": -0.1, "filter": { "effort": 0 }, "reason": "lesson-skipped" },
     { "event": "npc:helped", "category": "hilfsbereitschaft", "delta": 0.25, "reason": "helped-npc" },

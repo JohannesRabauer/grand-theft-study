@@ -620,5 +620,16 @@
   "hint.traffic.body": "Buses and other traffic can knock you over, and you lose a few coins. Look before you cross and stay on pavements and cycle lanes when you can.",
   "hint.rain.title": "It is raining",
   "hint.rain.body": "Puddles are slippery and slow you down. Ride around them and take it easy on wet roads. The rain stops after a while.",
-  "caught.rejoin": "{who} is back, right next to {mate}!"
+  "caught.rejoin": "{who} is back, right next to {mate}!",
+  "commute.warn": "{min} minutes until the school bell!",
+  "commute.late": "{who} is {min} minutes late. The teacher smiles: better late than never!",
+  "commute.ontime": "{who} arrives right on time. Well done!",
+  "tram.board": "Ride the tram ({price})",
+  "tram.arrived": "Ticket stamped. The tram ride is over.",
+  "tram.freeRide": "You rode without a ticket and nobody checked. Lucky!",
+  "tram.inspector": "The ticket inspector caught {who} without a ticket: a small fine and a friendly reminder.",
+  "hint.commute.title": "Three ways to school",
+  "hint.commute.body": "Be at school before 8:00! Main road: fast and straight, but with buses and traffic. Park route: quiet, but the cobblestones are bumpy and the skatepark is bully turf. Tram: from the stop near home to the stop at school, but you need a ticket. Coins lie along the way.",
+  "hint.tram.title": "Tram ride",
+  "hint.tram.body": "At a tram stop press {interact} to ride to the other stop. A ticket costs a little money. If you cannot pay you ride without a ticket, and an inspector might catch you."
 }

@@ -11,6 +11,7 @@ checks.push('check-morning.mjs');
 checks.push('check-open-world.mjs');
 checks.push('check-envart.mjs');
 checks.push('check-hints.mjs');
+checks.push('check-commute.mjs');
 for (const c of checks) {
   console.log(`\n== ${c}`);
   const r = spawnSync(process.execPath, [join(dir, c)], { stdio: 'inherit', cwd: join(dir, '..') });

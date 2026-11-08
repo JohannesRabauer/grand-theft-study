@@ -937,7 +937,8 @@ function outdoorInfo(map) {
       doors.set(`${o.x + i},${o.y - 1}`, { kind, part });
     }
   }
-  info = { pal, doors, cols };
+  const stops = new Set((map.objects ?? []).filter(o => o.type === 'tram-stop').map(o => `${o.x},${o.y}`));
+  info = { pal, doors, cols, stops };
   OUTDOOR.set(map, info);
   return info;
 }
@@ -1002,7 +1003,22 @@ function potTexture(v) {
   return tmp;
 }
 
+function tramStopTexture() {
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  px(c, '#b9b9b0', 2, 4, 28, 24); px(c, '#d6d6cc', 2, 4, 28, 1);          // platform slab
+  px(c, '#8d8d85', 2, 27, 28, 1);
+  for (let x = 3; x < 29; x += 4) px(c, x % 8 === 3 ? '#f2c230' : '#2b2b2b', x, 24, 4, 3); // safety stripe
+  px(c, 'rgba(0,0,0,0.25)', 21, 18, 7, 3);                                 // pole shadow
+  px(c, '#4a4f58', 22, 6, 2, 14);                                          // pole
+  px(c, '#1f5fa8', 17, 4, 12, 8); px(c, '#ffffff', 18, 5, 10, 6);          // sign plate
+  px(c, '#1f5fa8', 19, 6, 8, 2); px(c, '#1f5fa8', 20, 8, 2, 2); px(c, '#1f5fa8', 24, 8, 2, 2); // tram pictogram
+  px(c, '#f2c230', 19, 5, 8, 1);
+  return tmp;
+}
+
 function makeDecorArt(scene, size) {
+  emit(scene, 'env-tramstop', tramStopTexture(), size);
   for (let v = 0; v < 4; v++) emit(scene, `env-bed-${v}`, bedTexture(v), size);
   for (let v = 0; v < 2; v++) emit(scene, `env-pot-${v}`, potTexture(v), size);
 }
@@ -1165,6 +1181,7 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
     if (!doors.has(`${tx},${ty}`) && nextToDoor && (cls === 'concrete' || cls === 'grass' || cls === 'cobble')) keys.push(`env-pot-${h & 1}`);
     else if (cls === 'grass' && h < 62) keys.push(`env-bed-${h % 4}`);
   }
+  if (outdoorInfo(map).stops.has(`${tx},${ty}`)) keys.push('env-tramstop');
   const entrance = indoorInfo(map).doorFloors.get(`${tx},${ty}`); // a stone step and a mat in front of every door
   if (entrance) keys.push('env-ostep', `env-imat-${entrance}`);
   return keys;

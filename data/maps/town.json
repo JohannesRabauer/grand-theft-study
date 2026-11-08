@@ -502,6 +502,8 @@
     { "type":"sign", "id":"bridge-sign", "x":110, "y":42, "text":"world.bridge", "board":"BRUECKE" },
     { "type":"tram-stop", "id":"riverside-tram-stop", "x":108, "y":47 },
     { "type":"tram-stop", "id":"market-tram-stop", "x":90, "y":98 },
+    { "type":"tram-stop", "id":"home-tram-stop", "x":26, "y":52 },
+    { "type":"tram-stop", "id":"school-tram-stop", "x":72, "y":13 },
     { "type":"flag", "id":"flag-market", "x":54, "y":87, "color":"#f5bd58" },
     { "type":"bench", "id":"riverside-bench", "x":115, "y":19, "w":3, "h":1 },
     { "type":"bench", "id":"canal-bench", "x":137, "y":39, "w":3, "h":1 },

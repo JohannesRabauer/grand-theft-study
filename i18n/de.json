@@ -620,5 +620,16 @@
   "hint.traffic.body": "Busse und anderer Verkehr können dich umwerfen, und du verlierst ein paar Münzen. Schau, bevor du die Straße überquerst, und bleib möglichst auf Gehweg und Radweg.",
   "hint.rain.title": "Es regnet",
   "hint.rain.body": "Pfützen sind rutschig und bremsen dich. Fahre drumherum und nimm es auf nassen Straßen ruhig. Der Regen hört nach einer Weile auf.",
-  "caught.rejoin": "{who} ist wieder dabei, direkt neben {mate}!"
+  "caught.rejoin": "{who} ist wieder dabei, direkt neben {mate}!",
+  "commute.warn": "Noch {min} Minuten bis zum Schulgong!",
+  "commute.late": "{who} kommt {min} Minuten zu spät. Die Lehrerin lächelt: Besser spät als nie!",
+  "commute.ontime": "{who} ist pünktlich da. Gut gemacht!",
+  "tram.board": "Straßenbahn fahren ({price})",
+  "tram.arrived": "Fahrschein gestempelt. Die Fahrt ist zu Ende.",
+  "tram.freeRide": "Du bist ohne Fahrschein gefahren und niemand hat kontrolliert. Glück gehabt!",
+  "tram.inspector": "Die Kontrolleurin hat {who} ohne Fahrschein erwischt: eine kleine Strafe und eine freundliche Erinnerung.",
+  "hint.commute.title": "Drei Wege zur Schule",
+  "hint.commute.body": "Sei vor 8:00 Uhr in der Schule! Hauptstraße: schnell und gerade, aber mit Bussen und Verkehr. Parkweg: ruhig, aber das Kopfsteinpflaster holpert und der Skatepark ist Rüpel-Revier. Straßenbahn: von der Haltestelle bei dir zu Hause zur Haltestelle an der Schule, aber du brauchst einen Fahrschein. Entlang der Wege liegen Münzen.",
+  "hint.tram.title": "Straßenbahn",
+  "hint.tram.body": "An einer Haltestelle drückst du {interact}, um zur anderen Haltestelle zu fahren. Ein Fahrschein kostet etwas Geld. Wenn du nicht bezahlen kannst, fährst du schwarz, und eine Kontrolle könnte dich erwischen."
 }

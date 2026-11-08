@@ -3,6 +3,8 @@
   "cooldownSeconds": 25,
   "hints": [
     { "id": "welcome", "event": "clock:tick", "who": "all" },
+    { "id": "commute", "event": "phase:started", "match": { "phase": "commute" }, "who": "all" },
+    { "id": "tram", "event": "tram:ride", "who": "all" },
     { "id": "bike", "event": "player:vehicle", "match": { "id": "bike" }, "who": "event" },
     { "id": "skateboard", "event": "player:vehicle", "match": { "id": "skateboard" }, "who": "event" },
     { "id": "skates", "event": "player:vehicle", "match": { "id": "skates" }, "who": "event" },

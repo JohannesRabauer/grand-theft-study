@@ -46,6 +46,7 @@ import { LearningEngine } from '../learning/LearningEngine.js';
 import { Grades } from '../grading/Grades.js';
 import { Minigames } from '../minigames/Minigames.js';
 import { School } from '../entities/School.js';
+import { Commute } from '../entities/Commute.js';
 import { Home } from '../entities/Home.js';
 import { morningStartMap } from '../services/Morning.js';
 import { StreetRides } from '../entities/StreetRides.js';
@@ -163,6 +164,7 @@ export class GameScene extends Phaser.Scene {
     this.dojo = new Dojo(this, ctx, cache.get('karate')); // the dojo building in the town, the sensei and the belt rack inside
     this.school = new School(this, ctx, cache.get('timetable'), cache.get('minigames').minigames);
     this.home = new Home(this, ctx, cache.get('morning'));
+    this.commute = new Commute(this, ctx, cache.get('commute')); // story 8.2: the bell, the tram, pickups
     this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
     this.garage = new Garage(this, ctx);
     this.caught = new Caught(this, ctx, cache.get('chase').caught, this.mountables);
@@ -359,6 +361,7 @@ export class GameScene extends Phaser.Scene {
     this.dojo.update(dt);
     this.school.update();
     this.home.update();
+    this.commute.update(dt);
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.grabs.update(dt);
