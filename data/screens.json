@@ -7,6 +7,7 @@
   "minigameIntroduction": { "freezesWorld": true },
   "hint": { "freezesWorld": true },
   "shop": { "freezesWorld": true },
+  "message": { "freezesWorld": true },
   "test": { "freezesWorld": true },
   "testHint": { "freezesWorld": false }
 }

@@ -671,5 +671,17 @@
   "item.snack-juice.name": "Apfelsaft",
   "item.snack-juice.desc": "Kalt und süß: Deine Energie ist wieder voll.",
   "item.ticket-day.name": "Tagesfahrschein",
-  "item.ticket-day.desc": "Straßenbahnfahren ist für den Rest des Tages kostenlos."
+  "item.ticket-day.desc": "Straßenbahnfahren ist für den Rest des Tages kostenlos.",
+  "hud.mission": "Auftrag: {m} m",
+  "quest.call": "Telefonzelle benutzen",
+  "quest.noCall": "Gerade geht niemand ran. Versuch es später noch einmal!",
+  "quest.next": "Als Nächstes: {step}",
+  "quest.firstStep": "Zuerst: {step}",
+  "quest.done.title": "Auftrag erledigt: {title}",
+  "quest.reward": "Belohnung: {money} und {xp} XP",
+  "mission.parcel.title": "Paketbote",
+  "mission.parcel.intro": "Kling! Hier ist Frau Wendt. Sie hat ein Paket in der Bäckerei vergessen und ihr Knie tut weh. Kannst du es ihr in den Park bringen?",
+  "mission.parcel.step1": "Hole das Paket in der Bäckerei ab",
+  "mission.parcel.step2": "Bring das Paket zu Frau Wendt auf die Parkbank",
+  "mission.parcel.done": "Frau Wendt strahlt: Danke, du bist ein Schatz! Hier ist etwas für deine Mühe."
 }

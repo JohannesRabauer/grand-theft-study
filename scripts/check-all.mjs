@@ -13,6 +13,7 @@ checks.push('check-envart.mjs');
 checks.push('check-hints.mjs');
 checks.push('check-commute.mjs');
 checks.push('check-shop.mjs');
+checks.push('check-quests.mjs');
 for (const c of checks) {
   console.log(`\n== ${c}`);
   const r = spawnSync(process.execPath, [join(dir, c)], { stdio: 'inherit', cwd: join(dir, '..') });

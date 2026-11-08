@@ -12,6 +12,7 @@ export class ObjectiveArrow {
     this.arrow = scene.add.image(0, 0, 'arrow').setScale(ctx.res.inv).setDepth(10);
     this.text = uiText(scene, 0, 0, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d', stroke: '#000000', strokeThickness: 2 })
       .setOrigin(0.5).setDepth(10);
+    this.questLine = uiText(scene, ctx.res.w / 2, 40, '', { fontFamily: 'monospace', fontSize: '9px', color: '#9be58f', stroke: '#000000', strokeThickness: 2, align: 'center' }).setOrigin(0.5).setDepth(10).setVisible(false);
     this.lastMeters = -1;
     this.done = false;
     const sw = ctx.res.w;
@@ -28,7 +29,7 @@ export class ObjectiveArrow {
     ctx.events.on('goal:reached', this.onReached);
     this.onWorld = () => this.retarget();
     ctx.events.on('world:enter', this.onWorld);
-    this.onState = (ev) => { if (ev.path === 'shared.flags.stolenBike' || ev.path === '') this.retarget(); };
+    this.onState = (ev) => { if (ev.path === 'shared.flags.stolenBike' || ev.path === 'shared.quests' || ev.path === '') this.retarget(); };
     ctx.events.on('state:changed', this.onState);
     this.retarget();
   }
@@ -40,16 +41,22 @@ export class ObjectiveArrow {
     this.mpt = ctx.map.metersPerTile;
     const goal = ctx.map.objects.find(o => o.type === 'goal');
     const bike = ctx.state.shared.flags.stolenBike;
-    this.bike = !!bike && bike.map === ctx.world.id;
-    this.hasGoal = this.bike || !!goal;
-    if (this.bike) {
+    const quest = ctx.quests?.objective() ?? null; // an open mission step takes the arrow over (story 9.1)
+    this.quest = quest && quest.map === ctx.world.id ? quest : null;
+    this.bike = !this.quest && !!bike && bike.map === ctx.world.id;
+    this.hasGoal = !!this.quest || this.bike || !!goal;
+    this.questLine.setVisible(!!quest).setText(quest ? `${quest.title}: ${ctx.t(quest.text)}` : '');
+    if (this.quest) {
+      this.gx = (quest.x + 0.5) * this.ts;
+      this.gy = (quest.y + 0.5) * this.ts;
+    } else if (this.bike) {
       this.gx = bike.x;
       this.gy = bike.y;
     } else if (goal) {
       this.gx = (goal.x + goal.w / 2) * this.ts;
       this.gy = (goal.y + goal.h / 2) * this.ts;
     }
-    const show = this.hasGoal && (this.bike || !this.done);
+    const show = this.hasGoal && (this.bike || !!this.quest || !this.done);
     this.arrow.setVisible(show);
     this.text.setVisible(show);
     this.lastMeters = -1;
@@ -61,10 +68,12 @@ export class ObjectiveArrow {
     this.arrow.destroy();
     this.text.destroy();
     this.msg.destroy();
+    this.questLine.destroy();
+    this.ctx.events.off('state:changed', this.onState);
   }
 
   update() {
-    if (!this.hasGoal || (this.done && !this.bike)) return;
+    if (!this.hasGoal || (this.done && !this.bike && !this.quest)) return;
     const player = this.playerIndex === null ? this.game.focus : this.ctx.players[this.playerIndex];
     const cam = this.cam;
     // player on screen in UI units: from the live scroll (worldView is only refreshed at render time)
@@ -83,12 +92,13 @@ export class ObjectiveArrow {
     const m = Math.round((dist / this.ts) * this.mpt / 5) * 5; // 5 m steps, so the text rarely changes
     if (m !== this.lastMeters) {
       this.lastMeters = m;
-      this.text.setText(this.ctx.t(this.bike ? 'hud.bike' : 'hud.goal', { m }));
+      this.text.setText(this.ctx.t(this.bike ? 'hud.bike' : this.quest ? 'hud.mission' : 'hud.goal', { m }));
     }
   }
 
   retext() {
     this.msg.setText(this.ctx.t('msg.arrived'));
+    if (this.quest) this.questLine.setText(`${this.quest.title}: ${this.ctx.t(this.quest.text)}`);
     this.lastMeters = -1; // next update re-resolves the distance text
   }
 }

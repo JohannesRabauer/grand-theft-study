@@ -2,6 +2,7 @@ import { createMorning, createPlayer, grantStartBelt } from './GameState.js';
 import { applyRecord, validEntry, moveKopfnote } from '../grading/gradeCore.js';
 import { safeStreetPosition, streetRecord } from '../vehicles/streetLogic.js';
 import { itemById, itemStatus, ticketKey, upgradeKey } from '../services/shopLogic.js';
+import { canStart, missionById } from '../services/questLogic.js';
 
 // Registered state actions (AD-16). Each gets a mutable draft copy, the payload and the config and
 // returns { path } (the changed path(s)) or { reject: reason }. New systems add their actions here.
@@ -155,6 +156,36 @@ export const ACTIONS = {
       p.cosmetics.equipped[slot] = id;
     } else delete p.cosmetics.equipped[slot];
     return { path: `players.${player}.cosmetics` };
+  },
+
+  // Missions (story 9.1): shared.quests = { active: [{ id, step }], done: [ids] }. Started once (or once a day when it repeats),
+  // advanced a step at a time and finished with the last one; the runner pays the reward.
+  'quest.start'(s, { id }, cfg) {
+    const missions = cfg.missions ?? { missions: [] };
+    if (!missionById(missions, id)) return reject('unknown-mission');
+    const clock = s.shared.clock;
+    if (!canStart(missions, s.shared.quests, id, null, clock.day, s.shared.flags)) return reject('not-available');
+    s.shared.quests.active.push({ id, step: 0 });
+    return { path: 'shared.quests' };
+  },
+
+  'quest.advance'(s, { id }, cfg) {
+    const entry = s.shared.quests.active.find(q => q.id === id);
+    const m = missionById(cfg.missions ?? { missions: [] }, id);
+    if (!entry || !m || entry.step + 1 >= m.steps.length) return reject('bad-payload');
+    entry.step++;
+    return { path: 'shared.quests' };
+  },
+
+  'quest.finish'(s, { id }, cfg) {
+    const quests = s.shared.quests;
+    const m = missionById(cfg.missions ?? { missions: [] }, id);
+    const entry = quests.active.find(q => q.id === id);
+    if (!entry || !m || entry.step !== m.steps.length - 1) return reject('bad-payload');
+    quests.active = quests.active.filter(q => q.id !== id);
+    if (!quests.done.includes(id)) quests.done.push(id);
+    if (m.repeat) s.shared.flags[`mission.${id}.day`] = s.shared.clock.day;
+    return { path: ['shared.quests', 'shared.flags'] };
   },
 
   'flags.set'(s, { key, value = true }) {

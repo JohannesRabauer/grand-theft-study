@@ -671,5 +671,17 @@
   "item.snack-juice.name": "Apple juice",
   "item.snack-juice.desc": "Cold and sweet: your energy is full again.",
   "item.ticket-day.name": "Day ticket",
-  "item.ticket-day.desc": "Tram rides are free for the rest of the day."
+  "item.ticket-day.desc": "Tram rides are free for the rest of the day.",
+  "hud.mission": "Mission: {m} m",
+  "quest.call": "Use the phone booth",
+  "quest.noCall": "Nobody picks up right now. Try again later!",
+  "quest.next": "Next: {step}",
+  "quest.firstStep": "First: {step}",
+  "quest.done.title": "Mission complete: {title}",
+  "quest.reward": "Reward: {money} and {xp} XP",
+  "mission.parcel.title": "Parcel delivery",
+  "mission.parcel.intro": "Brrring! It is Mrs. Wendt. She forgot a parcel at the bakery and has a sore knee. Could you bring it to her at the park?",
+  "mission.parcel.step1": "Pick up the parcel at the bakery",
+  "mission.parcel.step2": "Bring the parcel to Mrs. Wendt at the park bench",
+  "mission.parcel.done": "Mrs. Wendt beams: Thank you, you are a star! Here is something for your trouble."
 }

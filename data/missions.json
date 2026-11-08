@@ -1,0 +1,16 @@
+{
+  "_doc": "Missions for the quest runner (story 9.1, entities/Quests.js). A mission has ordered `steps`; a step completes when a kid reaches its `reach` point ({ map, x, y } in tiles, `radius` in px, any player) or when its `event` fires (`match`: payload fields that must be equal, a list means any of them). `objective` is where the arrow points and `text` the line shown while the step is open (i18n keys mission.<id>.<key>). A mission starts at a phone booth (`booth: any`, only in the listed `phases` when given) or by itself when `trigger.event` fires. `kind` goes out with mission:done (help feeds Hilfsbereitschaft through data/kopfnoten.json). `reward` is paid to the shared wallet (cents) and to every player (xp); `repeat` lets it be played again each day. Intro and outro come from mission.<id>.intro / .done.",
+  "missions": [
+    {
+      "id": "parcel",
+      "kind": "help",
+      "booth": "any",
+      "phases": ["commute", "afternoon", "evening"],
+      "steps": [
+        { "id": "pick-up", "objective": { "map": "town", "x": 36, "y": 87 }, "text": "mission.parcel.step1", "reach": { "map": "town", "x": 36, "y": 87, "radius": 40 } },
+        { "id": "deliver", "objective": { "map": "town", "x": 50, "y": 37 }, "text": "mission.parcel.step2", "reach": { "map": "town", "x": 50, "y": 37, "radius": 40 } }
+      ],
+      "reward": { "cents": 300, "xp": 15 }
+    }
+  ]
+}

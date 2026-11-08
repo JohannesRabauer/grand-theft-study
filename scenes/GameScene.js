@@ -48,6 +48,7 @@ import { Minigames } from '../minigames/Minigames.js';
 import { School } from '../entities/School.js';
 import { Commute } from '../entities/Commute.js';
 import { Shops } from '../entities/Shops.js';
+import { Quests } from '../entities/Quests.js';
 import { Cosmetics } from '../entities/Cosmetics.js';
 import { Home } from '../entities/Home.js';
 import { morningStartMap } from '../services/Morning.js';
@@ -169,6 +170,7 @@ export class GameScene extends Phaser.Scene {
     this.commute = new Commute(this, ctx, cache.get('commute')); // story 8.2: the bell, the tram, pickups
     this.shops = new Shops(this, ctx, cache.get('shop'), cache.get('input')); // story 10.1: the market shops and the bakery
     this.cosmetics = new Cosmetics(this, ctx); // story 10.1: hats and rings the players wear
+    this.quests = new Quests(this, ctx, cache.get('missions'), cache.get('input')); // story 9.1: missions, phone booths, the objective
     this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
     this.garage = new Garage(this, ctx);
     this.caught = new Caught(this, ctx, cache.get('chase').caught, this.mountables);
@@ -368,6 +370,7 @@ export class GameScene extends Phaser.Scene {
     this.commute.update(dt);
     this.shops.update();
     this.cosmetics.update(dt);
+    this.quests.update();
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.grabs.update(dt);
