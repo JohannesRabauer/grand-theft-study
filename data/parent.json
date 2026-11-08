@@ -1,0 +1,10 @@
+{
+  "_doc": "Parent settings (story 11.4, services/parentLogic.js, ui/screens/ParentGateScreen.js and ParentSettingsScreen.js). The gate asks an arithmetic question a kid in class 3 does not do in their head (a product of a two-digit and a one-digit number plus a two-digit number) with four answers; a wrong answer shuts the gate for lockoutSeconds and brings a new question, and `strikes` wrong answers in a row lock it for longLockoutSeconds. Settings are saved in the family's flags: parentDifficulty (the learning difficulty modifier the learning engine reads, within data/learning.json parentRange), chasesOff (no bullies chase), playReminder (minutes of play after which a friendly break reminder appears, 0 = off; it repeats after the same time). Texts: parent.*.",
+  "gate": { "a": [12, 29], "b": [3, 9], "c": [11, 49], "lockoutSeconds": 15, "strikes": 3, "longLockoutSeconds": 60 },
+  "difficulties": [
+    { "id": "easier", "value": 0.8 },
+    { "id": "normal", "value": 1 },
+    { "id": "harder", "value": 1.2 }
+  ],
+  "reminders": [0, 20, 30, 45, 60]
+}

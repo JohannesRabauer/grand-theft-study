@@ -7,6 +7,8 @@ import { HintScreen } from '../ui/screens/HintScreen.js';
 import { StickerAlbumScreen } from '../ui/screens/StickerAlbumScreen.js';
 import { AchievementsScreen } from '../ui/screens/AchievementsScreen.js';
 import { LernbuchScreen } from '../ui/screens/LernbuchScreen.js';
+import { ParentGateScreen } from '../ui/screens/ParentGateScreen.js';
+import { ParentSettingsScreen } from '../ui/screens/ParentSettingsScreen.js';
 import { Hints } from '../services/Hints.js';
 
 // Overlay host (AD-27): HUD modules from data/hud.json plus the screen stack. Reads only; never mutates
@@ -32,6 +34,7 @@ export class UIScene extends Phaser.Scene {
       this.screens.push(new HintScreen(this, ctx, this.screens, { mode: 'hint', ids: [def.id], audience, inputCfg, onDone: confirmed => (confirmed ? done() : ctx.hints?.abandon()) }));
     });
     ctx.openHelp = () => this.screens.push(new HintScreen(this, ctx, this.screens, { mode: 'browse', ids: hintCfg.hints.map(h => h.id), index: 0, inputCfg }));
+    ctx.openParent = () => this.screens.push(new ParentGateScreen(this, ctx, this.screens, cache.get('parent'), () => this.screens.push(new ParentSettingsScreen(this, ctx, this.screens, cache.get('parent'))))); // story 11.4: the gate, then the settings
     ctx.openLernbuch = () => this.screens.push(new LernbuchScreen(this, ctx, this.screens, cache.get('lernbuch'))); // story 10.5
     ctx.openAchievements = () => this.screens.push(new AchievementsScreen(this, ctx, this.screens, ctx.achievements)); // story 10.4
     ctx.openAlbum = () => this.screens.push(new StickerAlbumScreen(this, ctx, this.screens, ctx.stickers)); // story 10.3
@@ -67,6 +70,7 @@ export class UIScene extends Phaser.Scene {
       delete ctx.openAlbum;
       delete ctx.openAchievements;
       delete ctx.openLernbuch;
+      delete ctx.openParent;
       for (const m of this.hudList) m.destroy();
       delete ctx.screens;
       delete ctx.duckHud;

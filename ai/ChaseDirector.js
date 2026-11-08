@@ -33,7 +33,7 @@ export class ChaseDirector {
     this.escapes = Array.from({ length: ctx.maxPlayers }, () => new Escape(cfg.escape)); // one per player
     this.alive = new Uint8Array(ctx.maxPlayers);
     this.nearestBully = new Float64Array(ctx.maxPlayers); // per player: distance to the closest bully
-    this.lvl = new ChaseLevel(cfg.level, cfg.chaseEnabled, (level, reason) => this.onLevel(level, reason));
+    this.lvl = new ChaseLevel(cfg.level, cfg.chaseEnabled && !ctx.state.shared.flags.chasesOff, (level, reason) => this.onLevel(level, reason)); // the family can switch chases off (story 11.4)
     this.spawns = this.readSpawns();
     this.seen = false;
     this.inTurf = new Uint8Array(ctx.maxPlayers); // per player: standing in bully turf
@@ -134,6 +134,12 @@ export class ChaseDirector {
   }
 
   // A bully appears at the nearest spawn point that is outside the camera view and runs for the nearest player.
+  // The parent setting "chases" (story 11.4): off means no bully chases; switching it off ends a chase that is going on.
+  setChasesEnabled(on) {
+    if (!on && this.lvl.level > 0) this.lvl.clear('parent'); // first: a disabled level refuses every change, even the end of the chase
+    this.lvl.enabled = !!on && this.cfg.chaseEnabled;
+  }
+
   spawn(kind) {
     const p = this.pickSpawn();
     if (!p) return null; // a map without bully spawns (an interior) has no chase
