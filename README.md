@@ -1,5 +1,7 @@
 # Schulweg (prototype)
 
+> **Continuing this project?** Read [HANDOFF.md](HANDOFF.md) first: state, next stories, workflow and gotchas.
+
 Retro top-down browser game prototype: a kid walks, rides and sneaks to school through a small town.
 Phaser 3.90.0 (from jsDelivr, includes Matter.js), native ES modules, no build step.
 
