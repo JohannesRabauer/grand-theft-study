@@ -1,5 +1,5 @@
 {
-  "_doc": "Prices and shops (AD-22, story 10.1), in integer cents. Item types: 'vehicle' unlocks `vehicle` through shop.buyVehicle; 'snack' refills stamina to `stamina` (0..1) of the bar; 'cosmetic' is worn in `slot` (hat above the head, ring under the feet) by whoever bought it and is put on straight away, owned cosmetics can be changed in the shop; 'upgrade' is a permanent family upgrade (`key: ammo` adds `bonus` to the slingshot magazine); 'ticket' is a day pass that makes every tram ride of today free. `shops` lists what each map shop sells (the map object's `shopId`, the bakery sells `bakery`); names and descriptions are i18n keys item.<id>.name / item.<id>.desc and shop.<id>.name.",
+  "_doc": "Prices and shops (AD-22, story 10.1), in integer cents. Item types: 'vehicle' unlocks `vehicle` through shop.buyVehicle; 'snack' refills stamina to `stamina` (0..1) of the bar; 'cosmetic' is worn in `slot` (hat above the head, ring under the feet) by whoever bought it and is put on straight away, owned cosmetics can be changed in the shop; 'upgrade' is a permanent family upgrade (`key: ammo` adds `bonus` to the slingshot magazine); 'ticket' is a day pass that makes every tram ride of today free; 'activity' is no purchase but the way to an activity (data/activities.json), price 0. `shops` lists what each map shop sells (the map object's `shopId`, the bakery sells `bakery`); names and descriptions are i18n keys item.<id>.name / item.<id>.desc and shop.<id>.name.",
   "slots": ["hat", "ring"],
   "items": [
     { "id": "vehicle-skateboard", "type": "vehicle", "vehicle": "skateboard", "price": 4500 },
@@ -16,10 +16,11 @@
     { "id": "snack-roll", "type": "snack", "stamina": 1, "price": 90 },
     { "id": "snack-pretzel", "type": "snack", "stamina": 1, "price": 120 },
     { "id": "snack-juice", "type": "snack", "stamina": 1, "price": 150 },
-    { "id": "ticket-day", "type": "ticket", "price": 300 }
+    { "id": "ticket-day", "type": "ticket", "price": 300 },
+    { "id": "activity-bakery", "type": "activity", "activity": "bakery", "price": 0 }
   ],
   "shops": {
     "vehicles": ["vehicle-skateboard", "vehicle-skates", "vehicle-bike", "vehicle-scooter", "vehicle-rollerblades", "upgrade-ammo", "hat-cap", "hat-party", "hat-crown", "ring-blue", "ring-gold"],
-    "bakery": ["snack-roll", "snack-pretzel", "snack-juice", "ticket-day"]
+    "bakery": ["activity-bakery", "snack-roll", "snack-pretzel", "snack-juice", "ticket-day"]
   }
 }

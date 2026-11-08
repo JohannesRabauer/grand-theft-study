@@ -13,6 +13,7 @@
   "achievements": { "freezesWorld": true },
   "lernbuch": { "freezesWorld": true },
   "parentGate": { "freezesWorld": true },
+  "activity": { "freezesWorld": true },
   "parentSettings": { "freezesWorld": true },
   "test": { "freezesWorld": true },
   "testHint": { "freezesWorld": false }

@@ -54,6 +54,7 @@ import { Progress } from '../characters/Progress.js';
 import { Stickers } from '../services/stickers.js';
 import { Achievements } from '../services/achievements.js';
 import { PlayTime } from '../services/PlayTime.js';
+import { Activities } from '../entities/Activities.js';
 import { Cosmetics } from '../entities/Cosmetics.js';
 import { Home } from '../entities/Home.js';
 import { morningStartMap } from '../services/Morning.js';
@@ -181,6 +182,7 @@ export class GameScene extends Phaser.Scene {
     this.progress = new Progress(ctx, cache.get('xp')); // story 10.2: xp for activities, level-up celebration
     this.stickers = new Stickers(ctx, cache.get('stickers')); // story 10.3: the sticker collection
     this.achievements = new Achievements(ctx, cache.get('achievements')); // story 10.4: achievements and daily streaks
+    this.activities = new Activities(this, ctx, cache.get('activities'), cache.get('input')); // story 9.2: the Pfand machine and the bakery counter
     this.playTime = new PlayTime(ctx, minutes => ctx.quests.show(ctx.t('parent.reminder.title'), [ctx.t('parent.reminder.body', { n: minutes })])); // story 11.4: the break reminder
     this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
     this.garage = new Garage(this, ctx);
@@ -383,6 +385,7 @@ export class GameScene extends Phaser.Scene {
     this.cosmetics.update(dt);
     this.quests.update(dt);
     this.playTime.update(dt);
+    this.activities.update();
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.grabs.update(dt);

@@ -40,7 +40,7 @@ export class ShopScreen {
       const name = text(42, y + 4, 10);
       const price = text(438, y + 4, 10, '#ffe7ac').setOrigin(1, 0);
       const hit = own(scene.add.rectangle(34, y, 412, 20, 0xffffff, 0.001).setOrigin(0).setDepth(44).setInteractive({ useHandCursor: true }));
-      hit.on('pointerdown', () => { this.sel = Math.min(this.items.length - 1, this.top + i); this.act(); this.retext(); });
+      hit.on('pointerdown', () => { this.sel = Math.min(this.items.length - 1, this.top + i); this.act(); if (this.ctx.screens.top() === this) this.retext(); });
       return { name, price, y };
     });
     this.more = text(240, 183, 9, '#8fa6b2').setOrigin(0.5);
@@ -58,6 +58,7 @@ export class ShopScreen {
   itemName(item) { return this.ctx.t(item.type === 'vehicle' ? `vehicle.${item.vehicle}` : `item.${item.id}.name`); }
 
   priceText(item) {
+    if (item.type === 'activity') return this.ctx.t('shop.practice');
     return this.ctx.t('hud.money', { v: (item.price / 100).toFixed(2).replace('.', this.ctx.i18n.lang === 'de' ? ',' : '.') });
   }
 
@@ -98,6 +99,7 @@ export class ShopScreen {
     const item = this.item();
     if (!item) return;
     const { ctx, shops, player } = this;
+    if (item.type === 'activity') { this.close(); ctx.activities.start(item.activity, player); return; } // the counter: practise ordering for pocket money
     const status = itemStatus(shops.cfg, ctx.state.data, player, item);
     const name = this.itemName(item);
     if (item.type === 'cosmetic' && status.owned) {
@@ -119,7 +121,7 @@ export class ShopScreen {
     if (intent.pause) { this.close(); return; }
     const read = this.cursor.read(this.ctx.input.intents[this.player]);
     if (read.dy) { this.sel = Math.max(0, Math.min(this.items.length - 1, this.sel + read.dy)); this.note = ''; this.retext(); }
-    else if (read.confirm) { this.act(); this.retext(); }
+    else if (read.confirm) { this.act(); if (this.ctx.screens.top() === this) this.retext(); }
   }
 
   destroy() {

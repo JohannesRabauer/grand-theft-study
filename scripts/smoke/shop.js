@@ -73,7 +73,7 @@ export const shop = {
     at(bakery);
     assert('the bakery has its own prompt', ctx.shops.placeNear(player)?.id === 'bakery');
     env.press('interact');
-    assert('it sells the bakery items only', top()?.id === 'shop' && top().items.every(i => ['snack', 'ticket'].includes(i.type)));
+    assert('it sells the bakery items only', top()?.id === 'shop' && top().items.every(i => ['snack', 'ticket', 'activity'].includes(i.type)));
     player.move.stamina = 0.2;
     buy('snack-juice');
     assert('a snack fills the energy bar again', player.move.stamina === 1);
