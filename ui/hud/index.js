@@ -9,6 +9,7 @@ import { DebugModule } from './DebugModule.js';
 import { RotateHintModule } from './RotateHintModule.js';
 import { RestartNoteModule } from './RestartNoteModule.js';
 import { ObjectiveModule } from './ObjectiveModule.js';
+import { MinimapModule } from './MinimapModule.js';
 import { CaughtModule } from './CaughtModule.js';
 import { TouchModule } from './TouchModule.js';
 import { CoopModule } from './CoopModule.js';
@@ -27,6 +28,7 @@ export const HUD_REGISTRY = {
   tool: ToolModule,
   caught: CaughtModule,
   objective: ObjectiveModule,
+  minimap: MinimapModule,
   touch: TouchModule,
   rotateHint: RotateHintModule,
   restartNote: RestartNoteModule,

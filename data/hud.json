@@ -11,6 +11,7 @@
       { "id": "style", "scope": "player" },
       { "id": "caught", "scope": "shared" },
       { "id": "objective", "scope": "shared" },
+      { "id": "minimap", "scope": "shared" },
       { "id": "touch", "scope": "shared" },
       { "id": "coop", "scope": "shared" },
       { "id": "toast", "scope": "shared" },

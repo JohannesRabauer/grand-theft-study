@@ -364,6 +364,8 @@ export class GameScene extends Phaser.Scene {
     this.ctx.world.update();
     this.stepPhysics(delta);
     if (this.ctx.input.intent.weather) this.ctx.weather.toggle(); // global intents come from P1 only
+    if (this.ctx.input.intent.map) this.ctx.minimap?.toggle(); // story 11.2
+
     this.ctx.day.update(dt);
     this.ctx.wind.update(dt);
     this.ctx.weather.update(dt);
