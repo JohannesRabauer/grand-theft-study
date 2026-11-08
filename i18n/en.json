@@ -906,5 +906,16 @@
   "streak.punctual.name": "Punctual streak",
   "streak.punctual.desc": "on time for school",
   "streak.helper.name": "Helper streak",
-  "streak.helper.desc": "finish a mission"
+  "streak.helper.desc": "finish a mission",
+  "pause.lernbuch": "Learning book",
+  "lernbuch.title": "Learning book",
+  "lernbuch.owner": "{who}'s progress in every subject",
+  "lernbuch.info": "answered {n}  -  level {level}  -  learned {learned} of {pool}",
+  "lernbuch.medal.gold": "Gold",
+  "lernbuch.medal.silver": "Silver",
+  "lernbuch.medal.bronze": "Bronze",
+  "lernbuch.total": "Altogether: {n} answers, {pct} right, {medals} medals",
+  "lernbuch.empty": "Nothing answered yet. Play a lesson and your book fills up!",
+  "lernbuch.legend": "Medal: many answers, mostly right. Red triangle: {streak} right in a row. Blue book: {learned} questions learned for good.",
+  "lernbuch.nav": "Q / E: next kid   Esc: close"
 }

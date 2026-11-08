@@ -26,6 +26,7 @@ export class PauseScreen {
       { items: [{ label: () => ctx.t('pause.help'), on: () => ctx.openHelp?.() }] },
       { items: [{ label: () => ctx.t('pause.album'), on: () => ctx.openAlbum?.() }] },
       { items: [{ label: () => ctx.t('pause.achievements'), on: () => ctx.openAchievements?.() }] },
+      { items: [{ label: () => ctx.t('pause.lernbuch'), on: () => ctx.openLernbuch?.() }] },
       ...settingsRows(ctx),
       ...(ctx.minigames?.active ? [{ items: [{ label: () => ctx.t('minigame.quit'), on: () => ctx.minigames.quit() }] }] : []),
       { items: [{ label: () => ctx.t('pause.menu'), on: () => ctx.events.emit('game:quit') }] }

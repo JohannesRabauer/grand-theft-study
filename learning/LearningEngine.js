@@ -53,4 +53,7 @@ export class LearningEngine {
   isCorrect(question, response) { return this.core.isCorrect(question, response); }
 
   stats(player, topic) { return this.core.stats(playerIndex(player), topic); }
+
+  // How many questions a topic has (the Lernbuch shows how many a kid has learned of them).
+  poolSize(topic) { return this.core.pools[topic]?.items.length ?? 0; }
 }

@@ -11,6 +11,7 @@
   "reportCard": { "freezesWorld": true },
   "album": { "freezesWorld": true },
   "achievements": { "freezesWorld": true },
+  "lernbuch": { "freezesWorld": true },
   "test": { "freezesWorld": true },
   "testHint": { "freezesWorld": false }
 }

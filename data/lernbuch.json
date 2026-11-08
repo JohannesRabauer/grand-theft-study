@@ -1,0 +1,15 @@
+{
+  "_doc": "The Lernbuch (story 10.5, learning/lernbuch.js, ui/screens/LernbuchScreen.js): per subject (learning topic) a bar of the real accuracy (correct / answered over everything the kid answered) and badges, all from the saved learning stats. medals: the best one whose `answered` and `accuracy` are both reached (bronze, silver, gold; a medal is a promise, not a punishment: below bronze the bar just shows how far along the kid is). badges: `streak` = best run of right answers at least `streakMin`; `learner` = at least `learnedMin` questions learned for good (the repetition queue let them go). barColors: accuracy from `min` up.",
+  "medals": [
+    { "id": "gold", "answered": 60, "accuracy": 0.88 },
+    { "id": "silver", "answered": 30, "accuracy": 0.75 },
+    { "id": "bronze", "answered": 10, "accuracy": 0.6 }
+  ],
+  "badges": { "streakMin": 10, "learnedMin": 20 },
+  "barColors": [
+    { "min": 0.85, "color": "#5fd36a" },
+    { "min": 0.7, "color": "#d6d655" },
+    { "min": 0.5, "color": "#e9a23b" },
+    { "min": 0, "color": "#e0605a" }
+  ]
+}

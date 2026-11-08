@@ -14,6 +14,7 @@ import { missions } from './missions.js';
 import { progress } from './progress.js';
 import { stickers } from './stickers.js';
 import { achievements } from './achievements.js';
+import { lernbuch } from './lernbuch.js';
 import { twoPlayers } from './players.js';
 import { characters } from './characters.js';
 import { skateboard } from './skate.js';
@@ -39,4 +40,4 @@ import { zeugnis } from './zeugnis.js';
 import { home } from './home.js';
 import { openWorld } from './open-world.js';
 
-export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, hints, commute, shop, quests, missions, progress, stickers, achievements, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, traffic, karate, school, schoolEvents, dayFlow, zeugnis, home, openWorld];
+export const scenarios = [rideToSchool, turfChase, pedestrians, slingshot, weather, dayClock, language, quality, pause, screenStack, hints, commute, shop, quests, missions, progress, stickers, achievements, lernbuch, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, traffic, karate, school, schoolEvents, dayFlow, zeugnis, home, openWorld];

@@ -906,5 +906,16 @@
   "streak.punctual.name": "Pünktlichkeits-Serie",
   "streak.punctual.desc": "pünktlich in der Schule",
   "streak.helper.name": "Helfer-Serie",
-  "streak.helper.desc": "einen Auftrag erledigen"
+  "streak.helper.desc": "einen Auftrag erledigen",
+  "pause.lernbuch": "Lernbuch",
+  "lernbuch.title": "Lernbuch",
+  "lernbuch.owner": "So weit ist {who} in jedem Fach",
+  "lernbuch.info": "beantwortet {n}  -  Stufe {level}  -  gelernt {learned} von {pool}",
+  "lernbuch.medal.gold": "Gold",
+  "lernbuch.medal.silver": "Silber",
+  "lernbuch.medal.bronze": "Bronze",
+  "lernbuch.total": "Insgesamt: {n} Antworten, {pct} richtig, {medals} Medaillen",
+  "lernbuch.empty": "Noch nichts beantwortet. Spiel eine Stunde und dein Buch füllt sich!",
+  "lernbuch.legend": "Medaille: viele Antworten, meist richtig. Rotes Dreieck: {streak} richtige in Folge. Blaues Buch: {learned} Fragen für immer gelernt.",
+  "lernbuch.nav": "Q / E: nächstes Kind   Esc: schließen"
 }
