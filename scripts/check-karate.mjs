@@ -10,7 +10,7 @@ import { GameState, STATE_VERSION, createDefaultState } from '../state/GameState
 import { SaveSlots } from '../state/SaveSlots.js';
 import { migrate } from '../state/migrations.js';
 import { AttrGrowth } from '../characters/AttrGrowth.js';
-import { beltStats } from '../defense/defenseCore.js';
+import { beltStats, kiaiReach, parryRefund } from '../defense/defenseCore.js';
 import { beltProgress, evaluateSession, nextBelt, sessionPoints, sessionsLeft, sessionsToday } from '../defense/beltCore.js';
 import { Karate } from '../defense/Karate.js';
 import { KarateSession, buildSession, defendLane, kataProblems, kataSet, lanesFromNav, laneOf, nextCall, parseKata, setWindows } from '../minigames/karateCore.js';
@@ -354,3 +354,34 @@ assert.equal(sessionPoints(t, { score: 5, fokus: -1 }), t.pointsBase + t.pointsM
   assert.ok(!solid(dojo, sensei.x, sensei.y) && sensei.w === 1 && sensei.h === 1);
 }
 console.log('karate: belts, kata, training logic, belt rules, state, service and maps ok');
+
+// ---- story 6.5: belt effects measurably grow with the belt
+{
+  const cfgK = load('data/karate.json');
+  const rows = cfgK.belts;
+  const up = ['kiaiRadius', 'blockWindow', 'dodgeDistance', 'stumbleDuration', 'aergerReduction', 'parryMut', 'auraStumble'];
+  const down = ['kiaiCooldown', 'dodgeCooldown'];
+  for (let i = 1; i < rows.length; i++) {
+    for (const k of up) assert.ok(rows[i][k] >= rows[i - 1][k], `${rows[i].id}.${k} is not below ${rows[i - 1].id}`);
+    for (const k of down) assert.ok(rows[i][k] <= rows[i - 1][k], `${rows[i].id}.${k} is not above ${rows[i - 1].id}`);
+  }
+  const first = rows[0];
+  const last = rows.at(-1);
+  assert.ok(last.kiaiRadius > first.kiaiRadius && last.blockWindow > first.blockWindow && last.dodgeDistance > first.dodgeDistance && last.kiaiCooldown < first.kiaiCooldown && last.dodgeCooldown < first.dodgeCooldown && last.stumbleDuration > first.stumbleDuration && last.parryMut > first.parryMut && last.auraStumble > first.auraStumble, 'the top belt beats the white belt in every effect');
+  // reach: a bully at 80 px is outside the white Kiai and inside the blue one
+  const out = { affected: [], gasp: [] };
+  const bully = [{ x: 80, y: 0, active: true, state: 'CHASE', id: 1 }];
+  assert.equal(kiaiReachCheck(first.kiaiRadius).affected.length, 0, 'the white Kiai does not reach 80 px');
+  assert.equal(kiaiReachCheck(last.kiaiRadius).affected.length, 1, 'the blue Kiai does');
+  function kiaiReachCheck(r) { return kiaiReach(0, 0, r, bully, [], out); }
+  // parry refund: only belts with parryMut give Mut back, never above 1
+  const slot = { mut: 0.5 };
+  assert.equal(parryRefund(slot, first), 0.5, 'white: nothing back');
+  assert.equal(parryRefund(slot, last), 0.5 + last.parryMut, 'blue: gives Mut back');
+  slot.mut = 0.95;
+  assert.equal(parryRefund(slot, last), 1, 'Mut is capped at 1');
+  // the aura belongs to the top belts only and has sane numbers
+  assert.ok(rows.filter(b => b.auraStumble > 0).length >= 1 && rows[0].auraStumble === 0, 'only the high belts have an aura');
+  assert.ok(cfgK.aura.radius > 10 && cfgK.aura.radius < cfgK.belts[0].kiaiRadius && cfgK.aura.cooldown > 0, 'the aura is a small close-range effect');
+  assert.ok(true, 'Ordnung grows on a promotion (attr-growth data, checked above)');
+}

@@ -16,7 +16,7 @@
 //    dogs and the like within the radius say "Oha!" and nothing else. The Kiai of either kid reaches bullies chasing either kid.
 // Other events: `defense:state` { player, state } on every change, `defense:dodge` { player, x, y }, `defense:guard-down` { player }.
 import { SpeechBubbles } from '../entities/SpeechBubbles.js';
-import { ST, EV, beltStats, contactResult, createSlot, kiaiReach, resetSlot, tickSlot, walkMult } from './defenseCore.js';
+import { ST, EV, beltStats, contactResult, createSlot, kiaiReach, parryRefund, resetSlot, tickSlot, walkMult } from './defenseCore.js';
 import { DefenseFx } from './DefenseFx.js';
 import { boostedKiai } from './beltCore.js';
 
@@ -36,6 +36,9 @@ export class DefenseController {
     this.shout = { radius: 0, aerger: 0 };
     this.gaspLists = [];
     this.voices = [];
+    this.auraCd = []; // seconds until the belt aura (auraStumble) may stumble a bully again, per player (story 6.5)
+    this.auraReach = { affected: [], gasp: [] };
+    this.noGaspers = [];
     this.stumbleOpts = { duration: 0, step: cfg.stumble.step, distance: 0, wobbleHz: cfg.stumble.wobbleHz, wobbleRad: cfg.stumble.wobbleRad };
     this.rand = Math.random;
     this.bubbles = new SpeechBubbles(scene, ctx, cfg.fx.maxBubbles, 'defenseBubbles');
@@ -98,6 +101,7 @@ export class DefenseController {
       const stats = this.stats(i);
       const ev = tickSlot(slot, stats, cfg, inp, dt);
       if (ev) this.started(i, p, ev, stats);
+      this.aura(i, p, stats, dt);
       if (slot.state !== this.shown[i]) {
         this.shown[i] = slot.state;
         ctx.events.emit('defense:state', { player: i, state: slot.state });
@@ -149,6 +153,20 @@ export class DefenseController {
 
   say(owner, key) { this.bubbles.say(owner, this.ctx.t(key), this.cfg.fx.bubbleSeconds); }
 
+  // The belt aura (story 6.5): a belt with auraStumble stumbles a chasing bully that comes close, then rests for aura.cooldown.
+  aura(i, p, stats, dt) {
+    if (!(stats.auraStumble > 0)) return;
+    const { ctx, cfg, auraReach } = this;
+    this.auraCd[i] = Math.max(0, (this.auraCd[i] ?? 0) - dt);
+    if (this.auraCd[i] > 0 || p.vehicle !== 'foot') return;
+    kiaiReach(p.x, p.y, cfg.aura.radius, ctx.chase.bullies, this.noGaspers, auraReach);
+    let n = 0;
+    for (const b of auraReach.affected) if (b.state === 'CHASE' && this.stumble(b, p, stats.auraStumble, cfg.stumble.bounceDistance, 'aura')) n++;
+    if (!n) return;
+    this.auraCd[i] = cfg.aura.cooldown;
+    ctx.events.emit('defense:aura', { player: i, count: n });
+  }
+
   // The Kiai's effect. Only bullies can stumble; everything else in range gasps.
   kiai(i, p, stats) {
     const { ctx, cfg, reach, shout } = this;
@@ -197,6 +215,7 @@ export class DefenseController {
       this.say(this.voice(p), perfect ? 'defense.parry' : 'defense.block');
       ctx.events.emit('defense:blocked', { player: index, bully: b.id, perfect });
       if (perfect) {
+        parryRefund(slot, this.stats(index));
         this.fx.parry(index, p);
         ctx.particles.emit('spark', p.x, p.y - 6);
         ctx.state.dispatch('xp.add', { player: index, amount: cfg.timing.parryXp });

@@ -100,6 +100,12 @@ export function tickSlot(slot, stats, cfg, inp, dt) {
 
 // How the player answers a bully reaching them: 'dodge' (invulnerable roll, the bully passes), 'parry' (block in its first
 // moments, free), 'block' (costs Mut), 'kiai' (the shout stance sends it back) or null (nothing: the bully catches). Spends Mut.
+// A perfect parry gives the kid's Mut back by the belt's parryMut (story 6.5). Returns the new Mut.
+export function parryRefund(slot, stats) {
+  slot.mut = Math.min(1, slot.mut + (stats.parryMut ?? 0));
+  return slot.mut;
+}
+
 export function contactResult(slot, cfg) {
   if (slot.invuln > 0) return 'dodge';
   if (slot.state === ST.KIAI) return 'kiai';
