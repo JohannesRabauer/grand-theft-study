@@ -52,6 +52,11 @@ export const school = {
     ctx.input.intents[0].interact = false;
     step(2);
     const lesson = ctx.school.next();
+    const doneLog = [];
+    const quizLog = [];
+    ctx.events.on('lesson:done', e => doneLog.push(e));
+    ctx.events.on('quiz:correct', e => quizLog.push(e));
+    const wissen0 = ctx.state.players.map(p => p.attributes.wissen);
     const gradesBefore = ctx.state.players.map(p => p.grades.entries.length);
     const beforeMinute = ctx.day.minute;
     ctx.screens.top().button.emit('pointerdown');
@@ -74,6 +79,7 @@ export const school = {
     await promise;
     step(3);
     assert('completed lessons record a grade per child with their lesson ID', ctx.players.every(p => ctx.school.recordFor(lesson, p.index)?.grade >= 1 && ctx.state.players[p.index].grades.entries.length === gradesBefore[p.index] + 1));
+    assert('finishing a lesson emits lesson:done per kid and quiz:correct per right answer, and knowledge grows (story 10.2)', doneLog.length >= 1 && doneLog.every(e => e.subject === lesson.subject && e.lessonId === lesson.id) && quizLog.length === 10 * doneLog.length && doneLog.every(e => ctx.state.players[e.player].attributes.wissen > wissen0[e.player]), `${doneLog.length} done ${JSON.stringify(doneLog[0])}, ${quizLog.length} correct, wissen ${JSON.stringify(wissen0)} -> ${JSON.stringify(ctx.state.players.map(p => p.attributes.wissen))}`);
     assert('the next lesson resumes without repeating the completed one', ctx.school.next()?.id !== lesson.id && !ctx.school.running && !ctx.frozen);
     const schedule = ctx.school.schedule();
     let lessons = 1;

@@ -70,7 +70,7 @@ assert.ok(validateCharacters({ ...cfg, characters: [{ ...by.helena, look: { ...b
 for (const rule of growth.rules) {
   assert.ok(order.includes(rule.attr) && rule.amount > 0 && rule.cap <= cfg.attrMax && rule.event && rule.reason, `growth rule ${rule.event}`);
 }
-assert.deepEqual(new Set(growth.rules.map(r => r.event)), new Set(['style:banked', 'prop:hit', 'quiz:correct', 'lesson:done', 'karate:belt']));
+assert.deepEqual(new Set(growth.rules.map(r => r.event)), new Set(['style:banked', 'prop:hit', 'quiz:correct', 'lesson:done', 'karate:belt', 'level:up', 'race:won', 'commute:ontime', 'homework:done']));
 
 // ---- i18n coverage (the key lists the UI reads)
 const de = load('i18n/de.json');

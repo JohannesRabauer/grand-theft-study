@@ -1,0 +1,14 @@
+{
+  "_doc": "XP for activities beyond lessons, tricks, defense and missions (those pay their own XP in their results; story 10.2, characters/Progress.js). When `event` fires, every kid it names gets `amount` XP through the xp.add action: payload.players (a list), else payload.player, else player 0. `filter` must match payload fields exactly. Levels come from state.json (xpPerLevel, maxLevel); every level-up emits level:up and is celebrated, and data/attr-growth.json lets a level-up grow stamina.",
+  "rules": [
+    { "event": "commute:ontime", "amount": 5 },
+    { "event": "homework:done", "amount": 5 },
+    { "event": "tram:ride", "amount": 2 },
+    { "event": "sticker:found", "amount": 3 },
+    { "event": "bike:recovered", "amount": 10 },
+    { "event": "race:won", "amount": 20 },
+    { "event": "karate:belt", "amount": 30 },
+    { "event": "zeugnis:done", "amount": 50, "filter": { "promoted": true } },
+    { "event": "zeugnis:done", "amount": 25, "filter": { "promoted": false } }
+  ]
+}

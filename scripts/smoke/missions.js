@@ -166,6 +166,7 @@ export const missions = {
     // ---- put everything back
     ui.screens.clear();
     ctx.state.replace(data0);
+    for (const pl of ctx.players) ctx.characters.refresh(pl); // the speed modifiers follow the restored attributes (a replace does not refresh them)
     ctx.events.emit('state:changed', { path: 'shared.quests', action: 'smoke' });
     player.teleport(home0.x, home0.y);
     if (home0.vehicle === 'bike') gs.bikes.giveBike(player);

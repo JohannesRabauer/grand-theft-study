@@ -773,5 +773,6 @@
   "zeugnis.next": "Nächstes Zeugnis",
   "zeugnis.continue": "Weiter",
   "zeugnis.end.title": "Klasse 4 kommt bald!",
-  "zeugnis.end.body": "Du hast Klasse 3 geschafft. Klasse 4 wird noch gebaut, aber du kannst weiterspielen: Jeder neue Tag ist ein weiteres Schuljahr in Klasse 3, mit mehr Abenteuern, Aufträgen und Unterricht. Danke fürs Spielen!"
+  "zeugnis.end.body": "Du hast Klasse 3 geschafft. Klasse 4 wird noch gebaut, aber du kannst weiterspielen: Jeder neue Tag ist ein weiteres Schuljahr in Klasse 3, mit mehr Abenteuern, Aufträgen und Unterricht. Danke fürs Spielen!",
+  "xp.levelUp": "Stufenaufstieg! {who} ist jetzt auf Stufe {level}!"
 }

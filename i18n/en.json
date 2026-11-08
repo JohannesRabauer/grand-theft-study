@@ -773,5 +773,6 @@
   "zeugnis.next": "Next report card",
   "zeugnis.continue": "Continue",
   "zeugnis.end.title": "Class 4 is coming soon!",
-  "zeugnis.end.body": "You finished class 3. Class 4 is still being built, but you can keep playing: every new day is another school year in class 3, with more adventures, missions and lessons. Thank you for playing!"
+  "zeugnis.end.body": "You finished class 3. Class 4 is still being built, but you can keep playing: every new day is another school year in class 3, with more adventures, missions and lessons. Thank you for playing!",
+  "xp.levelUp": "Level up! {who} is now level {level}!"
 }

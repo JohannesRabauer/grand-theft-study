@@ -66,7 +66,8 @@ export const zeugnis = {
     step(2);
     tap();
     assert('the bad year gets a Zeugnis too, put as a bonus lap with the comeback bonus', top()?.id === 'reportCard' && !top().cards[0].promotion.promoted && top().result.text.includes(ctx.t('zeugnis.repeat')) && top().bonus.text.length > 5);
-    assert('the bonus was paid once: xp, pocket money and the perk', ctx.state.players[0].xp === xp0 + 150 && ctx.state.shared.money === money0 + 500 && flags()['perk.extraHints.0'] === true && flags()['zeugnis.21.0'] === 'repeat', `${money0} -> ${ctx.state.shared.money}, xp ${xp0} -> ${ctx.state.players[0].xp}`);
+    assert('the bonus was paid once: xp, pocket money and the perk', ctx.state.players[0].xp === xp0 + 150 + ctx.progress.rules.find(r => r.event === 'zeugnis:done' && r.filter?.promoted === false).amount && // the comeback bonus plus the xp of a finished year
+       ctx.state.shared.money === money0 + 500 && flags()['perk.extraHints.0'] === true && flags()['zeugnis.21.0'] === 'repeat', `${money0} -> ${ctx.state.shared.money}, xp ${xp0} -> ${ctx.state.players[0].xp}`);
     const pages2 = top().cards.length;
     for (let i = 0; i < pages2; i++) tap();
     assert('a repeated year ends straight at home, without telling about class 4 again', !top() && ctx.world.id === 'home' && count('day:end-of-class') === 1 && ctx.day.day === 22);
@@ -78,6 +79,7 @@ export const zeugnis = {
     ctx.saves.activeSlot = slot0;
     ctx.day.mode = 'freeplay';
     ctx.state.replace(data0);
+    for (const pl of ctx.players) ctx.characters.refresh(pl); // the speed modifiers follow the restored attributes (a replace does not refresh them)
     ctx.state.dispatch('clock.set', { day: 1, minute: 465, phase: 'commute' });
     ctx.chase.reset();
     player.teleport(home0.x, home0.y);

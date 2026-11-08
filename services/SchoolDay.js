@@ -85,6 +85,7 @@ export class SchoolDay {
           throw new Error(`school: could not record lesson for player ${p.player}`);
         }
       }
+      for (const p of result.perPlayer) ctx.events.emit('lesson:done', { player: p.player, subject: lesson.subject, lessonId: lesson.id, effort: p.effort, score: p.score }); // Wissen and the Mitarbeit Kopfnote listen for it
       ctx.events.emit('lesson:completed', { lesson, players });
       if (ctx.schoolEvents?.popQuiz(lesson)) await this.popQuiz(lesson, players); // story 8.4: an unannounced extra round
       if (!this.next()) {

@@ -83,6 +83,7 @@ export class Minigames {
     const { ctx } = this;
     for (const p of result.perPlayer) if (p.xp > 0) ctx.state.dispatch('xp.add', { player: p.player, amount: p.xp });
     if (result.moneyCents > 0) ctx.state.dispatch('wallet.earn', { cents: result.moneyCents, reason: `minigame:${result.id}` });
+    if (!result.quit) for (const p of result.perPlayer) for (let i = 0; i < p.correct; i++) ctx.events.emit('quiz:correct', { player: p.player, subject: result.subject }); // story 10.2: Wissen grows a little with every right answer
     ctx.events.emit('minigame:done', { id: result.id, result, players: result.perPlayer.map(p => p.player) });
   }
 

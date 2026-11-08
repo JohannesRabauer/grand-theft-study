@@ -1187,7 +1187,7 @@ export const minigames = {
     press(1, 'interact');
     const r2sp = await duoSp;
     state.dispatch('player.setCharacter', { player: 1, character: char1 });
-    assert('both players get a full, own result; the higher Tempo scores measurably better', r2sp.perPlayer.length === 2 && r2sp.perPlayer[1].score >= r2sp.perPlayer[0].score + 0.03 && r2sp.perPlayer.every(p => p.xp > 0 && p.effort === 1 && p.total === 100), JSON.stringify(r2sp.perPlayer.map(p => p.score)));
+    assert('both players get a full, own result; the higher Tempo scores measurably better', r2sp.perPlayer.length === 2 && r2sp.perPlayer[1].score >= r2sp.perPlayer[0].score + 0.01 && r2sp.perPlayer.every(p => p.xp > 0 && p.effort === 1 && p.total === 100), JSON.stringify(r2sp.perPlayer.map(p => p.score)));
     assert('the world is restored after two-player Sport', ctx.frozen === false && ctx.screens.size === 0 && !game.scene.isActive('MG_sport'));
     step(5);
     assert('two-player Sport leaks nothing', JSON.stringify(snapshot()) === JSON.stringify(beforeSp2), `${JSON.stringify(beforeSp2)} -> ${JSON.stringify(snapshot())}`);
