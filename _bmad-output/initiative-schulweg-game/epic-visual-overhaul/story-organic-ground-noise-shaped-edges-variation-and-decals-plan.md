@@ -39,4 +39,4 @@ Rework the ground bake in EnvArt/World so surface borders follow a seeded noise 
 ## Outcome
 
 - Built as planned. Deviation: the overlay is two buffers (before and after the edge strips) and the lane/asphalt border fray was added (their tile border is the longest ground seam). Tone steps are one 5-bit colour bin so every level is its own flat colour; luminance is biased light to keep night walkable luminance (limits and numbers in docs/shots/overhaul/after-16-5/index.md).
-- For 16.4 (soft shadows): ground shadows should read nv-shadow-* strips and the tone patches; the ground is one RenderTexture per chunk with an overlay drawn between base tiles and edges, so a shadow layer must sit above the ground container (depth -1), not inside the bake.
+- For 16.4 (soft shadows): ground shadows should read env-shadow-* strips and the tone patches; the ground is one RenderTexture per chunk with an overlay drawn between base tiles and edges, so a shadow layer must sit above the ground container (depth -1), not inside the bake.
