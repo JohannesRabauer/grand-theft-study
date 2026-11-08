@@ -195,7 +195,7 @@
   "bully-scooter": {
     "texture": "bully-scooter",
     "faceHeading": true,
-    "maxSpeed": 165,
+    "maxSpeed": 148,
     "accel": 240,
     "turnRate": 230,
     "grip": 8,

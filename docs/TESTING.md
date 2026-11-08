@@ -31,6 +31,12 @@ node scripts/check-content.mjs --encode <word>          # print the stored form
 
 When a legitimate string is flagged, reword it; use `--allow` only for a real collision (a different, harmless word).
 
+### Standing reviews (stories 14.3 and 14.4)
+
+- `check-tone.mjs`: every text in both languages (placeholders match, German speaks to kids with du, no shouting, no blame in texts that react to mistakes).
+- `check-balance.mjs`: economy (first ride in about a week of ordinary play), progress and chase speeds stay inside chosen ranges.
+- Smoke scenario `fullDay` (last): a whole game day solo and in co-op through the real day flow. Cross-browser list: `docs/CROSS-BROWSER.md`.
+
 ## Smoke test (whole game, headless browser)
 
 Serve the project (`python -m http.server 8080` or `npx serve .`), then:
