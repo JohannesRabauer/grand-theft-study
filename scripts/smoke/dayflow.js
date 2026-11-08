@@ -82,7 +82,9 @@ export const dayFlow = {
     assert('the autosave stored where the game continues: the next morning', saved.length === saves0 + 1 && ctx.day.day === 7 && ctx.day.phase === 'morning');
     assert('the message tells that Mum and Dad bring a kid who is out home', top().body.text.includes(ctx.t('day.bedtime.away')));
     tap();
-    assert('after the message the family is at home, on foot, and the morning begins', ctx.world.id === 'home' && !ctx.frozen && count('day:morning', e => e.day === 7) === 1 && player.vehicle === 'foot' && ctx.chase.level === 0);
+    assert('the report card of the school year follows the good-night message', top()?.id === 'reportCard' && ctx.frozen);
+    tap();
+    assert('after the message and the report card the family is at home, on foot, and the morning begins', ctx.world.id === 'home' && !ctx.frozen && count('day:morning', e => e.day === 7) === 1 && player.vehicle === 'foot' && ctx.chase.level === 0);
 
     // ---- put everything back
     ctx.world.load('town', 'from-home');

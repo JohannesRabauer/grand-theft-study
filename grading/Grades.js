@@ -3,7 +3,7 @@
 // The Zeugnis screen itself comes later (epic 8) and builds on reportCard().
 import {
   gradeDetail, improvementFor, average, countOf, trend, zeugnisGrades, evaluatePromotion,
-  kopfnotenSummary, eventMatches, selectTeacherComment, selectParentReaction
+  kopfnotenSummary, eventMatches, selectTeacherComment, selectParentReaction, yearLedger
 } from './gradeCore.js';
 
 export class Grades {
@@ -83,6 +83,30 @@ export class Grades {
       teacherComment: this.teacherComment(p.grades, p.kopfnoten, lang),
       parentLine: this.text(selectParentReaction(promotion.promoted, p.grades, this.parents), lang)
     };
+  }
+
+  // The Zeugnis of the school year `day` for one kid (story 8.6): only that day's grades count; the conduct is as it stands.
+  yearCard(player, day, lang) {
+    const p = this.ctx.state.players[player];
+    const ledger = yearLedger(p.grades, day);
+    const zeugnis = zeugnisGrades(ledger);
+    const kopfnoten = this.kopfnotenSummary(player);
+    const promotion = evaluatePromotion(zeugnis, kopfnoten.values, this.cfg);
+    return {
+      day, average: average(ledger), zeugnis, kopfnoten, promotion,
+      teacherComment: this.text(selectTeacherComment(ledger, p.kopfnoten, this.comments, this.kopfCfg), lang),
+      parentLine: this.text(selectParentReaction(promotion.promoted, ledger, this.parents), lang)
+    };
+  }
+
+  // Pays out the consequence of the Zeugnis once per kid and year: promoted, or the comeback bonus of a repeated year.
+  // Returns the card with `applied` (false when this year was already settled).
+  settleYear(player, day, lang) {
+    const card = this.yearCard(player, day, lang);
+    const { promoted, comebackBonus } = card.promotion;
+    const applied = this.ctx.state.dispatch('zeugnis.apply', { player, day, promoted, bonus: comebackBonus });
+    if (applied) this.ctx.events.emit('zeugnis:done', { player, day, promoted });
+    return { ...card, applied };
   }
 
   #onEvent(row, payload) {

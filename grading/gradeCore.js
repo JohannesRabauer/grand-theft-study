@@ -77,6 +77,14 @@ export function improvementFor(ledger, subject, score) {
   return last === null || last === undefined ? 0 : round2(score - last);
 }
 
+// The ledger of one school year (one game day): a fresh ledger built from the entries of that day only, so a Zeugnis never
+// counts what was graded in an earlier year. (The entry list is capped, the year's lessons are far below the cap.)
+export function yearLedger(ledger, day) {
+  const out = emptyGrades();
+  for (const e of ledger?.entries ?? []) if (e.day === day) applyRecord(out, e, Infinity);
+  return out;
+}
+
 // Zeugnis grade per subject: the rounded subject average (x.5 rounds to the worse grade, like at school).
 export function zeugnisGrades(ledger) {
   return Object.fromEntries(Object.entries(ledger?.bySubject ?? {}).filter(([, t]) => t.n > 0).map(([s, t]) => [s, Math.round(t.sum / t.n)]));

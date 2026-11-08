@@ -158,6 +158,28 @@ export const ACTIONS = {
     return { path: `players.${player}.cosmetics` };
   },
 
+  // The consequence of a Zeugnis (story 8.6), once per kid and school year (= game day): promoted marks Klasse 4 as reached
+  // (flag klasse4, the content of the next class comes later); a repeated year pays the comeback bonus - xp, pocket money and a
+  // perk flag - so that repeating always feels like a fresh start, never a punishment.
+  'zeugnis.apply'(s, { player, day, promoted, bonus = null }, cfg) {
+    const p = s.players[player];
+    if (!p || !positiveInt(day) || typeof promoted !== 'boolean') return reject('bad-payload');
+    const key = `zeugnis.${day}.${player}`;
+    if (s.shared.flags[key]) return reject('already-done');
+    s.shared.flags[key] = promoted ? 'promoted' : 'repeat';
+    const path = ['shared.flags'];
+    if (promoted) s.shared.flags.klasse4 = true;
+    else if (bonus) {
+      if (!Number.isInteger(bonus.xp) || bonus.xp < 0 || !Number.isInteger(bonus.moneyCents) || bonus.moneyCents < 0) return reject('bad-payload');
+      p.xp += bonus.xp;
+      p.level = Math.min(cfg.maxLevel, 1 + Math.floor(p.xp / cfg.xpPerLevel));
+      s.shared.money += bonus.moneyCents;
+      if (bonus.perk) s.shared.flags[`perk.${bonus.perk}.${player}`] = true;
+      path.push(`players.${player}.xp`, `players.${player}.level`, 'shared.money');
+    }
+    return { path };
+  },
+
   // Missions (story 9.1): shared.quests = { active: [{ id, step }], done: [ids] }. Started once (or once a day when it repeats),
   // advanced a step at a time and finished with the last one; the runner pays the reward.
   'quest.start'(s, { id }, cfg) {
