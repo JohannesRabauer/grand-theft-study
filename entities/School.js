@@ -1,11 +1,13 @@
 import { SchoolDay } from '../services/SchoolDay.js';
+import { SchoolEvents } from '../services/schoolEvents.js';
 import { TimetableScreen } from '../ui/screens/TimetableScreen.js';
 
 export class School {
-  constructor(scene, ctx, cfg, minigames) {
+  constructor(scene, ctx, cfg, minigames, eventsCfg) {
     this.scene = scene;
     this.ctx = ctx;
     this.day = ctx.school = new SchoolDay(ctx, cfg, minigames);
+    this.events = new SchoolEvents(ctx, eventsCfg); // story 8.4: homework check, pop quiz, substitute teacher
     this.parts = [];
     this.labels = [];
     this.spot = null;

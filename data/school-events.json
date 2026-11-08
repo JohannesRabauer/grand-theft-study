@@ -1,0 +1,7 @@
+{
+  "_doc": "Surprise events in the school day (story 8.4, services/schoolEvents.js). The schedule of a game day comes from `seed` and the day number, so a given day always has the same surprises. homeworkCheck: before this lesson (index, 0 = the first) the teacher checks each kid's homework against what they packed (data/morning.json item `homework`); a forgotten one emits homework:forgotten, otherwise homework:done (both move the Ordnung Kopfnote through data/kopfnoten.json). popQuiz: with this chance per day an unannounced extra round of that lesson's subject follows one lesson from `fromLesson` on and is graded like a lesson. substitute: with this chance per day a substitute teacher (one of `names`, i18n school.sub.<n>.name / .quirk) takes the `lesson`. Texts: school.event.*.",
+  "seed": 7,
+  "homeworkCheck": { "lesson": 0, "item": "homework" },
+  "popQuiz": { "chance": 0.6, "fromLesson": 1 },
+  "substitute": { "chance": 0.35, "lesson": 0, "names": [1, 2, 3] }
+}

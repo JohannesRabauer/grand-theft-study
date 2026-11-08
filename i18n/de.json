@@ -733,5 +733,16 @@
   "mission.friendship-3.intro": "Zeit, es offiziell zu machen: Lade den großen Jungen zum Spielen in den Park ein. Klingle dreimal mit deiner Fahrradklingel, damit es alle hören.",
   "mission.friendship-3.step1": "Klingle dreimal mit deiner Klingel",
   "mission.friendship-3.step2": "Triff alle im Park",
-  "mission.friendship-3.done": "Jetzt seid ihr Freunde! Rüpel lassen dich viel öfter in Ruhe."
+  "mission.friendship-3.done": "Jetzt seid ihr Freunde! Rüpel lassen dich viel öfter in Ruhe.",
+  "school.notice.events": "{events}\n\n{base}",
+  "school.event.homework.ok": "Hausaufgabenkontrolle: {who} hat die Hausaufgaben dabei. Gut gemacht!",
+  "school.event.homework.forgot": "Hausaufgabenkontrolle: {who} hat die Hausaufgaben vergessen. Kein Problem, bring sie morgen mit!",
+  "school.event.substitute": "Heute unterrichtet {name} als Vertretung. {quirk}",
+  "school.sub.1.name": "Herr Pfeffer",
+  "school.sub.1.quirk": "Er stellt alle Fragen mit lustigen Stimmen.",
+  "school.sub.2.name": "Frau Knödel",
+  "school.sub.2.quirk": "Sie bringt den Schlauen immer einen Snack mit.",
+  "school.sub.3.name": "Herr Pfiff",
+  "school.sub.3.quirk": "Er pfeift ein Liedchen, wenn du es richtig hast.",
+  "school.popquiz.notice": "Überraschung! Ein Test aus dem Stand! Zeig, was du gerade gelernt hast."
 }

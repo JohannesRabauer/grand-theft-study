@@ -733,5 +733,16 @@
   "mission.friendship-3.intro": "Time to make it official: invite the big kid to play in the park. Ring your bike bell three times so everybody hears the invitation.",
   "mission.friendship-3.step1": "Ring your bell three times",
   "mission.friendship-3.step2": "Meet everybody in the park",
-  "mission.friendship-3.done": "Now you are friends! Bullies leave you alone far more often."
+  "mission.friendship-3.done": "Now you are friends! Bullies leave you alone far more often.",
+  "school.notice.events": "{events}\n\n{base}",
+  "school.event.homework.ok": "Homework check: {who} has the homework. Well done!",
+  "school.event.homework.forgot": "Homework check: {who} forgot the homework. No worries, bring it tomorrow!",
+  "school.event.substitute": "Today {name} is your substitute teacher. {quirk}",
+  "school.sub.1.name": "Mr. Pepper",
+  "school.sub.1.quirk": "He asks all his questions in funny voices.",
+  "school.sub.2.name": "Ms. Dumpling",
+  "school.sub.2.quirk": "She always brings a snack for the clever ones.",
+  "school.sub.3.name": "Mr. Whistle",
+  "school.sub.3.quirk": "He whistles a little tune whenever you get it right.",
+  "school.popquiz.notice": "Surprise! A pop quiz! Show what you just learned."
 }

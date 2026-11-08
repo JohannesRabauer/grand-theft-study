@@ -46,6 +46,27 @@ export class SchoolDay {
       && ['morning', 'commute', 'school'].includes(this.ctx.day.phase) && !!this.next();
   }
 
+  // The lesson introduction's text: what is missing from the bags, and the surprises of the day (homework check, substitute
+  // teacher) read before the lesson starts. Story 8.4.
+  noticeFor(lesson, players) {
+    const { ctx } = this;
+    const base = ctx.home?.lessonNotice(lesson, players) ?? null;
+    const extra = ctx.schoolEvents?.before(lesson, players);
+    if (!extra?.lines.length) return base;
+    return { key: 'school.notice.events', params: { events: extra.lines.join('\n'), base: base ? ctx.t(base.key, base.params) : '' } };
+  }
+
+  // A pop quiz: one more round of the lesson's subject, graded like a lesson (its own ledger id, so the lesson itself is untouched).
+  async popQuiz(lesson, players) {
+    const { ctx } = this;
+    const id = `${lesson.id}-quiz`;
+    ctx.events.emit('school:popquiz', { lesson, players });
+    const result = await ctx.minigames.start(lesson.minigame, { players, context: 'lesson', lessonId: id, notice: { key: 'school.popquiz.notice', params: {} } });
+    if (this.closed || result.quit) return result;
+    for (const p of result.perPlayer) ctx.grades.grade(p.player, lesson.subject, { ...p, difficulty: result.difficulty, lessonId: id });
+    return result;
+  }
+
   async attend() {
     const { ctx } = this;
     if (!this.canAttend()) throw new Error('school: no lesson available here now');
@@ -56,7 +77,7 @@ export class SchoolDay {
       while (ctx.day.phase !== 'school') ctx.day.advance('attend-school');
       ctx.day.skipTo(Math.max(ctx.day.minute, lesson.start), 'lesson-start');
       ctx.events.emit('lesson:started', { lesson, players });
-      const notice = ctx.home?.lessonNotice(lesson, players);
+      const notice = this.noticeFor(lesson, players);
       const result = await ctx.minigames.start(lesson.minigame, { players, context: 'lesson', lessonId: lesson.id, notice });
       if (this.closed || result.quit) return result;
       for (const p of result.perPlayer) {
@@ -65,6 +86,7 @@ export class SchoolDay {
         }
       }
       ctx.events.emit('lesson:completed', { lesson, players });
+      if (ctx.schoolEvents?.popQuiz(lesson)) await this.popQuiz(lesson, players); // story 8.4: an unannounced extra round
       if (!this.next()) {
         ctx.day.advance('lessons-complete');
         ctx.events.emit('ui:toast', { key: 'school.finished' });

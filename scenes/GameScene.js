@@ -165,7 +165,7 @@ export class GameScene extends Phaser.Scene {
     this.defense = new DefenseController(this, ctx, cache.get('karate')); // story 6.3: block, dodge, Kiai; the chase director asks it before a catch
     this.karate = new Karate(ctx, cache.get('karate')); // story 6.4: belts, training points and the daily limit (ctx.karate)
     this.dojo = new Dojo(this, ctx, cache.get('karate')); // the dojo building in the town, the sensei and the belt rack inside
-    this.school = new School(this, ctx, cache.get('timetable'), cache.get('minigames').minigames);
+    this.school = new School(this, ctx, cache.get('timetable'), cache.get('minigames').minigames, cache.get('school-events'));
     this.home = new Home(this, ctx, cache.get('morning'));
     this.commute = new Commute(this, ctx, cache.get('commute')); // story 8.2: the bell, the tram, pickups
     this.shops = new Shops(this, ctx, cache.get('shop'), cache.get('input')); // story 10.1: the market shops and the bakery
