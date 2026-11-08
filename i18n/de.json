@@ -1035,5 +1035,10 @@
   "grownup.janitor.calm": "Der Hausmeister schüttelt den Kopf und geht zu seinem Besen zurück.",
   "grownup.inspector.shout": "Der Kontrolleur: Moment! Zeig mir mal deinen Fahrschein!",
   "grownup.inspector.caught": "Der Kontrolleur: Kauf nächstes Mal bitte einen Fahrschein. Dann ist alles gut.",
-  "grownup.inspector.calm": "Der Kontrolleur tippt an seine Mütze und geht weg."
+  "grownup.inspector.calm": "Der Kontrolleur tippt an seine Mütze und geht weg.",
+  "activity.talk.title": "Der Rowdy hält dich auf",
+  "activity.stage.talk": "Antworte, vielleicht lässt er dich in Ruhe!",
+  "talk.charm.ok": "Du hast ihn mit einem breiten Lächeln überredet. Er zuckt mit den Schultern und geht.",
+  "talk.question.ok": "Richtig! Er ist beeindruckt und zieht ab.",
+  "talk.gentle": "Nicht ganz. Diesmal lässt er dich laufen - renn!"
 }

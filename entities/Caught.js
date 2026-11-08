@@ -24,6 +24,7 @@ export class Caught {
   trigger(index) {
     const slot = this.slots[index];
     if (slot.active) return;
+    if (this.ctx.talkdown?.intercept(index)) return; // levels 1-2: talk down or answer a question first (story 7.5)
     const { ctx, cfg } = this;
     slot.active = true;
     slot.t = 0;

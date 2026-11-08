@@ -8,6 +8,12 @@
     "spawnByLevel": [[], ["foot"], ["foot", "bike", "foot"], ["foot", "bike", "foot", "bike"], ["foot", "bike", "scooter", "bike", "foot"], ["foot", "scooter", "bike", "scooter", "foot", "bike"]],
     "coopExtraByLevel": [[], ["foot"], ["foot"], ["foot"], ["foot"], ["foot"]]
   },
+  "talk": {
+    "_doc": "Charme talk-down and question back-off (story 7.5, services/talkLogic.js, entities/TalkDown.js). At Aerger levels 1..maxLevel a bully's touch does not catch at once: first the Charme check succeeds with chance base + perPoint * Charme (at most max, never sure), then a question (data/activities.json talk, learning context bully) can make him back off; success ends the chase. A wrong answer is gentle: nobody is caught this time and a touch is swallowed for graceSeconds of play.",
+    "maxLevel": 2,
+    "charm": { "base": 0.15, "perPoint": 0.07, "max": 0.85, "pivot": 5 },
+    "graceSeconds": 3
+  },
   "lookout": {
     "_doc": "Phone lookouts (story 7.2, entities/Lookouts.js): the map objects `lookout` stand and watch with a phone. A player on foot or riding inside `radius` px who is not hidden is spotted: the lookout emits lookout:spotted, calls the gang (the Aerger level rises by `raise`, at least to 1) and exposes the player for `exposeSeconds` (hiding spots do not work meanwhile). A lookout needs `cooldown` seconds before it spots again.",
     "radius": 90,

@@ -26,6 +26,7 @@ checks.push('check-phone.mjs');
 checks.push('check-important-text.mjs');
 checks.push('check-age.mjs');
 checks.push('check-grownups.mjs');
+checks.push('check-talk.mjs');
 for (const c of checks) {
   console.log(`\n== ${c}`);
   const r = spawnSync(process.execPath, [join(dir, c)], { stdio: 'inherit', cwd: join(dir, '..') });

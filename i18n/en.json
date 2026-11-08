@@ -1035,5 +1035,10 @@
   "grownup.janitor.calm": "The janitor shakes his head and goes back to his broom.",
   "grownup.inspector.shout": "The ticket inspector: Hold on! Let me see your ticket!",
   "grownup.inspector.caught": "The inspector: Next time buy a ticket, please. Then everything is fine.",
-  "grownup.inspector.calm": "The inspector tips his cap and walks away."
+  "grownup.inspector.calm": "The inspector tips his cap and walks away.",
+  "activity.talk.title": "The bully stops you",
+  "activity.stage.talk": "Answer and he might leave you alone!",
+  "talk.charm.ok": "You talked him round with a big smile. He shrugs and leaves.",
+  "talk.question.ok": "Right! He is impressed and backs off.",
+  "talk.gentle": "Not quite. He lets you go this time - run!"
 }

@@ -67,7 +67,7 @@ export class ActivityScreen {
   next() {
     const { ctx } = this;
     const stage = this.stageAt(this.index);
-    this.q = ctx.learning.next(stage.topic, { player: this.player, context: this.activities.cfg.context, filter: fits(stage) });
+    this.q = ctx.learning.next(stage.topic, { player: this.player, context: stage.context ?? this.activities.cfg.context, filter: fits(stage) });
     this.view = this.q ? ctx.learning.localize(this.q) : null;
     this.stage = stage;
     this.sel = 0;
