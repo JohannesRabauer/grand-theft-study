@@ -5,6 +5,7 @@ import { PauseScreen } from '../ui/screens/PauseScreen.js';
 import { TestScreen } from '../ui/screens/TestScreen.js';
 import { HintScreen } from '../ui/screens/HintScreen.js';
 import { StickerAlbumScreen } from '../ui/screens/StickerAlbumScreen.js';
+import { AchievementsScreen } from '../ui/screens/AchievementsScreen.js';
 import { Hints } from '../services/Hints.js';
 
 // Overlay host (AD-27): HUD modules from data/hud.json plus the screen stack. Reads only; never mutates
@@ -30,6 +31,7 @@ export class UIScene extends Phaser.Scene {
       this.screens.push(new HintScreen(this, ctx, this.screens, { mode: 'hint', ids: [def.id], audience, inputCfg, onDone: confirmed => (confirmed ? done() : ctx.hints?.abandon()) }));
     });
     ctx.openHelp = () => this.screens.push(new HintScreen(this, ctx, this.screens, { mode: 'browse', ids: hintCfg.hints.map(h => h.id), index: 0, inputCfg }));
+    ctx.openAchievements = () => this.screens.push(new AchievementsScreen(this, ctx, this.screens, ctx.achievements)); // story 10.4
     ctx.openAlbum = () => this.screens.push(new StickerAlbumScreen(this, ctx, this.screens, ctx.stickers)); // story 10.3
     this.ducked = false;
     ctx.duckHud = (on) => { // AD-20: a minigame covers the HUD
@@ -61,6 +63,7 @@ export class UIScene extends Phaser.Scene {
       delete ctx.hints;
       delete ctx.openHelp;
       delete ctx.openAlbum;
+      delete ctx.openAchievements;
       for (const m of this.hudList) m.destroy();
       delete ctx.screens;
       delete ctx.duckHud;

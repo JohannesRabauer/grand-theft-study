@@ -64,6 +64,7 @@ export const zeugnis = {
     const xp0 = ctx.state.players[0].xp;
     ctx.day.advance('time');
     step(2);
+    assert('the second good-lessons day in a row puts the streak into the good-night message', top()?.id === 'message' && top().body.text.includes(ctx.t('streak.school.name')), top()?.body?.text);
     tap();
     assert('the bad year gets a Zeugnis too, put as a bonus lap with the comeback bonus', top()?.id === 'reportCard' && !top().cards[0].promotion.promoted && top().result.text.includes(ctx.t('zeugnis.repeat')) && top().bonus.text.length > 5);
     assert('the bonus was paid once: xp, pocket money and the perk', ctx.state.players[0].xp === xp0 + 150 + ctx.progress.rules.find(r => r.event === 'zeugnis:done' && r.filter?.promoted === false).amount && // the comeback bonus plus the xp of a finished year

@@ -10,6 +10,7 @@
   "message": { "freezesWorld": true },
   "reportCard": { "freezesWorld": true },
   "album": { "freezesWorld": true },
+  "achievements": { "freezesWorld": true },
   "test": { "freezesWorld": true },
   "testHint": { "freezesWorld": false }
 }

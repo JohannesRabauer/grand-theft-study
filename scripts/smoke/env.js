@@ -21,6 +21,7 @@ export function createEnv(game, h, assert, savedLang) {
   const hud = (id) => ui.hud.get(id);
   assert('game and UI scenes running', game.scene.isActive('Game') && game.scene.isActive('UI') && !!ctx);
   for (const id of ctx.state.cfg.vehicleIds) ctx.ownership.unlock(id, 'garage'); // the earlier scenarios mount whatever lies around; scenario `vehicles` tests the locks
+  ctx.achievements.cfg.xpReward = 0; // older scenarios pin exact xp totals; the reward of an unlock is covered by check-achievements
   ctx.input.update = () => {};
   const intent = ctx.input.intent;
   intent.aim = null;

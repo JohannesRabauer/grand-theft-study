@@ -1,0 +1,33 @@
+{
+  "_doc": "Achievements and daily streaks (story 10.4, services/achievements.js). An achievement counts matching events (`filter`: payload fields that must be equal, `min`: numeric payload fields at least this much, `n`: how many) separately for each kid the event names (payload.players, payload.player, else everybody) and unlocks once, with a celebration and `xpReward` xp. A streak counts days in a row on which a kid met its condition, settled when the day ends (lessons: at least `min` graded lessons that day; onTime: arrived at school in time; mission: finished a mission); missing a day starts again from zero, kindly. `milestones` pay `xp` times the days. Progress lives in shared.flags (ach.count.<id>.<player>, ach.<id>.<player>, streak.<id>.<player>, helped.<day>.<player>). Names and descriptions: i18n ach.<id>.name / .desc, streak.<id>.name / .desc.",
+  "xpReward": 10,
+  "milestones": [3, 5, 7, 10],
+  "streakXpPerDay": 5,
+  "streaks": [
+    { "id": "school", "cond": "lessons", "min": 3 },
+    { "id": "punctual", "cond": "onTime" },
+    { "id": "helper", "cond": "mission" }
+  ],
+  "achievements": [
+    { "id": "first-lesson", "event": "lesson:done", "n": 1 },
+    { "id": "bookworm", "event": "lesson:done", "n": 10 },
+    { "id": "top-marks", "event": "grades:recorded", "filter": {"grade": 1}, "n": 3 },
+    { "id": "early-bird", "event": "commute:ontime", "n": 3 },
+    { "id": "bell-ringer", "event": "bike:bell", "n": 25 },
+    { "id": "trick-master", "event": "style:banked", "n": 10 },
+    { "id": "sharp-shooter", "event": "prop:hit", "filter": {"source": "slingshot"}, "n": 20 },
+    { "id": "globetrotter", "event": "tram:ride", "n": 5 },
+    { "id": "helper", "event": "mission:done", "n": 3 },
+    { "id": "egg-baron", "event": "mission:done", "filter": {"id": "grandma"}, "n": 1 },
+    { "id": "race-winner", "event": "race:won", "n": 1 },
+    { "id": "karate-kid", "event": "karate:belt", "n": 1 },
+    { "id": "collector", "event": "sticker:collected", "n": 10 },
+    { "id": "shopper", "event": "shop:bought", "n": 3 },
+    { "id": "fashion-icon", "event": "shop:bought", "filter": {"type": "cosmetic"}, "n": 1 },
+    { "id": "level-five", "event": "level:up", "min": {"level": 5}, "n": 1 },
+    { "id": "friend", "event": "mission:done", "filter": {"id": "friendship-3"}, "n": 1 },
+    { "id": "second-lap", "event": "zeugnis:done", "filter": {"promoted": false}, "n": 1 },
+    { "id": "class-act", "event": "zeugnis:done", "filter": {"promoted": true}, "n": 1 },
+    { "id": "streaker", "event": "streak:up", "min": {"n": 3}, "n": 1 }
+  ]
+}

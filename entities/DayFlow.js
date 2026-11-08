@@ -71,6 +71,7 @@ export class DayFlow {
       const n = ctx.state.players[p.index].grades.entries.filter(e => e.day === day).length;
       lines.push(ctx.t('day.bedtime.lessons', { who: p.character?.name ?? ctx.t('menu.slot.player', { n: p.index + 1 }), n }));
     }
+    lines.push(...(ctx.achievements?.settleDay(day) ?? [])); // the day's streaks (story 10.4)
     const done = () => this.reportCard(day);
     if (!ctx.screens) { done(); return; }
     ctx.screens.push(new MessageScreen(this.scene.scene.get('UI'), ctx, ctx.screens, { title: ctx.t('day.bedtime.title'), lines, inputCfg: this.inputCfg, onDone: done }));
