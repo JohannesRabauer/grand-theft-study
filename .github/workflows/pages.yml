@@ -43,7 +43,7 @@ jobs:
           cp index.html main.js sw.js manifest.webmanifest _site/
           cp -r icons _site/
           sed -i "s/schulweg-dev/schulweg-${GITHUB_SHA::7}/" _site/sw.js
-          for d in ai camera characters data defense entities grading i18n learning minigames missions particles physics scenes services state tools ui vehicles; do cp -r "$d" _site/; done
+          for d in ai camera characters data defense entities grading i18n learning minigames missions particles physics render scenes services state tools ui vehicles; do cp -r "$d" _site/; done
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
