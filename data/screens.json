@@ -16,6 +16,7 @@
   "activity": { "freezesWorld": true },
   "fastTravel": { "freezesWorld": true },
   "chores": { "freezesWorld": true },
+  "phone": { "freezesWorld": true },
   "parentSettings": { "freezesWorld": true },
   "test": { "freezesWorld": true },
   "testHint": { "freezesWorld": false }

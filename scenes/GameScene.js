@@ -55,6 +55,7 @@ import { Stickers } from '../services/stickers.js';
 import { Achievements } from '../services/achievements.js';
 import { PlayTime } from '../services/PlayTime.js';
 import { Activities } from '../entities/Activities.js';
+import { Phone } from '../entities/Phone.js';
 import { Cosmetics } from '../entities/Cosmetics.js';
 import { Home } from '../entities/Home.js';
 import { morningStartMap } from '../services/Morning.js';
@@ -183,6 +184,7 @@ export class GameScene extends Phaser.Scene {
     this.stickers = new Stickers(ctx, cache.get('stickers')); // story 10.3: the sticker collection
     this.achievements = new Achievements(ctx, cache.get('achievements')); // story 10.4: achievements and daily streaks
     this.activities = new Activities(this, ctx, cache.get('activities'), cache.get('input')); // story 9.2: the Pfand machine and the bakery counter
+    this.phone = new Phone(this, ctx, cache.get('phone')); // story 11.3
     this.playTime = new PlayTime(ctx, minutes => ctx.quests.show(ctx.t('parent.reminder.title'), [ctx.t('parent.reminder.body', { n: minutes })])); // story 11.4: the break reminder
     this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
     this.garage = new Garage(this, ctx);
@@ -365,6 +367,7 @@ export class GameScene extends Phaser.Scene {
     this.stepPhysics(delta);
     if (this.ctx.input.intent.weather) this.ctx.weather.toggle(); // global intents come from P1 only
     if (this.ctx.input.intent.map) this.ctx.minimap?.toggle(); // story 11.2
+    if (this.ctx.input.intent.phone) this.ctx.phone?.toggle(); // story 11.3
 
     this.ctx.day.update(dt);
     this.ctx.wind.update(dt);

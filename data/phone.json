@@ -1,0 +1,17 @@
+{
+  "_doc": "The phone (story 11.3, services/phoneLogic.js, entities/Phone.js): a message arrives when its event `on` fires with a payload that satisfies `match` (equal fields) and `min` (at least); `perDay` lets it arrive once a game day, otherwise once per game. `from` is mom, friend or bully (the taunts of the bully gang tease, they are never nasty). Texts: phone.msg.<id>, senders phone.from.<from>. The inbox keeps the newest `max` messages in the flag phone.inbox.",
+  "max": 30,
+  "senders": ["mom", "friend", "bully"],
+  "messages": [
+    { "id": "mom-morning", "from": "mom", "on": "day:morning", "perDay": true },
+    { "id": "mom-ontime", "from": "mom", "on": "commute:ontime", "perDay": true },
+    { "id": "mom-late", "from": "mom", "on": "school:late", "perDay": true },
+    { "id": "mom-peace", "from": "mom", "on": "family:peace", "perDay": true },
+    { "id": "friend-pfand", "from": "friend", "on": "activity:done", "match": { "id": "pfand" } },
+    { "id": "friend-bakery", "from": "friend", "on": "activity:done", "match": { "id": "bakery" } },
+    { "id": "friend-route", "from": "friend", "on": "activity:done", "match": { "id": "route" } },
+    { "id": "friend-tram", "from": "friend", "on": "tram:unlocked" },
+    { "id": "bully-seen", "from": "bully", "on": "chase:level", "min": { "level": 1 }, "perDay": true },
+    { "id": "bully-caught", "from": "bully", "on": "bully:caught-contact", "perDay": true }
+  ]
+}

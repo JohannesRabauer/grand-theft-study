@@ -6,11 +6,11 @@
 // Edge intents (true for exactly one frame per press): interact, toolNext, toolPrev, kiai (karate shout), map, weather, pause.
 // Of those, map / weather / pause are global: only a player bound with `global: true` (P1) can raise them.
 // `answer` (0 = none, 1-4) is the number key pressed this frame, for minigame answer choices.
-export const EDGES = ['interact', 'toolNext', 'toolPrev', 'kiai', 'map', 'weather', 'pause'];
+export const EDGES = ['interact', 'toolNext', 'toolPrev', 'kiai', 'map', 'weather', 'phone', 'pause'];
 // Standard gamepad mapping: A, B, X, Y, LB, RB, LT, RT, Back, Start, stick clicks, d-pad.
 export const PAD = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, LSTICK: 10, RSTICK: 11, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
 export const ANSWER_KEYS = ['answer1', 'answer2', 'answer3', 'answer4'];
-export const ACTIONS = ['left', 'right', 'up', 'down', 'sprint', 'jump', 'manual', 'interact', 'toolPrev', 'toolNext', 'toolUse', 'defend', 'kiai', 'map', 'weather', 'pause', ...ANSWER_KEYS];
+export const ACTIONS = ['left', 'right', 'up', 'down', 'sprint', 'jump', 'manual', 'interact', 'toolPrev', 'toolNext', 'toolUse', 'defend', 'kiai', 'map', 'weather', 'phone', 'pause', ...ANSWER_KEYS];
 
 export function createTouchState() {
   return {
@@ -39,6 +39,7 @@ export function createIntent() {
     toolPrev: false,
     map: false,
     weather: false,
+    phone: false,
     pause: false,
     answer: 0
   };
@@ -137,6 +138,7 @@ export function mapIntent(intent, slot, bind, src, dz) {
   const g = bind.global;
   edge(intent, slot, 'map', g && (k('map') || pb(PAD.BACK)));
   edge(intent, slot, 'weather', g && k('weather'));
+  edge(intent, slot, 'phone', g && k('phone'));
   edge(intent, slot, 'pause', g && (k('pause') || btn.pause || pb(PAD.START)));
   intent.answer = 0;
   for (let i = 0; i < ANSWER_KEYS.length; i++) {

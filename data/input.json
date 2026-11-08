@@ -67,6 +67,9 @@
         "weather": [
           "KeyT"
         ],
+        "phone": [
+          "KeyP"
+        ],
         "pause": [
           "Escape"
         ],
@@ -130,6 +133,7 @@
         ],
         "map": [],
         "weather": [],
+        "phone": [],
         "pause": [],
         "answer1": [
           "Numpad1"
