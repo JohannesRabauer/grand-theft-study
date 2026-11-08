@@ -90,6 +90,7 @@
     "pfand-machine": { "shape": "point", "inWall": false, "fields": {} },
     "chore-board": { "shape": "point", "inWall": false, "fields": {}, "doc": "the chore board at home: interact lists the chores of data/activities.json (entities/Activities.js, ui/screens/ChoreScreen.js)" },
     "lookout": { "shape": "point", "inWall": false, "fields": {}, "doc": "a bully with a phone who spots players inside data/chase.json lookout.radius and calls the gang (entities/Lookouts.js)" },
+    "critter": { "shape": "point", "inWall": "perch", "fields": { "kind": { "type": "enum", "values": ["pigeon", "cat", "duck"], "required": true }, "perch": { "type": "bool" } }, "doc": "a pigeon, a cat on a fence or a duck on the pond (data/critters.json, entities/Critters.js); only a picture, never hittable" },
     "newsstand": { "shape": "point", "inWall": false, "fields": {}, "doc": "the newspaper stand where the newspaper route starts (data/activities.json route, entities/Activities.js)" },
     "bike-rack": { "shape": "point", "inWall": false, "fields": {}, "doc": "a bike let go of within data/theft.json rackRadius is chained here (locked, safe from borrowing)" },
     "bike-hideout": { "shape": "point", "inWall": false, "reach": true, "fields": {}, "doc": "where a bully hides a borrowed bike; the family fetches it back from here (entities/BikeTheft.js)" },

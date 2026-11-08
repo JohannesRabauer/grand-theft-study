@@ -1041,5 +1041,7 @@
   "talk.charm.ok": "Du hast ihn mit einem breiten Lächeln überredet. Er zuckt mit den Schultern und geht.",
   "talk.question.ok": "Richtig! Er ist beeindruckt und zieht ab.",
   "talk.gentle": "Nicht ganz. Diesmal lässt er dich laufen - renn!",
-  "parent.sound": "Ton"
+  "parent.sound": "Ton",
+  "critter.feed": "Enten füttern",
+  "critter.fed": "Die Enten quaken fröhlich und schwimmen heran!"
 }

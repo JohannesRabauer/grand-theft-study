@@ -1041,5 +1041,7 @@
   "talk.charm.ok": "You talked him round with a big smile. He shrugs and leaves.",
   "talk.question.ok": "Right! He is impressed and backs off.",
   "talk.gentle": "Not quite. He lets you go this time - run!",
-  "parent.sound": "Sound"
+  "parent.sound": "Sound",
+  "critter.feed": "Feed the ducks",
+  "critter.fed": "The ducks quack happily and swim over!"
 }

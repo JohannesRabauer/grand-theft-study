@@ -61,6 +61,7 @@ import { Grownups } from '../entities/Grownups.js';
 import { TalkDown } from '../entities/TalkDown.js';
 import { Audio } from '../services/Audio.js';
 import { Music } from '../services/Music.js';
+import { Critters } from '../entities/Critters.js';
 import { Cosmetics } from '../entities/Cosmetics.js';
 import { Home } from '../entities/Home.js';
 import { morningStartMap } from '../services/Morning.js';
@@ -190,6 +191,7 @@ export class GameScene extends Phaser.Scene {
     this.achievements = new Achievements(ctx, cache.get('achievements')); // story 10.4: achievements and daily streaks
     this.activities = new Activities(this, ctx, cache.get('activities'), cache.get('input')); // story 9.2: the Pfand machine and the bakery counter
     this.lookouts = new Lookouts(this, ctx); // story 7.2
+    this.critters = new Critters(this, ctx, cache.get('critters')); // story 12.5
     this.grownups = new Grownups(this, ctx, cache.get('grownups')); // story 7.4
     this.talkdown = new TalkDown(this, ctx); // story 7.5
     this.audio = new Audio(ctx, cache.get('audio')); // story 13.1
@@ -404,6 +406,7 @@ export class GameScene extends Phaser.Scene {
     this.playTime.update(dt);
     this.activities.update();
     this.lookouts.update(dt);
+    this.critters.update(dt);
     this.grownups.update(dt);
     this.talkdown.update(dt);
     this.ammo.update(dt);

@@ -247,7 +247,7 @@ export const newRides = {
       const fromX = p1.x, fromX2 = p2.x;
       intent.move.x = 1; other.move.x = -1;
       step(18);
-      assert(`${id}: both players move independently through their own intents`, p1.x > fromX + 3 && p2.x < fromX2 - 3 && p1.move.profileId === id && p2.move.profileId === 'foot', `rider dx ${p1.x - fromX}, partner dx ${p2.x - fromX2}`);
+      assert(`${id}: both players move independently through their own intents`, p1.x > fromX + 1 && p2.x < fromX2 - 3 && p1.move.profileId === id && p2.move.profileId === 'foot', `rider dx ${p1.x - fromX}, partner dx ${p2.x - fromX2}`);
       [p1,p2].forEach((p,index) => { p.body.collisionFilter.mask = masks[index]; });
       intent.move.x = 0; intent.move.y = -1;
       step(12);

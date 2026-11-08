@@ -1,0 +1,7 @@
+{
+  "_doc": "The town's small animals (story 12.5, services/critterLogic.js, entities/Critters.js): the map objects `critter` (kind pigeon, cat or duck). Pigeons peck on the plazas and scatter when a kid or a fast vehicle comes within scatterRadius px, flying up and away (fleeSpeed px/s, maxLift px high) and returning after returnSeconds; cats sit on fences and run off the same way; ducks swim about (swim px) and gather at a kid who feeds them (interact within feedRadius px of the pond, one feeding rests for feedCooldown s). They are only pictures: no body, so no tool, vehicle or slingshot can ever hit them. Texts: critter.feed.",
+  "vehicleSpeed": 55,
+  "pigeon": { "scatterRadius": 44, "fleeSpeed": 70, "fleeSeconds": 1.4, "returnSeconds": 8, "maxLift": 26, "liftSpeed": 38, "bobSpeed": 7 },
+  "cat": { "scatterRadius": 30, "fleeSpeed": 55, "fleeSeconds": 1.6, "returnSeconds": 12, "maxLift": 0, "liftSpeed": 1, "bobSpeed": 2.2 },
+  "duck": { "scatterRadius": 0, "fleeSpeed": 1, "fleeSeconds": 1, "returnSeconds": 2, "maxLift": 0, "liftSpeed": 1, "bobSpeed": 2, "swim": 14, "feedRadius": 42, "feedSeconds": 3.2, "feedCooldown": 5 }
+}
