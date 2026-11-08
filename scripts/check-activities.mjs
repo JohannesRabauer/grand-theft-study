@@ -18,6 +18,9 @@ assert.equal(questionsIn(stagesOf(cfg, 'bakery', 'en')), 6);
 assert.ok(stagesOf(cfg, 'bakery', 'en')[0].topic === 'englisch' && stagesOf(cfg, 'bakery', 'de')[0].topic === 'deutsch', 'the bakery orders in the language chosen');
 const mp = load('data/maps/town.json').objects.filter(o => o.type === 'pfand-machine');
 assert.ok(mp.length >= 1, 'the town has a Pfand machine');
+const town = load('data/maps/town.json');
+assert.ok(town.objects.some(o => o.type === 'newsstand'), 'the town has a newsstand');
+assert.ok(town.objects.filter(o => o.type === 'sign' && o.board).length >= 3, 'the town has English signs to scan');
 
 // ---- stages are copies (the screen may not change the data)
 stagesOf(cfg, 'pfand')[0].n = 99;
@@ -36,12 +39,15 @@ assert.equal(timesToday(flags, 'pfand', 3, 0), 1);
 assert.ok(canPlay(cfg, flags, 'pfand', 3, 0));
 flags[dayKey('pfand', 3, 0)] = 2;
 assert.ok(!canPlay(cfg, flags, 'pfand', 3, 0), 'two runs a day are enough');
+assert.ok(canPlay(cfg, {}, 'scan', 1, 0, 'a') && !canPlay(cfg, { 'scan.a.0': true }, 'scan', 9, 0, 'a') && canPlay(cfg, { 'scan.a.0': true }, 'scan', 9, 0, 'b') && canPlay(cfg, { 'scan.a.0': true }, 'scan', 9, 1, 'a'), 'a sign is scanned once per kid, on any day');
 assert.ok(canPlay(cfg, flags, 'pfand', 3, 1) && canPlay(cfg, flags, 'pfand', 4, 0) && canPlay(cfg, flags, 'bakery', 3, 0), 'other kid, other day, other activity');
 
 // ---- rewards
 assert.deepEqual(reward(cfg, 'pfand', 'de', 4, 4), { cents: 150, xp: 16 });
 assert.deepEqual(reward(cfg, 'pfand', 'de', 3, 4), { cents: 75, xp: 12 });
 assert.deepEqual(reward(cfg, 'pfand', 'de', 0, 4), { cents: 0, xp: 0 });
+assert.deepEqual(reward(cfg, 'scan', 'de', 1, 1), { cents: 25, xp: 6 });
+assert.deepEqual(reward(cfg, 'route', 'de', 5, 5), { cents: 210, xp: 25 });
 assert.deepEqual(reward(cfg, 'bakery', 'de', 6, 6), { cents: 160, xp: 24 });
 assert.deepEqual(reward(cfg, 'bakery', 'en', 6, 6), { cents: 240, xp: 24 });
 for (const [id, v, total] of [['pfand', 'de', 4], ['bakery', 'de', 6], ['bakery', 'en', 6]]) {
@@ -53,7 +59,8 @@ assert.ok(reward(cfg, 'bakery', 'en', 3, 6).cents > reward(cfg, 'bakery', 'de', 
 
 // ---- texts
 for (const l of ['de', 'en']) {
-  for (const id of ['pfand', 'bakery']) assert.ok(i18n[l][`activity.${id}.title`], `${l}: ${id} title`);
+  for (const id of ['pfand', 'bakery', 'scan', 'route']) assert.ok(i18n[l][`activity.${id}.title`], `${l}: ${id} title`);
+  for (const id of ['scan', 'route']) assert.ok(i18n[l][`activity.${id}.prompt`] && i18n[l][`activity.stage.${id}`], `${l}: ${id} texts`);
   for (const k of ['activity.limit', 'activity.pfand.prompt', 'activity.bakery.intro', 'activity.bakery.german', 'activity.bakery.english', 'activity.bakery.bonus', 'activity.stage.count', 'activity.stage.order', 'activity.stage.pay', 'activity.progress', 'activity.right', 'activity.wrong', 'activity.done', 'activity.reward', 'activity.nav.ask', 'activity.nav.next', 'activity.nav.close', 'shop.practice']) assert.ok(i18n[l][k], `${l}: ${k}`);
 }
 console.log(`activities ok: pfand and bakery (${questionsIn(stagesOf(cfg, 'bakery', 'de'))} questions), daily limit, rewards, texts`);

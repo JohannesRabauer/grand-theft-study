@@ -962,5 +962,11 @@
   "activity.reward": "Du hast {money} und {xp} XP verdient.",
   "activity.nav.ask": "Pfeile oder 1-4: auswählen   Space / F: antworten   Esc: verlassen",
   "activity.nav.next": "Space / F: weiter   Esc: verlassen",
-  "activity.nav.close": "Space / F oder Esc: schließen"
+  "activity.nav.close": "Space / F oder Esc: schließen",
+  "activity.scan.title": "Schilder-Scanner",
+  "activity.scan.prompt": "Schild lesen",
+  "activity.stage.scan": "Ein englisches Schild! Was bedeutet es?",
+  "activity.route.title": "Zeitungsrunde",
+  "activity.route.prompt": "Zeitungen austragen",
+  "activity.stage.route": "Welche Hausnummer kommt als Nächstes? Wirf die Zeitung dorthin!"
 }

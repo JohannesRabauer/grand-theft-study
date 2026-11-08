@@ -962,5 +962,11 @@
   "activity.reward": "You earned {money} and {xp} XP.",
   "activity.nav.ask": "Arrows or 1-4: choose   Space / F: answer   Esc: leave",
   "activity.nav.next": "Space / F: go on   Esc: leave",
-  "activity.nav.close": "Space / F or Esc: close"
+  "activity.nav.close": "Space / F or Esc: close",
+  "activity.scan.title": "Sign scanner",
+  "activity.scan.prompt": "Read the sign",
+  "activity.stage.scan": "An English sign! What does it mean?",
+  "activity.route.title": "Newspaper route",
+  "activity.route.prompt": "Deliver newspapers",
+  "activity.stage.route": "Which house number comes next? Throw the paper there!"
 }

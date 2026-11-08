@@ -84,6 +84,42 @@ export const activities = {
     ui.screens.clear();
     step(2);
 
+    // ---- an English sign is scanned once per kid
+    const sign = ctx.map.objects.find(o => o.type === 'sign' && o.board);
+    const hits = [];
+    ctx.events.on('route:hit', e => hits.push(e));
+    player.teleport((sign.x + 0.5) * ts, (sign.y + 0.5) * ts + 12);
+    gs.snapCamera();
+    step(3);
+    assert('standing at an English sign shows its prompt', ctx.activities.labels[0].visible, ctx.activities.labels[0].text);
+    const eng1 = n('englisch');
+    const money2 = ctx.state.shared.money;
+    env.press('interact');
+    step(2);
+    assert('interact opens a one-question scan', top()?.id === 'activity' && top().total === 1 && top().activity === 'scan', top()?.id);
+    play(1);
+    assert('the scan was recorded and pays 0.25', n('englisch') === eng1 + 1 && ctx.state.shared.money === money2 + 25 && ctx.state.shared.flags[`scan.${sign.id}.0`] === true, `${ctx.state.shared.money - money2}`);
+    top().confirm();
+    step(3);
+    assert('the same sign is not scanned twice by the same kid', !ctx.activities.labels[0].visible && !top());
+
+    // ---- the newspaper route
+    const stand = ctx.map.objects.find(o => o.type === 'newsstand');
+    player.teleport((stand.x + 0.5) * ts, (stand.y + 0.5) * ts + 8);
+    gs.snapCamera();
+    step(3);
+    const money3 = ctx.state.shared.money;
+    env.press('interact');
+    step(2);
+    assert('the newsstand starts a five question route', top()?.id === 'activity' && top().activity === 'route' && top().total === 5, top()?.id);
+    play(5);
+    assert('five right answers are five doorstep hits and pay 2.10', hits.length === 5 && ctx.state.shared.money === money3 + 210, `${hits.length} ${ctx.state.shared.money - money3}`);
+    top().confirm();
+    step(2);
+    env.press('interact');
+    step(2);
+    assert('the route is done for today', !top() && !ctx.frozen);
+
     // ---- put everything back
     ctx.state.replace(data0);
     player.teleport(home0.x, home0.y);

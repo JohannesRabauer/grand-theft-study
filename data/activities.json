@@ -1,5 +1,5 @@
 {
-  "_doc": "Question activities in the town (story 9.2, services/activityLogic.js, entities/Activities.js, ui/screens/ActivityScreen.js). Each activity is a list of `stages`; a stage asks `n` choice questions of a learning `topic` restricted to the sub-tag `tag` through the learning engine (so every answer is recorded in the kid's learning stats, context `bakery`). pfand: the recycling machine in the market district, a kid counts what the bottles earn (money questions). bakery: ordering and paying at the bakery counter (reached from the bakery shop screen); the kid chooses to order in German (article questions) or in English (vocabulary questions, rewarded `englishMultiplier` times better), then pays (money questions). Rewards: `perCorrectCents` for every right answer (rounded to 5 cents), `allCorrectCents` more when everything was right, and `xpPerCorrect` xp for the kid; `perDay` limits how often one kid can play it a game day (flag activity.<id>.<day>.<player>). Texts: activity.*",
+  "_doc": "Question activities in the town (story 9.2, services/activityLogic.js, entities/Activities.js, ui/screens/ActivityScreen.js). Each activity is a list of `stages`; a stage asks `n` choice questions of a learning `topic` restricted to the sub-tag `tag` through the learning engine (so every answer is recorded in the kid's learning stats, context `bakery`). pfand: the recycling machine in the market district, a kid counts what the bottles earn (money questions). bakery: ordering and paying at the bakery counter (reached from the bakery shop screen); the kid chooses to order in German (article questions) or in English (vocabulary questions, rewarded `englishMultiplier` times better), then pays (money questions). Rewards: `perCorrectCents` for every right answer (rounded to 5 cents), `allCorrectCents` more when everything was right, and `xpPerCorrect` xp for the kid; `perDay` limits how often one kid can play it a game day (flag activity.<id>.<day>.<player>). Texts: activity.* scan: an English sign (the map `sign` objects with a `board`): walk up, interact, one vocabulary question about signs, once per sign and kid (flag scan.<sign>.<player>, `perSign`). route: the newspaper route from the newsstand, five number-pattern questions, every right answer is a newspaper that lands on the right doorstep (route:hit), once a game day.",
   "context": "bakery",
   "pfand": {
     "perDay": 2,
@@ -18,5 +18,20 @@
       "de": [ { "kind": "order", "topic": "deutsch", "tag": "artikel", "n": 3 }, { "kind": "pay", "topic": "mathe", "tag": "geld", "n": 3 } ],
       "en": [ { "kind": "order", "topic": "englisch", "tag": "vokabeln", "n": 3 }, { "kind": "pay", "topic": "mathe", "tag": "geld", "n": 3 } ]
     }
+  },
+  "scan": {
+    "perSign": true,
+    "perDay": 1,
+    "perCorrectCents": 25,
+    "allCorrectCents": 0,
+    "xpPerCorrect": 6,
+    "stages": [ { "kind": "scan", "topic": "englisch", "tag": "signs", "n": 1 } ]
+  },
+  "route": {
+    "perDay": 1,
+    "perCorrectCents": 30,
+    "allCorrectCents": 60,
+    "xpPerCorrect": 5,
+    "stages": [ { "kind": "route", "topic": "mathe", "tag": "muster", "n": 5 } ]
   }
 }

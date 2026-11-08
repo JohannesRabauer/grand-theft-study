@@ -7,7 +7,7 @@ import { ChoiceCursor } from '../../minigames/minigameCore.js';
 // pocket money and xp it earned. The bakery first asks whether to order in German or in English. Esc leaves without a reward for what is
 // left. Arrows or 1-4 choose, jump / interact confirms, the pointer works too.
 export class ActivityScreen {
-  constructor(scene, ctx, stack, activities, id, player) {
+  constructor(scene, ctx, stack, activities, id, player, spot) {
     this.id = 'activity';
     this.scene = scene;
     this.ctx = ctx;
@@ -15,6 +15,7 @@ export class ActivityScreen {
     this.activities = activities;
     this.activity = id;
     this.player = player;
+    this.spot = spot;
     this.objects = [];
     this.cursor = new ChoiceCursor();
     this.phase = id === 'bakery' ? 'choose' : 'ask';
@@ -130,7 +131,7 @@ export class ActivityScreen {
   }
 
   finish() {
-    this.result = this.activities.finish({ id: this.activity, variant: this.variant, player: this.player, correct: this.correct, total: Math.max(this.total, this.answered) });
+    this.result = this.activities.finish({ id: this.activity, variant: this.variant, player: this.player, spot: this.spot, correct: this.correct, total: Math.max(this.total, this.answered) });
     this.phase = 'done';
     this.render();
   }

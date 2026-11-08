@@ -56,6 +56,7 @@ export class PlayObjects {
         for (let i = 0; i < 4; i++) art.fillStyle(0xa7473d).fillRect(x - 16 + i * 8, y - 23, 4, 9);
       }
       if (o.type === 'pfand-machine') art.fillStyle(0x4a8761).fillRect(x - 5, y - 10, 10, 16).fillStyle(0x243d46).fillCircle(x, y - 5, 3);
+      if (o.type === 'newsstand') art.fillStyle(0x8a5a3c).fillRect(x - 10, y - 8, 20, 14).fillStyle(0xf4deb0).fillRect(x - 8, y - 14, 16, 6).fillStyle(0xa7473d).fillRect(x - 10, y - 17, 20, 3);
       if (o.type === 'tram-stop' && o.id.startsWith('riverside')) art.lineStyle(2, 0x805839).lineBetween(x, y, x, y - 18).fillStyle(0xffdf65).fillCircle(x, y - 18, 5).lineStyle(1, 0x3d786c).strokeCircle(x, y - 18, 3);
     }
     ctx.props.cull();

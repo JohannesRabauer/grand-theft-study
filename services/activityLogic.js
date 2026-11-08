@@ -3,7 +3,10 @@ export const dayKey = (id, day, player) => `activity.${id}.${day}.${player}`;
 
 export const timesToday = (flags, id, day, player) => flags[dayKey(id, day, player)] ?? 0;
 
-export const canPlay = (cfg, flags, id, day, player) => timesToday(flags, id, day, player) < cfg[id].perDay;
+// Per-sign activities (`perSign`) are played once per spot and kid, ever; the others `perDay` times a game day.
+export const spotKey = (id, spot, player) => `${id}.${spot}.${player}`;
+
+export const canPlay = (cfg, flags, id, day, player, spot) => cfg[id].perSign ? !flags[spotKey(id, spot, player)] : timesToday(flags, id, day, player) < cfg[id].perDay;
 
 // The stages of an activity; the bakery has one list per language the kid orders in.
 export function stagesOf(cfg, id, variant = 'de') {
@@ -27,7 +30,7 @@ export const fits = stage => item => item.type === 'choice' && (!stage.tag || it
 // Problems in the data against the real question pools: every stage has enough choice questions of its tag, rewards are sane.
 export function validateActivities(cfg, pools) {
   const problems = [];
-  for (const id of ['pfand', 'bakery']) {
+  for (const id of ['pfand', 'bakery', 'scan', 'route']) {
     const a = cfg[id];
     if (!a) { problems.push(`missing activity ${id}`); continue; }
     if (!(a.perDay >= 1) || !(a.perCorrectCents > 0) || !(a.xpPerCorrect > 0)) problems.push(`${id}: perDay, perCorrectCents and xpPerCorrect must be positive`);
