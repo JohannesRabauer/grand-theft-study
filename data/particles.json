@@ -1,5 +1,9 @@
 {
-  "rain": { "rate": 200, "impactRate": 25, "refArea": 129600 },
+  "rain": {
+    "rate": 200,
+    "impactRate": 25,
+    "refArea": 129600
+  },
   "surfaceEmit": {
     "minSpeed": 35,
     "dustSlipDeg": 14,
@@ -11,77 +15,720 @@
     "rearOffset": 7
   },
   "surfaceFx": {
-    "dust-grey": { "name": "dust", "tint": 11645368 },
-    "dust-sand": { "name": "dust", "tint": 13617542 },
-    "grass-bits": { "name": "leaves" },
-    "splash": { "name": "splash", "ring": true }
+    "dust-grey": {
+      "name": "dust",
+      "tint": 11645368
+    },
+    "dust-sand": {
+      "name": "dust",
+      "tint": 13617542
+    },
+    "grass-bits": {
+      "name": "leaves"
+    },
+    "splash": {
+      "name": "splash",
+      "ring": true
+    },
+    "snow-puff": {
+      "name": "dust",
+      "tint": 16777215
+    },
+    "ice-chips": {
+      "name": "spark"
+    }
   },
   "ambient": {
     "steamInterval": 0.16,
     "leafInterval": 0.4,
-    "fishEvery": [2.5, 5],
+    "fishEvery": [
+      2.5,
+      5
+    ],
     "margin": 48
   },
   "emitters": {
     "dust": {
-      "texture": "p-dust", "share": 0.15, "depth": 8500, "count": 2, "windGain": 25,
-      "config": { "lifespan": { "min": 350, "max": 600 }, "speed": { "min": 8, "max": 28 }, "angle": { "min": 0, "max": 360 }, "scale": { "start": 0.7, "end": 1.5 }, "alpha": { "start": 0.65, "end": 0 } }
+      "texture": "p-dust",
+      "share": 0.15,
+      "depth": 8500,
+      "count": 2,
+      "windGain": 25,
+      "config": {
+        "lifespan": {
+          "min": 350,
+          "max": 600
+        },
+        "speed": {
+          "min": 8,
+          "max": 28
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "scale": {
+          "start": 0.7,
+          "end": 1.5
+        },
+        "alpha": {
+          "start": 0.65,
+          "end": 0
+        }
+      }
     },
     "splash": {
-      "texture": "p-drop", "share": 0.15, "depth": 8500, "count": 4, "windGain": 30,
-      "config": { "lifespan": { "min": 300, "max": 520 }, "speed": { "min": 30, "max": 70 }, "angle": { "min": 215, "max": 325 }, "gravityY": 220, "scale": { "start": 1.2, "end": 0.6 }, "alpha": { "start": 1, "end": 0 } }
+      "texture": "p-drop",
+      "share": 0.15,
+      "depth": 8500,
+      "count": 4,
+      "windGain": 30,
+      "config": {
+        "lifespan": {
+          "min": 300,
+          "max": 520
+        },
+        "speed": {
+          "min": 30,
+          "max": 70
+        },
+        "angle": {
+          "min": 215,
+          "max": 325
+        },
+        "gravityY": 220,
+        "scale": {
+          "start": 1.2,
+          "end": 0.6
+        },
+        "alpha": {
+          "start": 1,
+          "end": 0
+        }
+      }
     },
     "ripple": {
-      "texture": "p-ring", "share": 0.06, "depth": 8400, "count": 1, "windGain": 0,
-      "config": { "lifespan": { "min": 500, "max": 700 }, "speed": 0, "scale": { "start": 0.25, "end": 1 }, "alpha": { "start": 0.7, "end": 0 } }
+      "texture": "p-ring",
+      "share": 0.06,
+      "depth": 8400,
+      "count": 1,
+      "windGain": 0,
+      "config": {
+        "lifespan": {
+          "min": 500,
+          "max": 700
+        },
+        "speed": 0,
+        "scale": {
+          "start": 0.25,
+          "end": 1
+        },
+        "alpha": {
+          "start": 0.7,
+          "end": 0
+        }
+      }
     },
     "impact": {
-      "texture": "p-ring", "share": 0.05, "depth": 8400, "count": 1, "windGain": 0,
-      "config": { "lifespan": 280, "speed": 0, "scale": { "start": 0.1, "end": 0.45 }, "alpha": { "start": 0.6, "end": 0 } }
+      "texture": "p-ring",
+      "share": 0.05,
+      "depth": 8400,
+      "count": 1,
+      "windGain": 0,
+      "config": {
+        "lifespan": 280,
+        "speed": 0,
+        "scale": {
+          "start": 0.1,
+          "end": 0.45
+        },
+        "alpha": {
+          "start": 0.6,
+          "end": 0
+        }
+      }
     },
     "leaves": {
-      "texture": "p-leaf", "share": 0.15, "depth": 8500, "count": 2, "windGain": 70,
-      "config": { "lifespan": { "min": 1400, "max": 2400 }, "speed": { "min": 8, "max": 36 }, "angle": { "min": 0, "max": 360 }, "tint": [7191386, 13214503, 13789470, 9158410], "rotate": { "start": 0, "end": 360 }, "alpha": { "start": 1, "end": 0 } }
+      "texture": "p-leaf",
+      "share": 0.15,
+      "depth": 8500,
+      "count": 2,
+      "windGain": 70,
+      "config": {
+        "lifespan": {
+          "min": 1400,
+          "max": 2400
+        },
+        "speed": {
+          "min": 8,
+          "max": 36
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "tint": [
+          7191386,
+          13214503,
+          13789470,
+          9158410
+        ],
+        "rotate": {
+          "start": 0,
+          "end": 360
+        },
+        "alpha": {
+          "start": 1,
+          "end": 0
+        }
+      }
     },
     "rain": {
-      "texture": "p-rain", "share": 0.22, "depth": 9400, "count": 1, "windGain": 400,
-      "config": { "lifespan": { "min": 300, "max": 420 }, "speedX": 0, "speedY": { "min": 260, "max": 320 }, "alpha": 0.8 }
+      "texture": "p-rain",
+      "share": 0.22,
+      "depth": 9400,
+      "count": 1,
+      "windGain": 400,
+      "config": {
+        "lifespan": {
+          "min": 300,
+          "max": 420
+        },
+        "speedX": 0,
+        "speedY": {
+          "min": 260,
+          "max": 320
+        },
+        "alpha": 0.8
+      }
     },
     "steam": {
-      "texture": "puff", "share": 0.1, "depth": 8500, "count": 1, "windGain": 18,
-      "config": { "lifespan": { "min": 900, "max": 1500 }, "speedX": { "min": -4, "max": 4 }, "speedY": { "min": -26, "max": -14 }, "scale": { "start": 0.4, "end": 1.4 }, "alpha": { "start": 0.45, "end": 0 } }
+      "texture": "puff",
+      "share": 0.1,
+      "depth": 8500,
+      "count": 1,
+      "windGain": 18,
+      "config": {
+        "lifespan": {
+          "min": 900,
+          "max": 1500
+        },
+        "speedX": {
+          "min": -4,
+          "max": 4
+        },
+        "speedY": {
+          "min": -26,
+          "max": -14
+        },
+        "scale": {
+          "start": 0.4,
+          "end": 1.4
+        },
+        "alpha": {
+          "start": 0.45,
+          "end": 0
+        }
+      }
     },
     "anger": {
-      "texture": "puff", "share": 0.04, "depth": 8600, "count": 1, "windGain": 10,
-      "config": { "lifespan": { "min": 450, "max": 750 }, "speedX": { "min": -8, "max": 8 }, "speedY": { "min": -34, "max": -18 }, "scale": { "start": 0.3, "end": 0.9 }, "tint": 15022652, "alpha": { "start": 0.85, "end": 0 } }
+      "texture": "puff",
+      "share": 0.04,
+      "depth": 8600,
+      "count": 1,
+      "windGain": 10,
+      "config": {
+        "lifespan": {
+          "min": 450,
+          "max": 750
+        },
+        "speedX": {
+          "min": -8,
+          "max": 8
+        },
+        "speedY": {
+          "min": -34,
+          "max": -18
+        },
+        "scale": {
+          "start": 0.3,
+          "end": 0.9
+        },
+        "tint": 15022652,
+        "alpha": {
+          "start": 0.85,
+          "end": 0
+        }
+      }
     },
     "spark": {
-      "texture": "p-debris", "share": 0.03, "depth": 8600, "count": 5, "windGain": 0,
-      "config": { "lifespan": { "min": 150, "max": 350 }, "speed": { "min": 40, "max": 120 }, "angle": { "min": 0, "max": 360 }, "tint": [16777215, 13160953, 16769357], "scale": { "start": 0.7, "end": 0.2 }, "alpha": { "start": 1, "end": 0 } }
+      "texture": "p-debris",
+      "share": 0.03,
+      "depth": 8600,
+      "count": 5,
+      "windGain": 0,
+      "config": {
+        "lifespan": {
+          "min": 150,
+          "max": 350
+        },
+        "speed": {
+          "min": 40,
+          "max": 120
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "tint": [
+          16777215,
+          13160953,
+          16769357
+        ],
+        "scale": {
+          "start": 0.7,
+          "end": 0.2
+        },
+        "alpha": {
+          "start": 1,
+          "end": 0
+        }
+      }
     },
     "fire": {
-      "texture": "puff", "share": 0.08, "depth": 8600, "count": 1, "windGain": 0,
-      "config": { "lifespan": { "min": 260, "max": 480 }, "speedX": { "min": -10, "max": 10 }, "speedY": { "min": -34, "max": -12 }, "scale": { "start": 0.45, "end": 0.05 }, "tint": [16769357, 16751915, 14698556], "blendMode": "ADD", "alpha": { "start": 0.95, "end": 0 } }
+      "texture": "puff",
+      "share": 0.08,
+      "depth": 8600,
+      "count": 1,
+      "windGain": 0,
+      "config": {
+        "lifespan": {
+          "min": 260,
+          "max": 480
+        },
+        "speedX": {
+          "min": -10,
+          "max": 10
+        },
+        "speedY": {
+          "min": -34,
+          "max": -12
+        },
+        "scale": {
+          "start": 0.45,
+          "end": 0.05
+        },
+        "tint": [
+          16769357,
+          16751915,
+          14698556
+        ],
+        "blendMode": "ADD",
+        "alpha": {
+          "start": 0.95,
+          "end": 0
+        }
+      }
     },
     "heart": {
-      "texture": "p-heart", "share": 0.03, "depth": 8700, "count": 3, "windGain": 8,
-      "config": { "lifespan": { "min": 600, "max": 950 }, "speedX": { "min": -16, "max": 16 }, "speedY": { "min": -46, "max": -24 }, "scale": { "start": 1, "end": 1.4 }, "tint": [16740241, 16751280, 16764380], "alpha": { "start": 1, "end": 0 } }
+      "texture": "p-heart",
+      "share": 0.03,
+      "depth": 8700,
+      "count": 3,
+      "windGain": 8,
+      "config": {
+        "lifespan": {
+          "min": 600,
+          "max": 950
+        },
+        "speedX": {
+          "min": -16,
+          "max": 16
+        },
+        "speedY": {
+          "min": -46,
+          "max": -24
+        },
+        "scale": {
+          "start": 1,
+          "end": 1.4
+        },
+        "tint": [
+          16740241,
+          16751280,
+          16764380
+        ],
+        "alpha": {
+          "start": 1,
+          "end": 0
+        }
+      }
     },
     "debris": {
-      "texture": "p-debris", "share": 0.05, "depth": 8500, "count": 6, "windGain": 0,
-      "config": { "lifespan": { "min": 400, "max": 800 }, "speed": { "min": 30, "max": 110 }, "angle": { "min": 0, "max": 360 }, "tint": [9132587, 10514490, 13148259], "rotate": { "min": 0, "max": 360 }, "scale": { "start": 1, "end": 0.5 }, "alpha": { "start": 1, "end": 0 } }
+      "texture": "p-debris",
+      "share": 0.05,
+      "depth": 8500,
+      "count": 6,
+      "windGain": 0,
+      "config": {
+        "lifespan": {
+          "min": 400,
+          "max": 800
+        },
+        "speed": {
+          "min": 30,
+          "max": 110
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "tint": [
+          9132587,
+          10514490,
+          13148259
+        ],
+        "rotate": {
+          "min": 0,
+          "max": 360
+        },
+        "scale": {
+          "start": 1,
+          "end": 0.5
+        },
+        "alpha": {
+          "start": 1,
+          "end": 0
+        }
+      }
     },
     "paper": {
-      "texture": "p-debris", "share": 0.03, "depth": 8500, "count": 8, "windGain": 40,
-      "config": { "lifespan": { "min": 500, "max": 1000 }, "speed": { "min": 20, "max": 80 }, "angle": { "min": 0, "max": 360 }, "tint": [15856113, 14211288, 15393219], "rotate": { "min": 0, "max": 360 }, "scale": { "start": 1.2, "end": 0.6 }, "alpha": { "start": 1, "end": 0 } }
+      "texture": "p-debris",
+      "share": 0.03,
+      "depth": 8500,
+      "count": 8,
+      "windGain": 40,
+      "config": {
+        "lifespan": {
+          "min": 500,
+          "max": 1000
+        },
+        "speed": {
+          "min": 20,
+          "max": 80
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "tint": [
+          15856113,
+          14211288,
+          15393219
+        ],
+        "rotate": {
+          "min": 0,
+          "max": 360
+        },
+        "scale": {
+          "start": 1.2,
+          "end": 0.6
+        },
+        "alpha": {
+          "start": 1,
+          "end": 0
+        }
+      }
     },
     "stars": {
-      "texture": "p-star", "share": 0.03, "depth": 8700, "count": 3, "windGain": 0,
-      "config": { "lifespan": { "min": 450, "max": 750 }, "speedX": { "min": -22, "max": 22 }, "speedY": { "min": -34, "max": -14 }, "rotate": { "min": 0, "max": 360 }, "scale": { "start": 1, "end": 0.5 }, "alpha": { "start": 1, "end": 0 } }
+      "texture": "p-star",
+      "share": 0.03,
+      "depth": 8700,
+      "count": 3,
+      "windGain": 0,
+      "config": {
+        "lifespan": {
+          "min": 450,
+          "max": 750
+        },
+        "speedX": {
+          "min": -22,
+          "max": 22
+        },
+        "speedY": {
+          "min": -34,
+          "max": -14
+        },
+        "rotate": {
+          "min": 0,
+          "max": 360
+        },
+        "scale": {
+          "start": 1,
+          "end": 0.5
+        },
+        "alpha": {
+          "start": 1,
+          "end": 0
+        }
+      }
     },
     "confetti": {
-      "texture": "p-debris", "share": 0.04, "depth": 8700, "count": 12, "windGain": 30,
-      "config": { "lifespan": { "min": 700, "max": 1300 }, "speed": { "min": 30, "max": 110 }, "angle": { "min": 0, "max": 360 }, "gravityY": 60, "tint": [16006463, 15909434, 4094427, 4160090, 15695792, 15698485], "rotate": { "min": 0, "max": 360 }, "scale": { "start": 1.1, "end": 0.6 }, "alpha": { "start": 1, "end": 0 } }
+      "texture": "p-debris",
+      "share": 0.04,
+      "depth": 8700,
+      "count": 12,
+      "windGain": 30,
+      "config": {
+        "lifespan": {
+          "min": 700,
+          "max": 1300
+        },
+        "speed": {
+          "min": 30,
+          "max": 110
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "gravityY": 60,
+        "tint": [
+          16006463,
+          15909434,
+          4094427,
+          4160090,
+          15695792,
+          15698485
+        ],
+        "rotate": {
+          "min": 0,
+          "max": 360
+        },
+        "scale": {
+          "start": 1.1,
+          "end": 0.6
+        },
+        "alpha": {
+          "start": 1,
+          "end": 0
+        }
+      }
+    },
+    "pollen": {
+      "texture": "p-dust",
+      "share": 0.05,
+      "depth": 8450,
+      "count": 1,
+      "windGain": 30,
+      "config": {
+        "lifespan": {
+          "min": 3500,
+          "max": 5000
+        },
+        "speed": {
+          "min": 4,
+          "max": 10
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "tint": [
+          16773792,
+          16769658
+        ],
+        "scale": {
+          "start": 0.5,
+          "end": 0.3
+        },
+        "alpha": {
+          "start": 0.8,
+          "end": 0
+        }
+      }
+    },
+    "firefly": {
+      "texture": "p-debris",
+      "share": 0.04,
+      "depth": 8650,
+      "count": 1,
+      "windGain": 6,
+      "config": {
+        "lifespan": {
+          "min": 2200,
+          "max": 3600
+        },
+        "speed": {
+          "min": 3,
+          "max": 9
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "tint": [
+          14221178,
+          16774816
+        ],
+        "scale": {
+          "start": 0.9,
+          "end": 0.9
+        },
+        "blendMode": "ADD",
+        "alpha": {
+          "start": 1,
+          "end": 0
+        }
+      }
+    },
+    "butterfly": {
+      "texture": "p-debris",
+      "share": 0.03,
+      "depth": 8550,
+      "count": 1,
+      "windGain": 10,
+      "config": {
+        "lifespan": {
+          "min": 2500,
+          "max": 3500
+        },
+        "speed": {
+          "min": 10,
+          "max": 22
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "tint": [
+          16748480,
+          9422079,
+          16765786
+        ],
+        "scale": {
+          "start": 1.1,
+          "end": 1.1
+        },
+        "alpha": {
+          "start": 1,
+          "end": 0
+        }
+      }
+    },
+    "fog": {
+      "texture": "puff",
+      "share": 0.06,
+      "depth": 8480,
+      "count": 1,
+      "windGain": 20,
+      "config": {
+        "lifespan": {
+          "min": 5000,
+          "max": 8000
+        },
+        "speed": {
+          "min": 2,
+          "max": 6
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "scale": {
+          "start": 3.0,
+          "end": 4.5
+        },
+        "alpha": {
+          "start": 0.14,
+          "end": 0
+        }
+      }
     }
+  },
+  "seasonal": {
+    "_doc": "Seasonal and time-of-day ambience (story 12.2): while the `when` of an effect holds (seasons and/or day phases, weather it must not be, `day`: only in daylight) it emits `rate` particles per second over a view of refArea px2 into the effect's emitter, at fixed pseudo-random places (no Math.random: the seeded smoke runs stay repeatable), scaled by the quality tier and capped by the emitter's share. `ground`: only where that surface lies. Other effects of the set: snow footprints and ice chips (surfaceFx snow-puff / ice-chips under the movers on those surfaces), leaf piles (autumn leaves kicked up on grass), exhaust puffs behind driving traffic, sprinklers and the pond fountain (map objects `ambient` kind sprinkler / fountain), canal fish ripples, coin sparkles (loot), confetti and the trick fire trail (style:banked).",
+    "refArea": 129600,
+    "list": [
+      {
+        "id": "pollen",
+        "emitter": "pollen",
+        "rate": 6,
+        "when": {
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "notWeather": [
+            "rain",
+            "snow"
+          ],
+          "day": true
+        }
+      },
+      {
+        "id": "butterflies",
+        "emitter": "butterfly",
+        "rate": 1.2,
+        "when": {
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "notWeather": [
+            "rain",
+            "snow"
+          ],
+          "day": true
+        },
+        "ground": "grass"
+      },
+      {
+        "id": "fireflies",
+        "emitter": "firefly",
+        "rate": 5,
+        "when": {
+          "phases": [
+            "evening"
+          ]
+        }
+      },
+      {
+        "id": "fog",
+        "emitter": "fog",
+        "rate": 0.8,
+        "when": {
+          "seasons": [
+            "autumn"
+          ],
+          "phases": [
+            "morning"
+          ]
+        }
+      },
+      {
+        "id": "leaf-piles",
+        "emitter": "leaves",
+        "rate": 3,
+        "when": {
+          "seasons": [
+            "autumn"
+          ],
+          "notWeather": [
+            "rain"
+          ]
+        },
+        "ground": "grass"
+      }
+    ]
+  },
+  "exhaust": {
+    "interval": 0.22,
+    "minSpeed": 20,
+    "rear": 12
+  },
+  "fountain": {
+    "sprinklerEvery": 0.12,
+    "fountainEvery": 0.09
   }
 }

@@ -25,6 +25,9 @@ export class ParticleHub {
     this.rainAcc = 0;
     this.impactAcc = 0;
     this.leafIn = 0;
+    this.seed = 0x1234abcd; // placement of the seasonal ambience: a fixed generator, never Math.random (story 12.2)
+    this.seasonAcc = this.cfg.seasonal.list.map(() => 0);
+    this.exhaustIn = 0;
     this.fishIn = 1;
     this.applyCaps();
     ctx.events.on('quality:changed', () => this.applyCaps());
@@ -53,7 +56,7 @@ export class ParticleHub {
     const { ctx } = this;
     const ts = ctx.map.tileSize;
     this.spots = ctx.map.objects.filter(o => o.type === 'ambient')
-      .map(o => ({ x: (o.x + 0.5) * ts, y: (o.y + 0.5) * ts, chimney: o.kind === 'chimney', in: 0 }));
+      .map(o => ({ x: (o.x + 0.5) * ts, y: (o.y + 0.5) * ts, chimney: o.kind === 'chimney', kind: o.kind, in: 0 }));
     this.water = this.findWater();
   }
 
@@ -103,6 +106,53 @@ export class ParticleHub {
     this.surfaceFx(dt);
     if (weather.intensity > 0.01) this.rain(dt, view);
     this.ambient(dt, view);
+    this.seasonal(dt, view);
+    this.exhaust(dt, view);
+  }
+
+  rnd() { this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0; return this.seed / 4294967296; }
+
+  // Does the effect's condition hold now? Season and phase come from the day clock, the weather from the weather service, daylight from the tint.
+  holds(when) {
+    const { day, weather } = this.ctx;
+    if (when.seasons && !when.seasons.includes(day.season)) return false;
+    if (when.phases && !when.phases.includes(day.phase)) return false;
+    if (when.notWeather && when.notWeather.includes(weather.state)) return false;
+    if (when.day && day.tint.alpha > 0.05) return false;
+    return true;
+  }
+
+  // Pollen, butterflies, fireflies, fog and autumn leaves: a steady trickle over the view while their season, phase and weather fit.
+  seasonal(dt, view) {
+    const s = this.cfg.seasonal;
+    if (this.ctx.map.indoor || window.SCHULWEG_GAME?.ambienceOff) return; // ambienceOff: test hook, the scripted runs have no seasonal life
+    const mul = this.ctx.quality.tier.particleMul;
+    for (let i = 0; i < s.list.length; i++) {
+      const e = s.list[i];
+      if (!this.holds(e.when)) { this.seasonAcc[i] = 0; continue; }
+      this.seasonAcc[i] += e.rate * mul * (view.width * view.height) / s.refArea * dt;
+      for (; this.seasonAcc[i] >= 1; this.seasonAcc[i]--) {
+        const x = view.x + this.rnd() * view.width;
+        const y = view.y + this.rnd() * view.height;
+        if (e.ground && this.ctx.surfaces.at(x, y) !== e.ground) continue;
+        this.emitters[e.emitter].emitter.emitParticleAt(x, y, 1);
+      }
+    }
+  }
+
+  // A grey puff behind every driving vehicle of the traffic services that is in view.
+  exhaust(dt, view) {
+    const t = this.ctx.traffic;
+    const x = this.cfg.exhaust;
+    this.exhaustIn -= dt;
+    if (!t || this.exhaustIn > 0) return;
+    this.exhaustIn = x.interval / this.ctx.quality.tier.particleMul;
+    for (const src of t.sources) {
+      for (const v of src.pool ?? []) {
+        if (!v.active || v.speed < x.minSpeed || v.x < view.x || v.x > view.right || v.y < view.y || v.y > view.bottom) continue;
+        this.emit('steam', v.x - Math.cos(v.heading) * x.rear, v.y - Math.sin(v.heading) * x.rear, { count: 1, tint: 0x888888 });
+      }
+    }
   }
 
   // Dust (sprint, drifting), leaves (grass) and splash + ring (puddles) at every mover's feet.
@@ -167,6 +217,11 @@ export class ParticleHub {
       s.in -= dt;
       if (s.in > 0 || s.x < view.x - m || s.x > view.right + m || s.y < view.y - m || s.y > view.bottom + m) continue;
       s.in = a.steamInterval / mul;
+      if (s.kind === 'sprinkler' || s.kind === 'fountain') {
+        s.in = (s.kind === 'sprinkler' ? this.cfg.fountain.sprinklerEvery : this.cfg.fountain.fountainEvery) / mul;
+        this.emit('splash', s.x, s.kind === 'fountain' ? s.y - 6 : s.y, { count: s.kind === 'fountain' ? 3 : 2 });
+        continue;
+      }
       this.emit('steam', s.x, s.y, { count: 1, tint: s.chimney ? 0x777777 : 0xffffff });
     }
     this.leafIn -= dt;

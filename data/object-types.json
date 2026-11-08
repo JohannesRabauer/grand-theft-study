@@ -48,7 +48,7 @@
     "fair-stall": { "shape": "point", "inWall": false, "fields": {}, "doc": "the kirmes stall (art only) the balloons are tied to; x is its centre tile, y its front tile" },
     "ammo": { "shape": "point", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["pebble", "chestnut", "acorn"], "required": true } } },
     "flag": { "shape": "point", "inWall": false, "fields": { "color": { "type": "color", "required": true } } },
-    "ambient": { "shape": "point", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["steam", "chimney"], "required": true } } },
+    "ambient": { "shape": "point", "inWall": false, "fields": { "kind": { "type": "enum", "values": ["steam", "chimney", "sprinkler", "fountain"], "required": true } } },
     "npc-node": { "shape": "point", "inWall": false, "fields": {
       "district": { "type": "string", "required": true },
       "links": { "type": "ids", "required": true }

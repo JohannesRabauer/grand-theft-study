@@ -519,6 +519,8 @@
     { "type":"pfand-machine", "id":"market-recycling", "x":93, "y":88 },
     { "type":"newsstand", "id":"market-newsstand", "x":90, "y":88 },
     { "type":"lookout", "id":"lookout-skate-west", "x":44, "y":32 },
+    { "type":"ambient", "id":"sprinkler-park", "x":19, "y":38, "kind":"sprinkler" },
+    { "type":"ambient", "id":"fountain-pond", "x":23, "y":38, "kind":"fountain" },
     { "type":"lookout", "id":"lookout-skate-east", "x":70, "y":36 },
     { "type":"npc-node", "id":"n-exp-0", "x":96, "y":52, "district":"riverside", "links":["n-exp-1","n-exp-connector"] },
     { "type":"npc-node", "id":"n-exp-1", "x":102, "y":52, "district":"riverside", "links":["n-exp-0","n-exp-2","n-exp-9","n-exp-10"] },
