@@ -1020,5 +1020,10 @@
   "phone.msg.friend-route": "Unsere ganze Straße hat dank dir ihre Zeitung!",
   "phone.msg.friend-tram": "Du hast eine neue Haltestelle gefunden? Nimm uns beim nächsten Mal mit!",
   "phone.msg.bully-seen": "Hey du! Wir sind in der Nähe. Lass dich bloß nicht am Skatepark erwischen!",
-  "phone.msg.bully-caught": "Ha, fast hätten wir dich! Nächstes Mal bist du nicht so schnell!"
+  "phone.msg.bully-caught": "Ha, fast hätten wir dich! Nächstes Mal bist du nicht so schnell!",
+  "parent.age.p1": "Anspruch (Alter), Spieler 1",
+  "parent.age.p2": "Anspruch (Alter), Spieler 2",
+  "parent.age.auto": "Wie die Figur ({n})",
+  "parent.age.years": "{n} Jahre",
+  "parent.age.explain": "Das Anspruchsalter legt fest, wie schwer die Fragen und wie knapp die Zeiten für ein Kind sind, zusätzlich zur Lern-Schwierigkeit oben. Es startet mit dem Alter der Figur und lässt sich ändern, ohne die Figur zu ändern. Die Fragen bleiben bei Klasse 3 und passen sich weiter den Antworten an."
 }

@@ -6,27 +6,94 @@
   "minSamples": 5,
   "emaAlpha": 0.03,
   "hintScore": 0.6,
-  "band": { "low": 0.75, "high": 0.85, "hardLow": 0.7, "hardHigh": 0.9 },
+  "band": {
+    "low": 0.75,
+    "high": 0.85,
+    "hardLow": 0.7,
+    "hardHigh": 0.9
+  },
   "gain": 0.5,
   "fastRatio": 0.6,
   "fastRamp": 1.5,
   "fastBonus": 0.03,
-  "intervals": [3, 8, 20],
+  "intervals": [
+    3,
+    8,
+    20
+  ],
   "maxOverdue": 2,
-  "defaultContext": { "dueRate": 0.3 },
+  "defaultContext": {
+    "dueRate": 0.3
+  },
   "contexts": {
-    "lesson": { "dueRate": 0.3 },
-    "bakery": { "dueRate": 0.15 },
-    "bully": { "dueFirst": true }
+    "lesson": {
+      "dueRate": 0.3
+    },
+    "bakery": {
+      "dueRate": 0.15
+    },
+    "bully": {
+      "dueFirst": true
+    }
   },
-  "pick": { "sigma": 0.7, "novelty": 0.6 },
+  "pick": {
+    "sigma": 0.7,
+    "novelty": 0.6
+  },
   "support": {
-    "struggling": { "timeFactor": 1.5, "hints": "all" },
-    "normal": { "timeFactor": 1, "hints": 1 },
-    "strong": { "timeFactor": 0.85, "hints": 0 }
+    "struggling": {
+      "timeFactor": 1.5,
+      "hints": "all"
+    },
+    "normal": {
+      "timeFactor": 1,
+      "hints": 1
+    },
+    "strong": {
+      "timeFactor": 0.85,
+      "hints": 0
+    }
   },
-  "parentRange": [0.5, 1.5],
-  "timeFactorRange": [0.5, 2.5],
-  "expectedMs": { "default": 8000, "choice": 6000, "typed": 10000, "sort": 12000, "match": 12000, "perDifficulty": 0.25 },
-  "streakAt": 3
+  "parentRange": [
+    0.5,
+    1.5
+  ],
+  "timeFactorRange": [
+    0.5,
+    2.5
+  ],
+  "expectedMs": {
+    "default": 8000,
+    "choice": 6000,
+    "typed": 10000,
+    "sort": 12000,
+    "match": 12000,
+    "perDifficulty": 0.25
+  },
+  "streakAt": 3,
+  "ageMap": {
+    "_doc": "Difficulty by age (story 11.7, services/ageLogic.js): the challenge factor of a kid, multiplied with the parent difficulty (clamped to parentRange). The age is the age of the character the kid plays as, unless the family picked one of `choices` for that kid (flag difficultyAge.<player>, parent settings). The first step whose upTo holds the age counts. It never rewrites the learning stats: those keep adapting by the answers; Lorenz startOffset is the separate first-level start.",
+    "steps": [
+      {
+        "upTo": 8,
+        "factor": 0.9
+      },
+      {
+        "upTo": 10,
+        "factor": 1.0
+      },
+      {
+        "upTo": 99,
+        "factor": 1.1
+      }
+    ],
+    "choices": [
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ]
+  }
 }

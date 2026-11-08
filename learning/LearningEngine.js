@@ -5,10 +5,13 @@ import { EngineCore } from './engineCore.js';
 
 const playerIndex = p => (typeof p === 'number' ? p : p?.index ?? 0);
 
+import { playerFactor } from '../services/ageLogic.js';
+
 export class LearningEngine {
   // topicFiles: parsed data/learning/<grade>/<topic>.json documents; any topic file works the same way.
   constructor(ctx, cfg, topicFiles, reactions) {
     this.ctx = ctx;
+    this.cfg = cfg;
     const pools = Object.fromEntries(topicFiles.map(f => [f.topic, { grade: f.grade, bothLangs: !!f.bothLangs, items: f.items }]));
     const state = ctx.state;
     this.core = new EngineCore({
@@ -21,6 +24,7 @@ export class LearningEngine {
       },
       // AD-27 settings stub: the parent gate stores the difficulty modifier as a shared flag (default 1)
       parentDifficulty: () => state.shared.flags.parentDifficulty ?? 1,
+      playerDifficulty: player => playerFactor(cfg.ageMap, state.shared.flags, player, ctx.characters?.def(player)?.age),
       startOffset: player => ctx.characters?.def(player)?.learningStartOffset ?? 0
     });
   }

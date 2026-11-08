@@ -101,13 +101,14 @@ const norm = v => String(v).trim().toLowerCase().replace(',', '.').replace(/\s+/
 
 export class EngineCore {
   // pools: { topic: { bothLangs, items } }; reactions: { correct: [keys], wrong: [...], streak: [...] }
-  constructor({ pools, cfg, reactions, store, rng = Math.random, parentDifficulty = () => 1, startOffset = () => 0 }) {
+  constructor({ pools, cfg, reactions, store, rng = Math.random, parentDifficulty = () => 1, playerDifficulty = () => 1, startOffset = () => 0 }) {
     this.pools = pools;
     this.cfg = cfg;
     this.reactions = reactions;
     this.store = store;
     this.rng = rng;
     this.parentDifficulty = parentDifficulty;
+    this.playerDifficulty = playerDifficulty; // story 11.7: the challenge factor of one kid's age
     this.startOffset = startOffset;
     this.byId = {};
     for (const [topic, p] of Object.entries(pools)) this.byId[topic] = Object.fromEntries(p.items.map(i => [i.id, i]));
@@ -118,14 +119,14 @@ export class EngineCore {
 
   stats(player, topic) { return normalizeStats(this.store.get(player, topic), this.cfg, this.startOffset(player)); }
 
-  pd() { return clamp(this.parentDifficulty(), this.cfg.parentRange[0], this.cfg.parentRange[1]); }
+  pd(player = 0) { return clamp(this.parentDifficulty() * this.playerDifficulty(player), this.cfg.parentRange[0], this.cfg.parentRange[1]); }
 
   // The item as shown to the caller plus `meta` (difficulty, target, timeFactor, hintsAllowed, expectedMs, ...).
-  present(topic, item, stats, due) {
+  present(topic, item, stats, due, player = 0) {
     const cfg = this.cfg;
     const tier = supportTier(stats, cfg);
     const sup = cfg.support[tier];
-    const pd = this.pd();
+    const pd = this.pd(player);
     const hintsAllowed = sup.hints === 'all' ? item.hints?.length ?? 0 : Math.min(sup.hints, item.hints?.length ?? 0);
     return {
       ...item,
@@ -160,7 +161,7 @@ export class EngineCore {
       for (const e of this.dueEntries(stats, t)) out.push({ ...e, topic: t, stats });
     }
     out.sort((a, b) => b.overdue - a.overdue);
-    return out.slice(0, maxCount).map(e => this.present(e.topic, this.byId[e.topic][e.id], e.stats, true));
+    return out.slice(0, maxCount).map(e => this.present(e.topic, this.byId[e.topic][e.id], e.stats, true, player));
   }
 
   // `filter` (see itemFilter) restricts the pick to matching items, e.g. the sub-tag 'artikel'; null when none match.
@@ -175,7 +176,7 @@ export class EngineCore {
     const ctxCfg = cfg.contexts[context] ?? cfg.defaultContext;
     const due = this.dueEntries(stats, topic).filter(e => e.id !== stats.last && (!match || match(this.byId[topic][e.id])));
     if (due.length && (ctxCfg.dueFirst || due[0].overdue >= cfg.maxOverdue || this.rng() < ctxCfg.dueRate)) {
-      return this.present(topic, this.byId[topic][due[0].id], stats, true);
+      return this.present(topic, this.byId[topic][due[0].id], stats, true, player);
     }
     // everything not parked in a repetition interval, except the previous item
     const open = items.filter(i => {
@@ -185,13 +186,13 @@ export class EngineCore {
     let cands = open;
     if (!cands.length) cands = items.filter(i => i.id !== stats.last); // everything parked: pull the soonest back
     if (!cands.length) cands = items;
-    const target = clamp(stats.level * this.pd(), cfg.levelMin, cfg.levelMax);
+    const target = clamp(stats.level * this.pd(player), cfg.levelMin, cfg.levelMax);
     const { sigma, novelty } = cfg.pick;
     const weights = cands.map(i => Math.exp(-((i.difficulty - target) ** 2) / (2 * sigma * sigma)) * (1 + novelty / (1 + (stats.items[i.id]?.s ?? 0))));
     let r = this.rng() * weights.reduce((s, w) => s + w, 0);
     let pick = cands[cands.length - 1];
     for (let i = 0; i < cands.length; i++) { r -= weights[i]; if (r <= 0) { pick = cands[i]; break; } }
-    return this.present(topic, pick, stats, false);
+    return this.present(topic, pick, stats, false, player);
   }
 
   // Records an answer and returns the new stats; unknown items are ignored.
