@@ -95,8 +95,26 @@ assert.equal(puddleKey('cobble', 3, 4), null, 'neither does cobble');
 assert.equal(puddleKey('asphalt', 3, 4), puddleKey('asphalt', 3, 4));
 assert.ok(new Set(Array.from({ length: 64 }, (_, i) => puddleKey('asphalt', i, i * 3))).size === 4, 'four shapes are in use');
 
+
+// outdoor buildings: a palette per building, roof / facade with windows, and doors with a step and a mat
+const town = {
+  legend: { '#': 'wall', G: 'grass', S: 'concrete' },
+  rows: ['########', '#GGGGGG#', '#G####G#', '#G####G#', '#GGGGGG#', '#GSSGGG#', '########'],
+  objects: [{ type: 'door', id: 'd', x: 2, y: 4, w: 1, h: 1, to: 'home' }]
+};
+const outAt = (x, y) => groundKeys(town, x, y, 'base-x', 'town');
+const pal = k => k.match(/^env-(?:roof|facade|odoor)-(\w+?)-/)?.[1];
+assert.match(outAt(2, 2)[0], /^env-roof-\w+-1$/, 'the top row of a building is the roof ridge');
+assert.match(outAt(3, 3)[0], /^env-facade-\w+-(plain|window|shutter|flowers)$/, 'the south row of a building is its facade');
+assert.equal(outAt(0, 0)[0], 'base-x', 'the map border keeps its plain brick');
+assert.match(outAt(2, 3)[0], /^env-odoor-\w+-home-c$/, 'the wall above a door tile is a door in the style of where it leads');
+assert.ok(has(outAt(2, 4), /^env-ostep$/) && has(outAt(2, 4), /^env-imat-m$/), 'a step and a mat lie in front of the door');
+assert.equal(new Set([2, 3, 4, 5].flatMap(x => [2, 3].map(y => pal(outAt(x, y)[0])))).size, 1, 'one building keeps one palette');
+const twin = { ...town, rows: ['##########', '#GGGGGGGG#', '#G##G##GG#', '#G##G##GG#', '#GGGGGGGG#', '##########'], objects: [] };
+assert.ok(pal(groundKeys(twin, 2, 2, 'b', 'town')[0]) && pal(groundKeys(twin, 5, 2, 'b', 'town')[0]), 'two buildings are both styled');
+
 // every real map: only known key families, the base stays first, and nothing here touched the grid
-const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|shadow|hedge|iface|icap|ihall|idoor|ishade|ilight|imat|rug))/;
+const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|shadow|hedge|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep))/;
 let tiles = 0;
 let extra = 0;
 for (const f of readdirSync(new URL('../data/maps/', import.meta.url)).filter(n => n.endsWith('.json') && n !== 'index.json')) {

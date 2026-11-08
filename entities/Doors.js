@@ -26,9 +26,10 @@ export class Doors {
     if (!this.list.length) return;
     this.gfx = scene.add.graphics().setDepth(-0.5); // a doormat on the ground
     ctx.players.forEach((p, i) => { for (const d of this.list) d.inside[i] = this.contains(d, p) ? 1 : 0; });
+    const art = scene.textures.exists('env-imat-m'); // the ground texture draws the step and mat (scenes/EnvArt.js)
     for (const d of this.list) {
-      this.gfx.fillStyle(MAT, 1).fillRect(d.x0, d.y0, d.x1 - d.x0, d.y1 - d.y0);
-      this.gfx.lineStyle(1, MAT_EDGE, 1).strokeRect(d.x0 + 0.5, d.y0 + 0.5, d.x1 - d.x0 - 1, d.y1 - d.y0 - 1);
+      if (!art) this.gfx.fillStyle(MAT, 1).fillRect(d.x0, d.y0, d.x1 - d.x0, d.y1 - d.y0);
+      if (!art) this.gfx.lineStyle(1, MAT_EDGE, 1).strokeRect(d.x0 + 0.5, d.y0 + 0.5, d.x1 - d.x0 - 1, d.y1 - d.y0 - 1);
       if (window.SCHULWEG_DEBUG) {
         this.debugText.push(scene.add.text(d.x0 + 2, d.y0 + 1, `${d.o.id} > ${d.o.to}`, { fontFamily: 'monospace', fontSize: '6px', color: '#ffb84d', resolution: ctx.res.scale }).setDepth(9500));
       }
