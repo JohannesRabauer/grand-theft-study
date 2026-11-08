@@ -138,7 +138,7 @@ export function mapIntent(intent, slot, bind, src, dz) {
   const g = bind.global;
   edge(intent, slot, 'map', g && (k('map') || pb(PAD.BACK)));
   edge(intent, slot, 'weather', g && k('weather'));
-  edge(intent, slot, 'phone', g && k('phone'));
+  edge(intent, slot, 'phone', g && (k('phone') || pb(PAD.LSTICK))); // the pad opens the phone with a click of the left stick (story 14.2)
   edge(intent, slot, 'pause', g && (k('pause') || btn.pause || pb(PAD.START)));
   intent.answer = 0;
   for (let i = 0; i < ANSWER_KEYS.length; i++) {

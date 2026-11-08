@@ -2,13 +2,13 @@
 // Keyboard names come from data/input.json (the real bindings of that player), gamepad and touch from the fixed
 // mappings in ui/inputBindings.js and data/input.json `buttons`. Every returned label is ready to drop into a
 // sentence, so a hint says "press F" on a keyboard and "press Y" on a pad without anyone writing it twice.
-export const HINT_ACTIONS = ['move', 'sprint', 'jump', 'interact', 'map', 'pause', 'defend', 'kiai', 'manual', 'toolPrev', 'toolNext', 'toolUse'];
+export const HINT_ACTIONS = ['move', 'sprint', 'jump', 'interact', 'map', 'phone', 'pause', 'defend', 'kiai', 'manual', 'toolPrev', 'toolNext', 'toolUse'];
 
 const KEY_NAMES = {
   Space: 'Space', Enter: 'Enter', ShiftLeft: 'Shift', ShiftRight: 'Right Shift', ControlLeft: 'Ctrl', ControlRight: 'Right Ctrl',
   Slash: '/', Comma: ',', Period: '.', Semicolon: ';', Quote: "'", Escape: 'Esc', Numpad0: 'Num 0'
 };
-const PAD_NAMES = { sprint: 'B', jump: 'A', interact: 'Y', defend: 'X', kiai: 'RS', manual: 'LT', toolUse: 'RT', toolPrev: 'LB', toolNext: 'RB', map: 'Back', pause: 'Start' };
+const PAD_NAMES = { sprint: 'B', jump: 'A', interact: 'Y', defend: 'X', kiai: 'RS', manual: 'LT', toolUse: 'RT', toolPrev: 'LB', toolNext: 'RB', map: 'Back', phone: 'LS', pause: 'Start' };
 const TOUCH_ACTIONS = new Set(['sprint', 'jump', 'interact', 'defend', 'kiai', 'manual', 'toolUse', 'toolNext', 'pause']);
 
 export function keyName(code) {
