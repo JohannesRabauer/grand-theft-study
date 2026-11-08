@@ -1040,5 +1040,6 @@
   "activity.stage.talk": "Antworte, vielleicht lässt er dich in Ruhe!",
   "talk.charm.ok": "Du hast ihn mit einem breiten Lächeln überredet. Er zuckt mit den Schultern und geht.",
   "talk.question.ok": "Richtig! Er ist beeindruckt und zieht ab.",
-  "talk.gentle": "Nicht ganz. Diesmal lässt er dich laufen - renn!"
+  "talk.gentle": "Nicht ganz. Diesmal lässt er dich laufen - renn!",
+  "parent.sound": "Ton"
 }

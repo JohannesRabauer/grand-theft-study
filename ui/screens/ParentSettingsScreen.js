@@ -37,6 +37,7 @@ export class ParentSettingsScreen {
       { caption: 'parent.difficulty', items: cfg.difficulties.map(d => ({ label: () => ctx.t(`parent.difficulty.${d.id}`), on: () => this.set('parentDifficulty', d.value), selected: () => difficultyId(cfg, this.flags.parentDifficulty ?? 1) === d.id })) },
       { caption: 'parent.chases', items: [false, true].map(off => ({ label: () => ctx.t(off ? 'parent.off' : 'parent.on'), on: () => this.set('chasesOff', off), selected: () => !!this.flags.chasesOff === off })) },
       { caption: 'parent.reminder', items: cfg.reminders.map(m => ({ label: () => (m ? ctx.t('parent.minutes', { n: m }) : ctx.t('parent.off')), on: () => this.set('playReminder', m), selected: () => (this.flags.playReminder ?? 0) === m })) },
+      { caption: 'parent.sound', items: [false, true].map(off => ({ label: () => ctx.t(off ? 'parent.off' : 'parent.on'), on: () => this.set('audioMuted', off), selected: () => !!this.flags.audioMuted === off })) },
       ...ctx.players.map(p => ({ caption: `parent.age.p${p.index + 1}`, items: [null, ...ctx.learning.cfg.ageMap.choices].map(a => ({ label: () => (a === null ? ctx.t('parent.age.auto', { n: ctx.characters?.def(p.index)?.age ?? '?' }) : ctx.t('parent.age.years', { n: a })), on: () => this.set(ageFlag(p.index), a), selected: () => (a === null ? !ctx.learning.cfg.ageMap.choices.includes(this.flags[ageFlag(p.index)]) : this.flags[ageFlag(p.index)] === a) })) })),
       { items: [{ label: () => ctx.t('parent.back'), on: () => this.close() }] }
     ];
