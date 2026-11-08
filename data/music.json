@@ -1,0 +1,31 @@
+{
+  "_doc": "Music (stories 13.2 and 13.3, services/musicLogic.js, services/Music.js): a small step sequencer that plays a theme per day phase, coloured by the season of the phase, through the audio service's AudioContext (so it too waits for the first tap and respects the sound switch). A theme has a tempo `bpm` and two patterns of `steps` eighth notes: `bass` and `melody`, each a list of scale degrees (0 = the root, 7 = the root an octave up, negative = below) or null for a rest. A season sets the `root` (MIDI note), the `scale` (semitone steps), a `tempoMul` and the `wave` of the melody. The theme changes at phase boundaries (phase:started). `chase` (story 13.3): layers that stack with the Aerger level - layer n plays from level n, up to five - and drop again when the chase ends: 1 a hi-hat tick on every step, 2 a low drone, 3 an arpeggio, 4 a driving octave bass, 5 a siren lead; `tempoPerLevel` speeds the music up per level. `musicGain`/`lookahead`/`tickMs`: volume, how far ahead notes are scheduled (s) and the scheduler interval.",
+  "musicGain": 0.14,
+  "lookahead": 0.35,
+  "tickMs": 90,
+  "steps": 16,
+  "scales": { "major": [0, 2, 4, 5, 7, 9, 11], "minor": [0, 2, 3, 5, 7, 8, 10] },
+  "seasons": {
+    "autumn": { "root": 57, "scale": "minor", "tempoMul": 0.95, "wave": "triangle" },
+    "winter": { "root": 52, "scale": "minor", "tempoMul": 0.88, "wave": "sine" },
+    "spring": { "root": 60, "scale": "major", "tempoMul": 1.04, "wave": "triangle" },
+    "summer": { "root": 62, "scale": "major", "tempoMul": 1.1, "wave": "square" }
+  },
+  "phases": {
+    "morning": { "bpm": 84, "bass": [0, null, null, null, 4, null, null, null, 5, null, null, null, 4, null, null, null], "melody": [7, null, 9, null, 11, null, 9, null, 7, null, 4, null, 7, null, null, null] },
+    "commute": { "bpm": 132, "bass": [0, 0, null, 0, 4, 4, null, 4, 5, 5, null, 5, 3, 3, null, 3], "melody": [7, null, 9, 7, 11, null, 9, null, 12, 11, 9, 7, 9, null, 7, null] },
+    "school": { "bpm": 70, "bass": [0, null, null, null, null, null, null, null, 3, null, null, null, null, null, null, null], "melody": [7, null, null, null, 9, null, null, null, 4, null, null, null, 5, null, null, null] },
+    "afternoon": { "bpm": 104, "bass": [0, null, 0, null, 4, null, 4, null, 5, null, 5, null, 3, null, 3, null], "melody": [7, 9, 11, null, 12, null, 11, 9, 7, null, 9, null, 7, null, null, null] },
+    "evening": { "bpm": 64, "bass": [0, null, null, null, null, null, null, null, 4, null, null, null, null, null, null, null], "melody": [7, null, null, null, 4, null, null, null, 5, null, null, null, 2, null, null, null] }
+  },
+  "chase": {
+    "tempoPerLevel": 0.05,
+    "layers": [
+      { "id": "hat", "minLevel": 1, "kind": "noise", "every": 1, "gain": 0.5 },
+      { "id": "drone", "minLevel": 2, "kind": "tone", "wave": "sawtooth", "degree": -7, "every": 8, "gain": 0.45 },
+      { "id": "arp", "minLevel": 3, "kind": "tone", "wave": "square", "degrees": [0, 2, 4, 7], "every": 1, "octave": 1, "gain": 0.3 },
+      { "id": "drive", "minLevel": 4, "kind": "tone", "wave": "sawtooth", "degree": -7, "every": 2, "octave": 0, "gain": 0.45 },
+      { "id": "siren", "minLevel": 5, "kind": "tone", "wave": "square", "degrees": [7, 11], "every": 4, "octave": 1, "gain": 0.35 }
+    ]
+  }
+}

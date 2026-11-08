@@ -60,6 +60,7 @@ import { Lookouts } from '../entities/Lookouts.js';
 import { Grownups } from '../entities/Grownups.js';
 import { TalkDown } from '../entities/TalkDown.js';
 import { Audio } from '../services/Audio.js';
+import { Music } from '../services/Music.js';
 import { Cosmetics } from '../entities/Cosmetics.js';
 import { Home } from '../entities/Home.js';
 import { morningStartMap } from '../services/Morning.js';
@@ -192,6 +193,7 @@ export class GameScene extends Phaser.Scene {
     this.grownups = new Grownups(this, ctx, cache.get('grownups')); // story 7.4
     this.talkdown = new TalkDown(this, ctx); // story 7.5
     this.audio = new Audio(ctx, cache.get('audio')); // story 13.1
+    this.music = new Music(ctx, cache.get('music'), this.audio); // stories 13.2 and 13.3
     this.phone = new Phone(this, ctx, cache.get('phone')); // story 11.3
     this.playTime = new PlayTime(ctx, minutes => ctx.quests.show(ctx.t('parent.reminder.title'), [ctx.t('parent.reminder.body', { n: minutes })])); // story 11.4: the break reminder
     this.beltTags = new BeltTags(this, ctx, cache.get('karate'));
@@ -238,6 +240,7 @@ export class GameScene extends Phaser.Scene {
     this.scene.launch('UI', { ctx });
     this.events.once('shutdown', () => {
       this.scene.stop('UI');
+      this.music.destroy();
       this.audio.destroy();
       events.removeAllListeners(); // the shared emitter outlives this run; menu re-subscribes in create
     });

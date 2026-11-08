@@ -69,6 +69,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('phone', 'data/phone.json');
     this.load.json('grownups', 'data/grownups.json');
     this.load.json('audio', 'data/audio.json');
+    this.load.json('music', 'data/music.json');
     this.load.json('grading', 'data/grading.json');
     this.load.json('kopfnoten', 'data/kopfnoten.json');
     this.load.json('teacher-comments', 'data/teacher-comments.json');
