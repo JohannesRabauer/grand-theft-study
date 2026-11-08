@@ -9,6 +9,8 @@
 // High, 16 on Low), so both resolutions get matching art. Strips are drawn for the north side and rotated
 // for the other three, so a strip set costs one drawing and every strip shares the same depth at its ends,
 // which keeps a run of strips continuous across tiles.
+import { hash2, edgeLevel, mapSeed } from './GroundArt.js';
+
 const U = 32;
 const SIDES = ['n', 'e', 's', 'w'];
 const OFF = { n: [0, -1], e: [1, 0], s: [0, 1], w: [-1, 0] };
@@ -82,26 +84,52 @@ function sourceTile(scene, id, v) {
   return out;
 }
 
-// Per-column strip depth in units. Both ends share one value so neighbouring strips join without a notch.
-function depthProfile(style, r) {
+// Depth in units of a wet-mud bank strip (both ends 3, so neighbouring banks join).
+function bankProfile(r) {
   const d = new Array(U);
-  if (style === 'tuft') {
-    for (let x = 0; x < U; x++) d[x] = 4 + Math.floor(r() * 3);
-    for (let x = 3; x < U - 3; x += 5 + Math.floor(r() * 4)) { d[x] += 3; d[x + 1] += 2; d[x - 1] += 1; } // grass blades poking out
-    d[0] = d[U - 1] = 5;
-  } else if (style === 'soft') {
-    const phase = r() * 6;
-    for (let x = 0; x < U; x++) d[x] = Math.max(4, Math.min(10, Math.round(6 + 2.2 * Math.sin(x * 0.4 + phase) + r() * 1.5)));
-    d[0] = d[U - 1] = 6;
-  } else { // stone: loose stones, four units each
-    const blocks = [];
-    for (let b = 0; b < 8; b++) blocks.push(4 + Math.floor(r() * 4));
-    blocks[0] = blocks[7] = 5;
-    for (let x = 0; x < U; x++) d[x] = blocks[x >> 2];
-  }
+  const phase = r() * 6;
+  for (let x = 0; x < U; x++) d[x] = Math.max(3, Math.min(5, Math.round(5 + 2.2 * Math.sin(x * 0.4 + phase) + r() * 1.5)));
+  d[0] = d[U - 1] = 3;
   return d;
 }
 
+// Border strips follow a seeded noise curve (story 16.5): the depth runs from the noise level (0..2) of the strip's first
+// lattice vertex to that of its last, so any two strips with a shared vertex join without a notch and a long border wanders
+// by several base pixels instead of repeating once per tile.
+const LEVELS = { tuft: [3, 7, 11], soft: [5, 9, 12], stone: [4, 7, 10], curb: [3, 5, 7] };
+const smooth = t => t * t * (3 - 2 * t);
+function depthProfile(style, r, a, b) {
+  const d = new Array(U);
+  const [da, db] = [LEVELS[style][a], LEVELS[style][b]];
+  if (style === 'curb') { // a kerb jogs by one unit every 5 to 9 units
+    let cur = da;
+    let next = 3 + Math.floor(r() * 4);
+    for (let x = 0; x < U; x++) {
+      if (x === next) { const want = 3 + Math.floor(r() * 5); cur += Math.max(-2, Math.min(2, want - cur)); next += 5 + Math.floor(r() * 5); }
+      d[x] = cur;
+    }
+    d[U - 1] = db;
+    return d;
+  }
+  if (style === 'stone') { // loose stones, four units each
+    const blocks = [da];
+    for (let i = 1; i < 7; i++) blocks.push(Math.max(3, Math.round(da + (db - da) * (i / 7) + (r() - 0.5) * 5)));
+    blocks.push(db);
+    for (let x = 0; x < U; x++) d[x] = blocks[x >> 2];
+    return d;
+  }
+  const amp = style === 'tuft' ? 2.4 : 1.6;
+  const [p1, p2] = [r() * 6, r() * 6];
+  for (let x = 0; x < U; x++) {
+    const t = x / (U - 1);
+    const bump = amp * (0.6 * Math.sin(x * 0.45 + p1) + 0.4 * Math.sin(x * 0.9 + p2)) * Math.sin(Math.PI * t);
+    d[x] = Math.max(2, Math.round(da + (db - da) * smooth(t) + bump + (style === 'tuft' ? r() * 1.2 : 0)));
+  }
+  if (style === 'tuft') for (let x = 3; x < U - 3; x += 5 + Math.floor(r() * 4)) { d[x] += 3; d[x + 1] += 2; d[x - 1] += 1; } // grass blades poking out
+  d[0] = da;
+  d[U - 1] = db;
+  return d;
+}
 // Keeps the source texture above the depth profile; the last opaque row gets a darker rim.
 function maskStrip(tmp, depth, rim, dither) {
   const c = tmp.getContext('2d');
@@ -156,25 +184,29 @@ function maskCorner(tmp, radius, rim, r) {
 
 // -------------------------------------------------------------------------------------- strips
 
-function surfaceStrip(scene, cls, v) {
+function surfaceStrip(scene, cls, a, b, k) {
   const style = STYLE[cls];
   const tmp = canvas();
   const c = tmp.getContext('2d');
-  const r = rng(hash(`${cls}-edge`) + v * 977);
+  const v = (a + b + k) % VARIANTS;
+  const r = rng(hash(`${cls}-edge`) + (a * 3 + b) * 977 + k * 131);
   const source = sourceTile(scene, cls, v);
   c.drawImage(source, 0, 0);
   const srcData = source.getContext('2d').getImageData(0, 0, U, U).data;
+  const depth = depthProfile(style, r, a, b);
   if (style === 'curb') {
-    const depth = new Array(U).fill(5);
     maskStrip(tmp, depth, 0.0, false);
-    px(c, 'rgba(255,255,255,0.34)', 0, 0, U, 2);   // lit top of the kerb
-    px(c, 'rgba(0,0,0,0.38)', 0, 4, U, 1);          // kerb face
-    for (let x = 6 + v * 3; x < U; x += 11) px(c, 'rgba(0,0,0,0.16)', x, 0, 1, 4); // joints
-    px(c, 'rgba(0,0,0,0.24)', 0, 5, U, 1);          // soft shadow on the lower surface
-    px(c, 'rgba(0,0,0,0.15)', 0, 6, U, 1);
-    px(c, 'rgba(0,0,0,0.07)', 0, 7, U, 1);
+    for (let x = 0; x < U; x++) {
+      const d = depth[x];
+      px(c, 'rgba(255,255,255,0.34)', x, 0, 1, 2);    // lit top of the kerb
+      px(c, 'rgba(0,0,0,0.38)', x, d - 1);             // kerb face
+      px(c, 'rgba(0,0,0,0.24)', x, d);                 // soft shadow on the lower surface
+      px(c, 'rgba(0,0,0,0.15)', x, d + 1);
+      px(c, 'rgba(0,0,0,0.07)', x, d + 2);
+    }
+    for (let x = 6 + k * 3; x < U; x += 11) px(c, 'rgba(0,0,0,0.16)', x, 0, 1, depth[x] - 1); // joints
+    for (let i = 0; i < 3; i++) { const x = 2 + Math.floor(r() * 28); px(c, i ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.22)', x, Math.floor(r() * 3), 2, 1); } // chips
   } else {
-    const depth = depthProfile(style, r);
     maskStrip(tmp, depth, style === 'soft' ? 0 : style === 'stone' ? 0.3 : 0.16, style === 'stone' ? 0 : 2);
     if (style === 'tuft') scatter(c, srcData, depth, r, 6, 1, 2);
     else if (style === 'stone') scatter(c, srcData, depth, r, 4, 3, 2);
@@ -182,13 +214,12 @@ function surfaceStrip(scene, cls, v) {
   }
   return tmp;
 }
-
 function surfaceCorner(scene, cls, v) {
   const style = STYLE[cls];
   const tmp = canvas();
   const c = tmp.getContext('2d');
   c.drawImage(sourceTile(scene, cls, v), 0, 0);
-  maskCorner(tmp, style === 'curb' ? 5 : style === 'tuft' ? 6.5 : 6, style === 'soft' ? 0 : 0.25, rng(hash(`${cls}-corner`) + v * 31));
+  maskCorner(tmp, style === 'curb' ? 8 : style === 'tuft' ? 8 : 7, style === 'soft' ? 0 : 0.25, rng(hash(`${cls}-corner`) + v * 31));
   if (style === 'curb') px(c, 'rgba(255,255,255,0.3)', 0, 0, 4, 1);
   return tmp;
 }
@@ -231,8 +262,7 @@ function bankStrip(kind, v) {
     px(c, 'rgba(0,0,0,0.2)', 0, 3, U, 1);
     for (let x = 5 + v * 4; x < U; x += 9) px(c, '#5b5f68', x, 1, 1, 2);
   } else {
-    const d = depthProfile('soft', r).map(n => Math.max(3, Math.min(5, n - 1)));
-    d[0] = d[U - 1] = 3;
+    const d = bankProfile(r);
     for (let x = 0; x < U; x++) {
       for (let y = 0; y < d[x]; y++) {
         const col = y === 0 ? '#3d3226' : y === 1 ? '#5a4731' : r() < 0.3 ? '#8a7048' : '#6e5a3b';
@@ -1035,10 +1065,12 @@ export function makeEnvArt(scene, tileDefs, size) {
   }
   for (const cls of Object.keys(STYLE)) {
     for (let v = 0; v < VARIANTS; v++) {
-      const strip = surfaceStrip(scene, cls, v);
       const corner = surfaceCorner(scene, cls, v);
-      SIDES.forEach((s, rot) => emit(scene, `env-edge-${cls}-${s}-${v}`, strip, size, rot));
       CORNERS.forEach((s, rot) => emit(scene, `env-edgec-${cls}-${s}-${v}`, corner, size, rot));
+    }
+    for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) for (let k = 0; k < VARIANTS; k++) {
+      const strip = surfaceStrip(scene, cls, a, b, k);
+      SIDES.forEach((s, rot) => emit(scene, `env-edge-${cls}-${s}-${a}${b}${k}`, strip, size, rot));
     }
   }
   for (let v = 0; v < VARIANTS; v++) {
@@ -1092,6 +1124,15 @@ function landClass(id) {
 }
 const edgeVariant = (tx, ty) => (((tx * 2654435761) ^ (ty * 40503)) >>> 0) % VARIANTS;
 
+// Strip variant "<a><b><k>" for side s of tile (tx, ty): a and b are the noise levels of the lattice vertices at the strip's
+// start and end (after the quarter-turn rotation of the side), k picks one of the shapes with those ends.
+const STRIP_ENDS = { n: [[0, 0], [1, 0]], e: [[1, 0], [1, 1]], s: [[1, 1], [0, 1]], w: [[0, 1], [0, 0]] };
+export function stripVariant(seed, cls, s, tx, ty) {
+  const [[ax, ay], [bx, by]] = STRIP_ENDS[s];
+  const k = Math.floor(hash2(seed + 77, tx * 4 + SIDES.indexOf(s), ty) * VARIANTS);
+  return `${edgeLevel(seed, cls, tx + ax, ty + ay)}${edgeLevel(seed, cls, tx + bx, ty + by)}${k}`;
+}
+
 // Texture keys to draw, in order, for the tile at (tx, ty). `baseKey` is the plain tile texture the caller
 // would draw; without environment art (or on maps with no outdoor surfaces) it comes back unchanged.
 export function groundKeys(map, tx, ty, baseKey, mapId) {
@@ -1103,6 +1144,7 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
   const id = idAt(tx, ty);
   if (id === 'wall') return wallKeys(map, tx, ty, baseKey, idAt);
   const v = edgeVariant(tx, ty);
+  const seed = mapSeed(map, mapId);
   const keys = [];
 
   if (id === 'hedge') {
@@ -1155,7 +1197,7 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
       const nid = idAt(tx + OFF[s][0], ty + OFF[s][1]);
       if (nid === 'water') { keys.push(`env-bank-${waterKind}-${s}-${v}`); given[s] = 'water'; continue; }
       const g = giver(nid);
-      if (g) { keys.push(`env-edge-${g}-${s}-${v}`); given[s] = g; }
+      if (g) { keys.push(`env-edge-${g}-${s}-${stripVariant(seed, g, s, tx, ty)}`); given[s] = g; }
     }
     for (const k of CORNERS) {
       const nid = idAt(tx + CORNER_OFF[k][0], ty + CORNER_OFF[k][1]);

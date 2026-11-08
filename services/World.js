@@ -1,6 +1,7 @@
 import { addStaticWall } from '../physics/bodies.js';
 import { tileKey } from '../scenes/HiResArt.js';
 import { groundKeys } from '../scenes/EnvArt.js';
+import { paintGround, mapSeed } from '../scenes/GroundArt.js';
 import { resolveEntry } from './worldLogic.js';
 
 const FADE_MS = 160; // quick fade-in from black after a switch
@@ -94,6 +95,17 @@ export class World {
     scene.worldH = map.rows.length * map.tileSize;
   }
 
+  // A base-pixel RGBA buffer as a temporary nearest-filtered image, scaled to the tier's texture size.
+  groundSheet(key, data, paint, scale) {
+    const canvas = document.createElement('canvas');
+    canvas.width = paint.width;
+    canvas.height = paint.height;
+    canvas.getContext('2d').putImageData(new ImageData(data, paint.width, paint.height), 0, 0);
+    if (this.scene.textures.exists(key)) this.scene.textures.remove(key);
+    this.scene.textures.addCanvas(key, canvas).setFilter(Phaser.Textures.FilterMode.NEAREST);
+    return this.scene.make.image({ key, add: false }).setOrigin(0).setScale(scale);
+  }
+
   // Static ground stays within the device's texture limit, including the larger town.
   renderGround(map) {
     const { res } = this.ctx;
@@ -102,6 +114,7 @@ export class World {
     const limit = Math.min(4096, gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 4096);
     const span = Math.floor(limit / ts);
     const cols = map.rows[0].length;
+    const seed = mapSeed(map, this.id);
     const ground = this.scene.add.container(0, 0).setDepth(-1);
     for (let y = 0; y < map.rows.length; y += span) {
       for (let x = 0; x < cols; x += span) {
@@ -110,13 +123,23 @@ export class World {
         const rt = this.scene.add.renderTexture(x * map.tileSize, y * map.tileSize, w * ts, h * ts).setOrigin(0).setScale(res.inv);
         rt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
         ground.add(rt);
+        const paint = paintGround(map, seed, x, y, w, h);
+        const sheets = paint ? [paint.under, paint.over].map((data, i) => this.groundSheet(`ground-sheet-${i}`, data, paint, res.scale)) : [];
         rt.beginDraw();
+        const rest = [];
         for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) {
           const key = res.scale > 1 ? tileKey(map, x + tx, y + ty) : `tile-${map.legend[map.rows[y + ty][x + tx]]}`;
           // AD-30: blended edges, shores, curbs and oriented fences come from the neighbours, drawn once here
-          for (const k of groundKeys(map, x + tx, y + ty, key, this.id)) rt.batchDraw(k, tx * ts, ty * ts);
+          const keys = groundKeys(map, x + tx, y + ty, key, this.id);
+          rt.batchDraw(keys[0], tx * ts, ty * ts);
+          for (let i = 1; i < keys.length; i++) rest.push(keys[i], tx * ts, ty * ts);
         }
+        // Three passes: base tiles, then the organic overlay (tone patches, decals), then edges and dressing, then worn dirt
+        if (sheets[0]) rt.batchDraw(sheets[0], 0, 0);
+        for (let i = 0; i < rest.length; i += 3) rt.batchDraw(rest[i], rest[i + 1], rest[i + 2]);
+        if (sheets[1]) rt.batchDraw(sheets[1], 0, 0);
         rt.endDraw();
+        for (const s of sheets) { s.destroy(); this.scene.textures.remove(s.texture.key); }
       }
     }
     return ground;

@@ -10,6 +10,7 @@ checks.push('check-school.mjs');
 checks.push('check-morning.mjs');
 checks.push('check-open-world.mjs');
 checks.push('check-envart.mjs');
+checks.push('check-groundart.mjs');
 checks.push('check-hints.mjs');
 checks.push('check-commute.mjs');
 checks.push('check-shop.mjs');

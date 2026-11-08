@@ -19,6 +19,13 @@ assert.deepEqual(at(m, 0, 1), ['base-grass'], 'grass is the higher surface and g
 m = mk('AAA', 'AAA', 'AAG');
 assert.ok(has(at(m, 1, 1), /^env-edgec-grass-se-/), 'an outer corner with grass only on the diagonal gets a corner piece');
 
+// story 16.5: border strips are named by the noise level at both ends and a shape, e.g. env-edge-grass-n-012
+assert.ok(has(at(mk('GGG', 'AAA', 'AAA'), 1, 1), /^env-edge-grass-n-[0-2][0-2][01]$/), 'edge strips carry their noise levels and shape');
+assert.deepEqual(at(m, 1, 1), at(m, 1, 1), 'the strip choice is stable');
+const run = mk('GGGGGGGGGGGG', 'AAAAAAAAAAAA');
+const names = Array.from({ length: 12 }, (_, x) => at(run, x, 1).find(k => /^env-edge-grass-n-/.test(k)));
+assert.ok(new Set(names).size > 4, 'a long border is made of many different strips, not one repeated tile');
+
 // kerb: concrete over asphalt and lane, grass over concrete
 m = mk('SSA', 'SSL', 'SSG');
 assert.ok(has(at(m, 2, 0), /^env-edge-concrete-w-/), 'asphalt gets a kerb along the pavement');
