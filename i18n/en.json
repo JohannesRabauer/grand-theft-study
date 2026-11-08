@@ -619,5 +619,6 @@
   "hint.traffic.title": "Watch the road",
   "hint.traffic.body": "Buses and other traffic can knock you over, and you lose a few coins. Look before you cross and stay on pavements and cycle lanes when you can.",
   "hint.rain.title": "It is raining",
-  "hint.rain.body": "Puddles are slippery and slow you down. Ride around them and take it easy on wet roads. The rain stops after a while."
+  "hint.rain.body": "Puddles are slippery and slow you down. Ride around them and take it easy on wet roads. The rain stops after a while.",
+  "caught.rejoin": "{who} is back, right next to {mate}!"
 }

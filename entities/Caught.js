@@ -3,7 +3,8 @@
 // ignore it) while UIScene shows the comic frame for it; it loses a little money from the shared wallet, once per catch
 // (a `wallet.spend` on ctx.state, AD-16), and ctx.chase.playerCaught() decides about the chase (the level resets only when no bully is
 // chasing any more). After `seconds` or on that player's interact / a fresh jump press it is dismounted and put back at home
-// (beside the spawn point in co-op, camera.json coop.spawnOffsets). The world freezes only while EVERY player is caught
+// (beside the spawn point in co-op, camera.json coop.spawnOffsets; in co-op, when home is far from the sibling still
+// playing, next to the sibling instead, so the shared camera and tether never end up stuck). The world freezes only while EVERY player is caught
 // (always, with one player); otherwise the other keeps playing. Emits `player:caught` { player, lost, money } (cents) and
 // `player:respawn` { player, x, y }.
 export class Caught {
@@ -58,8 +59,20 @@ export class Caught {
     for (const ride of this.rides) if (ride.isMounted(index)) ride.dismount(player); // the bike or board stays where the player was caught
     const coop = ctx.players.length > 1;
     const off = coop ? scene.zoomCfg.coop.spawnOffsets[index] : [0, 0];
-    const x = this.home.x + off[0];
-    const y = this.home.y + off[1];
+    let x = this.home.x + off[0];
+    let y = this.home.y + off[1];
+    // Co-op: one shared camera and a tether. When home is far from the sibling who is still playing, the view could
+    // not show both and the pair got stuck, so the caught player comes back right next to the sibling instead.
+    const mate = coop ? ctx.players.find(p => p.index !== index && p.alive && !p.pinned) : null;
+    let rejoined = false;
+    if (mate && Math.hypot(mate.x - x, mate.y - y) > scene.zoomCfg.tether.maxDistance * 0.6) {
+      const { surfaces } = ctx;
+      const spot = [[off[0] * 2, off[1] * 2 + 10], [off[0] * 2, off[1] * 2 - 10], [0, 12], [0, 0]]
+        .map(([dx, dy]) => [mate.x + dx, mate.y + dy])
+        .find(([px, py]) => !surfaces.solid(surfaces.at(px, py))) ?? [mate.x, mate.y];
+      [x, y] = spot;
+      rejoined = true;
+    }
     player.teleport(x, y);
     if (!coop) scene.cameras.main.centerOn(x, y); // with two players the rig eases the view over
     ctx.particles.emit('dust', x, y, { count: 14 });
@@ -67,6 +80,7 @@ export class Caught {
     player.pinned = false;
     player.alive = true;
     if (--this.count < ctx.players.length) scene.freeze(false);
-    ctx.events.emit('player:respawn', { player: index, x, y });
+    if (rejoined) ctx.events.emit('ui:toast', { key: 'caught.rejoin', params: { who: player.character?.name ?? ctx.t('menu.slot.player', { n: index + 1 }), mate: mate.character?.name ?? ctx.t('menu.slot.player', { n: mate.index + 1 }) } });
+    ctx.events.emit('player:respawn', { player: index, x, y, rejoined });
   }
 }

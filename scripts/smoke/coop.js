@@ -304,7 +304,9 @@ export const coopChase = {
     const home = gs.caught.home;
     const off = gs.zoomCfg.coop.spawnOffsets[0];
     const back = until(() => n('player:respawn', e => e.player === 0) >= 1, 400, holdC2);
-    assert('P1 respawns at the spawn point (beside it), alive and free', back >= 0 && Math.hypot(p1.x - (home.x + off[0]), p1.y - (home.y + off[1])) < 24 && p1.alive && !p1.pinned && !gs.bikes.isMounted(0), `${back} frames`);
+    const far = Math.hypot(p2.x - (home.x + off[0]), p2.y - (home.y + off[1])) > gs.zoomCfg.tether.maxDistance * 0.6;
+    assert('home is far from P2, so P1 comes back right next to P2 (the shared camera and tether cannot get stuck), alive and free', back >= 0 && far && Math.hypot(p1.x - p2.x, p1.y - p2.y) < 40 && p1.alive && !p1.pinned && !gs.bikes.isMounted(0) && n('player:respawn', e => e.player === 0 && e.rejoined) === 1, `${back} frames, apart ${Math.hypot(p1.x - p2.x, p1.y - p2.y).toFixed(0)}px`);
+    assert('the view fits both players after the rejoin: their distance is inside the tether', Math.hypot(p1.x - p2.x, p1.y - p2.y) < gs.zoomCfg.tether.maxDistance * 0.3);
     assert('P1 frame is hidden again, P2 never lost control', !frames.frames[0].items[0].visible && !p2.pinned && p2.alive);
 
     // ---- P2 is caught as the last chaser: level resets (nobody chases any more) ----
@@ -352,6 +354,17 @@ export const coopChase = {
     assert('both hidden: the shared level drops', t1 >= 0 && chase.level === 0, `${t1} frames, level ${chase.level}`);
     chase.cfg.bully.catchRadius = 9;
     until(() => active().length === 0, 1500);
+    // ---- sibling near home: the caught player still goes home, beside the spawn point ----
+    chase.cfg.bully.catchRadius = -1;
+    until(() => active().length === 0, 1500);
+    step(5);
+    at(p2, home.x + 40, home.y);
+    const r0 = n('player:respawn', e => e.player === 0 && !e.rejoined);
+    ctx.events.emit('bully:caught-contact', { player: 0 });
+    step(1);
+    gs.caught.respawn(0);
+    assert('with P2 near home, P1 respawns at the spawn point as before', Math.hypot(p1.x - (home.x + off[0]), p1.y - (home.y + off[1])) < 24 && n('player:respawn', e => e.player === 0 && !e.rejoined) === r0 + 1, `at ${p1.x.toFixed(0)},${p1.y.toFixed(0)}`);
+    chase.cfg.bully.catchRadius = 9;
     ctx.state.dispatch('coop.set', { on: false });
     step(2);
   }

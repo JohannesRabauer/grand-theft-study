@@ -619,5 +619,6 @@
   "hint.traffic.title": "Achtung Straße",
   "hint.traffic.body": "Busse und anderer Verkehr können dich umwerfen, und du verlierst ein paar Münzen. Schau, bevor du die Straße überquerst, und bleib möglichst auf Gehweg und Radweg.",
   "hint.rain.title": "Es regnet",
-  "hint.rain.body": "Pfützen sind rutschig und bremsen dich. Fahre drumherum und nimm es auf nassen Straßen ruhig. Der Regen hört nach einer Weile auf."
+  "hint.rain.body": "Pfützen sind rutschig und bremsen dich. Fahre drumherum und nimm es auf nassen Straßen ruhig. Der Regen hört nach einer Weile auf.",
+  "caught.rejoin": "{who} ist wieder dabei, direkt neben {mate}!"
 }
