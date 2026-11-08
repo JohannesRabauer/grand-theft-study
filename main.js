@@ -7,6 +7,10 @@ import { installScaling } from './ui/scaling.js';
 import { resolveRes } from './services/quality.js';
 
 window.SCHULWEG_DEBUG = new URLSearchParams(location.search).has('debug');
+// offline play after the first visit (story 14.1, sw.js); not in the scripted ?bench runs
+if ('serviceWorker' in navigator && !new URLSearchParams(location.search).has('bench') && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 // debug maps and doors (data/maps/index.json) exist only in sessions meant for checking
 window.SCHULWEG_TESTMAPS = window.SCHULWEG_DEBUG || new URLSearchParams(location.search).has('bench');
 

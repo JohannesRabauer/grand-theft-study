@@ -1,0 +1,18 @@
+{
+  "name": "Schulweg",
+  "short_name": "Schulweg",
+  "description": "Komm bloß nicht zu spät zur Schule! A cartoon school-run game for kids.",
+  "lang": "de",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#10131c",
+  "theme_color": "#10131c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
