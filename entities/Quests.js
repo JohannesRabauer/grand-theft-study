@@ -6,7 +6,7 @@
 // - End: the last step pays the reward (shared wallet cents, xp for every player) and emits mission:done { id, kind }.
 // Events: mission:started { id }, mission:step { id, step }, mission:done { id, kind }.
 import { MessageScreen } from '../ui/screens/MessageScreen.js';
-import { canStart, currentStep, missionById, nextCall, reached, stepFinishedBy } from '../services/questLogic.js';
+import { canStart, countsFor, currentStep, missionById, nextCall, raceProgress, reached, stepFinishedBy } from '../services/questLogic.js';
 import { matches } from '../services/Hints.js';
 
 export class Quests {
@@ -17,6 +17,8 @@ export class Quests {
     this.inputCfg = inputCfg;
     ctx.quests = this;
     this.booths = new WeakMap();
+    this.counts = {}; // progress of count steps (not saved; a step starts again after a reload)
+    this.race = null; // the race in progress: { key, id, idx, left }
     this.labels = Array.from({ length: ctx.maxPlayers }, () => scene.add.text(0, 0, '', {
       fontFamily: 'monospace', fontSize: '8px', color: '#fff2a8', backgroundColor: '#243d46', resolution: ctx.res.scale
     }).setOrigin(0.5).setDepth(8100).setVisible(false));
@@ -24,7 +26,7 @@ export class Quests {
     for (const m of cfg.missions) {
       if (m.trigger?.event) names.add(m.trigger.event);
       for (const f of m.failOn ?? []) names.add(f.event);
-      for (const s of m.steps) if (s.event) names.add(s.event);
+      for (const s of m.steps) { if (s.event) names.add(s.event); if (s.count) names.add(s.count.event); }
     }
     for (const name of names) ctx.events.on(name, payload => this.onEvent(name, payload));
     ctx.events.on('lang:changed', () => { for (const l of this.labels) l.questText = null; });
@@ -53,11 +55,32 @@ export class Quests {
   objective() {
     for (const entry of this.quests.active) {
       const step = currentStep(this.cfg, entry);
+      if (step?.race) {
+        const r = this.raceState(entry, step);
+        const pt = step.race.points[Math.min(r.idx, step.race.points.length - 1)];
+        return { id: entry.id, map: step.objective?.map ?? this.ctx.world.id, x: pt[0], y: pt[1], text: step.text, title: this.title(entry.id), live: true, timer: Math.max(0, Math.ceil(r.left)), checkpoint: r.idx + 1, total: step.race.points.length };
+      }
       if (!step?.objective) continue;
       const o = this.place(step.objective);
       if (o) return { id: entry.id, ...o, text: step.text, title: this.title(entry.id) };
     }
     return null;
+  }
+
+  // The state of the race of this step: starts the clock when the step becomes the current one.
+  raceState(entry, step) {
+    const key = `${entry.id}:${entry.step}`;
+    if (this.race?.key !== key) this.race = { key, id: entry.id, idx: 0, left: step.race.seconds };
+    return this.race;
+  }
+
+  // The clock ran out: the race is lost, kindly, and can be run again.
+  failRace(entry) {
+    const { ctx } = this;
+    this.race = null;
+    ctx.state.dispatch('quest.abort', { id: entry.id });
+    ctx.events.emit('mission:failed', { id: entry.id });
+    this.show(this.title(entry.id), [ctx.t(`mission.${entry.id}.fail`)]);
   }
 
   // A step's objective as a map spot: fixed, or the hideout of the stolen bike (dynamic).
@@ -112,13 +135,16 @@ export class Quests {
     }
     if (!ctx.state.dispatch('quest.finish', { id })) return;
     const { cents, xp } = m.reward;
+    const wins = m.reward.vehicle && !ctx.ownership.owns(m.reward.vehicle) ? m.reward.vehicle : null;
     if (cents > 0) ctx.state.dispatch('wallet.earn', { cents, reason: `mission-${id}` });
     if (xp > 0) for (const p of ctx.players) ctx.state.dispatch('xp.add', { player: p.index, amount: xp });
     ctx.events.emit('mission:done', { id, kind: m.kind, cents, xp });
     if (m.finishEvent) ctx.events.emit(m.finishEvent.name, { ...m.finishEvent.payload });
+    if (m.finishFlag) ctx.state.dispatch('flags.set', { key: m.finishFlag.key, value: m.finishFlag.value });
+    if (m.reward.vehicle) ctx.events.emit('race:won', { vehicle: m.reward.vehicle, id, player: 0 });
     const money = ctx.t('hud.money', { v: (cents / 100).toFixed(2).replace('.', ctx.i18n.lang === 'de' ? ',' : '.') });
     if (!m.booth) { ctx.events.emit('ui:toast', { key: `mission.${id}.done`, style: 'phone' }); return; } // started by itself: it also ends with a toast, never a screen that takes the next key press
-    this.show(ctx.t('quest.done.title', { title: this.title(id) }), [ctx.t(`mission.${id}.done`), ctx.t('quest.reward', { money, xp })]);
+    this.show(ctx.t('quest.done.title', { title: this.title(id) }), [ctx.t(`mission.${id}.done`), ctx.t('quest.reward', { money, xp }), ...(wins ? [ctx.t('quest.vehicle', { name: ctx.t(`vehicle.${wins}`) })] : [])]);
   }
 
   // A step whose goal is already met (flag) is passed at once; the last step is never skipped.
@@ -150,13 +176,31 @@ export class Quests {
       if (m.trigger?.event === name && matches(m.trigger.match, payload) && canStart(this.cfg, this.quests, m.id, null, ctx.day.day, ctx.state.shared.flags)) this.start(m.id, false);
     }
     for (const entry of [...this.quests.active]) {
-      if (stepFinishedBy(currentStep(this.cfg, entry), name, payload)) this.advance(entry.id);
+      const step = currentStep(this.cfg, entry);
+      if (stepFinishedBy(step, name, payload)) { this.advance(entry.id); continue; }
+      if (!countsFor(step?.count, name, payload, ctx.map.tileSize)) continue;
+      const key = `${entry.id}:${entry.step}`;
+      const n = (this.counts[key] = (this.counts[key] ?? 0) + 1);
+      if (n >= step.count.n) { delete this.counts[key]; this.advance(entry.id); } else ctx.events.emit('ui:toast', { key: 'quest.count', params: { n, total: step.count.n } });
     }
   }
 
-  update() {
+  update(dt = 0) {
     const { ctx } = this;
     if (ctx.screens?.top()) return;
+    for (const entry of [...this.quests.active]) {
+      const step = currentStep(this.cfg, entry);
+      if (!step?.race) continue;
+      const r = this.raceState(entry, step);
+      r.left -= dt;
+      const ts = ctx.map.tileSize;
+      for (const p of ctx.players) if (p.alive && !p.pinned && (!step.objective?.map || step.objective.map === ctx.world.id)) {
+        const idx = raceProgress(step.race, r.idx, p.x, p.y, p.vehicle, ts);
+        if (idx > r.idx) { r.idx = idx; ctx.events.emit('race:checkpoint', { id: entry.id, n: idx, total: step.race.points.length }); }
+      }
+      if (r.idx >= step.race.points.length) { this.race = null; this.advance(entry.id); return; }
+      if (r.left <= 0) { this.failRace(entry); return; }
+    }
     for (const entry of [...this.quests.active]) {
       const step = currentStep(this.cfg, entry);
       if (!step?.reach) continue;

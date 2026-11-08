@@ -1,5 +1,5 @@
 {
-  "_doc": "Missions for the quest runner (story 9.1, entities/Quests.js). A mission has ordered `steps`; a step completes when a kid reaches its `reach` point ({ map, x, y } in tiles, `radius` in px, any player) or when its `event` fires (`match`: payload fields that must be equal, a list means any of them). `objective` is where the arrow points and `text` the line shown while the step is open (i18n keys mission.<id>.<key>). A mission starts at a phone booth (`booth: any`, only in the listed `phases` when given) or by itself when `trigger.event` fires. `kind` goes out with mission:done (help feeds Hilfsbereitschaft through data/kopfnoten.json). `reward` is paid to the shared wallet (cents) and to every player (xp); `repeat` lets it be played again each day. Intro and outro come from mission.<id>.intro / .done. More: objective `{ dynamic: stolenBike }` follows the hideout of the stolen bike; `lives` with `failOn` (events, counted from step `failFromStep` on) lets a fragile load take that many bumps before the mission fails (mission.<id>.hit / .fail) and can be started again; `skipIfFlag` skips a step whose goal is already met; `finishEvent` is emitted when the mission is done.",
+  "_doc": "Missions for the quest runner (story 9.1, entities/Quests.js). A mission has ordered `steps`; a step completes when a kid reaches its `reach` point ({ map, x, y } in tiles, `radius` in px, any player) or when its `event` fires (`match`: payload fields that must be equal, a list means any of them). `objective` is where the arrow points and `text` the line shown while the step is open (i18n keys mission.<id>.<key>). A mission starts at a phone booth (`booth: any`, only in the listed `phases` when given) or by itself when `trigger.event` fires. `kind` goes out with mission:done (help feeds Hilfsbereitschaft through data/kopfnoten.json). `reward` is paid to the shared wallet (cents) and to every player (xp); `repeat` lets it be played again each day. Intro and outro come from mission.<id>.intro / .done. More: objective `{ dynamic: stolenBike }` follows the hideout of the stolen bike; `lives` with `failOn` (events, counted from step `failFromStep` on) lets a fragile load take that many bumps before the mission fails (mission.<id>.hit / .fail) and can be started again; `skipIfFlag` skips a step whose goal is already met; `finishEvent` is emitted when the mission is done. Step kinds besides `reach` and `event`: `count` ({ event, where: { kind, source, near }, n }: n matching events, e.g. cans hit with the slingshot near the stall) and `race` ({ points, seconds, radius, vehicles }: the checkpoints in order within the time, only while riding one of the vehicles; running out of time fails the mission kindly, mission.<id>.fail). `requires` lists missions that must be done first; `finishFlag` sets a saved flag when the mission is done (the friendship level the chase reads); `reward.vehicle` wins that vehicle (race:won).",
   "missions": [
     {
       "id": "parcel",
@@ -47,6 +47,77 @@
         { "id": "return", "objective": { "map": "town", "x": 78, "y": 13 }, "text": "mission.lost-homework.step2", "reach": { "map": "town", "x": 78, "y": 13, "radius": 48 } }
       ],
       "reward": { "cents": 200, "xp": 20 }
+    },
+    {
+      "id": "skate-race",
+      "kind": "race",
+      "booth": "any",
+      "phases": ["commute", "afternoon", "evening"],
+      "steps": [
+        { "id": "start-line", "objective": { "map": "town", "x": 50, "y": 37 }, "text": "mission.skate-race.step1", "reach": { "map": "town", "x": 50, "y": 37, "radius": 40 } },
+        { "id": "race", "objective": { "map": "town" }, "text": "mission.skate-race.step2", "race": { "points": [[64, 37], [64, 43], [50, 43], [50, 37]], "seconds": 25, "radius": 40, "vehicles": ["skateboard", "skates", "scooter", "rollerblades"] } }
+      ],
+      "reward": { "cents": 250, "xp": 25, "vehicle": "scooter" }
+    },
+    {
+      "id": "bike-race",
+      "kind": "race",
+      "booth": "any",
+      "phases": ["commute", "afternoon", "evening"],
+      "steps": [
+        { "id": "start-line", "objective": { "map": "town", "x": 44, "y": 53 }, "text": "mission.bike-race.step1", "reach": { "map": "town", "x": 44, "y": 53, "radius": 40 } },
+        { "id": "race", "objective": { "map": "town" }, "text": "mission.bike-race.step2", "race": { "points": [[60, 53], [78, 53], [78, 58], [60, 58], [44, 58]], "seconds": 30, "radius": 40, "vehicles": ["bike"] } }
+      ],
+      "reward": { "cents": 250, "xp": 25, "vehicle": "rollerblades" }
+    },
+    {
+      "id": "kirmes-range",
+      "kind": "skill",
+      "booth": "any",
+      "phases": ["commute", "afternoon", "evening"],
+      "steps": [
+        { "id": "go-to-stall", "objective": { "map": "town", "x": 5, "y": 40 }, "text": "mission.kirmes-range.step1", "reach": { "map": "town", "x": 5, "y": 40, "radius": 40 } },
+        { "id": "shoot", "objective": { "map": "town", "x": 5, "y": 40 }, "text": "mission.kirmes-range.step2", "count": { "event": "prop:hit", "where": { "kind": "can", "source": "slingshot", "near": { "x": 5, "y": 37, "radius": 8 } }, "n": 5 } }
+      ],
+      "reward": { "cents": 400, "xp": 25 }
+    },
+    {
+      "id": "friendship-1",
+      "kind": "help",
+      "booth": "any",
+      "phases": ["commute", "afternoon", "evening"],
+      "finishFlag": { "key": "friendship", "value": 1 },
+      "steps": [
+        { "id": "candy", "objective": { "map": "town", "x": 14, "y": 38 }, "text": "mission.friendship-1.step1", "count": { "event": "loot:collected", "where": { "kind": "candy" }, "n": 2 } },
+        { "id": "offer", "objective": { "map": "town", "x": 52, "y": 41 }, "text": "mission.friendship-1.step2", "reach": { "map": "town", "x": 52, "y": 41, "radius": 40 } }
+      ],
+      "reward": { "cents": 200, "xp": 20 }
+    },
+    {
+      "id": "friendship-2",
+      "kind": "help",
+      "booth": "any",
+      "requires": ["friendship-1"],
+      "phases": ["commute", "afternoon", "evening"],
+      "finishFlag": { "key": "friendship", "value": 2 },
+      "steps": [
+        { "id": "lesson", "objective": { "map": "town", "x": 78, "y": 13 }, "text": "mission.friendship-2.step1", "event": "lesson:completed" },
+        { "id": "help", "objective": { "map": "town", "x": 88, "y": 17 }, "text": "mission.friendship-2.step2", "reach": { "map": "town", "x": 88, "y": 17, "radius": 40 } }
+      ],
+      "reward": { "cents": 300, "xp": 25 }
+    },
+    {
+      "id": "friendship-3",
+      "kind": "help",
+      "booth": "any",
+      "requires": ["friendship-2"],
+      "phases": ["commute", "afternoon", "evening"],
+      "finishFlag": { "key": "friendship", "value": 3 },
+      "steps": [
+        { "id": "bell", "objective": { "map": "town", "x": 50, "y": 37 }, "text": "mission.friendship-3.step1", "count": { "event": "bike:bell", "n": 3 } },
+        { "id": "park", "objective": { "map": "town", "x": 50, "y": 37 }, "text": "mission.friendship-3.step2", "reach": { "map": "town", "x": 50, "y": 37, "radius": 40 } }
+      ],
+      "reward": { "cents": 500, "xp": 30 }
     }
   ]
 }

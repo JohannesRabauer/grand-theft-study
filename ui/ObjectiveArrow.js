@@ -37,6 +37,7 @@ export class ObjectiveArrow {
   // Points at the hideout of a stolen bike on this map, else at the goal of the current map; a map without one (an interior) shows no arrow.
   retarget() {
     const { ctx } = this;
+    const before = `${this.gx},${this.gy},${this.bike},${!!this.quest}`;
     this.ts = ctx.map.tileSize;
     this.mpt = ctx.map.metersPerTile;
     const goal = ctx.map.objects.find(o => o.type === 'goal');
@@ -45,7 +46,7 @@ export class ObjectiveArrow {
     this.quest = quest && quest.map === ctx.world.id ? quest : null;
     this.bike = !this.quest && !!bike && bike.map === ctx.world.id;
     this.hasGoal = !!this.quest || this.bike || !!goal;
-    this.questLine.setVisible(!!quest).setText(quest ? `${quest.title}: ${ctx.t(quest.text)}` : '');
+    this.setQuestLine(quest);
     if (this.quest) {
       this.gx = (quest.x + 0.5) * this.ts;
       this.gy = (quest.y + 0.5) * this.ts;
@@ -59,7 +60,14 @@ export class ObjectiveArrow {
     const show = this.hasGoal && (this.bike || !!this.quest || !this.done);
     this.arrow.setVisible(show);
     this.text.setVisible(show);
-    this.lastMeters = -1;
+    if (before !== `${this.gx},${this.gy},${this.bike},${!!this.quest}`) this.lastMeters = -1; // only a new goal needs the distance text again
+  }
+
+  // The mission line under the clock; a race adds its checkpoint and the seconds left. Only touches the text when it changed.
+  setQuestLine(quest) {
+    const line = quest ? `${quest.title}: ${this.ctx.t(quest.text)}${quest.live ? ` (${quest.checkpoint}/${quest.total}, ${quest.timer}s)` : ''}` : '';
+    this.questLine.setVisible(!!quest);
+    if (line !== this.questLineText) { this.questLine.setText(line); this.questLineText = line; }
   }
 
   destroy() {
@@ -73,6 +81,7 @@ export class ObjectiveArrow {
   }
 
   update() {
+    if (this.quest?.live) this.retarget(); // a race moves its goal and counts down every second
     if (!this.hasGoal || (this.done && !this.bike && !this.quest)) return;
     const player = this.playerIndex === null ? this.game.focus : this.ctx.players[this.playerIndex];
     const cam = this.cam;
@@ -98,7 +107,7 @@ export class ObjectiveArrow {
 
   retext() {
     this.msg.setText(this.ctx.t('msg.arrived'));
-    if (this.quest) this.questLine.setText(`${this.quest.title}: ${this.ctx.t(this.quest.text)}`);
+    if (this.quest) { this.questLineText = null; this.setQuestLine(this.quest); }
     this.lastMeters = -1; // next update re-resolves the distance text
   }
 }

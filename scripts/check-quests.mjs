@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { EventEmitter } from 'node:events';
 import { GameState } from '../state/GameState.js';
-import { canStart, currentStep, missionById, nextCall, reached, stepFinishedBy, validateMissions } from '../services/questLogic.js';
+import { canStart, countsFor, currentStep, missionById, nextCall, raceProgress, reached, stepFinishedBy, validateMissions } from '../services/questLogic.js';
+import { wantedKinds } from '../ai/chaseLogic.js';
 
 const load = p => JSON.parse(readFileSync(new URL(`../${p}`, import.meta.url), 'utf8'));
 const cfg = load('data/missions.json');
@@ -81,5 +82,51 @@ assert.ok(s.dispatch('quest.start', { id: 'stolen-bike' }), 'the bike rescue sta
 const homework = missionById(cfg, 'lost-homework');
 assert.ok(homework.steps[0].skipIfFlag === 'lostHomeworkFound' && homework.finishEvent.name === 'homework:done', 'the homework hunt knows its flag and its Kopfnote event');
 assert.ok(kopfnoten.events.some(e => e.event === 'homework:done'), 'finishing it earns the Ordnung bonus');
+
+// ---- races: checkpoints in order, on the right vehicles, within the time
+const race = missionById(cfg, 'skate-race').steps[1].race;
+const at = (i, dx = 0) => [(race.points[i][0] + 0.5) * ts + dx, (race.points[i][1] + 0.5) * ts];
+assert.equal(raceProgress(race, 0, ...at(0), 'skateboard', ts), 1, 'a checkpoint reached on wheels counts');
+assert.equal(raceProgress(race, 0, ...at(0), 'bike', ts), 0, 'but not on a bike in a skate race');
+assert.equal(raceProgress(race, 0, ...at(0), 'foot', ts), 0, 'and not on foot');
+assert.equal(raceProgress(race, 1, ...at(0), 'skateboard', ts), 1, 'checkpoints go in order: only the next one counts');
+assert.equal(raceProgress(race, 0, ...at(0, race.radius + 20), 'skateboard', ts), 0, 'too far away does not');
+assert.equal(raceProgress(race, race.points.length, 0, 0, 'skateboard', ts), race.points.length, 'a finished race stays finished');
+const brace = missionById(cfg, 'bike-race').steps[1].race;
+assert.deepEqual(brace.vehicles, ['bike'], 'the bike race is for the bike');
+for (const id of ['skate-race', 'bike-race']) {
+  const m = missionById(cfg, id);
+  assert.ok(m.reward.vehicle && load('data/vehicles.json')[m.reward.vehicle], `${id} wins a real vehicle`);
+  assert.ok(m.steps[0].reach && m.steps[1].race.seconds >= 20, `${id}: a start line, then a fair time`);
+}
+
+// ---- counting: the Kirmes cans and the friendship counts
+const range = missionById(cfg, 'kirmes-range').steps[1].count;
+const can = (x, y, source = 'slingshot', kind = 'can') => ({ prop: { kind, body: { position: { x: (x + 0.5) * ts, y: (y + 0.5) * ts } } }, source });
+assert.ok(countsFor(range, 'prop:hit', can(4, 35)), 'a can near the stall hit by the slingshot counts');
+assert.ok(!countsFor(range, 'prop:hit', can(4, 35, 'bike')), 'a can bumped by something else does not');
+assert.ok(!countsFor(range, 'prop:hit', can(4, 35, 'slingshot', 'crate')), 'neither does a crate');
+assert.ok(!countsFor(range, 'prop:hit', can(40, 20)), 'nor a can far away from the stall');
+assert.ok(!countsFor(range, 'other', can(4, 35)));
+const cans = town.objects.filter(o => o.type === 'prop' && o.kind === 'can' && Math.hypot(o.x - range.where.near.x, o.y - range.where.near.y) <= range.where.near.radius);
+assert.ok(cans.length >= range.n + 1, `the range has more cans (${cans.length}) than the five to hit`);
+assert.ok(countsFor({ event: 'loot:collected', where: { kind: 'candy' }, n: 2 }, 'loot:collected', { kind: 'candy' }) && !countsFor({ event: 'loot:collected', where: { kind: 'candy' }, n: 2 }, 'loot:collected', { kind: 'coin' }));
+
+// ---- the friendship arc: in order, each step up measurably leaves a bully out of the chase
+assert.ok(canStart(cfg, quests(), 'friendship-1', 'afternoon', 1) && !canStart(cfg, quests(), 'friendship-2', 'afternoon', 1) && !canStart(cfg, quests(), 'friendship-3', 'afternoon', 1), 'only the first can start at first');
+assert.ok(!canStart(cfg, quests([], ['friendship-1']), 'friendship-3', 'afternoon', 1) && canStart(cfg, quests([], ['friendship-1']), 'friendship-2', 'afternoon', 1), 'one after the other');
+assert.deepEqual([1, 2, 3].map(n => missionById(cfg, `friendship-${n}`).finishFlag), [1, 2, 3].map(n => ({ key: 'friendship', value: n })));
+const level = load('data/chase.json').level;
+const kinds = (lv, f, coop = false) => wantedKinds(level, lv, coop, 3, f);
+assert.deepEqual([kinds(1, 0).length, kinds(1, 1).length], [1, 0], 'level 1: the first friend ends the foot bully');
+assert.deepEqual([0, 1, 2, 3].map(f => kinds(2, f).length), [3, 2, 1, 1], 'level 2: one bully less per friendship level, never none');
+assert.deepEqual(kinds(0, 3), [], 'no chase stays no chase');
+assert.ok(kinds(2, 1, true).length <= 3 && wantedKinds(level, 2, true, 1, 0).length === 1, 'the quality cap still applies');
+
+// ---- the booth offers them in order
+let q = quests([], []);
+const seen = [];
+for (let i = 0; i < 12; i++) { const m = nextCall(cfg, q, 'afternoon', 1, {}); if (!m) break; seen.push(m.id); q = quests([], [...q.done, m.id]); }
+assert.deepEqual(seen, ['parcel', 'grandma', 'lost-homework', 'skate-race', 'bike-race', 'kirmes-range', 'friendship-1', 'friendship-2', 'friendship-3'], 'one call after the other, the chain in order');
 
 console.log(`quests ok: ${cfg.missions.length} mission(s), start rules, steps by place and event, three actions, repeat per day`);

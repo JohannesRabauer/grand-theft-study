@@ -1,5 +1,8 @@
-// Smoke scenario: the missions of story 9.7 (grandma's eggs, the stolen bike, the lost homework) on the quest runner.
+// Smoke scenario: the missions of stories 9.7 and 9.8 (grandma's eggs, the stolen bike, the lost homework, the races,
+// the Kirmes range and the friendship arc) on the quest runner.
 // Registered in scripts/smoke/index.js. Puts state, screens and the player back.
+import { wantedKinds } from '../../ai/chaseLogic.js';
+
 export const missions = {
   name: 'missions',
   run(game, assert, env) {
@@ -74,6 +77,91 @@ export const missions = {
     q.start('lost-homework');
     tap();
     assert('when the homework was found earlier the hunt starts at the hand-in', active('lost-homework')?.step === 1, JSON.stringify([ctx.state.shared.quests, ctx.state.shared.flags.lostHomeworkFound]));
+
+    // ---- the skate race: gates in order on wheels, within the time
+    reset();
+    const raceOf = id => q.cfg.missions.find(m => m.id === id).steps[1].race;
+    const gates = id => raceOf(id).points;
+    const skateRace = raceOf('skate-race');
+    gs.skateboards.giveBoard(player);
+    q.start('skate-race');
+    tap();
+    go(50, 37);
+    assert('rolling to the start line begins the race: the arrow shows the first gate and a clock', active('skate-race')?.step === 1 && arrow.quest?.live && arrow.questLine.text.includes('1/4') && arrow.questLine.text.includes('s)'), arrow.questLine.text);
+    step(30);
+    go(50, 43);
+    assert('a gate out of order does not count', arrow.questLine.text.includes('1/4'), arrow.questLine.text);
+    const moneyRace = ctx.state.shared.money;
+    for (const [x, y] of gates('skate-race')) go(x, y);
+    assert('all gates in time win the race, the reward and the prize vehicle event', count('mission:done', e => e.id === 'skate-race') === 1 && ctx.state.shared.money === moneyRace + 250 && log.some(e => e[0] === 'mission:done' && e[1].id === 'skate-race'), `${moneyRace} -> ${ctx.state.shared.money}`);
+    tap();
+    reset();
+    q.start('skate-race');
+    tap();
+    go(50, 37);
+    step(60 * (skateRace.seconds + 10)); // the harness runs a few percent fewer frames than the wall clock says
+    assert('with the clock run out the race is lost, kindly, and can be started again', !active('skate-race') && count('mission:failed', e => e.id === 'skate-race') === 1 && top()?.id === 'message' && !ctx.state.shared.quests.done.includes('skate-race'), JSON.stringify({ q: ctx.state.shared.quests, race: q.race, top: top()?.id, failed: count('mission:failed'), frozen: ctx.frozen }));
+    tap();
+    q.start('skate-race');
+    tap();
+    assert('and the next try starts with a fresh clock', active('skate-race')?.step === 0);
+
+    // ---- the bike race wants the bike
+    reset();
+    gs.skateboards.giveBoard(player);
+    q.start('bike-race');
+    tap();
+    go(44, 53);
+    go(60, 53);
+    assert('a skateboard does not count in the bike race', active('bike-race')?.step === 1 && arrow.questLine.text.includes('1/5'), arrow.questLine.text);
+    for (const [x, y] of gates('bike-race')) go(x, y);
+    assert('all gates on a skateboard still do not win the bike race (the bike counts: see check-quests)', !!active('bike-race') && !ctx.state.shared.quests.done.includes('bike-race') && count('mission:done', e => e.id === 'bike-race') === 0);
+
+    // ---- the Kirmes range: five cans with the slingshot near the stall, nothing else counts
+    reset();
+    for (const ride of gs.mountables) if (ride.isMounted(0)) ride.dismount(player);
+    q.start('kirmes-range');
+    tap();
+    go(5, 40);
+    assert('at the stall the shooting starts', active('kirmes-range')?.step === 1);
+    const can = (x, y, source = 'slingshot', kind = 'can') => ({ prop: { kind, body: { position: { x: (x + 0.5) * ts, y: (y + 0.5) * ts } } }, source });
+    q.onEvent('prop:hit', can(4, 35, 'bike'));
+    q.onEvent('prop:hit', can(40, 20));
+    assert('cans hit by something else or far from the stall do not count', count('ui:toast', e => e.key === 'quest.count') === 0 && active('kirmes-range').step === 1);
+    for (const [x, y] of [[2, 35], [4, 35], [6, 35], [8, 35]]) q.onEvent('prop:hit', can(x, y));
+    assert('every hit says how many are down', count('ui:toast', e => e.key === 'quest.count' && e.params.total === 5) === 4);
+    const moneyK = ctx.state.shared.money;
+    q.onEvent('prop:hit', can(3, 37));
+    assert('the fifth can ends the mission with its prize', count('mission:done', e => e.id === 'kirmes-range') === 1 && ctx.state.shared.money === moneyK + 400);
+    tap();
+
+    // ---- the friendship arc: three missions in order, each one leaves a bully out of the chase
+    reset();
+    const kindsAt = lvl => wantedKinds(ctx.chase.cfg.level, lvl, false, 3, ctx.state.shared.flags.friendship ?? 0).length;
+    assert('without friends the chase wants its usual bullies', kindsAt(1) === 1 && kindsAt(2) === 3);
+    assert('the second mission cannot start before the first is done', !q.start('friendship-2') && !active('friendship-2'));
+    q.start('friendship-1');
+    tap();
+    q.onEvent('loot:collected', { kind: 'coin' });
+    q.onEvent('loot:collected', { kind: 'candy' });
+    assert('only candy counts for the peace offering', active('friendship-1').step === 0);
+    q.onEvent('loot:collected', { kind: 'candy' });
+    assert('two candies move on to the skatepark', active('friendship-1').step === 1);
+    go(52, 41);
+    tap();
+    assert('the first friendship is saved and a bully is measurably left out of the low chase', ctx.state.shared.flags.friendship === 1 && kindsAt(1) === 0 && kindsAt(2) === 2, `${kindsAt(1)} ${kindsAt(2)}`);
+    q.start('friendship-2');
+    tap();
+    q.onEvent('lesson:completed', {});
+    go(88, 17);
+    tap();
+    assert('the second one: a lesson, then the schoolyard', ctx.state.shared.flags.friendship === 2 && kindsAt(2) === 1, `${ctx.state.shared.flags.friendship}`);
+    q.start('friendship-3');
+    tap();
+    for (let i = 0; i < 3; i++) q.onEvent('bike:bell', { player: 0 });
+    go(50, 37);
+    tap();
+    assert('the third makes them friends: at the highest Aerger one bully still comes', ctx.state.shared.flags.friendship === 3 && kindsAt(2) === 1 && kindsAt(1) === 0 && ctx.state.shared.quests.done.includes('friendship-3'));
 
     // ---- put everything back
     ui.screens.clear();

@@ -370,7 +370,7 @@ export class GameScene extends Phaser.Scene {
     this.commute.update(dt);
     this.shops.update();
     this.cosmetics.update(dt);
-    this.quests.update();
+    this.quests.update(dt);
     this.ammo.update(dt);
     for (const p of this.ctx.players) p.vehicleSwapped = false;
     this.grabs.update(dt);

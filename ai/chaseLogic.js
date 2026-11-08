@@ -27,11 +27,14 @@ export function escapeVerdict(escapes, alive, n) {
 }
 
 // Bully kinds a level wants: the level's list, plus the co-op extras (data `coopExtraByLevel`, at most one bully) when
-// two players are in play, cut to the quality tier's cap. Returns a fresh array.
-export function wantedKinds(levelCfg, level, coop, cap) {
+// two players are in play, less one per friendship level, cut to the quality tier's cap. Returns a fresh array.
+export function wantedKinds(levelCfg, level, coop, cap, friends = 0) {
   const kinds = levelCfg.spawnByLevel[level].slice();
   if (coop) kinds.push(...(levelCfg.coopExtraByLevel[level] ?? []).slice(0, 1));
-  return kinds.slice(0, cap);
+  // Friendship (the missions of story 9.8, saved flag `friendship` 0-3): every friendly level leaves one bully out of the
+  // chase; at the highest Aerger at least one still comes, so being chased never disappears altogether.
+  const keep = level >= 2 ? Math.max(1, kinds.length - friends) : Math.max(0, kinds.length - friends);
+  return kinds.slice(0, Math.min(cap, keep));
 }
 
 // Is a spawn point clear of the camera view (centre cx, cy, half size hw, hh, all world px) by `margin`?

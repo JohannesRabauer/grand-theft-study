@@ -116,7 +116,7 @@ export class ChaseDirector {
       return;
     }
     // top up to the kinds this level wants (never past the tier cap); bullies already out stay
-    const want = wantedKinds(this.cfg.level, level, this.ctx.players.length > 1, this.ctx.quality.tier.maxBullies);
+    const want = wantedKinds(this.cfg.level, level, this.ctx.players.length > 1, this.ctx.quality.tier.maxBullies, this.ctx.state.shared.flags.friendship ?? 0);
     for (const b of this.pool.list) {
       if (!b.active || b.state === S.GIVE_UP) continue;
       const i = want.indexOf(b.kind);
