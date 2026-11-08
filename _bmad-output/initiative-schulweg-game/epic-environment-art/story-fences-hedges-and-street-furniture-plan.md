@@ -1,5 +1,5 @@
 ---
 title: "Fences, hedges and street furniture"
 ticket: 3
-status: in-progress
+status: built
 ---

@@ -962,6 +962,51 @@ function wallKeys(map, tx, ty, baseKey, idAt) {
   return [`env-roof-${pal.id}-${chimney ? 'c' : 0}`];
 }
 
+// -------------------------------------------------------------------------------------- garden dressing (15.3)
+// Flower beds with small shrubs along the front of buildings, and potted plants beside doors. Drawn into the
+// ground texture next to the neighbours they belong to; nothing here is an object, so nothing collides.
+function bedTexture(v) {
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const r = rng(6100 + v * 53);
+  px(c, 'rgba(0,0,0,0.25)', 0, 0, U, 3);                       // shade under the wall
+  px(c, '#4b3220', 0, 3, U, 11); px(c, '#6a4930', 0, 3, U, 1); // soil bed
+  px(c, '#2f2013', 0, 13, U, 1);
+  for (let i = 0; i < 18; i++) px(c, '#5d4029', Math.floor(r() * U), 4 + Math.floor(r() * 9), 2, 1);
+  const palette = [['#ff6f91', '#ffd0dc'], ['#ffd84d', '#fff2a6'], ['#b58cff', '#e0ccff'], ['#ffffff', '#f2ead0']][v % 4];
+  let x = 2;
+  while (x < U - 3) {
+    const shrub = r() < 0.28;
+    if (shrub) {
+      ell(c, '#2c6a2c', x + 3, 9, 4.5, 4); ell(c, '#3f8a3c', x + 2.5, 8, 3.6, 3.2); ell(c, '#5aa84c', x + 2, 7, 1.8, 1.4);
+      x += 9;
+    } else {
+      px(c, '#3f8a3c', x + 1, 8, 1, 4); px(c, '#3f8a3c', x, 9, 1, 2);
+      px(c, palette[0], x, 6, 3, 3); px(c, palette[1], x + 1, 6, 1, 1); px(c, '#e8b830', x + 1, 7, 1, 1);
+      x += 4 + Math.floor(r() * 3);
+    }
+  }
+  px(c, '#cfcfc6', 0, 14, U, 1);                                // edging stones
+  return tmp;
+}
+
+function potTexture(v) {
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const palette = [['#ff6f91', '#ffd0dc'], ['#ffd84d', '#fff2a6']][v & 1];
+  px(c, 'rgba(0,0,0,0.28)', 8, 24, 17, 4);
+  px(c, '#a1502f', 10, 16, 13, 10); px(c, '#c3683f', 10, 16, 13, 2); px(c, '#7a3a20', 11, 25, 11, 1); px(c, '#7a3a20', 22, 18, 1, 8);
+  px(c, '#c3683f', 9, 15, 15, 2);
+  ell(c, '#2c6a2c', 16, 11, 8, 6); ell(c, '#3f8a3c', 15, 10, 6, 4.6); ell(c, '#5aa84c', 13, 8, 3, 2);
+  for (const [x, y] of [[12, 6], [18, 5], [20, 10], [10, 11]]) { px(c, palette[0], x, y, 3, 3); px(c, palette[1], x + 1, y, 1, 1); px(c, '#e8b830', x + 1, y + 1, 1, 1); }
+  return tmp;
+}
+
+function makeDecorArt(scene, size) {
+  for (let v = 0; v < 4; v++) emit(scene, `env-bed-${v}`, bedTexture(v), size);
+  for (let v = 0; v < 2; v++) emit(scene, `env-pot-${v}`, potTexture(v), size);
+}
+
 // -------------------------------------------------------------------------------------- public API
 
 // Draws every environment texture for the current resolution. `size` is the tile texture size in pixels.
@@ -1010,6 +1055,7 @@ export function makeEnvArt(scene, tileDefs, size) {
   }
   makeInteriorArt(scene, size);
   makeOutdoorArt(scene, size);
+  makeDecorArt(scene, size);
   STATE.ready = true;
 }
 
@@ -1111,6 +1157,13 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
     const h = same(tx - 1, ty) || same(tx + 1, ty);
     const vert = same(tx, ty - 1) || same(tx, ty + 1);
     keys.push(`env-fence-${h && vert ? 'x' : vert ? 'v' : 'h'}`);
+  }
+  if (cls && cls !== 'water' && idAt(tx, ty - 1) === 'wall' && ty - 1 > 0 && tx > 0 && tx < cols - 1) { // dressing in front of a building
+    const doors = indoorInfo(map).doorFloors;
+    const h = (((tx * 2246822519) ^ (ty * 3266489917)) >>> 0) % 100;
+    const nextToDoor = doors.has(`${tx - 1},${ty}`) || doors.has(`${tx + 1},${ty}`);
+    if (!doors.has(`${tx},${ty}`) && nextToDoor && (cls === 'concrete' || cls === 'grass' || cls === 'cobble')) keys.push(`env-pot-${h & 1}`);
+    else if (cls === 'grass' && h < 62) keys.push(`env-bed-${h % 4}`);
   }
   const entrance = indoorInfo(map).doorFloors.get(`${tx},${ty}`); // a stone step and a mat in front of every door
   if (entrance) keys.push('env-ostep', `env-imat-${entrance}`);
