@@ -1,5 +1,5 @@
 {
-  "_doc": "Missions for the quest runner (story 9.1, entities/Quests.js). A mission has ordered `steps`; a step completes when a kid reaches its `reach` point ({ map, x, y } in tiles, `radius` in px, any player) or when its `event` fires (`match`: payload fields that must be equal, a list means any of them). `objective` is where the arrow points and `text` the line shown while the step is open (i18n keys mission.<id>.<key>). A mission starts at a phone booth (`booth: any`, only in the listed `phases` when given) or by itself when `trigger.event` fires. `kind` goes out with mission:done (help feeds Hilfsbereitschaft through data/kopfnoten.json). `reward` is paid to the shared wallet (cents) and to every player (xp); `repeat` lets it be played again each day. Intro and outro come from mission.<id>.intro / .done.",
+  "_doc": "Missions for the quest runner (story 9.1, entities/Quests.js). A mission has ordered `steps`; a step completes when a kid reaches its `reach` point ({ map, x, y } in tiles, `radius` in px, any player) or when its `event` fires (`match`: payload fields that must be equal, a list means any of them). `objective` is where the arrow points and `text` the line shown while the step is open (i18n keys mission.<id>.<key>). A mission starts at a phone booth (`booth: any`, only in the listed `phases` when given) or by itself when `trigger.event` fires. `kind` goes out with mission:done (help feeds Hilfsbereitschaft through data/kopfnoten.json). `reward` is paid to the shared wallet (cents) and to every player (xp); `repeat` lets it be played again each day. Intro and outro come from mission.<id>.intro / .done. More: objective `{ dynamic: stolenBike }` follows the hideout of the stolen bike; `lives` with `failOn` (events, counted from step `failFromStep` on) lets a fragile load take that many bumps before the mission fails (mission.<id>.hit / .fail) and can be started again; `skipIfFlag` skips a step whose goal is already met; `finishEvent` is emitted when the mission is done.",
   "missions": [
     {
       "id": "parcel",
@@ -11,6 +11,42 @@
         { "id": "deliver", "objective": { "map": "town", "x": 50, "y": 37 }, "text": "mission.parcel.step2", "reach": { "map": "town", "x": 50, "y": 37, "radius": 40 } }
       ],
       "reward": { "cents": 300, "xp": 15 }
+    },
+    {
+      "id": "stolen-bike",
+      "kind": "rescue",
+      "repeat": true,
+      "trigger": { "event": "mission:trigger", "match": { "id": "stolen-bike" } },
+      "steps": [
+        { "id": "rescue", "objective": { "dynamic": "stolenBike" }, "text": "mission.stolen-bike.step1", "event": "bike:recovered" }
+      ],
+      "reward": { "cents": 100, "xp": 20 }
+    },
+    {
+      "id": "grandma",
+      "kind": "help",
+      "booth": "any",
+      "phases": ["commute", "afternoon", "evening"],
+      "lives": 3,
+      "failFromStep": 1,
+      "failOn": [{ "event": "traffic:hit" }, { "event": "player:caught" }, { "event": "bully:bump" }],
+      "steps": [
+        { "id": "groceries", "objective": { "map": "town", "x": 36, "y": 87 }, "text": "mission.grandma.step1", "reach": { "map": "town", "x": 36, "y": 87, "radius": 40 } },
+        { "id": "grandma", "objective": { "map": "town", "x": 14, "y": 12 }, "text": "mission.grandma.step2", "reach": { "map": "town", "x": 14, "y": 12, "radius": 40 } }
+      ],
+      "reward": { "cents": 500, "xp": 25 }
+    },
+    {
+      "id": "lost-homework",
+      "kind": "help",
+      "booth": "any",
+      "phases": ["commute", "afternoon", "evening"],
+      "finishEvent": { "name": "homework:done", "payload": { "player": 0 } },
+      "steps": [
+        { "id": "search", "objective": { "map": "town", "x": 52, "y": 36 }, "text": "mission.lost-homework.step1", "event": "homework:found", "skipIfFlag": "lostHomeworkFound" },
+        { "id": "return", "objective": { "map": "town", "x": 78, "y": 13 }, "text": "mission.lost-homework.step2", "reach": { "map": "town", "x": 78, "y": 13, "radius": 48 } }
+      ],
+      "reward": { "cents": 200, "xp": 20 }
     }
   ]
 }

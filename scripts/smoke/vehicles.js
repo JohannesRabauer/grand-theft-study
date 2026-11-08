@@ -137,7 +137,7 @@ export const vehicles = {
     assert('the rescue trigger fires and the fallback flag marks the hideout', of('mission:trigger').at(-1)?.id === 'stolen-bike' && ctx.state.shared.flags.stolenBike?.hideout === stolen.hideoutId && ctx.state.shared.flags.stolenBike?.bikeId === bikeId);
     const arrow = ui.hud.get('objective').arrow;
     const hideout = lying(stolen.hideoutId);
-    assert('the objective arrow points at the hideout', arrow.bike === true && Math.abs(arrow.gx - T(hideout.x)) < 1 && Math.abs(arrow.gy - T(hideout.y)) < 1 && arrow.arrow.visible);
+    assert('the objective arrow points at the hideout (the rescue mission has taken the arrow over from the plain bike flag)', (arrow.bike === true || arrow.quest?.id === 'stolen-bike') && Math.abs(arrow.gx - T(hideout.x)) < 1 && Math.abs(arrow.gy - T(hideout.y)) < 1 && arrow.arrow.visible);
     assert('no second theft while a bike is out', (() => { cfg.cooldownSeconds = 0; step(60); return of('bike:stolen').length === 1; })());
     until(() => !theft.active, 60 * 30);
     assert('the thief rides it to the hideout and leaves it standing there', !theft.active && theft.stolen === ridden && ridden.visible && Math.hypot(ridden.x - T(hideout.x), ridden.y - T(hideout.y)) < 1);

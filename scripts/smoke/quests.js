@@ -45,7 +45,8 @@ export const quests = {
     step(2);
     assert('the arrow goes back to the school goal when no mission is open', !arrow.quest && !arrow.questLine.visible);
 
-    // ---- nothing left to ask for
+    // ---- nothing left to ask for (every mission that wants a call is marked done first)
+    ctx.state.replace({ ...ctx.state.data, shared: { ...ctx.state.shared, quests: { active: [], done: q.cfg.missions.map(m => m.id) } } });
     player.teleport(booth.x, booth.y + 22);
     gs.snapCamera();
     step(3);

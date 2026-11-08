@@ -36,7 +36,9 @@ const repeating = { missions: [{ id: 'r', booth: 'any', repeat: true, steps: [{ 
 assert.ok(!canStart(repeating, quests([], ['r']), 'r', 'afternoon', 3, { 'mission.r.day': 3 }), 'a repeating mission once a day');
 assert.ok(canStart(repeating, quests([], ['r']), 'r', 'afternoon', 4, { 'mission.r.day': 3 }), 'and again the next day');
 assert.equal(nextCall(cfg, quests(), 'afternoon', 1, {})?.id, 'parcel', 'a phone call offers the mission');
-assert.equal(nextCall(cfg, quests([], ['parcel']), 'afternoon', 1, {}), null, 'and nothing once everything is done');
+assert.equal(nextCall(cfg, quests([], ['parcel']), 'afternoon', 1, {})?.id, 'grandma', 'the next call offers the next mission');
+assert.equal(nextCall(cfg, quests([], cfg.missions.map(m => m.id)), 'afternoon', 1, {}), null, 'and nothing once everything is done');
+assert.ok(!nextCall(cfg, quests(), 'afternoon', 1, {}).trigger, 'a trigger-only mission is never offered by phone');
 
 // ---- steps
 const step = currentStep(cfg, { id: 'parcel', step: 0 });
@@ -66,5 +68,18 @@ assert.ok(!s.dispatch('quest.start', { id: 'r' }), 'once a day');
 s.dispatch('clock.set', { day: 2, minute: 400, phase: 'morning' });
 assert.ok(s.dispatch('quest.start', { id: 'r' }), 'and is back the next day');
 assert.equal(missionById(cfg, 'parcel').steps.length, 2);
+
+// ---- lives (fragile load), abort and restart
+s = fresh();
+assert.ok(s.dispatch('quest.start', { id: 'grandma' }) && s.shared.quests.active[0].lives === 3, 'the eggs start with three lives');
+assert.ok(s.dispatch('quest.hit', { id: 'grandma' }) && s.dispatch('quest.hit', { id: 'grandma' }) && s.shared.quests.active[0].lives === 1);
+assert.ok(!s.dispatch('quest.hit', { id: 'parcel' }), 'a mission without lives takes no hits');
+assert.ok(s.dispatch('quest.abort', { id: 'grandma' }) && s.shared.quests.active.length === 0 && !s.shared.quests.done.includes('grandma'), 'a failed mission is not done');
+assert.ok(s.dispatch('quest.start', { id: 'grandma' }) && s.shared.quests.active[0].lives === 3, 'and starts again with fresh eggs');
+assert.ok(!s.dispatch('quest.abort', { id: 'parcel' }), 'only running missions can be given up');
+assert.ok(s.dispatch('quest.start', { id: 'stolen-bike' }), 'the bike rescue starts without a phone');
+const homework = missionById(cfg, 'lost-homework');
+assert.ok(homework.steps[0].skipIfFlag === 'lostHomeworkFound' && homework.finishEvent.name === 'homework:done', 'the homework hunt knows its flag and its Kopfnote event');
+assert.ok(kopfnoten.events.some(e => e.event === 'homework:done'), 'finishing it earns the Ordnung bonus');
 
 console.log(`quests ok: ${cfg.missions.length} mission(s), start rules, steps by place and event, three actions, repeat per day`);

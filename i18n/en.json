@@ -683,5 +683,21 @@
   "mission.parcel.intro": "Brrring! It is Mrs. Wendt. She forgot a parcel at the bakery and has a sore knee. Could you bring it to her at the park?",
   "mission.parcel.step1": "Pick up the parcel at the bakery",
   "mission.parcel.step2": "Bring the parcel to Mrs. Wendt at the park bench",
-  "mission.parcel.done": "Mrs. Wendt beams: Thank you, you are a star! Here is something for your trouble."
+  "mission.parcel.done": "Mrs. Wendt beams: Thank you, you are a star! Here is something for your trouble.",
+  "mission.stolen-bike.title": "Bike rescue",
+  "mission.stolen-bike.intro": "Oh no! A bully borrowed your bike. Follow the arrow to the hideout and ride it back home!",
+  "mission.stolen-bike.step1": "Get your bike back from the hideout",
+  "mission.stolen-bike.done": "Got it! Your bike is back with you. That was brave.",
+  "mission.grandma.title": "Groceries for Grandma",
+  "mission.grandma.intro": "Grandma called: she needs groceries, and eggs! Careful, every bump can break eggs. You can lose three before they are all gone.",
+  "mission.grandma.step1": "Pick up the groceries at the market",
+  "mission.grandma.step2": "Bring the groceries to Grandma in the old town",
+  "mission.grandma.hit": "Crack! {n} eggs left. Take it slower!",
+  "mission.grandma.fail": "All the eggs are broken. Grandma says: no problem, try again!",
+  "mission.grandma.done": "Grandma hugs you: what a careful delivery! Here is a treat for you.",
+  "mission.lost-homework.title": "The lost homework",
+  "mission.lost-homework.intro": "Your homework flew away in the wind! Search the park: use your stick to rummage through bushes and piles of leaves.",
+  "mission.lost-homework.step1": "Search the park with your stick",
+  "mission.lost-homework.step2": "Bring the homework to school",
+  "mission.lost-homework.done": "Your homework is saved! Your teacher is very proud of you."
 }

@@ -683,5 +683,21 @@
   "mission.parcel.intro": "Kling! Hier ist Frau Wendt. Sie hat ein Paket in der Bäckerei vergessen und ihr Knie tut weh. Kannst du es ihr in den Park bringen?",
   "mission.parcel.step1": "Hole das Paket in der Bäckerei ab",
   "mission.parcel.step2": "Bring das Paket zu Frau Wendt auf die Parkbank",
-  "mission.parcel.done": "Frau Wendt strahlt: Danke, du bist ein Schatz! Hier ist etwas für deine Mühe."
+  "mission.parcel.done": "Frau Wendt strahlt: Danke, du bist ein Schatz! Hier ist etwas für deine Mühe.",
+  "mission.stolen-bike.title": "Fahrrad-Rettung",
+  "mission.stolen-bike.intro": "Oje! Ein Rüpel hat dein Fahrrad geklaut. Folge dem Pfeil zum Versteck und fahr es nach Hause zurück!",
+  "mission.stolen-bike.step1": "Hol dein Fahrrad aus dem Versteck",
+  "mission.stolen-bike.done": "Geschafft! Dein Fahrrad ist wieder da. Das war mutig.",
+  "mission.grandma.title": "Einkauf für Oma",
+  "mission.grandma.intro": "Oma hat angerufen: Sie braucht Einkäufe, und Eier! Vorsicht, jede Erschütterung kann Eier zerbrechen. Drei darfst du verlieren, dann sind alle kaputt.",
+  "mission.grandma.step1": "Hole den Einkauf auf dem Markt ab",
+  "mission.grandma.step2": "Bring den Einkauf zu Oma in die Altstadt",
+  "mission.grandma.hit": "Knack! Noch {n} Eier übrig. Fahr langsamer!",
+  "mission.grandma.fail": "Alle Eier sind kaputt. Oma sagt: Kein Problem, versuch es nochmal!",
+  "mission.grandma.done": "Oma drückt dich: Was für eine vorsichtige Lieferung! Hier ist eine Belohnung für dich.",
+  "mission.lost-homework.title": "Die verlorenen Hausaufgaben",
+  "mission.lost-homework.intro": "Deine Hausaufgaben sind im Wind davongeflogen! Suche im Park: Stöbere mit deinem Stock in Büschen und Laubhaufen.",
+  "mission.lost-homework.step1": "Suche im Park mit deinem Stock",
+  "mission.lost-homework.step2": "Bring die Hausaufgaben zur Schule",
+  "mission.lost-homework.done": "Deine Hausaufgaben sind gerettet! Deine Lehrerin ist sehr stolz auf dich."
 }

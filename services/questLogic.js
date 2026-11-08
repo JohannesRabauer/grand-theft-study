@@ -34,11 +34,12 @@ export function validateMissions(cfg, maps, i18n) {
     if (!m.steps?.length) problems.push(`${m.id}: needs steps`);
     if (!m.booth && !m.trigger) problems.push(`${m.id}: needs a phone booth or a trigger to start`);
     if (!Number.isInteger(m.reward?.cents) || m.reward.cents < 0 || !Number.isInteger(m.reward?.xp) || m.reward.xp < 0) problems.push(`${m.id}: reward is whole cents and xp`);
-    for (const k of ['title', 'intro', 'done']) if (!i18n[`mission.${m.id}.${k}`]) problems.push(`${m.id}: missing text mission.${m.id}.${k}`);
+    if (m.failOn && !(m.lives > 0)) problems.push(`${m.id}: failOn needs lives`);
+    for (const k of ['title', 'intro', 'done', ...(m.failOn ? ['hit', 'fail'] : [])]) if (!i18n[`mission.${m.id}.${k}`]) problems.push(`${m.id}: missing text mission.${m.id}.${k}`);
     for (const s of m.steps ?? []) {
       if (!s.reach && !s.event) problems.push(`${m.id}.${s.id}: a step ends by reaching a place or an event`);
       if (!i18n[s.text]) problems.push(`${m.id}.${s.id}: missing text ${s.text}`);
-      const spots = [s.objective, s.reach].filter(Boolean);
+      const spots = [s.objective?.dynamic ? null : s.objective, s.reach].filter(Boolean);
       for (const spot of spots) {
         const map = maps[spot.map];
         if (!map) { problems.push(`${m.id}.${s.id}: unknown map ${spot.map}`); continue; }

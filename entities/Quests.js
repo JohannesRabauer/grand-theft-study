@@ -23,6 +23,7 @@ export class Quests {
     const names = new Set();
     for (const m of cfg.missions) {
       if (m.trigger?.event) names.add(m.trigger.event);
+      for (const f of m.failOn ?? []) names.add(f.event);
       for (const s of m.steps) if (s.event) names.add(s.event);
     }
     for (const name of names) ctx.events.on(name, payload => this.onEvent(name, payload));
@@ -52,9 +53,20 @@ export class Quests {
   objective() {
     for (const entry of this.quests.active) {
       const step = currentStep(this.cfg, entry);
-      if (step?.objective) return { id: entry.id, ...step.objective, text: step.text, title: this.title(entry.id) };
+      if (!step?.objective) continue;
+      const o = this.place(step.objective);
+      if (o) return { id: entry.id, ...o, text: step.text, title: this.title(entry.id) };
     }
     return null;
+  }
+
+  // A step's objective as a map spot: fixed, or the hideout of the stolen bike (dynamic).
+  place(o) {
+    if (!o.dynamic) return o;
+    const bike = this.ctx.state.shared.flags[o.dynamic];
+    if (!bike) return null;
+    const ts = this.ctx.map.tileSize;
+    return { map: bike.map, x: bike.x / ts - 0.5, y: bike.y / ts - 0.5 };
   }
 
   show(title, lines, onDone) {
@@ -63,11 +75,16 @@ export class Quests {
     ctx.screens.push(new MessageScreen(this.scene.scene.get('UI'), ctx, ctx.screens, { title, lines, inputCfg: this.inputCfg, onDone }));
   }
 
-  start(id) {
+  // `call`: a phone call at a booth opens a message to read; a mission that starts by itself (a theft in the middle of a ride)
+  // only announces itself with a phone toast, so the world never freezes at a bad moment.
+  start(id, call = true) {
     const { ctx } = this;
     if (!ctx.state.dispatch('quest.start', { id })) return false;
     ctx.events.emit('mission:started', { id });
-    this.show(this.title(id), [ctx.t(`mission.${id}.intro`), ctx.t('quest.firstStep', { step: ctx.t(missionById(this.cfg, id).steps[0].text) })]);
+    this.skipDone(id);
+    const now = this.quests.active.find(q => q.id === id);
+    if (!call) { ctx.events.emit('ui:toast', { key: `mission.${id}.intro`, style: 'phone' }); return true; }
+    this.show(this.title(id), [ctx.t(`mission.${id}.intro`), ctx.t('quest.firstStep', { step: ctx.t(missionById(this.cfg, id).steps[now?.step ?? 0].text) })]);
     return true;
   }
 
@@ -90,6 +107,7 @@ export class Quests {
       const step = m.steps[entry.step + 1];
       ctx.events.emit('mission:step', { id, step: entry.step + 1 });
       ctx.events.emit('ui:toast', { key: 'quest.next', params: { step: ctx.t(step.text) } });
+      this.skipDone(id);
       return;
     }
     if (!ctx.state.dispatch('quest.finish', { id })) return;
@@ -97,14 +115,39 @@ export class Quests {
     if (cents > 0) ctx.state.dispatch('wallet.earn', { cents, reason: `mission-${id}` });
     if (xp > 0) for (const p of ctx.players) ctx.state.dispatch('xp.add', { player: p.index, amount: xp });
     ctx.events.emit('mission:done', { id, kind: m.kind, cents, xp });
+    if (m.finishEvent) ctx.events.emit(m.finishEvent.name, { ...m.finishEvent.payload });
     const money = ctx.t('hud.money', { v: (cents / 100).toFixed(2).replace('.', ctx.i18n.lang === 'de' ? ',' : '.') });
+    if (!m.booth) { ctx.events.emit('ui:toast', { key: `mission.${id}.done`, style: 'phone' }); return; } // started by itself: it also ends with a toast, never a screen that takes the next key press
     this.show(ctx.t('quest.done.title', { title: this.title(id) }), [ctx.t(`mission.${id}.done`), ctx.t('quest.reward', { money, xp })]);
+  }
+
+  // A step whose goal is already met (flag) is passed at once; the last step is never skipped.
+  skipDone(id) {
+    const m = missionById(this.cfg, id);
+    const entry = this.quests.active.find(q => q.id === id);
+    const step = entry && m.steps[entry.step];
+    if (step?.skipIfFlag && this.ctx.state.shared.flags[step.skipIfFlag] && entry.step + 1 < m.steps.length) this.advance(id);
+  }
+
+  // A bump to a fragile load costs a life; with none left the mission fails and can be tried again.
+  hit(entry, m) {
+    const { ctx } = this;
+    if (!ctx.state.dispatch('quest.hit', { id: entry.id })) return;
+    const left = this.quests.active.find(q => q.id === entry.id).lives;
+    if (left > 0) { ctx.events.emit('ui:toast', { key: `mission.${entry.id}.hit`, params: { n: left } }); return; }
+    ctx.state.dispatch('quest.abort', { id: entry.id });
+    ctx.events.emit('mission:failed', { id: entry.id });
+    this.show(this.title(entry.id), [ctx.t(`mission.${entry.id}.fail`)]);
   }
 
   onEvent(name, payload) {
     const { ctx } = this;
+    for (const entry of [...this.quests.active]) {
+      const m = missionById(this.cfg, entry.id);
+      if (m.failOn?.some(f => f.event === name && matches(f.match, payload)) && entry.step >= (m.failFromStep ?? 0)) this.hit(entry, m);
+    }
     for (const m of this.cfg.missions) {
-      if (m.trigger?.event === name && matches(m.trigger.match, payload) && canStart(this.cfg, this.quests, m.id, null, ctx.day.day, ctx.state.shared.flags)) this.start(m.id);
+      if (m.trigger?.event === name && matches(m.trigger.match, payload) && canStart(this.cfg, this.quests, m.id, null, ctx.day.day, ctx.state.shared.flags)) this.start(m.id, false);
     }
     for (const entry of [...this.quests.active]) {
       if (stepFinishedBy(currentStep(this.cfg, entry), name, payload)) this.advance(entry.id);

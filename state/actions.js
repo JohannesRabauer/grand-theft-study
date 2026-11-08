@@ -165,7 +165,24 @@ export const ACTIONS = {
     if (!missionById(missions, id)) return reject('unknown-mission');
     const clock = s.shared.clock;
     if (!canStart(missions, s.shared.quests, id, null, clock.day, s.shared.flags)) return reject('not-available');
-    s.shared.quests.active.push({ id, step: 0 });
+    const m = missionById(missions, id);
+    s.shared.quests.active.push(m.lives ? { id, step: 0, lives: m.lives } : { id, step: 0 });
+    return { path: 'shared.quests' };
+  },
+
+  // A bump to a fragile load: one life less (the runner fails the mission at zero). Returns the lives left through the state.
+  'quest.hit'(s, { id }) {
+    const entry = s.shared.quests.active.find(q => q.id === id);
+    if (!entry || !(entry.lives > 0)) return reject('bad-payload');
+    entry.lives--;
+    return { path: 'shared.quests' };
+  },
+
+  // Gives a mission up or loses it: it leaves the active list without counting as done, so it can be started again.
+  'quest.abort'(s, { id }) {
+    const quests = s.shared.quests;
+    if (!quests.active.some(q => q.id === id)) return reject('bad-payload');
+    quests.active = quests.active.filter(q => q.id !== id);
     return { path: 'shared.quests' };
   },
 
