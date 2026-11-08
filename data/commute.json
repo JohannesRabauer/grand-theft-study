@@ -14,6 +14,7 @@
     "rideMinutes": 8,
     "boardRadius": 28,
     "groupRadius": 120,
+    "knownAtStart": ["home-tram-stop", "school-tram-stop"],
     "lines": [
       ["home-tram-stop", "school-tram-stop"],
       ["riverside-tram-stop", "market-tram-stop"]

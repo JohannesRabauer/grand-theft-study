@@ -3,11 +3,12 @@
 // Run: node scripts/check-activities.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { fastTargets, knownStop, stopKey } from '../services/commuteLogic.js';
 import { canPlay, dayKey, fits, questionsIn, reward, stagesOf, timesToday, validateActivities } from '../services/activityLogic.js';
 
 const load = p => JSON.parse(readFileSync(new URL(`../${p}`, import.meta.url), 'utf8'));
 const cfg = load('data/activities.json');
-const pools = { mathe: load('data/learning/grade3/mathe.json'), deutsch: load('data/learning/grade3/deutsch.json'), englisch: load('data/learning/grade3/englisch.json') };
+const pools = { sachkunde: load('data/learning/grade3/sachkunde.json'), mathe: load('data/learning/grade3/mathe.json'), deutsch: load('data/learning/grade3/deutsch.json'), englisch: load('data/learning/grade3/englisch.json') };
 const i18n = { de: load('i18n/de.json'), en: load('i18n/en.json') };
 
 // ---- data
@@ -57,9 +58,18 @@ for (const [id, v, total] of [['pfand', 'de', 4], ['bakery', 'de', 6], ['bakery'
 }
 assert.ok(reward(cfg, 'bakery', 'en', 3, 6).cents > reward(cfg, 'bakery', 'de', 3, 6).cents, 'English pays better');
 
+// ---- the tram map: home and school are known, others by quiz, the line partner first
+const tram = load('data/commute.json').tram;
+const ids = ['home-tram-stop', 'school-tram-stop', 'riverside-tram-stop', 'market-tram-stop'];
+assert.ok(knownStop(tram, {}, 'home-tram-stop') && !knownStop(tram, {}, 'riverside-tram-stop') && knownStop(tram, { [stopKey('riverside-tram-stop')]: true }, 'riverside-tram-stop'));
+assert.deepEqual(fastTargets(tram, {}, ids, 'home-tram-stop'), ['school-tram-stop']);
+assert.deepEqual(fastTargets(tram, { [stopKey('riverside-tram-stop')]: true }, ids, 'home-tram-stop'), ['school-tram-stop', 'riverside-tram-stop']);
+assert.deepEqual(fastTargets(tram, { [stopKey('riverside-tram-stop')]: true, [stopKey('market-tram-stop')]: true }, ids, 'riverside-tram-stop'), ['market-tram-stop', 'home-tram-stop', 'school-tram-stop']);
+for (const l of ['de', 'en']) for (const id of ids) assert.ok(i18n[l][`tram.stop.${id}`], `${l}: stop name ${id}`);
+
 // ---- texts
 for (const l of ['de', 'en']) {
-  for (const id of ['pfand', 'bakery', 'scan', 'route']) assert.ok(i18n[l][`activity.${id}.title`], `${l}: ${id} title`);
+  for (const id of ['pfand', 'bakery', 'scan', 'route', 'tramquiz']) assert.ok(i18n[l][`activity.${id}.title`], `${l}: ${id} title`);
   for (const id of ['scan', 'route']) assert.ok(i18n[l][`activity.${id}.prompt`] && i18n[l][`activity.stage.${id}`], `${l}: ${id} texts`);
   for (const k of ['activity.limit', 'activity.pfand.prompt', 'activity.bakery.intro', 'activity.bakery.german', 'activity.bakery.english', 'activity.bakery.bonus', 'activity.stage.count', 'activity.stage.order', 'activity.stage.pay', 'activity.progress', 'activity.right', 'activity.wrong', 'activity.done', 'activity.reward', 'activity.nav.ask', 'activity.nav.next', 'activity.nav.close', 'shop.practice']) assert.ok(i18n[l][k], `${l}: ${k}`);
 }

@@ -30,10 +30,10 @@ export const fits = stage => item => item.type === 'choice' && (!stage.tag || it
 // Problems in the data against the real question pools: every stage has enough choice questions of its tag, rewards are sane.
 export function validateActivities(cfg, pools) {
   const problems = [];
-  for (const id of ['pfand', 'bakery', 'scan', 'route']) {
+  for (const id of ['pfand', 'bakery', 'scan', 'route', 'tramquiz']) {
     const a = cfg[id];
     if (!a) { problems.push(`missing activity ${id}`); continue; }
-    if (!(a.perDay >= 1) || !(a.perCorrectCents > 0) || !(a.xpPerCorrect > 0)) problems.push(`${id}: perDay, perCorrectCents and xpPerCorrect must be positive`);
+    if (!(a.perDay >= 1) || !(a.perCorrectCents >= 0) || !(a.xpPerCorrect > 0)) problems.push(`${id}: perDay, perCorrectCents and xpPerCorrect must be positive`);
     for (const variant of a.variants ? Object.keys(a.variants) : [null]) {
       for (const s of stagesOf(cfg, id, variant ?? 'de')) {
         const items = pools[s.topic]?.items.filter(fits(s)) ?? [];

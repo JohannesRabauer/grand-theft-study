@@ -120,6 +120,43 @@ export const activities = {
     step(2);
     assert('the route is done for today', !top() && !ctx.frozen);
 
+    // ---- the tram map quiz unlocks a stop, then fast travel works between known stops
+    const cm = ctx.commute;
+    const rng0 = cm.rng;
+    cm.rng = () => 0.99;
+    ctx.state.dispatch('wallet.earn', { cents: 500, reason: 'smoke' });
+    const rides = [];
+    ctx.events.on('tram:ride', e => rides.push(e));
+    const riverside = ctx.map.objects.find(o => o.id === 'riverside-tram-stop');
+    const spos = o => [(o.x + 0.5) * ts, (o.y + 0.5) * ts];
+    const atStop = o => { player.teleport(spos(o)[0], spos(o)[1] + 10); gs.snapCamera(); step(3); };
+    atStop(riverside);
+    assert('the riverside stop is unknown at first and offers the map quiz', !cm.known(riverside) && ctx.commute.labels[0].visible && ctx.commute.labels[0].text.length > 5, ctx.commute.labels[0].text);
+    env.press('interact');
+    step(2);
+    assert('interact at an unknown stop opens the map quiz, not a ride', top()?.id === 'activity' && top().activity === 'tramquiz' && rides.length === 0, top()?.id);
+    play(0);
+    top().confirm();
+    step(2);
+    assert('a wrong answer unlocks nothing', !cm.known(riverside));
+    atStop(riverside);
+    env.press('interact');
+    step(2);
+    play(1);
+    top().confirm();
+    step(2);
+    assert('a right answer unlocks the stop for the family', cm.known(riverside) && ctx.state.shared.flags['tram.stop.riverside-tram-stop'] === true);
+    atStop(riverside);
+    env.press('interact');
+    step(2);
+    assert('a known stop with other known stops opens the tram map', top()?.id === 'fastTravel' && top().targets.length === 2 && top().targets[0].id === 'home-tram-stop', top()?.id);
+    const home = ctx.map.objects.find(o => o.id === 'home-tram-stop');
+    top().sel = top().targets.findIndex(t => t.id === 'home-tram-stop');
+    top().confirm();
+    step(2);
+    assert('choosing the home stop rides there across the lines', rides.length === 1 && rides[0].to === 'home-tram-stop' && Math.hypot(player.x - spos(home)[0], player.y - spos(home)[1]) < 40 && !top(), `${rides.length}`);
+    cm.rng = rng0;
+
     // ---- put everything back
     ctx.state.replace(data0);
     player.teleport(home0.x, home0.y);

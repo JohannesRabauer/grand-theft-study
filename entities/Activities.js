@@ -4,6 +4,7 @@
 // results were already recorded answer by answer through the learning engine. Emits `activity:started` { id, player } and
 // `activity:done` { id, variant, player, correct, total, cents, xp }.
 import { ActivityScreen } from '../ui/screens/ActivityScreen.js';
+import { stopKey } from '../services/commuteLogic.js';
 import { canPlay, dayKey, reward, spotKey, timesToday } from '../services/activityLogic.js';
 
 export class Activities {
@@ -39,6 +40,11 @@ export class Activities {
     const r = reward(this.cfg, id, variant, correct, total);
     if (this.cfg[id].perSign) ctx.state.dispatch('flags.set', { key: spotKey(id, spot, player), value: true });
     else ctx.state.dispatch('flags.set', { key: dayKey(id, this.day, player), value: timesToday(ctx.state.shared.flags, id, this.day, player) + 1 });
+    if (id === 'tramquiz' && correct >= 1) {
+      ctx.state.dispatch('flags.set', { key: stopKey(spot), value: true });
+      ctx.events.emit('tram:unlocked', { stop: spot, player });
+      ctx.events.emit('ui:toast', { key: 'tram.unlocked', params: { stop: ctx.t(`tram.stop.${spot}`) } });
+    }
     if (id === 'route') for (let i = 0; i < correct; i++) ctx.events.emit('route:hit', { player, n: i + 1 });
     if (r.cents > 0) ctx.state.dispatch('wallet.earn', { cents: r.cents, reason: `activity-${id}` });
     if (r.xp > 0) ctx.state.dispatch('xp.add', { player, amount: r.xp });

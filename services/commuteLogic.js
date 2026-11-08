@@ -7,6 +7,18 @@ export function arrival(deadline, minute) {
   return { late: Math.max(0, minute - bell), early: Math.max(0, bell - minute) };
 }
 
+export const stopKey = id => `tram.stop.${id}`;
+
+// A stop is known from the start (home and school) or once the map quiz there was answered right.
+export const knownStop = (tram, flags, id) => (tram.knownAtStart ?? []).includes(id) || !!flags[stopKey(id)];
+
+// Where fast travel can go from a known stop: every other known stop that has a place on the map; the line partner comes first.
+export function fastTargets(tram, flags, stopIds, from) {
+  const partner = otherStop(tram, from);
+  const list = stopIds.filter(id => id !== from && knownStop(tram, flags, id));
+  return list.sort((a, b) => (b === partner) - (a === partner));
+}
+
 export function otherStop(tram, id) {
   for (const [a, b] of tram.lines) {
     if (a === id) return b;

@@ -968,5 +968,17 @@
   "activity.stage.scan": "An English sign! What does it mean?",
   "activity.route.title": "Newspaper route",
   "activity.route.prompt": "Deliver newspapers",
-  "activity.stage.route": "Which house number comes next? Throw the paper there!"
+  "activity.stage.route": "Which house number comes next? Throw the paper there!",
+  "tram.quiz": "Learn this stop on the map",
+  "tram.fast": "Tram: choose where to go",
+  "tram.unlocked": "{stop} is on your tram map now! You can travel there.",
+  "tram.fast.title": "Tram map",
+  "tram.fast.nav": "Arrows or 1-4: choose   Space / F: ride   Esc: stay",
+  "tram.fast.here": "You are here: {stop}",
+  "tram.stop.home-tram-stop": "Home",
+  "tram.stop.school-tram-stop": "School",
+  "tram.stop.riverside-tram-stop": "Riverside",
+  "tram.stop.market-tram-stop": "Market",
+  "activity.tramquiz.title": "Tram map quiz",
+  "activity.stage.map": "Answer right and this stop joins your tram map!"
 }

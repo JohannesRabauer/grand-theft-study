@@ -968,5 +968,17 @@
   "activity.stage.scan": "Ein englisches Schild! Was bedeutet es?",
   "activity.route.title": "Zeitungsrunde",
   "activity.route.prompt": "Zeitungen austragen",
-  "activity.stage.route": "Welche Hausnummer kommt als Nächstes? Wirf die Zeitung dorthin!"
+  "activity.stage.route": "Welche Hausnummer kommt als Nächstes? Wirf die Zeitung dorthin!",
+  "tram.quiz": "Haltestelle auf der Karte lernen",
+  "tram.fast": "Straßenbahn: Ziel wählen",
+  "tram.unlocked": "{stop} ist jetzt auf deiner Bahnkarte! Du kannst dorthin fahren.",
+  "tram.fast.title": "Bahnkarte",
+  "tram.fast.nav": "Pfeile oder 1-4: auswählen   Space / F: fahren   Esc: bleiben",
+  "tram.fast.here": "Du bist hier: {stop}",
+  "tram.stop.home-tram-stop": "Zuhause",
+  "tram.stop.school-tram-stop": "Schule",
+  "tram.stop.riverside-tram-stop": "Flussufer",
+  "tram.stop.market-tram-stop": "Markt",
+  "activity.tramquiz.title": "Bahnkarten-Quiz",
+  "activity.stage.map": "Antworte richtig, dann kommt diese Haltestelle auf deine Bahnkarte!"
 }

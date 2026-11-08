@@ -7,7 +7,8 @@
 //   other stop of the line, skipping game minutes. Without money the kids ride black: an inspector may board
 //   (`tram:inspector` { player, fine }, the hook for the chaser story 7.4), charging a fine, never more than they have.
 // - Pickups: coins appear when a kid comes close to a spot (LootDrops), once per spot per run.
-import { arrival, fares, inspected, otherStop, rideTarget } from '../services/commuteLogic.js';
+import { arrival, fares, fastTargets, inspected, knownStop, otherStop, rideTarget } from '../services/commuteLogic.js';
+import { FastTravelScreen } from '../ui/screens/FastTravelScreen.js';
 import { hasDayTicket } from '../services/shopLogic.js';
 
 export class Commute {
@@ -64,9 +65,9 @@ export class Commute {
   }
 
   // Everyone on foot near the stop rides together. Returns what happened, or null when there is nowhere to go.
-  ride(stopObject) {
+  ride(stopObject, destObject = null) {
     const { ctx, cfg } = this;
-    const destId = otherStop(cfg.tram, stopObject.id);
+    const destId = destObject ? destObject.id : otherStop(cfg.tram, stopObject.id);
     const dest = this.stops.find(o => o.id === destId);
     if (!dest) return null;
     const from = this.stopPos(stopObject);
@@ -100,6 +101,25 @@ export class Commute {
     return info;
   }
 
+  known(o) { return knownStop(this.cfg.tram, this.ctx.state.shared.flags, o.id); }
+
+  // Fast travel destinations (stop objects) from a known stop; more than the line partner only after quizzes unlocked other stops.
+  targets(o) {
+    return fastTargets(this.cfg.tram, this.ctx.state.shared.flags, this.stops.map(s => s.id), o.id).map(id => this.stops.find(s => s.id === id));
+  }
+
+  // The press at a stop: an unknown stop asks the map quiz, a known stop with several targets opens the fast travel list, else the line ride.
+  press(stop, player) {
+    const { ctx } = this;
+    if (!this.known(stop)) { ctx.activities.start('tramquiz', player, stop.id); return; }
+    const to = this.targets(stop);
+    if (to.length > 1 && !ctx.screens?.top()) {
+      ctx.screens.push(new FastTravelScreen(this.scene.scene.get('UI'), ctx, ctx.screens, this, stop, to, player));
+      return;
+    }
+    this.ride(stop);
+  }
+
   update(dt) {
     const { ctx, cfg } = this;
     const town = !ctx.map.indoor && this.stops.length > 0;
@@ -108,10 +128,12 @@ export class Commute {
       const label = this.labels[p.index];
       label.setVisible(!!stop);
       if (!stop) continue;
-      if (ctx.input.intents[p.index].interact && !p.vehicleSwapped) { this.ride(stop); continue; }
+      if (ctx.input.intents[p.index].interact && !p.vehicleSwapped) { ctx.input.intents[p.index].interact = false; this.press(stop, p.index); continue; }
       label.setPosition(p.x, p.y - 24);
-      const dest = otherStop(cfg.tram, stop.id);
-      const text = !dest ? '' : `${ctx.t(`world.interact.${ctx.input.type === 'keyboard' && p.index === 1 ? 'keyboardP2' : ctx.input.type}`)} ${ctx.t('tram.board', { price: ctx.t('hud.money', { v: (cfg.tram.priceCents / 100).toFixed(2).replace('.', ctx.i18n.lang === 'de' ? ',' : '.') }) })}`;
+      const known = this.known(stop);
+      const dest = known ? otherStop(cfg.tram, stop.id) : true;
+      const fast = known && this.targets(stop).length > 1;
+      const text = !dest ? '' : `${ctx.t(`world.interact.${ctx.input.type === 'keyboard' && p.index === 1 ? 'keyboardP2' : ctx.input.type}`)} ${!known ? ctx.t('tram.quiz') : fast ? ctx.t('tram.fast') : ctx.t('tram.board', { price: ctx.t('hud.money', { v: (cfg.tram.priceCents / 100).toFixed(2).replace('.', ctx.i18n.lang === 'de' ? ',' : '.') }) })}`;
       if (label.tramText !== text) { label.setText(text); label.tramText = text; }
       label.setVisible(!!dest);
     }
