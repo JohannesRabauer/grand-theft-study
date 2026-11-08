@@ -6,6 +6,7 @@ export function createEnv(game, h, assert, savedLang) {
   if (game.scene.isActive('Game')) game.scene.getScene('Game').scene.start('Menu'); else if (!game.scene.isActive('Menu')) game.scene.start('Menu');
   game.schoolEventsOff = true; // surprises in the school day (story 8.4) are switched on by the scenario that tests them
   game.pocketMoneyOff = true; // the Familienfrieden pocket money on a new morning (story 9.6) is switched on by the scenario that tests it
+  game.grownupsOff = true; // the janitor, the inspector and the neighbor dog (story 7.4) are switched on by the scenario that tests them
   game.lookoutsOff = true; // lookouts (story 7.2) are switched on by the scenario that tests them
   game.hintsOff = true; // contextual tips freeze the world until confirmed; the scripted runs switch them off (the `hints` scenario turns them on)
   game.trafficOff = true; // the scripted route runners ride the main road blind: buses only hit players in the `traffic` scenario

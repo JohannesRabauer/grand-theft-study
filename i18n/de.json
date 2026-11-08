@@ -1029,5 +1029,11 @@
   "lookout.spotted": "Ein Späher hat dich gesehen und die Bande gerufen!",
   "phone.msg.bully-lookout": "Unser Späher hat dich gesehen! Wir kommen!",
   "boss.rocco.name": "Rocco, der Rowdy-Boss",
-  "boss.arrives": "{name} mischt jetzt mit! Er lässt sich kaum ablenken."
+  "boss.arrives": "{name} mischt jetzt mit! Er lässt sich kaum ablenken.",
+  "grownup.janitor.shout": "Der Hausmeister: Hey! Auf dem Schulhof wird nicht gerannt!",
+  "grownup.janitor.caught": "Der Hausmeister seufzt: Bitte geh langsam. (Ein bisschen Geld ist weg.)",
+  "grownup.janitor.calm": "Der Hausmeister schüttelt den Kopf und geht zu seinem Besen zurück.",
+  "grownup.inspector.shout": "Der Kontrolleur: Moment! Zeig mir mal deinen Fahrschein!",
+  "grownup.inspector.caught": "Der Kontrolleur: Kauf nächstes Mal bitte einen Fahrschein. Dann ist alles gut.",
+  "grownup.inspector.calm": "Der Kontrolleur tippt an seine Mütze und geht weg."
 }

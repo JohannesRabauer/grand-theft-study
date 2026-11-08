@@ -1029,5 +1029,11 @@
   "lookout.spotted": "A lookout spotted you and called the gang!",
   "phone.msg.bully-lookout": "Our lookout saw you! We are coming!",
   "boss.rocco.name": "Rocco the Rowdy Boss",
-  "boss.arrives": "{name} joins the chase! He hardly lets himself be distracted."
+  "boss.arrives": "{name} joins the chase! He hardly lets himself be distracted.",
+  "grownup.janitor.shout": "The janitor: Hey! No running on the school yard!",
+  "grownup.janitor.caught": "The janitor sighs: Please walk, and pick up that coin you dropped. (A little money is gone.)",
+  "grownup.janitor.calm": "The janitor shakes his head and goes back to his broom.",
+  "grownup.inspector.shout": "The ticket inspector: Hold on! Let me see your ticket!",
+  "grownup.inspector.caught": "The inspector: Next time buy a ticket, please. Then everything is fine.",
+  "grownup.inspector.calm": "The inspector tips his cap and walks away."
 }

@@ -1,0 +1,16 @@
+{
+  "_doc": "The other chasers (story 7.4, services/grownupLogic.js, entities/Grownups.js). Each has a cause (an event), walks at `speed` px/s straight at the nearest kid (sliding along walls) and can be escaped: hidden for `hideSeconds` or farther than `loseDistance` px for `loseSeconds` ends it. A catch costs `lossCents` (never more than the family has) and a kind scolding, never more; afterwards, and after losing the kids, he walks off for `calmSeconds` and is gone for `cooldown` seconds. janitor (Hausmeister): chases kids who run onto the school yard behind the school. inspector: boards after a tram ride without a ticket (the fine itself was paid on the tram). dog: the neighbor dog joins when the neighbor storms out of his door (neighbor:alert); it only trots after the kids and calms down after `chaseSeconds` or when they are `loseDistance` px away (data/dogs.json animal rules, entities/NeighborDogs.js). The neighbor himself is the ding-dong-run chaser of story 6.2 (data/neighbors.json). Texts: grownup.<id>.shout / caught / calm.",
+  "janitor": {
+    "cause": { "event": "turf:enter", "match": { "id": "schoolyard-back" } },
+    "speed": 78, "catchRadius": 10, "loseDistance": 190, "loseSeconds": 5, "hideSeconds": 2.5, "calmSeconds": 3, "lossCents": 50, "cooldown": 30,
+    "outfit": { "jacket": "#3f6f8f", "pants": "#2c3a4a", "hat": "#d8b64a" },
+    "shout": "grownup.janitor.shout", "caught": "grownup.janitor.caught", "calm": "grownup.janitor.calm"
+  },
+  "inspector": {
+    "cause": { "event": "tram:inspector" },
+    "speed": 86, "catchRadius": 10, "loseDistance": 200, "loseSeconds": 5, "hideSeconds": 2.5, "calmSeconds": 3, "lossCents": 0, "cooldown": 30,
+    "outfit": { "jacket": "#a02b2b", "pants": "#2a2a33", "hat": "#2a2a33" },
+    "shout": "grownup.inspector.shout", "caught": "grownup.inspector.caught", "calm": "grownup.inspector.calm"
+  },
+  "dog": { "cause": { "event": "neighbor:alert" }, "chaseSeconds": 12, "loseDistance": 150, "cooldown": 20 }
+}

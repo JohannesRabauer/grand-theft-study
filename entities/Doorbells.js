@@ -135,7 +135,7 @@ export class Doorbells {
       d.neighbor = this.neighbors.find(m => !m.active) ?? null;
       d.neighbor?.activate(d.o.neighborId, d.doorX, d.walkY);
       if (d.neighbor) this.bubbles.say(d.neighbor, ctx.t('stick.neighborShout'), ncfg.timing.shoutSeconds);
-      ctx.events.emit('neighbor:alert', { houseId: d.houseId, player: d.target });
+      ctx.events.emit('neighbor:alert', { houseId: d.houseId, player: d.target, x: d.doorX, y: d.walkY });
     } else if (ev === 'caught') {
       d.neighbor?.show(2, d.neighbor.sprite.flipX);
       this.bubbles.say(d.neighbor ?? d.owner, ctx.t('stick.neighborCaught'), ncfg.bubbleSeconds);
