@@ -1,0 +1,726 @@
+{
+ "schema": 1,
+ "label": "before",
+ "shots": [
+  {
+   "id": "park-day",
+   "tier": "medium",
+   "file": "park-day-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "f8bce02006170e8c",
+   "metrics": {
+    "longestSeamPx": 344,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 37020.75,
+    "largestFlatShare": 0.2857,
+    "walkableLuminanceMin": 0.4212,
+    "walkableLuminanceP5": 0.4932,
+    "meanLuminance": 0.5017,
+    "distinctColors": 1072
+   }
+  },
+  {
+   "id": "oldtown-day",
+   "tier": "medium",
+   "file": "oldtown-day-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "db713c94e337f611",
+   "metrics": {
+    "longestSeamPx": 163.5,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 10661,
+    "largestFlatShare": 0.0823,
+    "walkableLuminanceMin": 0.4239,
+    "walkableLuminanceP5": 0.4509,
+    "meanLuminance": 0.4309,
+    "distinctColors": 218
+   }
+  },
+  {
+   "id": "road-day",
+   "tier": "medium",
+   "file": "road-day-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "1621b7273eb183c7",
+   "metrics": {
+    "longestSeamPx": 479.5,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 26582.5,
+    "largestFlatShare": 0.2051,
+    "walkableLuminanceMin": 0.3038,
+    "walkableLuminanceP5": 0.3051,
+    "meanLuminance": 0.4521,
+    "distinctColors": 638
+   }
+  },
+  {
+   "id": "school-day",
+   "tier": "medium",
+   "file": "school-day-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "02fdb285dd0c6d09",
+   "metrics": {
+    "longestSeamPx": 311.5,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 65555.75,
+    "largestFlatShare": 0.5058,
+    "walkableLuminanceMin": 0.4273,
+    "walkableLuminanceP5": 0.4515,
+    "meanLuminance": 0.5337,
+    "distinctColors": 531
+   }
+  },
+  {
+   "id": "market-day",
+   "tier": "medium",
+   "file": "market-day-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "835756b919ea831b",
+   "metrics": {
+    "longestSeamPx": 120.5,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 11784.5,
+    "largestFlatShare": 0.0909,
+    "walkableLuminanceMin": 0.3048,
+    "walkableLuminanceP5": 0.3053,
+    "meanLuminance": 0.4447,
+    "distinctColors": 183
+   }
+  },
+  {
+   "id": "riverside-day",
+   "tier": "medium",
+   "file": "riverside-day-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "754595da42c9a8b8",
+   "metrics": {
+    "longestSeamPx": 193.5,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 45885.25,
+    "largestFlatShare": 0.3541,
+    "walkableLuminanceMin": 0.3038,
+    "walkableLuminanceP5": 0.3051,
+    "meanLuminance": 0.4324,
+    "distinctColors": 247
+   }
+  },
+  {
+   "id": "skate-day",
+   "tier": "medium",
+   "file": "skate-day-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "e99b5b2452855e8c",
+   "metrics": {
+    "longestSeamPx": 350.5,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 10014,
+    "largestFlatShare": 0.0773,
+    "walkableLuminanceMin": 0.4396,
+    "walkableLuminanceP5": 0.501,
+    "meanLuminance": 0.5485,
+    "distinctColors": 1349
+   }
+  },
+  {
+   "id": "plaza-day",
+   "tier": "medium",
+   "file": "plaza-day-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "da22f3a7cbf8dc4e",
+   "metrics": {
+    "longestSeamPx": 120,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 27345.75,
+    "largestFlatShare": 0.211,
+    "walkableLuminanceMin": 0.3488,
+    "walkableLuminanceP5": 0.4515,
+    "meanLuminance": 0.4842,
+    "distinctColors": 408
+   }
+  },
+  {
+   "id": "oldtown-morning",
+   "tier": "medium",
+   "file": "oldtown-morning-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 420,
+   "weather": "clear",
+   "hash": "0ef999a4394d62fe",
+   "metrics": {
+    "longestSeamPx": 163.5,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 10562.25,
+    "largestFlatShare": 0.0815,
+    "walkableLuminanceMin": 0.4399,
+    "walkableLuminanceP5": 0.4844,
+    "meanLuminance": 0.4676,
+    "distinctColors": 444
+   }
+  },
+  {
+   "id": "oldtown-evening",
+   "tier": "medium",
+   "file": "oldtown-evening-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 1185,
+   "weather": "clear",
+   "hash": "41b418fd04139677",
+   "metrics": {
+    "longestSeamPx": 163.5,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 10600.25,
+    "largestFlatShare": 0.0818,
+    "walkableLuminanceMin": 0.4139,
+    "walkableLuminanceP5": 0.4593,
+    "meanLuminance": 0.4442,
+    "distinctColors": 379
+   }
+  },
+  {
+   "id": "oldtown-night",
+   "tier": "medium",
+   "file": "oldtown-night-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 1290,
+   "weather": "clear",
+   "hash": "63d948f7ce5bc518",
+   "metrics": {
+    "longestSeamPx": 163.5,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 10363,
+    "largestFlatShare": 0.08,
+    "walkableLuminanceMin": 0.254,
+    "walkableLuminanceP5": 0.2778,
+    "meanLuminance": 0.2669,
+    "distinctColors": 318
+   }
+  },
+  {
+   "id": "oldtown-rain",
+   "tier": "medium",
+   "file": "oldtown-rain-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "rain",
+   "hash": "77d49a57e86e2200",
+   "metrics": {
+    "longestSeamPx": 163.5,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 10547.75,
+    "largestFlatShare": 0.0814,
+    "walkableLuminanceMin": 0.2974,
+    "walkableLuminanceP5": 0.3562,
+    "meanLuminance": 0.3454,
+    "distinctColors": 568
+   }
+  },
+  {
+   "id": "oldtown-snow",
+   "tier": "medium",
+   "file": "oldtown-snow-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "snow",
+   "hash": "0194bf725b34f57e",
+   "metrics": {
+    "longestSeamPx": 163,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 644.75,
+    "largestFlatShare": 0.005,
+    "walkableLuminanceMin": 0.415,
+    "walkableLuminanceP5": 0.4904,
+    "meanLuminance": 0.4828,
+    "distinctColors": 1350
+   }
+  },
+  {
+   "id": "park-night",
+   "tier": "medium",
+   "file": "park-night-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 1290,
+   "weather": "clear",
+   "hash": "9cdec464b16616d3",
+   "metrics": {
+    "longestSeamPx": 339,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 36923.5,
+    "largestFlatShare": 0.2849,
+    "walkableLuminanceMin": 0.2769,
+    "walkableLuminanceP5": 0.3149,
+    "meanLuminance": 0.3198,
+    "distinctColors": 545
+   }
+  },
+  {
+   "id": "interior-home-morning",
+   "tier": "medium",
+   "file": "interior-home-morning-medium.png",
+   "size": "960x540",
+   "map": "home",
+   "minute": 420,
+   "weather": "clear",
+   "hash": "a0ea30c2f25db5a7",
+   "metrics": {
+    "longestSeamPx": 384,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 12960,
+    "largestFlatShare": 0.1,
+    "walkableLuminanceMin": 0.3434,
+    "walkableLuminanceP5": 0.4104,
+    "meanLuminance": 0.4189,
+    "distinctColors": 195
+   }
+  },
+  {
+   "id": "interior-home-night",
+   "tier": "medium",
+   "file": "interior-home-night-medium.png",
+   "size": "960x540",
+   "map": "home",
+   "minute": 1290,
+   "weather": "clear",
+   "hash": "a0ea30c2f25db5a7",
+   "metrics": {
+    "longestSeamPx": 384,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 12960,
+    "largestFlatShare": 0.1,
+    "walkableLuminanceMin": 0.3434,
+    "walkableLuminanceP5": 0.4104,
+    "meanLuminance": 0.4189,
+    "distinctColors": 195
+   }
+  },
+  {
+   "id": "interior-school-day",
+   "tier": "medium",
+   "file": "interior-school-day-medium.png",
+   "size": "960x540",
+   "map": "school",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "53a689ae485390af",
+   "metrics": {
+    "longestSeamPx": 479.5,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 2991.25,
+    "largestFlatShare": 0.0231,
+    "walkableLuminanceMin": 0.3688,
+    "walkableLuminanceP5": 0.447,
+    "meanLuminance": 0.5703,
+    "distinctColors": 186
+   }
+  },
+  {
+   "id": "interior-dojo-day",
+   "tier": "medium",
+   "file": "interior-dojo-day-medium.png",
+   "size": "960x540",
+   "map": "dojo",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "6a50ab47e3c2f135",
+   "metrics": {
+    "longestSeamPx": 384,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 37440,
+    "largestFlatShare": 0.2889,
+    "walkableLuminanceMin": 0.3639,
+    "walkableLuminanceP5": 0.447,
+    "meanLuminance": 0.3433,
+    "distinctColors": 170
+   }
+  },
+  {
+   "id": "park-day",
+   "tier": "low",
+   "file": "park-day-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "f6d64033c6095a30",
+   "metrics": {
+    "longestSeamPx": 346,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 59398,
+    "largestFlatShare": 0.4583,
+    "walkableLuminanceMin": 0.4506,
+    "walkableLuminanceP5": 0.4945,
+    "meanLuminance": 0.5055,
+    "distinctColors": 717
+   }
+  },
+  {
+   "id": "oldtown-day",
+   "tier": "low",
+   "file": "oldtown-day-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "2a7689d5fa66bb93",
+   "metrics": {
+    "longestSeamPx": 161,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 43503,
+    "largestFlatShare": 0.3357,
+    "walkableLuminanceMin": 0.4714,
+    "walkableLuminanceP5": 0.4899,
+    "meanLuminance": 0.4431,
+    "distinctColors": 260
+   }
+  },
+  {
+   "id": "road-day",
+   "tier": "low",
+   "file": "road-day-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "a5f84eee6a246d42",
+   "metrics": {
+    "longestSeamPx": 479,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 31702,
+    "largestFlatShare": 0.2446,
+    "walkableLuminanceMin": 0.3037,
+    "walkableLuminanceP5": 0.3039,
+    "meanLuminance": 0.4524,
+    "distinctColors": 548
+   }
+  },
+  {
+   "id": "school-day",
+   "tier": "low",
+   "file": "school-day-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "486b0c45f354569e",
+   "metrics": {
+    "longestSeamPx": 311,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 69816,
+    "largestFlatShare": 0.5387,
+    "walkableLuminanceMin": 0.4334,
+    "walkableLuminanceP5": 0.4903,
+    "meanLuminance": 0.5427,
+    "distinctColors": 390
+   }
+  },
+  {
+   "id": "market-day",
+   "tier": "low",
+   "file": "market-day-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "7b0a47c2b5a53fa4",
+   "metrics": {
+    "longestSeamPx": 119,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 27148,
+    "largestFlatShare": 0.2095,
+    "walkableLuminanceMin": 0.3039,
+    "walkableLuminanceP5": 0.3039,
+    "meanLuminance": 0.4527,
+    "distinctColors": 256
+   }
+  },
+  {
+   "id": "riverside-day",
+   "tier": "low",
+   "file": "riverside-day-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "1fc4a7082c7aebce",
+   "metrics": {
+    "longestSeamPx": 192,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 53310,
+    "largestFlatShare": 0.4113,
+    "walkableLuminanceMin": 0.3037,
+    "walkableLuminanceP5": 0.3039,
+    "meanLuminance": 0.432,
+    "distinctColors": 296
+   }
+  },
+  {
+   "id": "skate-day",
+   "tier": "low",
+   "file": "skate-day-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "aa1e3a4b6b8bc72e",
+   "metrics": {
+    "longestSeamPx": 190,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 19155,
+    "largestFlatShare": 0.1478,
+    "walkableLuminanceMin": 0.4525,
+    "walkableLuminanceP5": 0.5057,
+    "meanLuminance": 0.5504,
+    "distinctColors": 999
+   }
+  },
+  {
+   "id": "plaza-day",
+   "tier": "low",
+   "file": "plaza-day-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "623169e8923272c2",
+   "metrics": {
+    "longestSeamPx": 120,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 51863,
+    "largestFlatShare": 0.4002,
+    "walkableLuminanceMin": 0.4284,
+    "walkableLuminanceP5": 0.4899,
+    "meanLuminance": 0.4996,
+    "distinctColors": 347
+   }
+  },
+  {
+   "id": "oldtown-morning",
+   "tier": "low",
+   "file": "oldtown-morning-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 420,
+   "weather": "clear",
+   "hash": "d0647d41f9d923f8",
+   "metrics": {
+    "longestSeamPx": 161,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 43213,
+    "largestFlatShare": 0.3334,
+    "walkableLuminanceMin": 0.464,
+    "walkableLuminanceP5": 0.5188,
+    "meanLuminance": 0.4781,
+    "distinctColors": 360
+   }
+  },
+  {
+   "id": "oldtown-evening",
+   "tier": "low",
+   "file": "oldtown-evening-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 1185,
+   "weather": "clear",
+   "hash": "d316e14bff9fd95e",
+   "metrics": {
+    "longestSeamPx": 160,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 43184,
+    "largestFlatShare": 0.3332,
+    "walkableLuminanceMin": 0.4574,
+    "walkableLuminanceP5": 0.4909,
+    "meanLuminance": 0.454,
+    "distinctColors": 332
+   }
+  },
+  {
+   "id": "oldtown-night",
+   "tier": "low",
+   "file": "oldtown-night-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 1290,
+   "weather": "clear",
+   "hash": "0a77f2e2066b0901",
+   "metrics": {
+    "longestSeamPx": 159,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 37064,
+    "largestFlatShare": 0.286,
+    "walkableLuminanceMin": 0.2723,
+    "walkableLuminanceP5": 0.292,
+    "meanLuminance": 0.2731,
+    "distinctColors": 452
+   }
+  },
+  {
+   "id": "oldtown-rain",
+   "tier": "low",
+   "file": "oldtown-rain-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 720,
+   "weather": "rain",
+   "hash": "660b23c6069470b6",
+   "metrics": {
+    "longestSeamPx": 160,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 43253,
+    "largestFlatShare": 0.3337,
+    "walkableLuminanceMin": 0.3674,
+    "walkableLuminanceP5": 0.3869,
+    "meanLuminance": 0.3542,
+    "distinctColors": 356
+   }
+  },
+  {
+   "id": "oldtown-snow",
+   "tier": "low",
+   "file": "oldtown-snow-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 720,
+   "weather": "snow",
+   "hash": "cfa11188c1b8553c",
+   "metrics": {
+    "longestSeamPx": 161,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 42118,
+    "largestFlatShare": 0.325,
+    "walkableLuminanceMin": 0.4682,
+    "walkableLuminanceP5": 0.5322,
+    "meanLuminance": 0.4929,
+    "distinctColors": 410
+   }
+  },
+  {
+   "id": "park-night",
+   "tier": "low",
+   "file": "park-night-low.png",
+   "size": "480x270",
+   "map": "town",
+   "minute": 1290,
+   "weather": "clear",
+   "hash": "bd7ba70a4a1c3243",
+   "metrics": {
+    "longestSeamPx": 339,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 59207,
+    "largestFlatShare": 0.4568,
+    "walkableLuminanceMin": 0.292,
+    "walkableLuminanceP5": 0.3157,
+    "meanLuminance": 0.3216,
+    "distinctColors": 423
+   }
+  },
+  {
+   "id": "interior-home-morning",
+   "tier": "low",
+   "file": "interior-home-morning-low.png",
+   "size": "480x270",
+   "map": "home",
+   "minute": 420,
+   "weather": "clear",
+   "hash": "466ebf69b213a169",
+   "metrics": {
+    "longestSeamPx": 384,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 32188,
+    "largestFlatShare": 0.2484,
+    "walkableLuminanceMin": 0.3585,
+    "walkableLuminanceP5": 0.4204,
+    "meanLuminance": 0.4291,
+    "distinctColors": 216
+   }
+  },
+  {
+   "id": "interior-home-night",
+   "tier": "low",
+   "file": "interior-home-night-low.png",
+   "size": "480x270",
+   "map": "home",
+   "minute": 1290,
+   "weather": "clear",
+   "hash": "466ebf69b213a169",
+   "metrics": {
+    "longestSeamPx": 384,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 32188,
+    "largestFlatShare": 0.2484,
+    "walkableLuminanceMin": 0.3585,
+    "walkableLuminanceP5": 0.4204,
+    "meanLuminance": 0.4291,
+    "distinctColors": 216
+   }
+  },
+  {
+   "id": "interior-school-day",
+   "tier": "low",
+   "file": "interior-school-day-low.png",
+   "size": "480x270",
+   "map": "school",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "33252af316e04cd1",
+   "metrics": {
+    "longestSeamPx": 479,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 50801,
+    "largestFlatShare": 0.392,
+    "walkableLuminanceMin": 0.3997,
+    "walkableLuminanceP5": 0.4697,
+    "meanLuminance": 0.5856,
+    "distinctColors": 222
+   }
+  },
+  {
+   "id": "interior-dojo-day",
+   "tier": "low",
+   "file": "interior-dojo-day-low.png",
+   "size": "480x270",
+   "map": "dojo",
+   "minute": 720,
+   "weather": "clear",
+   "hash": "177421c56892727b",
+   "metrics": {
+    "longestSeamPx": 384,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 43135,
+    "largestFlatShare": 0.3328,
+    "walkableLuminanceMin": 0.3762,
+    "walkableLuminanceP5": 0.4797,
+    "meanLuminance": 0.3567,
+    "distinctColors": 124
+   }
+  }
+ ]
+}

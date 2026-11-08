@@ -207,3 +207,7 @@ regressions pass. No review work was deferred. After that correction, all 40 pur
 with zero console problems. A fresh 1,200-step Medium repeat recorded maxima **1.2/1.1/1.1/2.2/1.2/1.3 ms**;
 every pool remained capped (aggregate prop peak 48/60). Isolated ride-input checks start in a clear road lane, and the
 traffic remount check presses interact before unrelated pedestrians can displace its scripted placement.
+
+## Screenshot set and look metrics (epic 16)
+
+`node scripts/shots.mjs --label <name> [--tier medium|low] [--only id,id]` serves the game itself, runs it in headless Edge/Chrome with a seeded `Math.random` and a fixed-step clock, hides the debug overlay and HUD and writes the fixed shot list (8 districts by day, old town morning/evening/night/rain/snow, park at night, home/school/dojo interiors; Medium and Low) to `docs/shots/overhaul/<name>/` with `metrics.json` (longest straight seam, largest flat area, walkable luminance; limits in `docs/art-limits.json`). Two runs give identical images and metrics. `before/` is the baseline from before the epic-16 changes, `before/index.md` lists what looks unfinished. `scripts/check-lookmetrics.mjs` validates the skill, the limits file, the metric function and every recorded set.
