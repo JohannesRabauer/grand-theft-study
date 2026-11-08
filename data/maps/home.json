@@ -28,6 +28,7 @@
     { "type": "entry", "id": "from-town", "x": 12, "y": 13, "facing": "up" },
     { "type": "door", "id": "home-exit", "x": 11, "y": 16, "w": 3, "h": 1, "to": "town", "entry": "from-home", "label": "world.door.exit", "auto": true },
     { "type": "home", "id": "breakfast", "role": "breakfast", "x": 5, "y": 4, "w": 3, "h": 2 },
-    { "type": "home", "id": "schoolbag", "role": "bag", "x": 18, "y": 5, "w": 1, "h": 1 }
+    { "type": "home", "id": "schoolbag", "role": "bag", "x": 18, "y": 5, "w": 1, "h": 1 },
+    { "type":"chore-board", "id":"chore-board", "x":12, "y":3 }
   ]
 }

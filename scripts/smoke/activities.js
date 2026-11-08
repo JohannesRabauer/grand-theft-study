@@ -157,6 +157,43 @@ export const activities = {
     assert('choosing the home stop rides there across the lines', rides.length === 1 && rides[0].to === 'home-tram-stop' && Math.hypot(player.x - spos(home)[0], player.y - spos(home)[1]) < 40 && !top(), `${rides.length}`);
     cm.rng = rng0;
 
+    // ---- the chore board and the Familienfrieden
+    const peace = [];
+    ctx.events.on('family:peace', e => peace.push(e));
+    ctx.activities.openChores(0);
+    step(2);
+    const board = top();
+    assert('the chore board lists the six chores', board?.id === 'chores' && board.ids.length === 6 && ctx.frozen, board?.id);
+    board.sel = board.ids.indexOf('dishes');
+    const sci0 = n('science');
+    const money4 = ctx.state.shared.money;
+    board.confirm();
+    step(2);
+    assert('choosing the dishes opens the chore with three questions', top()?.id === 'activity' && top().activity === 'dishes' && top().total === 3, top()?.id);
+    play(3);
+    assert('the dishes pay 0.50 and are recorded as science answers', n('science') === sci0 + 3 && ctx.state.shared.money === money4 + 50, `${ctx.state.shared.money - money4}`);
+    top().confirm();
+    step(2);
+    ctx.activities.openChores(0);
+    step(2);
+    top().sel = top().ids.indexOf('dishes');
+    top().confirm();
+    assert('a chore done today cannot be done twice', top()?.id === 'chores');
+    top().sel = top().ids.indexOf('reading');
+    top().confirm();
+    step(2);
+    assert('the reading chore asks for German or English first', top()?.id === 'activity' && top().phase === 'choose');
+    ui.screens.clear();
+    step(2);
+    game.pocketMoneyOff = false;
+    const day = ctx.state.shared.clock.day + 5;
+    for (const id of ['dishes', 'trash']) ctx.state.dispatch('flags.set', { key: `activity.${id}.${day - 1}.0`, value: 1 });
+    const money5 = ctx.state.shared.money;
+    ctx.events.emit('day:morning', { day });
+    const expected = 140 + 100 * (ctx.players.length - 1);
+    assert('a new morning pays pocket money that shrinks with every chore left undone', peace.length === 1 && peace[0].cents === expected && ctx.state.shared.money === money5 + expected && peace[0].done[0] === 2, `${peace[0]?.cents} vs ${expected}`);
+    game.pocketMoneyOff = true;
+
     // ---- put everything back
     ctx.state.replace(data0);
     player.teleport(home0.x, home0.y);

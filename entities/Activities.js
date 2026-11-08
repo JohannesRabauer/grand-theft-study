@@ -5,7 +5,8 @@
 // `activity:done` { id, variant, player, correct, total, cents, xp }.
 import { ActivityScreen } from '../ui/screens/ActivityScreen.js';
 import { stopKey } from '../services/commuteLogic.js';
-import { canPlay, dayKey, reward, spotKey, timesToday } from '../services/activityLogic.js';
+import { ChoreScreen } from '../ui/screens/ChoreScreen.js';
+import { choreIds, pocketMoney, canPlay, dayKey, reward, spotKey, timesToday } from '../services/activityLogic.js';
 
 export class Activities {
   constructor(scene, ctx, cfg, inputCfg) {
@@ -18,6 +19,7 @@ export class Activities {
       fontFamily: 'monospace', fontSize: '8px', color: '#fff2a8', backgroundColor: '#243d46', resolution: ctx.res.scale
     }).setOrigin(0.5).setDepth(8100).setVisible(false));
     ctx.events.on('lang:changed', () => { for (const l of this.labels) l.actText = null; });
+    ctx.events.on('day:morning', e => this.payPocketMoney(e.day));
   }
 
   get day() { return this.ctx.state.shared.clock.day; }
@@ -52,12 +54,35 @@ export class Activities {
     return r;
   }
 
+  // Familienfrieden: every kid's pocket money on a new morning, less for each chore left undone the day before.
+  payPocketMoney(day) {
+    const { ctx } = this;
+    if (day < 2 || window.SCHULWEG_GAME?.pocketMoneyOff) return null;
+    const flags = ctx.state.shared.flags;
+    const chores = choreIds(this.cfg);
+    let cents = 0;
+    const done = ctx.players.map(p => chores.filter(id => timesToday(flags, id, day - 1, p.index) > 0).length);
+    for (const n of done) cents += pocketMoney(this.cfg, n);
+    ctx.state.dispatch('wallet.earn', { cents, reason: 'pocket-money' });
+    ctx.events.emit('family:peace', { day, done, total: chores.length, cents });
+    ctx.events.emit('ui:toast', { key: 'chores.pocket', params: { money: ctx.t('hud.money', { v: (cents / 100).toFixed(2).replace('.', ctx.i18n.lang === 'de' ? ',' : '.') }) } });
+    return cents;
+  }
+
+  // The chore board: the list of chores for this kid.
+  openChores(player) {
+    const { ctx } = this;
+    if (!ctx.screens || ctx.screens.top()) return null;
+    return ctx.screens.push(new ChoreScreen(this.scene.scene.get('UI'), ctx, ctx.screens, this, choreIds(this.cfg), player));
+  }
+
   // The spots of the town an activity starts from: the Pfand machine, the newsstand and the English signs (once per kid each).
   spots() {
     const { map } = this.ctx;
     if (this._spotsFor !== map) {
       this._spotsFor = map;
-      this._spots = map.indoor ? [] : map.objects.flatMap(o => {
+      this._spots = map.objects.flatMap(o => {
+        if (map.indoor) return o.type === 'chore-board' ? [{ id: 'chores', spot: o.id, x: (o.x + 0.5) * map.tileSize, y: (o.y + 0.5) * map.tileSize, r: 34 }] : [];
         const id = o.type === 'pfand-machine' ? 'pfand' : o.type === 'newsstand' ? 'route' : o.type === 'sign' && o.board ? 'scan' : null;
         return id ? [{ id, spot: o.id, x: (o.x + 0.5) * map.tileSize, y: (o.y + 0.5) * map.tileSize, r: id === 'scan' ? 26 : 30 }] : [];
       });
@@ -75,7 +100,7 @@ export class Activities {
     for (const s of this.spots()) {
       const d = Math.hypot(p.x - s.x, p.y - s.y);
       if (d > s.r || d >= bd) continue;
-      if (this.cfg[s.id].perSign && flags[spotKey(s.id, s.spot, p.index)]) continue;
+      if (this.cfg[s.id]?.perSign && flags[spotKey(s.id, s.spot, p.index)]) continue;
       best = s;
       bd = d;
     }
@@ -92,10 +117,10 @@ export class Activities {
     const { ctx } = this;
     for (const p of ctx.players) {
       const label = this.labels[p.index];
-      const s = !ctx.screens?.top() && p.alive && !p.pinned && p.vehicle === 'foot' ? this.spotNear(p) : null;
+      const s = !ctx.screens?.top() && p.alive && !p.pinned && (p.vehicle === 'foot' || ctx.map.indoor) ? this.spotNear(p) : null;
       label.setVisible(!!s);
       if (!s) continue;
-      if (ctx.input.intents[p.index].interact && !p.vehicleSwapped) { label.setVisible(false); this.start(s.id, p.index, s.spot); continue; }
+      if (ctx.input.intents[p.index].interact && !p.vehicleSwapped) { label.setVisible(false); if (s.id === 'chores') this.openChores(p.index); else this.start(s.id, p.index, s.spot); continue; }
       label.setPosition(p.x, p.y - 24);
       const text = `${ctx.t(`world.interact.${ctx.input.type === 'keyboard' && p.index === 1 ? 'keyboardP2' : ctx.input.type}`)} ${ctx.t(`activity.${s.id}.prompt`)}`;
       if (label.actText !== text) { label.setText(text); label.actText = text; }

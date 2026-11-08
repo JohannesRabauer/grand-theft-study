@@ -18,7 +18,7 @@ export class ActivityScreen {
     this.spot = spot;
     this.objects = [];
     this.cursor = new ChoiceCursor();
-    this.phase = id === 'bakery' ? 'choose' : 'ask';
+    this.phase = activities.cfg[id].variants ? 'choose' : 'ask';
     this.variant = 'de';
     this.sel = 0;
     this.correct = 0;
@@ -84,9 +84,9 @@ export class ActivityScreen {
     if (this.phase === 'choose') {
       this.header.setText('');
       this.progress.setText('');
-      this.body.setText(ctx.t('activity.bakery.intro'));
-      this.feedback.setText(ctx.t('activity.bakery.bonus'));
-      [ctx.t('activity.bakery.german'), ctx.t('activity.bakery.english')].forEach((t, i) => this.buttons[i].setVisible(true).setText(t));
+      this.body.setText(ctx.t(`activity.${id}.intro`));
+      this.feedback.setText(ctx.t(`activity.${id}.bonus`));
+      [ctx.t(`activity.${id}.german`), ctx.t(`activity.${id}.english`)].forEach((t, i) => this.buttons[i].setVisible(true).setText(t));
       hide(2);
       this.colour(2);
       return;

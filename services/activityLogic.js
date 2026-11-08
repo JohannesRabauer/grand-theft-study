@@ -28,9 +28,20 @@ export function reward(cfg, id, variant, correct, total) {
 export const fits = stage => item => item.type === 'choice' && (!stage.tag || item.tags?.includes(stage.tag));
 
 // Problems in the data against the real question pools: every stage has enough choice questions of its tag, rewards are sane.
+// The activities of the file (everything with stages) and the chores among them.
+export const activityIds = cfg => Object.keys(cfg).filter(k => cfg[k] && typeof cfg[k] === 'object' && (cfg[k].stages || cfg[k].variants));
+export const choreIds = cfg => activityIds(cfg).filter(k => cfg[k].chore);
+
+// Familienfrieden: pocket money for one kid on a new morning, from the chores not done yesterday.
+export function pocketMoney(cfg, done) {
+  const f = cfg.familyPeace;
+  const missed = Math.max(0, choreIds(cfg).length - done);
+  return Math.max(f.minCents, f.baseCents - missed * f.perMissedCents);
+}
+
 export function validateActivities(cfg, pools) {
   const problems = [];
-  for (const id of ['pfand', 'bakery', 'scan', 'route', 'tramquiz']) {
+  for (const id of activityIds(cfg)) {
     const a = cfg[id];
     if (!a) { problems.push(`missing activity ${id}`); continue; }
     if (!(a.perDay >= 1) || !(a.perCorrectCents >= 0) || !(a.xpPerCorrect > 0)) problems.push(`${id}: perDay, perCorrectCents and xpPerCorrect must be positive`);

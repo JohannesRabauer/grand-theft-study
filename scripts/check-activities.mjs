@@ -4,11 +4,11 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fastTargets, knownStop, stopKey } from '../services/commuteLogic.js';
-import { canPlay, dayKey, fits, questionsIn, reward, stagesOf, timesToday, validateActivities } from '../services/activityLogic.js';
+import { activityIds, choreIds, pocketMoney, canPlay, dayKey, fits, questionsIn, reward, stagesOf, timesToday, validateActivities } from '../services/activityLogic.js';
 
 const load = p => JSON.parse(readFileSync(new URL(`../${p}`, import.meta.url), 'utf8'));
 const cfg = load('data/activities.json');
-const pools = { sachkunde: load('data/learning/grade3/sachkunde.json'), mathe: load('data/learning/grade3/mathe.json'), deutsch: load('data/learning/grade3/deutsch.json'), englisch: load('data/learning/grade3/englisch.json') };
+const pools = { science: load('data/learning/grade3/science.json'), sachkunde: load('data/learning/grade3/sachkunde.json'), mathe: load('data/learning/grade3/mathe.json'), deutsch: load('data/learning/grade3/deutsch.json'), englisch: load('data/learning/grade3/englisch.json') };
 const i18n = { de: load('i18n/de.json'), en: load('i18n/en.json') };
 
 // ---- data
@@ -67,9 +67,22 @@ assert.deepEqual(fastTargets(tram, { [stopKey('riverside-tram-stop')]: true }, i
 assert.deepEqual(fastTargets(tram, { [stopKey('riverside-tram-stop')]: true, [stopKey('market-tram-stop')]: true }, ids, 'riverside-tram-stop'), ['market-tram-stop', 'home-tram-stop', 'school-tram-stop']);
 for (const l of ['de', 'en']) for (const id of ids) assert.ok(i18n[l][`tram.stop.${id}`], `${l}: stop name ${id}`);
 
+// ---- chores and the Familienfrieden
+assert.equal(choreIds(cfg).length, 6, 'six chores');
+assert.equal(pocketMoney(cfg, 6), 300, 'all chores done: the full pocket money');
+assert.equal(pocketMoney(cfg, 5), 260);
+assert.equal(pocketMoney(cfg, 0), 100, 'never below the minimum');
+for (let n = 1; n <= 6; n++) assert.ok(pocketMoney(cfg, n) >= pocketMoney(cfg, n - 1), 'every chore helps');
+assert.ok(load('data/maps/home.json').objects.some(o => o.type === 'chore-board'), 'the home has a chore board');
+
 // ---- texts
 for (const l of ['de', 'en']) {
-  for (const id of ['pfand', 'bakery', 'scan', 'route', 'tramquiz']) assert.ok(i18n[l][`activity.${id}.title`], `${l}: ${id} title`);
+  for (const id of activityIds(cfg)) {
+    assert.ok(i18n[l][`activity.${id}.title`], `${l}: ${id} title`);
+    for (const v of cfg[id].variants ? Object.keys(cfg[id].variants) : [null]) for (const st of stagesOf(cfg, id, v ?? 'de')) assert.ok(i18n[l][`activity.stage.${st.kind}`], `${l}: stage ${st.kind}`);
+    if (cfg[id].variants) for (const k of ['intro', 'german', 'english', 'bonus']) assert.ok(i18n[l][`activity.${id}.${k}`], `${l}: ${id}.${k}`);
+  }
+  for (const k of ['chores.pocket', 'chores.done', 'chores.nav', 'activity.chore.prompt', 'activity.chores.title']) assert.ok(i18n[l][k], `${l}: ${k}`);
   for (const id of ['scan', 'route']) assert.ok(i18n[l][`activity.${id}.prompt`] && i18n[l][`activity.stage.${id}`], `${l}: ${id} texts`);
   for (const k of ['activity.limit', 'activity.pfand.prompt', 'activity.bakery.intro', 'activity.bakery.german', 'activity.bakery.english', 'activity.bakery.bonus', 'activity.stage.count', 'activity.stage.order', 'activity.stage.pay', 'activity.progress', 'activity.right', 'activity.wrong', 'activity.done', 'activity.reward', 'activity.nav.ask', 'activity.nav.next', 'activity.nav.close', 'shop.practice']) assert.ok(i18n[l][k], `${l}: ${k}`);
 }
