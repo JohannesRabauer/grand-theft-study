@@ -6,7 +6,7 @@
 // per frame, and nothing changes collision, pathfinding or map data.
 import { U, rng, hash, shade, rgbOf, canvas, px, ell, emit } from './EnvDraw.js';
 import { mapSeed } from './GroundArt.js';
-import { ROOFS, STYLES, buildingInfo, buildingAt, isFacade, facadeLook, roofEdges, roofExtra } from '../render/buildingMath.js';
+import { ROOFS, STYLES, ROOF_LOOKS, ROOF_DRESS, buildingInfo, buildingAt, isFacade, facadeLook, roofEdges, roofExtra, roofLook, roofDress } from '../render/buildingMath.js';
 
 export const PALS = [
   { id: 'brick', roof: '#b2553a', wall: '#a2553c', brick: true, mortar: '#c99a86', trim: '#f0e8da', shutter: '#2f5f4a', base: '#3e2018' },
@@ -28,20 +28,21 @@ export function roofColors(pal, kind) {
   return { base, light: shade(base, 0.38), dark: shade(base, -0.3), deep: shade(base, -0.5) };
 }
 
-function roofTexture(pal, kind, mask) {
+function roofTexture(pal, kind, mask, look = 0) {
   const tmp = canvas();
   const c = tmp.getContext('2d');
-  const r = rng(hash(pal.id + kind + 'roof'));
+  const r = rng(hash(pal.id + kind + 'roof' + (look || '')));
   const col = roofColors(pal, kind);
+  const joint = () => (look ? [col.dark, col.deep, shade(col.base, -0.18)][Math.floor(r() * 3)] : col.dark); // the open roof breaks its network of joints into three colours
   px(c, col.base, 0, 0, U, U);
   if (kind === 'tile') {
     for (let row = 0; row < 8; row++) {
       const y = row * 4;
       const off = row % 2 ? 4 : 0;
-      px(c, col.dark, 0, y + 3, U, 1);
+      if (look) for (let k = -1; k < 4; k++) px(c, joint(), off + k * 8, y + 3, 8, 1); else px(c, col.dark, 0, y + 3, U, 1);
       for (let k = -1; k < 4; k++) {
         const x = off + k * 8;
-        px(c, col.dark, x, y, 1, 3);
+        px(c, joint(), x, y, 1, 3);
         const t = shade(col.base, (r() - 0.45) * 0.3);
         px(c, t, x + 1, y, 7, 3);
         px(c, shade(t, 0.2), x + 1, y, 7, 1);
@@ -65,6 +66,15 @@ function roofTexture(pal, kind, mask) {
     for (let i = 0; i < 90; i++) px(c, shade(col.base, r() < 0.5 ? -0.16 : 0.16), Math.floor(r() * U), Math.floor(r() * U), 2, 1); // gravel
     for (const x of [10, 21]) { px(c, col.dark, x, 0, 1, U); px(c, col.light, x + 1, 0, 1, U); }  // seams
     for (let y = 6; y < U; y += 12) px(c, col.dark, 0, y, U, 1);                                    // overlaps
+  }
+  if (look) { // a few new tiles or a stain, so no two neighbouring tiles are the same
+    const patch = (x, y, w, h, col) => { px(c, col, x, y, w, h); px(c, shade(col, 0.22), x, y, w, 1); px(c, shade(col, -0.2), x + w - 1, y, 1, h); };
+    const n = look % 3 + 1;
+    for (let i = 0; i < n; i++) {
+      const x = Math.floor(r() * 3) * 8 + (kind === 'slate' ? 0 : 1), y = Math.floor(r() * 7) * 4;
+      if (kind === 'flat') px(c, shade(col.base, r() < 0.5 ? -0.24 : 0.2), x, y, 8 + Math.floor(r() * 8), 4 + Math.floor(r() * 4));
+      else patch(x, y, kind === 'tile' ? 7 : 6, kind === 'tile' ? 3 : 4, shade(col.base, look % 2 ? 0.26 : -0.22));
+    }
   }
   // where the roof ends, an edge: a lit lip on the north and west, a shaded one on the east, ragged (the lip is 2 or 3 units
   // thick per group of 4), so a long roof edge is never one straight colour line; a flat roof gets a parapet
@@ -91,6 +101,19 @@ function roofExtraTexture(v) {
     px(c, '#59606b', 7, 9, 18, 12); px(c, '#9fcfe8', 9, 11, 14, 8); px(c, '#cfe8f4', 9, 11, 14, 2);
     px(c, '#59606b', 15, 11, 1, 8); px(c, '#59606b', 9, 15, 14, 1);
   }
+  return tmp;
+}
+
+// What sits on a roof now and then (story 16.9): skylight, solar panel, moss, satellite dish. Drawn on the 16 pixel tile (two units per pixel).
+function roofDressTexture(kind) {
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const b = (col, x, y, w = 1, h = 1) => px(c, col, x * 2, y * 2, w * 2, h * 2);
+  const r = rng(hash('rdress' + kind));
+  if (kind === 'skylight') { b('rgba(22,22,30,0.35)', 5, 5, 8, 7); b('#4a4f58', 4, 4, 8, 7); b('#9fcfe8', 5, 5, 6, 5); b('#cfe8f4', 5, 5, 6, 1); b('#cfe8f4', 5, 5, 1, 5); b('#4a4f58', 8, 5, 1, 5); b('#4a4f58', 5, 7, 6, 1); }
+  else if (kind === 'solar') { b('rgba(22,22,30,0.35)', 3, 4, 11, 9); b('#9aa1ab', 2, 3, 11, 9); b('#2d3f6a', 3, 4, 9, 7); for (let x = 3; x < 12; x += 3) b('#4a63a0', x, 4, 1, 7); for (let y = 4; y < 11; y += 3) b('#4a63a0', 3, y, 9, 1); b('#7f9ad0', 3, 4, 3, 1); }
+  else if (kind === 'moss') { for (let i = 0; i < 26; i++) b(['#3f6a3a', '#5a8a44', '#2c4a2a', '#7fa65a'][Math.floor(r() * 4)], 2 + Math.floor(r() * 12), 2 + Math.floor(r() * 12), r() < 0.4 ? 2 : 1, 1); }
+  else { b('rgba(22,22,30,0.35)', 6, 9, 7, 3); b('#8d939c', 4, 4, 6, 5); b('#c4c8d0', 4, 4, 3, 2); b('#5a6068', 9, 6, 1, 3); b('#4a4f58', 7, 8, 2, 4); b('#3a3f48', 6, 6, 1, 3); }
   return tmp;
 }
 
@@ -277,13 +300,17 @@ function stepTexture() {
 
 export function makeOutdoorArt(scene, size) {
   for (const pal of PALS) {
-    for (const kind of ROOFS) for (let mask = 0; mask < 8; mask++) emit(scene, `env-roof-${pal.id}-${kind}-${mask}`, roofTexture(pal, kind, mask), size);
+    for (const kind of ROOFS) {
+      for (let mask = 0; mask < 8; mask++) emit(scene, `env-roof-${pal.id}-${kind}-${mask}`, roofTexture(pal, kind, mask), size);
+      for (let look = 1; look < ROOF_LOOKS; look++) emit(scene, `env-roof-${pal.id}-${kind}-0-${look}`, roofTexture(pal, kind, 0, look), size);
+    }
     emit(scene, `env-facade-${pal.id}-plain`, facadeTexture(pal, 'plain', 0, 0), size);
     for (const style of STYLES.slice(0, 4)) for (let cu = 0; cu < 4; cu++) emit(scene, `env-facade-${pal.id}-${style}-${cu}`, facadeTexture(pal, style, cu, 0), size);
     for (let sign = 0; sign < 5; sign++) emit(scene, `env-facade-${pal.id}-shop-${sign}`, facadeTexture(pal, 'shop', 0, sign), size);
     for (const kind of DOOR_KINDS) for (const part of DOOR_PARTS) emit(scene, `env-odoor-${pal.id}-${kind}-${part}`, doorTexture(pal, kind, part), size);
   }
   emit(scene, 'env-ostep', stepTexture(), size);
+  ROOF_DRESS.forEach(k => emit(scene, `env-rdress-${k}`, roofDressTexture(k), size));
   for (const side of ['w', 'e']) emit(scene, `env-pipe-${side}`, overlay(OVERLAYS.pipe, side), size);
   for (let v = 0; v < 4; v++) emit(scene, `env-age-${v}`, overlay(OVERLAYS.age, v), size);
   for (let v = 0; v < 3; v++) { emit(scene, `env-bin-${v}`, overlay(OVERLAYS.bin, v), size); emit(scene, `env-vent-${v}`, roofExtraTexture(v), size); }
@@ -315,9 +342,12 @@ export function wallKeys(map, tx, ty, baseKey, mapId) {
     if (look.age >= 0) keys.push(`env-age-${look.age}`);
     return keys;
   }
-  const keys = [`env-roof-${pal}-${ROOFS[b.roof]}-${roofEdges(info, tx, ty)}`];
+  const look = roofLook(info, tx, ty);
+  const keys = [`env-roof-${pal}-${ROOFS[b.roof]}-${roofEdges(info, tx, ty)}${look ? `-${look}` : ''}`];
   const extra = roofExtra(info, tx, ty);
   if (extra >= 0) keys.push(`env-vent-${extra}`);
+  const dress = roofDress(info, tx, ty);
+  if (dress >= 0) keys.push(`env-rdress-${ROOF_DRESS[dress]}`);
   return keys;
 }
 

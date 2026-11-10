@@ -46,13 +46,13 @@ assert.ok(!has(at(m, 2, 0), /^env-bank/) && !has(at(mk('GGG', 'GWG', 'GGG'), 1, 
 
 // fences: orientation follows the neighbours, the ground under them blends
 m = mk('GGG', 'SFS', 'SFS', 'SFS');
-assert.ok(has(at(m, 1, 2), /^env-fence-v$/), 'a fence run along a column is drawn vertically');
+assert.ok(has(at(m, 1, 2), /^env-fence-v-\d$/), 'a fence run along a column is drawn vertically');
 m = mk('GGGG', 'SFFF', 'SSSS');
-assert.ok(has(at(m, 2, 1), /^env-fence-h$/), 'a fence run along a row is drawn horizontally');
+assert.ok(has(at(m, 2, 1), /^env-fence-h-\d$/), 'a fence run along a row is drawn horizontally');
 assert.ok(has(at(m, 2, 1), /^env-edge-grass-n-/), 'the pavement under a fence still blends with the lawn behind it');
 m = mk('SFS', 'FFF', 'SFS');
-assert.ok(has(at(m, 1, 1), /^env-fence-x$/), 'a fence junction draws both directions');
-assert.ok(has(at(mk('SSS', 'SFS', 'SSS'), 1, 1), /^env-fence-h$/), 'a lone fence section defaults to horizontal');
+assert.ok(has(at(m, 1, 1), /^env-fence-x-\d$/), 'a fence junction draws both directions');
+assert.ok(has(at(mk('SSS', 'SFS', 'SSS'), 1, 1), /^env-fence-h-\d$/), 'a lone fence section defaults to horizontal');
 assert.ok(!has(at(mk('HHH', 'SSS'), 1, 1), /^env-shadow/), 'hedge shadows come from the shadow layer (render/Shadows.js), not from tile keys');
 
 // hedges (story 16.6): the ground under a hedge is lawn, the lumpy mass is a sprite; the lawn behind a hedge gets a flower bed or tall grass
@@ -124,7 +124,7 @@ const twin = { ...town, rows: ['##########', '#GGGGGGGG#', '#G##G##GG#', '#G##G#
 assert.ok(pal(groundKeys(twin, 2, 2, 'b', 'town')[0]) && pal(groundKeys(twin, 5, 2, 'b', 'town')[0]), 'two buildings are both styled');
 
 // every real map: only known key families, the base stays first, and nothing here touched the grid
-const known = /^(base-|tile-|env-(edge|edgec|wbed|fence|trunk|tuft|iface|iwall|icap|ihall|iplank|ilino|itatami|iwear|iaoc|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop|pipe|age|vent|bin))/;
+const known = /^(base-|tile-|env-(edge|edgec|wbed|fence|trunk|tuft|iface|iwall|icap|ihall|iplank|ilino|itatami|iwear|iaoc|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop|pipe|age|vent|bin|rdress|poster|chalk|play|kweed|gleaf))/;
 let tiles = 0;
 let extra = 0;
 for (const f of readdirSync(new URL('../data/maps/', import.meta.url)).filter(n => n.endsWith('.json') && n !== 'index.json')) {

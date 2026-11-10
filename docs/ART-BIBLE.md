@@ -120,3 +120,11 @@ Story 16.11 particles: one multi-frame sheet `p-sheet` (`scenes/particleShapes.j
 (fire, sparks, smoke, splashes), eased fades, footsteps and wheel dust per surface, splash crowns, drips, wind-driven smoke, falling leaves and petals,
 lamp embers, dust motes in window light and celebration bursts. Glowing particles (fireflies, sparks, sparkles) hold a pooled `ctx.lights` handle;
 the hub never holds more than `maxParticles`.
+
+Story 16.9 street dressing: `render/streetMath.js` (pure) works out from the tile neighbours and the objects which tiles get set dressing. Ground decals go
+into the ground bake (kerb weeds, leaves in the gutter, chalk drawings, playground markings in the schoolyard, posters on plain facade stretches); standing props
+(planters, bollards, hydrants, letterboxes, recycling bins, parked bikes, street signs, the kiosk and the Pfand machine) are frames of the `street-atlas` and
+images of a fixed pool lent to what is near the view (`render/StreetProps.js`, tier `streetProps`: Low 70, Medium 110, High 160). Roofs have six looks per
+material and now and then a skylight, solar panel, moss or dish, so a big roof is no longer one repeated tile (its joints used to form one connected network of a
+single colour: the flat-area metric). Fences have four looks per direction; the park's slab joints jog and have gaps. Dressing never stands on an object or door tile.
+

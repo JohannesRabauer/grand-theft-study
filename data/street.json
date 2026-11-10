@@ -1,0 +1,7 @@
+{
+  "_doc": "Street dressing (story 16.9, AD-31). Densities are per mille of the eligible tiles (render/streetMath.js decides which tiles are eligible from the neighbours: a facade to the north for planters, bins and bikes, a road beside the tile for bollards, hydrants and signs, a fence beside it for letterboxes); `weeds` and `leaves` are the chance per kerb side. `schoolyard`: the open concrete within rx tiles of the school door and ry tiles in front of it carries the playground markings and chalk drawings. Standing props are images lent from a fixed pool (the tier's `streetProps` in quality.json) to what is near the view; the pool is made at map load, so the display list does not grow while playing. `margin`: base pixels around the view where props show. `depth` of the kiosk awning part is the prop's own foot line.",
+  "density": { "planter": 150, "recycle": 28, "bike": 45, "hydrant": 30, "bollard": 90, "sign": 60, "letterbox": 90, "poster": 430, "play": 120, "chalk": 90, "chalkOpen": 22, "weeds": 0.5, "leaves": 0.34 },
+  "schoolyard": { "rx": 8, "ry": 9 },
+  "margin": 40,
+  "tick": 0.25
+}

@@ -41,6 +41,7 @@ checks.push('check-lighting.mjs');
 checks.push('check-shadows.mjs');
 checks.push('check-vegetation.mjs');
 checks.push('check-buildings.mjs');
+checks.push('check-street.mjs');
 checks.push('check-interiors.mjs'); // story 16.10
 checks.push('check-water.mjs');
 checks.push('check-particles.mjs');

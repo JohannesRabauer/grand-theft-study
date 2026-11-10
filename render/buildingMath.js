@@ -130,6 +130,28 @@ export function facadeLook(info, tx, ty) {
   };
 }
 
+// Story 16.9: the open middle of a roof comes in ROOF_LOOKS variants (different mortar and ageing, a patch of new tiles), so a big
+// roof is no longer one repeated tile, and gets now and then a skylight, solar panel, moss or dish (ROOF_DRESS, -1 none).
+export const ROOF_LOOKS = 6;
+export const ROOF_DRESS = ['skylight', 'solar', 'moss', 'dish'];
+const interiorRoof = (info, tx, ty) => !!buildingAt(info, tx, ty) && !isFacade(info, tx, ty) && !roofEdges(info, tx, ty);
+export function roofLook(info, tx, ty) {
+  const b = buildingAt(info, tx, ty);
+  return b && interiorRoof(info, tx, ty) ? mix(b.seed, tx, ty + 41) % ROOF_LOOKS : 0;
+}
+const CHIMNEYS = new WeakMap();
+export function roofDress(info, tx, ty) {
+  const b = buildingAt(info, tx, ty);
+  if (!b || !interiorRoof(info, tx, ty)) return -1;
+  let set = CHIMNEYS.get(b);
+  if (!set) { set = new Set(chimneyTiles(info, b).map(([x, y]) => `${x},${y}`)); CHIMNEYS.set(b, set); }
+  if (set.has(`${tx},${ty}`) || (b.roof === 2 && roofExtra(info, tx, ty) >= 0)) return -1;
+  const h = mix(b.seed, tx, ty + 77);
+  if (h % 100 >= 22) return -1;
+  const kind = (h >>> 8) % ROOF_DRESS.length;
+  return b.roof === 2 && kind !== 2 ? 2 : kind; // flat roofs only gather moss (they have vents and units already)
+}
+
 // Where a flat roof gets a vent, a unit or a skylight (-1 none).
 export function roofExtra(info, tx, ty) {
   const b = buildingAt(info, tx, ty);

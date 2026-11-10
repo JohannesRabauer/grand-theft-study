@@ -82,32 +82,37 @@ function rail(c, o, ts) {
   }
 }
 
+// The park bench (story 16.9): planks with a lit top edge, dark gaps and a worn joint, iron legs with a light edge, a dithered
+// shadow to the lower right and the grindable steel edge with rivets. Whole pixels, no anti-aliasing.
 function bench(c, o, ts, cfg) {
-  const x = o.x * ts;
-  const y = o.y * ts;
-  const w = o.w * ts;
-  const h = o.h * ts;
+  const x = Math.round(o.x * ts);
+  const y = Math.round(o.y * ts);
+  const w = Math.round(o.w * ts);
+  const h = Math.round(o.h * ts);
   const horizontal = w >= h;
-  c.fillStyle = 'rgba(0,0,0,0.25)';
-  c.fillRect(x + 1.5, y + 2, w, h);
-  c.fillStyle = '#35373f';
-  if (horizontal) { c.fillRect(x + 1, y + 1, 2, h - 2); c.fillRect(x + w - 3, y + 1, 2, h - 2); } else { c.fillRect(x + 1, y + 1, w - 2, 2); c.fillRect(x + 1, y + h - 3, w - 2, 2); }
-  c.fillStyle = '#b07a3f';
-  c.fillRect(x + 1.5, y + 1.5, w - 3, h - 3);
-  c.strokeStyle = '#7d5226';
-  c.lineWidth = 0.7;
+  const R = (col, rx, ry, rw = 1, rh = 1) => { c.fillStyle = col; c.fillRect(rx, ry, rw, rh); };
+  for (let sy = 0; sy < h + 2; sy++) for (let sx = 0; sx < w + 2; sx++) if (sx >= 2 && sy >= 2 && (sx + sy) % 2 === 0 && (sx >= w - 1 || sy >= h - 1 || sx < 4 || sy < 4)) R('rgba(26,32,70,0.34)', x + sx, y + sy); // checker shadow rim
+  R('rgba(26,32,70,0.3)', x + 3, y + 3, w - 3, h - 3);
+  const legs = '#35373f';
+  if (horizontal) { R(legs, x + 1, y + 1, 2, h - 2); R(legs, x + w - 3, y + 1, 2, h - 2); R('#5a5d66', x + 1, y + 1, 1, h - 2); R('#5a5d66', x + w - 3, y + 1, 1, h - 2); }
+  else { R(legs, x + 1, y + 1, w - 2, 2); R(legs, x + 1, y + h - 3, w - 2, 2); R('#5a5d66', x + 1, y + 1, w - 2, 1); R('#5a5d66', x + 1, y + h - 3, w - 2, 1); }
   const planks = Math.max(2, Math.round((horizontal ? h : w) / 4));
-  for (let i = 1; i < planks; i++) {
-    c.beginPath();
-    if (horizontal) { c.moveTo(x + 1.5, y + 1.5 + ((h - 3) * i) / planks); c.lineTo(x + w - 1.5, y + 1.5 + ((h - 3) * i) / planks); } else { c.moveTo(x + 1.5 + ((w - 3) * i) / planks, y + 1.5); c.lineTo(x + 1.5 + ((w - 3) * i) / planks, y + h - 1.5); }
-    c.stroke();
+  const tones = ['#b07a3f', '#a9783f', '#b8854a', '#a06d38'];
+  for (let i = 0; i < planks; i++) {
+    const t = tones[(i + o.x * 3 + o.y) % tones.length];
+    const p0 = 1 + Math.round(((horizontal ? h : w) - 2) * i / planks);
+    const p1 = 1 + Math.round(((horizontal ? h : w) - 2) * (i + 1) / planks);
+    if (horizontal) { R(t, x + 1, y + p0, w - 2, p1 - p0 - 1); R('#d2a06a', x + 1, y + p0, w - 2, 1); R('#7d5226', x + 1, y + p1 - 1, w - 2, 1); R('#8c5f2e', x + w - 2, y + p0, 1, p1 - p0); }
+    else { R(t, x + p0, y + 1, p1 - p0 - 1, h - 2); R('#d2a06a', x + p0, y + 1, 1, h - 2); R('#7d5226', x + p1 - 1, y + 1, 1, h - 2); R('#8c5f2e', x + p0, y + h - 2, p1 - p0, 1); }
   }
-  // the grindable steel edge along the middle
-  c.strokeStyle = '#d3dbe8';
-  c.lineWidth = Math.max(1, cfg.width * ts * 0.18);
-  c.beginPath();
-  if (horizontal) { c.moveTo(x + cfg.inset, y + h / 2); c.lineTo(x + w - cfg.inset, y + h / 2); } else { c.moveTo(x + w / 2, y + cfg.inset); c.lineTo(x + w / 2, y + h - cfg.inset); }
-  c.stroke();
+  for (let k = 9; k < (horizontal ? w : h) - 4; k += 11 + ((k * 7) % 4)) { // worn joints and a knot or two
+    if (horizontal) { R('#7d5226', x + k, y + 2, 1, 2); R('#8c5f2e', x + k + 4, y + h - 5, 2, 1); } else { R('#7d5226', x + 2, y + k, 2, 1); R('#8c5f2e', x + w - 5, y + k + 4, 1, 2); }
+  }
+  const inset = Math.round(cfg.inset);
+  const half = Math.max(1, Math.round(cfg.width * ts * 0.09));
+  c.fillStyle = '#d3dbe8';
+  if (horizontal) { R('#d3dbe8', x + inset, y + Math.round(h / 2) - half, w - 2 * inset, half * 2); R('#ffffff', x + inset, y + Math.round(h / 2) - half, w - 2 * inset, 1); R('#8a94a6', x + inset, y + Math.round(h / 2) + half - 1, w - 2 * inset, 1); for (const rx of [inset + 2, w - inset - 3]) R('#5a6272', x + rx, y + Math.round(h / 2) - 1, 1, 1); }
+  else { R('#d3dbe8', x + Math.round(w / 2) - half, y + inset, half * 2, h - 2 * inset); R('#ffffff', x + Math.round(w / 2) - half, y + inset, 1, h - 2 * inset); R('#8a94a6', x + Math.round(w / 2) + half - 1, y + inset, 1, h - 2 * inset); for (const ry of [inset + 2, h - inset - 3]) R('#5a6272', x + Math.round(w / 2) - 1, y + ry, 1, 1); }
 }
 
 // Arrow marks pointing along `dir` over a rect.

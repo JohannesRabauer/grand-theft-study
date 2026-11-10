@@ -26,11 +26,13 @@ const RANK = { asphalt: 1, lane: 1, concrete: 2, cobble: 3, path: 4, grass: 5 };
 const GIVES_AS = { tree: 'grass', dumpster: 'concrete', booth: 'concrete' };
 const STYLE = { grass: 'tuft', path: 'soft', cobble: 'stone', concrete: 'curb' };
 
-const STATE = { ready: false, variants: {} };
+const STATE = { ready: false, variants: {}, street: null }; // street: data/street.json (story 16.9), absent in node checks
 
 import { U, rng, hash, rgbOf, shade, canvas, px, ell, emit } from './EnvDraw.js';
 import { makeOutdoorArt, wallKeys, outdoorInfo } from './BuildingArt.js';
 import { binAt } from '../render/buildingMath.js';
+import { streetInfo, decalKeys } from '../render/streetMath.js';
+import { makeStreetDecals } from './StreetArt.js';
 import { makeInteriorArt, indoorKeys, indoorInfo } from './InteriorArt.js'; // story 16.10: walls, floors and rugs of the interiors
 
 // A 32 unit copy of an existing tile texture (variant v when the tier has variants).
@@ -187,48 +189,58 @@ function waterBed(v) {
 
 // -------------------------------------------------------------------------------------- fences
 
-function postH(c, x) {
+// Four looks per direction (story 16.9): the rail sits a pixel higher or lower, posts lean or lose their cap, ivy and rust creep along,
+// so a long fence is never one straight colour line.
+const FENCE_LOOKS = 4;
+function postH(c, x, v) {
+  const tilt = v === 1 && x === 10 ? 2 : 0;
   px(c, 'rgba(0,0,0,0.22)', x, 19, 5, 4);
-  px(c, '#3e4248', x, 5, 4, 19);
-  px(c, '#6a6e76', x, 5, 3, 18);
-  px(c, '#9aa0a8', x, 5, 1, 18);
-  px(c, '#c4c8d0', x, 4, 3, 2);
+  px(c, '#3e4248', x + tilt, 5, 4, 19);
+  px(c, '#6a6e76', x + tilt, 5, 3, 18);
+  px(c, '#9aa0a8', x + tilt, 5, 1, 18);
+  if (!(v === 2 && x === 18)) px(c, '#c4c8d0', x + tilt, 4, 3, 2);
 }
 
-function fenceH() {
+function fenceH(v) {
   const tmp = canvas();
   const c = tmp.getContext('2d');
+  const dy = [0, 2, -2, 0][v];
   px(c, 'rgba(0,0,0,0.25)', 0, 18, U, 3);
-  px(c, '#6a6e76', 0, 16, U, 2);
-  px(c, '#c4c8d0', 0, 12, U, 4);
-  px(c, '#e6e9ee', 0, 12, U, 1);
-  px(c, '#8a8e96', 0, 15, U, 1);
-  for (let x = 2; x < U; x += 8) postH(c, x);
+  px(c, '#6a6e76', 0, 16 + dy, U, 2);
+  px(c, '#c4c8d0', 0, 12 + dy, U, 4);
+  px(c, '#e6e9ee', 0, 12 + dy, U, 1);
+  px(c, '#8a8e96', 0, 15 + dy, U, 1);
+  if (v === 3) { px(c, '#c4c8d0', 0, 10, 14, 2); px(c, '#e6e9ee', 0, 10, 14, 1); } // the rail steps up half way
+  for (let x = 2; x < U; x += 8) postH(c, x, v);
+  if (v === 2) for (let x = 8; x < 20; x += 2) px(c, x % 4 ? '#3f8a3c' : '#2c6a2c', x, 11 + (x % 6), 2, 2); // ivy
+  if (v === 1) for (const x of [6, 14, 22]) px(c, '#a0602e', x, 14, 2, 2); // rust
   return tmp;
 }
 
-function fenceV(c) {
-  px(c, 'rgba(0,0,0,0.25)', 17, 0, 4, U);
-  px(c, '#8a8e96', 13, 0, 1, U);
-  px(c, '#c4c8d0', 14, 0, 2, U);
-  px(c, '#6a6e76', 16, 0, 1, U);
+function fenceV(c, v) {
+  const dx = [0, 2, -2, 0][v];
+  px(c, 'rgba(0,0,0,0.25)', 17 + dx, 0, 4, U);
+  px(c, '#8a8e96', 13 + dx, 0, 1, U);
+  px(c, '#c4c8d0', 14 + dx, 0, 2, U);
+  px(c, '#6a6e76', 16 + dx, 0, 1, U);
   for (let y = 2; y < U; y += 8) {
-    px(c, 'rgba(0,0,0,0.25)', 12, y + 4, 9, 3);
-    px(c, '#3e4248', 11, y - 1, 7, 6);
-    px(c, '#6a6e76', 12, y, 5, 4);
-    px(c, '#c4c8d0', 12, y - 1, 5, 2);
+    px(c, 'rgba(0,0,0,0.25)', 12 + dx, y + 4, 9, 3);
+    px(c, '#3e4248', 11 + dx, y - 1, 7, 6);
+    px(c, '#6a6e76', 12 + dx, y, 5, 4);
+    if (!(v === 2 && y === 18)) px(c, '#c4c8d0', 12 + dx, y - 1, 5, 2);
   }
+  if (v === 2) for (let y = 6; y < 22; y += 2) px(c, y % 4 ? '#3f8a3c' : '#2c6a2c', 12 + dx + (y % 6), y, 2, 2);
+  if (v === 1) for (const y of [4, 12, 24]) px(c, '#a0602e', 14 + dx, y, 2, 2);
+  if (v === 3) px(c, '#c4c8d0', 14 + dx, 0, 2, 12);
 }
 
-function fenceTile(kind) {
+function fenceTile(kind, v) {
   const tmp = canvas();
   const c = tmp.getContext('2d');
-  if (kind === 'h' || kind === 'x') c.drawImage(fenceH(), 0, 0);
-  if (kind === 'v' || kind === 'x') fenceV(c);
+  if (kind === 'h' || kind === 'x') c.drawImage(fenceH(v), 0, 0);
+  if (kind === 'v' || kind === 'x') fenceV(c, v);
   return tmp;
 }
-
-
 
 // Rain puddles (dynamic, see physics/Weather.js): a transparent overlay so the surface underneath shows through.
 // Irregular blob (a lumpy ellipse), a darker wet halo, a sky reflection that brightens towards the top, a thin
@@ -407,17 +419,25 @@ function tuftTexture(v) {
   }
   return tmp;
 }
+// The tram stop (story 16.9): a worn slab with a ragged safety stripe, a shelter bench, a bin, the pole with its sign and a timetable.
 function tramStopTexture() {
   const tmp = canvas();
   const c = tmp.getContext('2d');
-  px(c, '#b9b9b0', 2, 4, 28, 24); px(c, '#d6d6cc', 2, 4, 28, 1);          // platform slab
-  px(c, '#8d8d85', 2, 27, 28, 1);
-  for (let x = 3; x < 29; x += 4) px(c, x % 8 === 3 ? '#f2c230' : '#2b2b2b', x, 24, 4, 3); // safety stripe
+  const r = rng(hash('tramstop'));
+  px(c, '#b9b9b0', 2, 4, 28, 24); px(c, '#d6d6cc', 2, 4, 28, 2); px(c, '#d6d6cc', 2, 4, 2, 24);
+  px(c, '#8d8d85', 2, 27, 28, 1); px(c, '#a2a29a', 28, 6, 2, 21);
+  for (let i = 0; i < 26; i++) px(c, r() < 0.5 ? '#a2a29a' : '#c8c8be', 3 + Math.floor(r() * 24), 7 + Math.floor(r() * 16), 2, 1); // wear
+  for (let x = 3; x < 29; x += 4) { const worn = r() < 0.2; px(c, x % 8 === 3 ? (worn ? '#c9a22a' : '#f2c230') : '#2b2b2b', x, 24, 4, 3); }
+  px(c, '#6e6e66', 4, 14, 1, 3); px(c, '#6e6e66', 12, 14, 1, 3); // bench legs
+  px(c, '#8a5a3c', 3, 12, 11, 2); px(c, '#c9955a', 3, 12, 11, 1); px(c, '#6e4426', 3, 14, 11, 1);
+  px(c, '#2e6a52', 26, 14, 3, 4); px(c, '#4f9a7c', 26, 14, 3, 1); // a bin
   px(c, 'rgba(0,0,0,0.25)', 21, 18, 7, 3);                                 // pole shadow
-  px(c, '#4a4f58', 22, 6, 2, 14);                                          // pole
+  px(c, '#4a4f58', 22, 6, 2, 14); px(c, '#7c7f88', 22, 6, 1, 14);          // pole
+  px(c, '#16161e', 16, 3, 14, 10);                                         // sign outline
   px(c, '#1f5fa8', 17, 4, 12, 8); px(c, '#ffffff', 18, 5, 10, 6);          // sign plate
   px(c, '#1f5fa8', 19, 6, 8, 2); px(c, '#1f5fa8', 20, 8, 2, 2); px(c, '#1f5fa8', 24, 8, 2, 2); // tram pictogram
   px(c, '#f2c230', 19, 5, 8, 1);
+  px(c, '#f4f1e8', 6, 6, 6, 4); px(c, '#3d63a8', 6, 6, 6, 1); px(c, '#8a8e96', 7, 8, 4, 1); // timetable board
   return tmp;
 }
 
@@ -432,8 +452,9 @@ function makeDecorArt(scene, size) {
 // -------------------------------------------------------------------------------------- public API
 
 // Draws every environment texture for the current resolution. `size` is the tile texture size in pixels.
-export function makeEnvArt(scene, tileDefs, size) {
+export function makeEnvArt(scene, tileDefs, size, street = null) {
   STATE.variants = {};
+  STATE.street = street;
   for (const id in tileDefs) {
     let n = 1;
     while (scene.textures.exists(`tile-${id}-${n}`)) n++;
@@ -450,17 +471,19 @@ export function makeEnvArt(scene, tileDefs, size) {
     }
   }
   for (let v = 0; v < VARIANTS; v++) emit(scene, `env-wbed-${v}`, waterBed(v), size);
-  for (const k of ['h', 'v', 'x']) emit(scene, `env-fence-${k}`, fenceTile(k), size);
+  for (const k of ['h', 'v', 'x']) for (let v = 0; v < FENCE_LOOKS; v++) emit(scene, `env-fence-${k}-${v}`, fenceTile(k, v), size);
   for (const surface of PUDDLE_SURFACES) for (let v = 0; v < PUDDLE_VARIANTS; v++) emit(scene, `env-puddle-${surface}-${v}`, puddleTexture(surface, v), size);
   makeInteriorArt(scene, size);
   makeOutdoorArt(scene, size);
   makeDecorArt(scene, size);
+  makeStreetDecals(scene, size);
   STATE.ready = true;
 }
 
 // Lets node checks exercise groundKeys without a Phaser scene (the textures are only named, never drawn).
-export function prepareEnvArtForTest(variantCounts = {}) {
+export function prepareEnvArtForTest(variantCounts = {}, street = null) {
   STATE.variants = { ...variantCounts };
+  STATE.street = street;
   STATE.ready = true;
 }
 
@@ -489,7 +512,8 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
   const cols = map.rows[0].length;
   const idAt = (x, y) => (x < 0 || y < 0 || x >= cols || y >= rows ? null : map.legend[map.rows[y][x]]);
   const id = idAt(tx, ty);
-  if (id === 'wall') return wallKeys(map, tx, ty, baseKey, mapId);
+  const street = STATE.street ? streetInfo(map, mapSeed(map, mapId), outdoorInfo(map, mapId), STATE.street) : null;
+  if (id === 'wall') return street ? wallKeys(map, tx, ty, baseKey, mapId).concat(decalKeys(street, tx, ty)) : wallKeys(map, tx, ty, baseKey, mapId);
   const v = edgeVariant(tx, ty);
   const seed = mapSeed(map, mapId);
   const keys = [];
@@ -529,7 +553,7 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
     const same = (x, y) => idAt(x, y) === 'fence';
     const h = same(tx - 1, ty) || same(tx + 1, ty);
     const vert = same(tx, ty - 1) || same(tx, ty + 1);
-    keys.push(`env-fence-${h && vert ? 'x' : vert ? 'v' : 'h'}`);
+    keys.push(`env-fence-${h && vert ? 'x' : vert ? 'v' : 'h'}-${(((tx * 668265263) ^ (ty * 2246822519)) >>> 0) % FENCE_LOOKS}`);
   }
   if (cls && cls !== 'water' && idAt(tx, ty - 1) === 'wall' && ty - 1 > 0 && tx > 0 && tx < cols - 1) { // dressing in front of a building
     const doors = indoorInfo(map).doorFloors;
@@ -548,5 +572,6 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
   if (outdoorInfo(map, mapId).stops.has(`${tx},${ty}`)) keys.push('env-tramstop');
   const entrance = indoorInfo(map).doorFloors.get(`${tx},${ty}`); // a stone step and a mat in front of every door
   if (entrance) keys.push('env-ostep', `env-imat-${entrance}`);
+  if (street) for (const k of decalKeys(street, tx, ty)) keys.push(k); // story 16.9: kerb weeds, gutter leaves, chalk, playground markings
   return keys;
 }

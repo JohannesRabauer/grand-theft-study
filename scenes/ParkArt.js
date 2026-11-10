@@ -5,6 +5,7 @@
 // objects (vehicles/trickArt.js, which draws the ramps, rails, benches and stairs on top of the ground canvas). The
 // finest detail (stains, scuffs) is skipped on Low (scale 1). Nothing is loaded; the layout is data/park.json.
 import { darken, lighten } from './HiResArt.js';
+import { PARK_LAMP } from '../render/streetMath.js';
 
 const FLOOR_DEPTH = 1; // above the ground, below the trick objects (depth 2) and everything y-sorted
 const CONCRETE = '#9a9ea6';
@@ -88,8 +89,8 @@ function floor(c, cfg, ts, sc, f) {
     }
   }
   c.lineWidth = 0.7;
-  for (let x = x0; x <= x1; x += slab) joint(c, x, y0, x, y1);
-  for (let y = y0; y <= y1; y += slab) joint(c, x0, y, x1, y);
+  for (let x = x0; x <= x1; x += slab) joint(c, x, y0, x, y1, r);
+  for (let y = y0; y <= y1; y += slab) joint(c, x0, y, x1, y, r);
   if (sc < 2) return;
   for (let i = 0; i < 26; i++) { // oil stains and tyre scuffs
     const x = x0 + r() * (x1 - x0);
@@ -110,17 +111,23 @@ function floor(c, cfg, ts, sc, f) {
   }
 }
 
-function joint(c, ax, ay, bx, by) {
-  c.strokeStyle = 'rgba(55,60,70,0.22)';
-  c.beginPath();
-  c.moveTo(ax, ay);
-  c.lineTo(bx, by);
-  c.stroke();
-  c.strokeStyle = 'rgba(255,255,255,0.13)';
-  c.beginPath();
-  c.moveTo(ax + 0.8, ay + 0.8);
-  c.lineTo(bx + 0.8, by + 0.8);
-  c.stroke();
+// A slab joint (story 16.9): pixel segments of 5 to 9 px that jog by a pixel now and then and leave a gap here and there, so no
+// joint runs across the plaza as one straight line (the art bible's seam limit).
+function joint(c, ax, ay, bx, by, r) {
+  const horiz = ay === by;
+  const len = Math.round(horiz ? bx - ax : by - ay);
+  let off = 0;
+  for (let d = 0; d < len;) {
+    const n = Math.min(5 + Math.floor(r() * 5), len - d);
+    off = Math.max(-1, Math.min(1, off + (r() < 0.55 ? (r() < 0.5 ? -1 : 1) : 0)));
+    if (r() > 0.16) {
+      c.fillStyle = 'rgba(55,60,70,0.22)';
+      if (horiz) c.fillRect(ax + d, ay + off, n, 1); else c.fillRect(ax + off, ay + d, 1, n);
+      c.fillStyle = 'rgba(255,255,255,0.13)';
+      if (horiz) c.fillRect(ax + d, ay + off + 1, n, 1); else c.fillRect(ax + off + 1, ay + d, 1, n);
+    }
+    d += n;
+  }
 }
 
 // ---- drawn-only bodies; the ramps around them are map objects
@@ -389,61 +396,53 @@ function line(c, o, ts) {
   }
 }
 
+// One pixel dark outline around everything drawn so far (the canvas is scaled to the render scale: the pass works in device pixels).
+function outline(c, w, h) {
+  const cw = c.canvas.width;
+  const ch = c.canvas.height;
+  const d = c.getImageData(0, 0, cw, ch).data;
+  const solid = (x, y) => x >= 0 && y >= 0 && x < cw && y < ch && d[(y * cw + x) * 4 + 3] > 100;
+  c.save();
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.fillStyle = '#16161e';
+  for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) if (!solid(x, y) && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) c.fillRect(x, y, 1, 1);
+  c.restore();
+}
+
 // ---- y-sorted standing things: { w, h, draw(c, w, h) }; the feet are 3 px above the bottom edge
 const SPRITE = {
-  lamp: {
+  lamp: { // story 16.9: pixel lamp post; the lantern's glass sits where data/lighting.json puts the light (PARK_LAMP.head)
     w: 16, h: 46,
     draw(c, w, h) {
       const cx = w / 2;
       const base = h - 3;
-      const glow = c.createRadialGradient(cx + 3, 8, 1, cx + 3, 8, 9);
-      glow.addColorStop(0, 'rgba(255,233,168,0.42)');
-      glow.addColorStop(1, 'rgba(255,233,168,0)');
-      c.fillStyle = glow;
-      c.fillRect(0, 0, w, 18);
-      c.fillStyle = 'rgba(0,0,0,0.3)';
-      c.beginPath();
-      c.ellipse(cx + 1, base + 1, 4.5, 2, 0, 0, TAU);
-      c.fill();
-      c.fillStyle = '#3a3f4b';
-      c.fillRect(cx - 3, base - 4, 6, 4);
-      c.fillStyle = '#5a6272';
-      c.fillRect(cx - 1.2, 9, 2.4, base - 11);
-      c.fillStyle = '#8b94a6';
-      c.fillRect(cx - 1.2, 9, 0.9, base - 11);
-      c.fillStyle = '#5a6272';
-      c.fillRect(cx - 1.2, 7, 6, 2);
-      c.fillStyle = '#2f3440';
-      c.fillRect(cx + 2, 8.5, 5, 2);
-      c.fillStyle = '#ffe9a8';
-      c.fillRect(cx + 2.4, 10, 4.2, 1.4);
+      const R = (col, x, y, rw = 1, rh = 1) => { c.fillStyle = col; c.fillRect(x, y, rw, rh); };
+      R('rgba(26,32,70,0.3)', cx - 4, base - 1, 9, 2); R('rgba(26,32,70,0.3)', cx - 2, base + 1, 7, 1);
+      for (let i = 0; i < 4; i++) R('rgba(26,32,70,0.3)', cx - 5 + i * 3, base + 1 + (i % 2));
+      R('#3c3f48', cx - 3, base - 3, 6, 3); R('#5a5d66', cx - 3, base - 3, 6, 1); R('#2c2e38', cx + 2, base - 2, 1, 2);
+      R('#3c3f48', cx - 1, 11, 2, base - 14); R('#5a5d66', cx - 1, 11, 1, base - 14); R('#7c7f88', cx - 1, 16, 1, 8); R('#2c2e38', cx, 24, 1, base - 27);
+      R('#4a4d55', cx - 2, 27, 4, 1); R('#2c2e38', cx - 2, 28, 4, 1);
+      const [hx, hy] = PARK_LAMP.head;
+      const gx = Math.round(cx + hx - 1.5);
+      const gy = Math.round(base + hy - 2);
+      R('#4a4d55', cx - 1, gy - 2, hx + 4, 2); R('#7c7f88', cx - 1, gy - 2, hx + 4, 1); R('#3c3f48', cx - 1, gy, 2, 3);
+      R('#3c3f48', gx - 1, gy, 5, 1); R('#c9b98a', gx, gy + 1, 3, 2); R('#e8dca8', gx, gy + 1, 1, 1); R('#3c3f48', gx - 1, gy + 3, 5, 1); R('#2c2e38', gx + 3, gy + 1, 1, 2);
+      outline(c, w, h);
     }
   },
-  'bike-rack': {
+  'bike-rack': { // story 16.9: steel hoops with a lit edge, a dithered shadow
     w: 28, h: 16,
     draw(c, w, h) {
       const y = h - 3;
-      c.fillStyle = 'rgba(0,0,0,0.25)';
-      c.fillRect(2, y - 1, w - 3, 3);
-      c.strokeStyle = '#4d5565';
-      c.lineWidth = 1.6;
-      c.lineCap = 'round';
+      const R = (col, x, yy, rw = 1, rh = 1) => { c.fillStyle = col; c.fillRect(x, yy, rw, rh); };
+      for (let x = 3; x < w - 2; x++) { R('rgba(26,32,70,0.28)', x, y, 1, 1); if (x % 2) R('rgba(26,32,70,0.28)', x, y + 1, 1, 1); }
+      R('#3c3f48', 3, y - 1, w - 6, 1);
       for (let i = 0; i < 4; i++) {
         const x = 5 + i * 6;
-        c.beginPath();
-        c.moveTo(x, y);
-        c.lineTo(x, y - 5);
-        c.arc(x + 2.5, y - 5, 2.5, Math.PI, 0);
-        c.lineTo(x + 5, y);
-        c.stroke();
+        R('#4d5565', x, y - 5, 1, 5); R('#4d5565', x + 4, y - 5, 1, 5); R('#4d5565', x + 1, y - 6, 3, 1);
+        R(STEEL, x, y - 5, 1, 4); R(STEEL, x + 1, y - 6, 2, 1); R('#8a94a6', x + 4, y - 4, 1, 3);
       }
-      c.strokeStyle = STEEL;
-      c.lineWidth = 0.7;
-      for (let i = 0; i < 4; i++) {
-        c.beginPath();
-        c.arc(5 + i * 6 + 2.5, y - 5.4, 2.5, Math.PI, 0);
-        c.stroke();
-      }
+      outline(c, w, h);
     }
   },
   sign: {

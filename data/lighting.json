@@ -25,10 +25,10 @@
     ] }
   },
   "sources": [
-    { "id": "park-lamp-1", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -29] },
-    { "id": "park-lamp-2", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -29] },
-    { "id": "park-lamp-3", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -29] },
-    { "id": "park-lamp-4", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -29] }
+    { "id": "park-lamp-1", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -33] },
+    { "id": "park-lamp-2", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -33] },
+    { "id": "park-lamp-3", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -33] },
+    { "id": "park-lamp-4", "map": "town", "schedule": "street", "radius": 60, "color": "#ffc47a", "intensity": 1, "flicker": 0, "offset": [4.5, -33] }
   ],
   "signs": [
     { "id": "market-workshop", "map": "town", "schedule": "sign", "radius": 44, "color": "#ffb347", "intensity": 0.9, "offset": [0, -10] },
