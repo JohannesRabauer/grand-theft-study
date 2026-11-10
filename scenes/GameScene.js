@@ -24,6 +24,7 @@ import { Vegetation } from '../render/Vegetation.js';
 import { Buildings } from '../render/Buildings.js';
 import { StreetProps } from '../render/StreetProps.js';
 import { Interiors } from '../render/Interiors.js';
+import { Atmosphere } from '../render/Atmosphere.js';
 import { Water } from '../render/Water.js';
 import { PostFx } from '../render/PostFx.js';
 import { Zones } from '../entities/Zones.js';
@@ -244,6 +245,7 @@ export class GameScene extends Phaser.Scene {
     this.streetProps = new StreetProps(this, ctx, cache.get('street')); // story 16.9: planters, bollards, hydrants, bins, bikes, signs, kiosk
     this.interiors = new Interiors(this, ctx, cache.get('interiors'), this.lightMap); // story 16.10: furniture, ceiling lamps, window light
     this.water = new Water(this, ctx, cache.get('water')); // story 16.8: organic shores, water shader or looping frames, reflections
+    this.atmosphere = new Atmosphere(this, ctx, cache.get('atmosphere'), this.postFx, this.lightMap, this.streetLights); // story 16.12: haze, cloud shadows, wet ground, reflections, ripples
     this.crowd = new CrowdDirector(this, ctx, cache.get('npcs')); // after the camera: it prefills the view
 
     // UIScene asks for pause (a freezing screen is open) / quit through events; the world is only changed here.
@@ -465,6 +467,7 @@ export class GameScene extends Phaser.Scene {
     this.streetProps.update(dt);
     this.interiors.update(dt);
     this.water.update(dt);
+    this.atmosphere.update(dt);
     this.streamer.update();
     this.markers.update();
     this.beltTags.update();

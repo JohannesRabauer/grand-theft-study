@@ -37,6 +37,8 @@ const SHOTS = [
   ...DISTRICTS.flatMap(d => ['evening', 'night'].filter(t => d !== 'oldtown' && !(d === 'park' && t === 'night')).map(t => ({ id: `${d}-${t}`, map: 'town', at: d, time: t, weather: 'clear' }))), // story 16.3: lamps, signs and headlights in every district
   { id: 'interior-school-night', map: 'school', time: 'night', weather: 'clear' }, // story 16.10: lamps indoors (last, so the sequence of the older shots stays the same)
   { id: 'interior-dojo-night', map: 'dojo', time: 'night', weather: 'clear' },
+  { id: 'oldtown-fog', map: 'town', at: 'oldtown', time: 'day', weather: 'fog' }, // story 16.12: fog banks
+  { id: 'oldtown-rain-night', map: 'town', at: 'oldtown', time: 'night', weather: 'rain' }, // wet ground and lamp reflections
 ].filter(s => !only || only.includes(s.id));
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.css': 'text/css', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml' };
@@ -126,6 +128,7 @@ async function captureTier(tier) {
         ctx.state.dispatch('clock.set', { day: 1, minute, phase: phase.id });
         ctx.events.emit('clock:tick', ctx.day.snapshot());
         ctx.weather.set(shot.weather);
+        gs.atmosphere.settle(); // the layers of story 16.12 ease in over seconds; a shot shows them settled
         let x, y;
         if (shot.map === 'town') {
           const obj = shot.at.startsWith('object:') ? ctx.map.objects.find(o => o.id === shot.at.slice(7)) : null;

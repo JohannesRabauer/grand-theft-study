@@ -7,19 +7,22 @@
       "renderScale": 1,
       "particleMul": 0.5, "maxParticles": 150, "maxProps": 30, "maxNPCs": 6, "maxBullies": 2,
       "rainDensity": 0.4, "skidPool": 60, "smokePool": 12, "bellPool": 2, "shadows": false, "aimDots": 8,
-      "lightMap": false, "windFx": false, "waterFx": false, "maxLights": 0, "particleLights": 0, "windowLights": 0, "streetProps": 70, "postFx": { "grade": false, "vignette": false, "bloomTaps": 0 }
+      "lightMap": false, "windFx": false, "waterFx": false, "maxLights": 0, "particleLights": 0, "windowLights": 0, "streetProps": 70, "postFx": { "grade": false, "vignette": false, "bloomTaps": 0 },
+      "atmosphere": { "pass": false, "fog": true, "mist": true, "clouds": true, "curtain": false, "wet": 260, "reflections": 0, "ripples": 6 }
     },
     "medium": {
       "renderScale": 2,
       "particleMul": 1, "maxParticles": 300, "maxProps": 60, "maxNPCs": 12, "maxBullies": 3,
       "rainDensity": 1, "skidPool": 120, "smokePool": 24, "bellPool": 3, "shadows": true, "aimDots": 14,
-      "lightMap": true, "windFx": true, "waterFx": true, "maxLights": 30, "particleLights": 4, "windowLights": 6, "streetProps": 110, "postFx": { "grade": true, "vignette": true, "bloomTaps": 8 }
+      "lightMap": true, "windFx": true, "waterFx": true, "maxLights": 30, "particleLights": 4, "windowLights": 6, "streetProps": 110, "postFx": { "grade": true, "vignette": true, "bloomTaps": 8 },
+      "atmosphere": { "pass": true, "fog": true, "mist": true, "clouds": true, "curtain": true, "wet": 520, "reflections": 12, "ripples": 12 }
     },
     "high": {
       "renderScale": 2,
       "particleMul": 1.5, "maxParticles": 500, "maxProps": 100, "maxNPCs": 20, "maxBullies": 4,
       "rainDensity": 1.6, "skidPool": 240, "smokePool": 48, "bellPool": 4, "shadows": true, "aimDots": 20,
-      "lightMap": true, "windFx": true, "waterFx": true, "maxLights": 60, "particleLights": 8, "windowLights": 12, "streetProps": 160, "postFx": { "grade": true, "vignette": true, "bloomTaps": 16 }
+      "lightMap": true, "windFx": true, "waterFx": true, "maxLights": 60, "particleLights": 8, "windowLights": 12, "streetProps": 160, "postFx": { "grade": true, "vignette": true, "bloomTaps": 16 },
+      "atmosphere": { "pass": true, "fog": true, "mist": true, "clouds": true, "curtain": true, "wet": 700, "reflections": 24, "ripples": 24 }
     }
   }
 }

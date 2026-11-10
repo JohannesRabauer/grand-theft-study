@@ -1,4 +1,4 @@
-// Weather service: state 'clear' | 'rain', following the schedule of ctx.day (AD-17); the `weather`
+// Weather service: state 'clear' | 'rain' | 'fog' (story 16.12: banks of fog, drawn by render/Atmosphere.js; no puddles), following the schedule of ctx.day (AD-17); the `weather`
 // intent (T) is a debug override that holds until the schedule changes. Owns the ambient
 // time-of-day tint (updated once per game minute) and the darker rain tint
 // overlay and the temporary puddles: while it rains, dry tiles near the camera become 'puddle'
@@ -110,7 +110,8 @@ export class Weather {
     const { day } = this.ctx;
     if (day.weather !== this.scheduled) {
       this.scheduled = day.weather;
-      this.set(this.scheduled === 'snow' && window.SCHULWEG_GAME?.snowOff ? 'clear' : this.scheduled); // snowOff: test hook, the scripted school runs stay dry
+      const g = window.SCHULWEG_GAME;
+      this.set((this.scheduled === 'snow' && g?.snowOff) || (this.scheduled === 'fog' && g?.fogOff) ? 'clear' : this.scheduled); // snowOff, fogOff: test hooks, the scripted school runs stay dry and clear
     }
     const tint = day.tint;
     this.ambient.setFillStyle(tint.rgb);

@@ -66,7 +66,7 @@ export class Shadows {
     if (!img?.visible) return;
     const { ctx, cfg } = this;
     const w = ctx.weather;
-    const overcast = !!(w && (w.raining || w.snowing));
+    const overcast = !!(w && (w.raining || w.snowing || w.state === 'fog'));
     const dark = this.lightMap.dark;
     if (ctx.day.minute === this.minute && dark === this.dark && overcast === this.overcast) return;
     this.minute = ctx.day.minute;

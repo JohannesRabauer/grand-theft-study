@@ -116,6 +116,11 @@ night, rain and snow; the park at night; home, school and dojo interiors) at Med
 HUD into `docs/shots/overhaul/<name>/`, with `metrics.json`. The run is deterministic: running it twice gives identical
 images and metrics. `index.md` beside a set names what still looks unfinished in each shot.
 
+Story 16.12 atmosphere (`render/Atmosphere.js`, `render/atmosphereMath.js`, `data/atmosphere.json`, switches `atmosphere` per tier in `data/quality.json`): the weather state (`clear`, `rain`, `snow`, `fog`) and the hour drive layers that ease
+over seconds (never a pop): fog banks (state `fog`, some mornings), a thin morning mist (06:30 to 07:55 in every weather), drifting cloud shadows on clear days, a faint veil of
+distant rain, a wet-ground sheen on paved tiles that spreads tile by tile and dries slowly, lamp reflections on wet ground and rings on puddles. Haze is cut into four flat levels with ordered
+dither, never denser than 0.5, and spares bright pixels so lamps keep glowing. Medium and High compute it per base pixel inside the grade shader; Low and Canvas use scrolling pre-drawn noise banks.
+
 Story 16.11 particles: one multi-frame sheet `p-sheet` (`scenes/particleShapes.js`, 20 bitmaps in a grey ramp that the emitter tints), colour-over-life ramps
 (fire, sparks, smoke, splashes), eased fades, footsteps and wheel dust per surface, splash crowns, drips, wind-driven smoke, falling leaves and petals,
 lamp embers, dust motes in window light and celebration bursts. Glowing particles (fireflies, sparks, sparkles) hold a pooled `ctx.lights` handle;

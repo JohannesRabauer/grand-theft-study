@@ -34,6 +34,12 @@ export class PostFx {
 
   get active() { return this.names.length > 0; }
 
+  // Does this tier run the atmosphere (story 16.12)? It lives in the grade pass, so: Medium and High on WebGL.
+  get atmosphereAllowed() {
+    const t = this.ctx.quality.tier;
+    return this.webgl && !!(t.postFx?.grade || t.postFx?.vignette) && !!t.atmosphere?.pass;
+  }
+
   // Puts the passes of the current tier on the world camera (and takes them off again for Low).
   apply() {
     const cam = this.scene.cameras.main;

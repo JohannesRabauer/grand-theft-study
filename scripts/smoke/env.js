@@ -7,6 +7,8 @@ export function createEnv(game, h, assert, savedLang) {
   game.schoolEventsOff = true; // surprises in the school day (story 8.4) are switched on by the scenario that tests them
   game.pocketMoneyOff = true; // the Familienfrieden pocket money on a new morning (story 9.6) is switched on by the scenario that tests it
   game.ambienceOff = true; // the seasonal ambience (story 12.2) is switched on by the scenario that tests it
+  game.fogOff = true; // the scheduled morning fog (story 16.12) is switched on by the scenario that tests it
+  game.ripplesOff = true; // rain rings on the puddles (story 16.12), same
   game.snowOff = true; // the scheduled snow of the winter school window (story 12.1) is switched on by the scenario that tests it
   game.talkOff = true; // the talk-down at levels 1-2 (story 7.5) is switched on by the scenario that tests it
   game.grownupsOff = true; // the janitor, the inspector and the neighbor dog (story 7.4) are switched on by the scenario that tests them

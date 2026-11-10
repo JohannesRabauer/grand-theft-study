@@ -6,7 +6,7 @@
   "freeplay": { "phase": "commute", "time": "07:45", "running": false },
   "phases": [
     { "id": "morning", "start": "06:30", "end": "07:30", "season": "autumn",
-      "weather": [{ "state": "rain", "chance": 0.15, "from": "06:30", "to": "07:30" }] },
+      "weather": [{ "state": "rain", "chance": 0.15, "from": "06:30", "to": "07:30" }, { "state": "fog", "chance": 0.3, "from": "06:30", "to": "07:30" }] },
     { "id": "commute", "start": "07:30", "end": "08:00", "season": "autumn",
       "weather": [{ "state": "rain", "chance": 0.2, "from": "07:30", "to": "08:00" }] },
     { "id": "school", "start": "08:00", "end": "13:15", "season": "winter", "weather": [{ "state": "snow", "chance": 0.7, "from": "08:00", "to": "13:15" }] },
