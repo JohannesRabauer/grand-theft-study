@@ -43,6 +43,7 @@ checks.push('check-vegetation.mjs');
 checks.push('check-buildings.mjs');
 checks.push('check-interiors.mjs'); // story 16.10
 checks.push('check-water.mjs');
+checks.push('check-particles.mjs');
 for (const c of checks) {
   console.log(`\n== ${c}`);
   const r = spawnSync(process.execPath, [join(dir, c)], { stdio: 'inherit', cwd: join(dir, '..') });

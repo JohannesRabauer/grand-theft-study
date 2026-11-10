@@ -35,6 +35,7 @@ When a legitimate string is flagged, reword it; use `--allow` only for a real co
 
 - `check-tone.mjs`: every text in both languages (placeholders match, German speaks to kids with du, no shouting, no blame in texts that react to mistakes).
 - `check-balance.mjs`: economy (first ride in about a week of ordinary play), progress and chase speeds stay inside chosen ranges.
+- `check-particles.mjs` (story 16.11): particle shapes and sheet, emitter configs, the glow tracker against the real light pool, budget, test flags. Smoke scenario `particles` runs the live total, footsteps, crowns, drips, glow lights and seasons; `node scripts/particle-frames.mjs --label <name>` writes the frame sequences.
 - Smoke scenario `fullDay` (last): a whole game day solo and in co-op through the real day flow. Cross-browser list: `docs/CROSS-BROWSER.md`.
 
 ## Smoke test (whole game, headless browser)

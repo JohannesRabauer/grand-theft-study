@@ -3,6 +3,7 @@ import { createQuality } from '../services/quality.js';
 import { makeToolArt } from './ToolArt.js';
 import { makeStickArt } from './StickArt.js';
 import { makeHiResArt } from './HiResArt.js';
+import { makeParticleSheet } from './ParticleArt.js';
 import { makeNpcArt } from './NpcArt.js';
 import { makeCharacterArt } from './CharacterArt.js';
 import { makeDefenseArt } from './DefenseArt.js';
@@ -147,6 +148,7 @@ export class BootScene extends Phaser.Scene {
     makeCrowns(this, this.cache.json.get('vegetation'), res.scale / 2); // story 16.6: tree crowns per species, shape and season
     makeBuildingAtlas(this, this.cache.json.get('buildings'), res.scale); // story 16.7: eaves, chimneys, awnings and lit window panes
     makeInteriorAtlas(this, res.scale); // story 16.10: furniture, lamps and shafts of daylight
+    makeParticleSheet(this, res.scale); // story 16.11: pixel-shaped multi-frame particle frames
     // The speed zoom scales the world by non-integer factors, where nearest-neighbour sampling makes
     // texels land on uneven screen pixels (shimmer). World textures are filtered bilinear instead; at
     // an exact integer zoom texels map 1:1 to pixels, so the result stays crisp. UI textures stay sharp.

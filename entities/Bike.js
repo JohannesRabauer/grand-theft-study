@@ -136,6 +136,7 @@ export class Bikes {
       }
       if (r.puffIn <= 0) {
         this.puffs.spawn(rx, ry, 0, 0.6, 0.5, 0.5, 1.6, 14);
+        this.ctx.particles.puffAt(player, rx, ry, 1);
         r.puffIn = 0.06 / this.ctx.quality.tier.particleMul;
       }
     } else {

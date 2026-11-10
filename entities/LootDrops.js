@@ -120,7 +120,7 @@ export class LootDrops {
       events.emit('homework:found', { player: player.index });
       events.emit('ui:toast', { key: 'loot.homework' });
     }
-    ctx.particles.emit('spark', it.x, it.y - 3, { count: 3 });
+    ctx.particles.emit('sparkle', it.x, it.y - 3, { count: 3 });
     events.emit('loot:collected', info);
     this.release(it);
     return true;

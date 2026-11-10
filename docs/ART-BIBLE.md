@@ -115,3 +115,8 @@ The `before` set exceeds the first two limits; the `after` set of story 16.19 mu
 night, rain and snow; the park at night; home, school and dojo interiors) at Medium and Low without the debug overlay or
 HUD into `docs/shots/overhaul/<name>/`, with `metrics.json`. The run is deterministic: running it twice gives identical
 images and metrics. `index.md` beside a set names what still looks unfinished in each shot.
+
+Story 16.11 particles: one multi-frame sheet `p-sheet` (`scenes/particleShapes.js`, 20 bitmaps in a grey ramp that the emitter tints), colour-over-life ramps
+(fire, sparks, smoke, splashes), eased fades, footsteps and wheel dust per surface, splash crowns, drips, wind-driven smoke, falling leaves and petals,
+lamp embers, dust motes in window light and celebration bursts. Glowing particles (fireflies, sparks, sparkles) hold a pooled `ctx.lights` handle;
+the hub never holds more than `maxParticles`.

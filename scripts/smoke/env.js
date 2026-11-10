@@ -12,6 +12,7 @@ export function createEnv(game, h, assert, savedLang) {
   game.grownupsOff = true; // the janitor, the inspector and the neighbor dog (story 7.4) are switched on by the scenario that tests them
   game.lookoutsOff = true; // lookouts (story 7.2) are switched on by the scenario that tests them
   game.hintsOff = true; // contextual tips freeze the world until confirmed; the scripted runs switch them off (the `hints` scenario turns them on)
+  for (const f of ['footstepsOff', 'dripsOff', 'petalsOff', 'leavesFallOff', 'embersOff', 'motesOff', 'glowOff']) game[f] = true; // the particle overhaul (story 16.11) is switched on by the `particles` scenario
   game.trafficOff = true; // the scripted route runners ride the main road blind: buses only hit players in the `traffic` scenario
   step(3);
   const menu = game.scene.getScene('Menu');

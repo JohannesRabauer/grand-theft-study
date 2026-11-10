@@ -12,27 +12,47 @@
     "puddleInterval": 0.07,
     "ringInterval": 0.22,
     "feetOffset": 4,
-    "rearOffset": 7
+    "rearOffset": 7,
+    "stepInterval": 0.2,
+    "stepMinSpeed": 28,
+    "wheelInterval": 0.11,
+    "wheelMinSpeed": 48,
+    "crownInterval": 0.3
   },
   "surfaceFx": {
     "dust-grey": {
       "name": "dust",
-      "tint": 11645368
+      "tint": 11645368,
+      "step": {
+        "name": "stepdust",
+        "tint": 12105928
+      }
     },
     "dust-sand": {
       "name": "dust",
-      "tint": 13617542
+      "tint": 13617542,
+      "step": {
+        "name": "stepdust",
+        "tint": 13678712
+      }
     },
     "grass-bits": {
       "name": "leaves"
     },
     "splash": {
       "name": "splash",
-      "ring": true
+      "ring": true,
+      "step": {
+        "name": "crown"
+      }
     },
     "snow-puff": {
       "name": "dust",
-      "tint": 16777215
+      "tint": 16777215,
+      "step": {
+        "name": "stepdust",
+        "tint": 16777215
+      }
     },
     "ice-chips": {
       "name": "spark"
@@ -49,7 +69,7 @@
   },
   "emitters": {
     "dust": {
-      "texture": "p-dust",
+      "texture": "p-sheet",
       "share": 0.15,
       "depth": 8500,
       "count": 2,
@@ -73,12 +93,18 @@
         },
         "alpha": {
           "start": 0.65,
-          "end": 0
-        }
+          "end": 0,
+          "ease": "Quad.easeOut"
+        },
+        "frame": [
+          "puff0",
+          "puff1",
+          "puff2"
+        ]
       }
     },
     "splash": {
-      "texture": "p-drop",
+      "texture": "p-sheet",
       "share": 0.15,
       "depth": 8500,
       "count": 4,
@@ -103,8 +129,19 @@
         },
         "alpha": {
           "start": 1,
-          "end": 0
-        }
+          "end": 0,
+          "ease": "Quad.easeIn"
+        },
+        "frame": [
+          "drop0",
+          "drop1",
+          "bead"
+        ],
+        "color": [
+          16777215,
+          13625599,
+          8041712
+        ]
       }
     },
     "ripple": {
@@ -149,7 +186,7 @@
       }
     },
     "leaves": {
-      "texture": "p-leaf",
+      "texture": "p-sheet",
       "share": 0.15,
       "depth": 8500,
       "count": 2,
@@ -179,8 +216,14 @@
         },
         "alpha": {
           "start": 1,
-          "end": 0
-        }
+          "end": 0,
+          "ease": "Cubic.easeIn"
+        },
+        "frame": [
+          "leafA",
+          "leafB",
+          "leafC"
+        ]
       }
     },
     "rain": {
@@ -203,7 +246,7 @@
       }
     },
     "steam": {
-      "texture": "puff",
+      "texture": "p-sheet",
       "share": 0.1,
       "depth": 8500,
       "count": 1,
@@ -227,8 +270,14 @@
         },
         "alpha": {
           "start": 0.45,
-          "end": 0
-        }
+          "end": 0,
+          "ease": "Quad.easeIn"
+        },
+        "frame": [
+          "puff0",
+          "puff1",
+          "puff2"
+        ]
       }
     },
     "anger": {
@@ -262,7 +311,7 @@
       }
     },
     "spark": {
-      "texture": "p-debris",
+      "texture": "p-sheet",
       "share": 0.03,
       "depth": 8600,
       "count": 5,
@@ -280,11 +329,6 @@
           "min": 0,
           "max": 360
         },
-        "tint": [
-          16777215,
-          13160953,
-          16769357
-        ],
         "scale": {
           "start": 0.7,
           "end": 0.2
@@ -292,7 +336,19 @@
         "alpha": {
           "start": 1,
           "end": 0
-        }
+        },
+        "frame": [
+          "spark0",
+          "spark1",
+          "spark2"
+        ],
+        "color": [
+          16777215,
+          16771488,
+          16757575,
+          10111530
+        ],
+        "colorEase": "Quad.easeOut"
       }
     },
     "fire": {
@@ -318,16 +374,18 @@
           "start": 0.45,
           "end": 0.05
         },
-        "tint": [
-          16769357,
-          16751915,
-          14698556
-        ],
         "blendMode": "ADD",
         "alpha": {
           "start": 0.95,
           "end": 0
-        }
+        },
+        "color": [
+          16773296,
+          16757575,
+          15233820,
+          7027242
+        ],
+        "colorEase": "Cubic.easeOut"
       }
     },
     "heart": {
@@ -516,7 +574,7 @@
       }
     },
     "pollen": {
-      "texture": "p-dust",
+      "texture": "p-sheet",
       "share": 0.05,
       "depth": 8450,
       "count": 1,
@@ -545,11 +603,15 @@
         "alpha": {
           "start": 0.8,
           "end": 0
-        }
+        },
+        "frame": [
+          "mote0",
+          "mote1"
+        ]
       }
     },
     "firefly": {
-      "texture": "p-debris",
+      "texture": "p-sheet",
       "share": 0.04,
       "depth": 8650,
       "count": 1,
@@ -567,10 +629,6 @@
           "min": 0,
           "max": 360
         },
-        "tint": [
-          14221178,
-          16774816
-        ],
         "scale": {
           "start": 0.9,
           "end": 0.9
@@ -578,12 +636,22 @@
         "blendMode": "ADD",
         "alpha": {
           "start": 1,
-          "end": 0
-        }
+          "end": 0,
+          "ease": "Sine.easeIn"
+        },
+        "frame": [
+          "glow0",
+          "glow1"
+        ],
+        "color": [
+          16774824,
+          14086266,
+          11065440
+        ]
       }
     },
     "butterfly": {
-      "texture": "p-debris",
+      "texture": "p-sheet",
       "share": 0.03,
       "depth": 8550,
       "count": 1,
@@ -613,7 +681,11 @@
         "alpha": {
           "start": 1,
           "end": 0
-        }
+        },
+        "frame": [
+          "petal0",
+          "petal1"
+        ]
       }
     },
     "fog": {
@@ -636,12 +708,351 @@
           "max": 360
         },
         "scale": {
-          "start": 3.0,
+          "start": 3,
           "end": 4.5
         },
         "alpha": {
           "start": 0.14,
           "end": 0
+        }
+      }
+    },
+    "stepdust": {
+      "texture": "p-sheet",
+      "share": 0.08,
+      "depth": 8500,
+      "count": 1,
+      "windGain": 20,
+      "config": {
+        "frame": [
+          "crumb0",
+          "crumb1",
+          "puff2"
+        ],
+        "lifespan": {
+          "min": 220,
+          "max": 380
+        },
+        "speed": {
+          "min": 4,
+          "max": 14
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "scale": {
+          "start": 0.8,
+          "end": 1.5,
+          "ease": "Quad.easeOut"
+        },
+        "alpha": {
+          "start": 0.55,
+          "end": 0,
+          "ease": "Quad.easeOut"
+        }
+      }
+    },
+    "crown": {
+      "texture": "p-sheet",
+      "share": 0.08,
+      "depth": 8500,
+      "count": 5,
+      "windGain": 0,
+      "config": {
+        "frame": [
+          "drop0",
+          "drop1",
+          "bead"
+        ],
+        "lifespan": {
+          "min": 280,
+          "max": 460
+        },
+        "speedX": {
+          "min": -52,
+          "max": 52
+        },
+        "speedY": {
+          "min": -78,
+          "max": -44
+        },
+        "gravityY": 340,
+        "scale": {
+          "start": 1.1,
+          "end": 0.7,
+          "ease": "Linear"
+        },
+        "alpha": {
+          "start": 1,
+          "end": 0,
+          "ease": "Quad.easeIn"
+        },
+        "color": [
+          16777215,
+          13625599,
+          8041712
+        ]
+      }
+    },
+    "drip": {
+      "texture": "p-sheet",
+      "share": 0.04,
+      "depth": 8500,
+      "count": 1,
+      "windGain": 0,
+      "config": {
+        "frame": [
+          "drop1"
+        ],
+        "lifespan": {
+          "min": 380,
+          "max": 520
+        },
+        "speed": 0,
+        "gravityY": 170,
+        "tint": 10473727,
+        "alpha": {
+          "start": 1,
+          "end": 0,
+          "ease": "Quad.easeIn"
+        }
+      }
+    },
+    "smoke": {
+      "texture": "p-sheet",
+      "share": 0.1,
+      "depth": 8520,
+      "count": 1,
+      "windGain": 55,
+      "config": {
+        "frame": [
+          "puff0",
+          "puff1",
+          "puff2"
+        ],
+        "lifespan": {
+          "min": 1500,
+          "max": 2500
+        },
+        "speedX": {
+          "min": -5,
+          "max": 5
+        },
+        "speedY": {
+          "min": -24,
+          "max": -10
+        },
+        "scale": {
+          "start": 0.6,
+          "end": 2,
+          "ease": "Sine.easeOut"
+        },
+        "alpha": {
+          "start": 0.6,
+          "end": 0,
+          "ease": "Quad.easeIn"
+        },
+        "color": [
+          4868694,
+          8026760,
+          12105928
+        ]
+      }
+    },
+    "leaffall": {
+      "texture": "p-sheet",
+      "share": 0.06,
+      "depth": 8700,
+      "count": 1,
+      "windGain": 40,
+      "config": {
+        "frame": [
+          "leafA",
+          "leafB",
+          "leafC"
+        ],
+        "lifespan": {
+          "min": 3400,
+          "max": 5400
+        },
+        "speedX": {
+          "min": 6,
+          "max": 18
+        },
+        "speedY": {
+          "min": 14,
+          "max": 26
+        },
+        "rotate": {
+          "start": 0,
+          "end": 540,
+          "ease": "Linear"
+        },
+        "tint": [
+          14379807,
+          13214247,
+          10894634,
+          13929004
+        ],
+        "alpha": {
+          "start": 1,
+          "end": 0,
+          "ease": "Cubic.easeIn"
+        }
+      }
+    },
+    "petal": {
+      "texture": "p-sheet",
+      "share": 0.05,
+      "depth": 8700,
+      "count": 1,
+      "windGain": 35,
+      "config": {
+        "frame": [
+          "petal0",
+          "petal1"
+        ],
+        "lifespan": {
+          "min": 3600,
+          "max": 5600
+        },
+        "speedX": {
+          "min": 8,
+          "max": 20
+        },
+        "speedY": {
+          "min": 10,
+          "max": 20
+        },
+        "rotate": {
+          "start": 0,
+          "end": 360,
+          "ease": "Linear"
+        },
+        "tint": [
+          16763100,
+          16777215,
+          16769260
+        ],
+        "alpha": {
+          "start": 1,
+          "end": 0,
+          "ease": "Cubic.easeIn"
+        }
+      }
+    },
+    "mote": {
+      "texture": "p-sheet",
+      "share": 0.05,
+      "depth": 8700,
+      "count": 1,
+      "windGain": 4,
+      "config": {
+        "frame": [
+          "mote0",
+          "mote1"
+        ],
+        "lifespan": {
+          "min": 4000,
+          "max": 6000
+        },
+        "speed": {
+          "min": 2,
+          "max": 6
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "tint": [
+          16773832,
+          16777215
+        ],
+        "blendMode": "ADD",
+        "alpha": {
+          "start": 0.9,
+          "end": 0,
+          "ease": "Sine.easeIn"
+        }
+      }
+    },
+    "ember": {
+      "texture": "p-sheet",
+      "share": 0.04,
+      "depth": 8660,
+      "count": 1,
+      "windGain": 12,
+      "config": {
+        "frame": [
+          "glow1",
+          "mote1"
+        ],
+        "lifespan": {
+          "min": 1800,
+          "max": 2800
+        },
+        "speedX": {
+          "min": -4,
+          "max": 4
+        },
+        "speedY": {
+          "min": -14,
+          "max": -6
+        },
+        "blendMode": "ADD",
+        "color": [
+          16773312,
+          16757575,
+          9062954
+        ],
+        "alpha": {
+          "start": 1,
+          "end": 0,
+          "ease": "Sine.easeIn"
+        }
+      }
+    },
+    "sparkle": {
+      "texture": "p-sheet",
+      "share": 0.05,
+      "depth": 8700,
+      "count": 3,
+      "windGain": 0,
+      "config": {
+        "frame": [
+          "spark0",
+          "spark1",
+          "spark2"
+        ],
+        "lifespan": {
+          "min": 500,
+          "max": 900
+        },
+        "speed": {
+          "min": 8,
+          "max": 30
+        },
+        "angle": {
+          "min": 0,
+          "max": 360
+        },
+        "gravityY": -12,
+        "scale": {
+          "start": 1,
+          "end": 0.3,
+          "ease": "Quad.easeOut"
+        },
+        "blendMode": "ADD",
+        "color": [
+          16777215,
+          16773800,
+          16765514
+        ],
+        "alpha": {
+          "start": 1,
+          "end": 0,
+          "ease": "Quad.easeIn"
         }
       }
     }
@@ -719,6 +1130,65 @@
           ]
         },
         "ground": "grass"
+      },
+      {
+        "id": "petals",
+        "emitter": "petal",
+        "rate": 2.2,
+        "flag": "petalsOff",
+        "when": {
+          "seasons": [
+            "spring"
+          ],
+          "notWeather": [
+            "rain",
+            "snow"
+          ],
+          "day": true
+        }
+      },
+      {
+        "id": "falling-leaves",
+        "emitter": "leaffall",
+        "rate": 2.4,
+        "flag": "leavesFallOff",
+        "when": {
+          "seasons": [
+            "autumn"
+          ],
+          "notWeather": [
+            "snow"
+          ]
+        }
+      },
+      {
+        "id": "lamp-embers",
+        "emitter": "ember",
+        "rate": 1.6,
+        "at": "lamp",
+        "flag": "embersOff",
+        "when": {
+          "phases": [
+            "evening"
+          ]
+        }
+      },
+      {
+        "id": "dust-motes",
+        "emitter": "mote",
+        "rate": 5,
+        "at": "shaft",
+        "indoor": true,
+        "flag": "motesOff",
+        "when": {
+          "phases": [
+            "morning",
+            "commute",
+            "school",
+            "afternoon"
+          ],
+          "day": true
+        }
       }
     ]
   },
@@ -730,5 +1200,95 @@
   "fountain": {
     "sprinklerEvery": 0.12,
     "fountainEvery": 0.09
+  },
+  "footsteps": {
+    "_doc": "Footstep and wheel dust per surface (story 16.11): surfaceFx[...].step names the emitter; ollie and skid puffs use the tints below. Drips fall from a kid for dripSeconds after leaving water. Switched off in the scripted runs by the flags footstepsOff and dripsOff.",
+    "dripSeconds": 0.9,
+    "dripInterval": 0.13,
+    "ollie": 4,
+    "skid": 1,
+    "tints": {
+      "dust-grey": 12105928,
+      "dust-sand": 13678712,
+      "snow-puff": 16777215,
+      "grass-bits": 9420650
+    }
+  },
+  "glow": {
+    "_doc": "Glowing particles (story 16.11) take a pooled ctx.lights handle for their life while it is dark (or indoors) and the tier allows (quality.json particleLights); the handle follows the particle, fades with its alpha and is released when it dies, the emitter is cleared or the map unloads. Switched off in the scripted runs by the flag glowOff.",
+    "emitters": {
+      "firefly": {
+        "radius": 17,
+        "color": "#e4f58a",
+        "intensity": 0.75
+      },
+      "sparkle": {
+        "radius": 20,
+        "color": "#ffe9a0",
+        "intensity": 0.8
+      },
+      "spark": {
+        "radius": 14,
+        "color": "#ffc47a",
+        "intensity": 0.7
+      }
+    }
+  },
+  "celebrate": {
+    "_doc": "Celebration bursts (story 16.11) at the kid on level:up, achievement:unlocked and sticker:collected: [emitter, count] pairs plus a short warm flash light.",
+    "levelup": {
+      "bursts": [
+        [
+          "sparkle",
+          14
+        ],
+        [
+          "confetti",
+          14
+        ]
+      ],
+      "light": {
+        "radius": 56,
+        "color": "#ffe9a0",
+        "intensity": 0.9,
+        "seconds": 0.9
+      }
+    },
+    "achievement": {
+      "bursts": [
+        [
+          "sparkle",
+          10
+        ],
+        [
+          "confetti",
+          8
+        ]
+      ],
+      "light": {
+        "radius": 48,
+        "color": "#ffd9a0",
+        "intensity": 0.8,
+        "seconds": 0.7
+      }
+    },
+    "sticker": {
+      "bursts": [
+        [
+          "sparkle",
+          8
+        ],
+        [
+          "confetti",
+          6
+        ]
+      ],
+      "light": {
+        "radius": 40,
+        "color": "#fff0b0",
+        "intensity": 0.8,
+        "seconds": 0.6
+      }
+    }
   }
 }

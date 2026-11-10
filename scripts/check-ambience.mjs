@@ -11,7 +11,7 @@ const day = load('data/day.json');
 const surfaces = load('data/surfaces.json');
 const town = load('data/maps/town.json');
 const quality = load('data/quality.json');
-const boot = ['BootScene', 'HiResArt', 'ToolArt', 'ParkArt', 'ExpansionArt', 'DefenseArt'].map(f => readFileSync(new URL(`../scenes/${f}.js`, import.meta.url), 'utf8')).join(' ');
+const boot = ['BootScene', 'HiResArt', 'ToolArt', 'ParkArt', 'ExpansionArt', 'DefenseArt', 'particleShapes'].map(f => readFileSync(new URL(`../scenes/${f}.js`, import.meta.url), 'utf8')).join(' ');
 const seasons = new Set(day.phases.map(p => p.season));
 const phases = new Set(day.phases.map(p => p.id));
 
@@ -22,7 +22,7 @@ for (const [id, e] of Object.entries(part.emitters)) {
   assert.ok(e.share > 0 && e.share <= 0.25, `${id}: share`);
   share += e.share;
 }
-assert.ok(share <= 1.6, `the shares add up to a sane total (${share.toFixed(2)})`);
+assert.ok(share <= 2.4, `the shares add up to a sane total (the hub also holds the live total under maxParticles, check-particles) (${share.toFixed(2)})`);
 
 // ---- seasonal effects
 const ids = new Set();

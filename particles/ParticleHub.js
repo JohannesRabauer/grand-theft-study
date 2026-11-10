@@ -1,9 +1,17 @@
 // Particle registry (AD-8): a few shared pooled emitters, created once. Everything fires through
 // ctx.particles.emit(name, x, y, opts); nothing is created per frame. Each emitter gets a share of
 // the tier's `maxParticles` (re-read on `quality:changed`), and `particleMul` scales burst sizes.
-// The hub also drives the effects that come from the world: surface effects under every player,
-// rain, ambient steam, leaf swirl and fish ripples. Wind is applied here as emitter gravity (AD-7).
+// The hub also drives the effects that come from the world: surface effects under every player (dust,
+// footsteps, wheel dust, splash crowns, drips), rain, ambient smoke and steam, falling leaves and petals,
+// dust motes in window light, lamp embers, fish ripples and the celebration bursts. Wind is applied here
+// as emitter gravity (AD-7).
+// Story 16.11: every emission goes through `put`, so the live total never passes the tier's `maxParticles`;
+// glowing particles (data `glow`) hold a pooled ctx.lights handle for their life (GlowTracker); every new
+// always-on effect has an `...Off` test flag (scripts/smoke/env.js).
+import { FlashLights, GlowTracker, hexInt, holds, roomFor } from './particleMath.js';
+
 const DEG = Math.PI / 180;
+const flag = name => window.SCHULWEG_GAME?.[name];
 
 export class ParticleHub {
   constructor(scene, ctx, cfg) {
@@ -11,17 +19,32 @@ export class ParticleHub {
     this.ctx = ctx;
     this.cfg = cfg;
     this.emitters = {};
+    this.glow = new GlowTracker(ctx.lights); // glowing particles and their lights
+    this.flashes = new FlashLights(ctx.lights); // the short light of a celebration
     for (const [name, e] of Object.entries(cfg.emitters)) {
       // configs are written for 1x textures: scale them by the texture's display scale (AD-14)
       const sc = e.config.scale;
       const scale = sc ? { start: sc.start * ctx.res.inv, end: sc.end * ctx.res.inv } : ctx.res.inv;
-      const emitter = scene.add.particles(0, 0, e.texture, { ...e.config, scale, emitting: false }).setDepth(e.depth);
+      const g = cfg.glow.emitters[name];
+      const glow = g && { radius: g.radius, color: hexInt(g.color), intensity: g.intensity };
+      const emitCallback = glow ? p => { if (this.glowOk()) this.glow.start(p, glow); } : undefined;
+      const emitter = scene.add.particles(0, 0, e.texture, { ...e.config, scale, emitting: false, emitCallback }).setDepth(e.depth);
+      if (glow) {
+        const killAll = emitter.killAll;
+        emitter.killAll = () => { this.glow.drop(emitter); return killAll.call(emitter); }; // clearing an emitter gives its lights back
+      }
       this.emitters[name] = { emitter, cfg: e, gravityY: e.config.gravityY ?? 0, tint: null };
     }
     this.list = Object.values(this.emitters);
     this.readMap();
     this.fxIn = new Float64Array(ctx.maxPlayers); // per player emit timers
     this.ringIn = new Float64Array(ctx.maxPlayers);
+    this.stepIn = new Float64Array(ctx.maxPlayers);
+    this.dripIn = new Float64Array(ctx.maxPlayers);
+    this.wetT = new Float64Array(ctx.maxPlayers); // seconds a kid still drips after leaving the water
+    this.total = 0; // live particles this tick, counted against the tier budget
+    this.px = 0; // the spot `place` found
+    this.py = 0;
     this.rainAcc = 0;
     this.impactAcc = 0;
     this.leafIn = 0;
@@ -31,6 +54,10 @@ export class ParticleHub {
     this.fishIn = 1;
     this.applyCaps();
     ctx.events.on('quality:changed', () => this.applyCaps());
+    ctx.events.on('level:up', e => this.celebrate('levelup', e.player));
+    ctx.events.on('achievement:unlocked', e => this.celebrate('achievement', e.player));
+    ctx.events.on('sticker:collected', e => this.celebrate('sticker', e.player));
+    ctx.events.on('trick:ollie', e => { if (e.phase === 'start') this.puffAt(ctx.players[e.player], e.x, e.y + 4, this.cfg.footsteps.ollie); });
     const self = this;
     ctx.pools.register('particles', { live: () => self.live(), get cap() { return ctx.quality.tier.maxParticles; } });
     ctx.world.register(this);
@@ -62,6 +89,8 @@ export class ParticleHub {
 
   unloadMap() {
     for (const e of this.list) e.emitter.killAll();
+    this.glow.clear();
+    this.flashes.clear();
   }
 
   loadMap() { this.readMap(); }
@@ -74,6 +103,7 @@ export class ParticleHub {
       let extra = e.emitter.getAliveParticleCount() - e.emitter.maxAliveParticles;
       if (extra > 0) e.emitter.forEachAlive(p => { if (extra-- > 0) p.lifeCurrent = 0; });
     }
+    if (!this.ctx.quality.tier.particleLights) this.glow.clear();
   }
 
   live() {
@@ -82,7 +112,15 @@ export class ParticleHub {
     return n;
   }
 
-  // opts: { count, tint }. Burst sizes scale with the tier; the emitter's alive cap does the rest.
+  // The tier's budget holds for all emitters together; each emitter's `share` is a cap on top of it.
+  put(emitter, x, y, n) {
+    n = roomFor(n, this.ctx.quality.tier.maxParticles, this.total);
+    if (n <= 0) return;
+    this.total += n;
+    emitter.emitParticleAt(x, y, n);
+  }
+
+  // opts: { count, tint }. Burst sizes scale with the tier.
   emit(name, x, y, opts) {
     const e = this.emitters[name];
     if (!e) return;
@@ -90,8 +128,32 @@ export class ParticleHub {
       e.emitter.setParticleTint(opts.tint);
       e.tint = opts.tint;
     }
-    const n = Math.max(1, Math.round((opts?.count ?? e.cfg.count) * this.ctx.quality.tier.particleMul));
-    e.emitter.emitParticleAt(x, y, n);
+    this.put(e.emitter, x, y, Math.max(1, Math.round((opts?.count ?? e.cfg.count) * this.ctx.quality.tier.particleMul)));
+  }
+
+  // Glowing particles take a light while it is dark (or indoors), on a tier with a light map and spare handles.
+  glowOk() {
+    const { lights, quality, map, day } = this.ctx;
+    return lights.mapActive && this.glow.count < quality.tier.particleLights && !flag('glowOff') && (map.indoor || day.tint.alpha > 0.05);
+  }
+
+  // Bursts at the kid on level up, achievement and sticker, with a short warm flash of light.
+  celebrate(name, index) {
+    const p = this.ctx.players[index];
+    const c = this.cfg.celebrate[name];
+    if (!p || !c) return;
+    for (const [emitter, count] of c.bursts) this.emit(emitter, p.x, p.y - 8, { count });
+    const { lights } = this.ctx;
+    if (lights.mapActive && !flag('glowOff')) this.flashes.add({ x: p.x, y: p.y - 8, radius: c.light.radius, color: hexInt(c.light.color), intensity: c.light.intensity }, c.light.seconds);
+  }
+
+  // A small puff in the tint of the ground the kid stands on (ollie take-off, bike skid).
+  puffAt(player, x, y, count) {
+    if (!player || flag('footstepsOff')) return;
+    const key = this.ctx.surfaces.props(player.move.surface).particle;
+    const tint = this.cfg.footsteps.tints[key];
+    if (key === 'splash') this.emit('crown', x, y, { count });
+    else if (tint !== undefined) this.emit('stepdust', x, y, { count, tint });
   }
 
   update(dt) {
@@ -103,6 +165,9 @@ export class ParticleHub {
     // streaks lean with the wind (about the sideways drift a drop gathers during its life)
     this.emitters.rain.emitter.particleRotate = -Math.atan2(wv.x * this.emitters.rain.cfg.windGain * 0.17, 290) / DEG;
     const view = this.scene.cameras.main.worldView;
+    this.total = this.live();
+    this.glow.update();
+    this.flashes.update(dt);
     this.surfaceFx(dt);
     if (weather.intensity > 0.01) this.rain(dt, view);
     this.ambient(dt, view);
@@ -115,32 +180,56 @@ export class ParticleHub {
   // Does the effect's condition hold now? Season and phase come from the day clock, the weather from the weather service, daylight from the tint.
   holds(when) {
     const { day, weather } = this.ctx;
-    if (when.seasons && !when.seasons.includes(day.season)) return false;
-    if (when.phases && !when.phases.includes(day.phase)) return false;
-    if (when.notWeather && when.notWeather.includes(weather.state)) return false;
-    if (when.day && day.tint.alpha > 0.05) return false;
-    return true;
+    return holds(when, { season: day.season, phase: day.phase, weather: weather.state, daylight: day.tint.alpha <= 0.05 });
   }
 
-  // Pollen, butterflies, fireflies, fog and autumn leaves: a steady trickle over the view while their season, phase and weather fit.
+  // Where does the effect appear? Over the view by default (on `ground` only), at a lit street lamp (`lamp`) or in the daylight under a window (`shaft`).
+  // Sets this.px / this.py; false when there is no such place now.
+  place(e, view) {
+    if (e.at === 'lamp') {
+      const lamps = this.scene.streetLights?.live;
+      if (!lamps?.length) return false;
+      const start = Math.floor(this.rnd() * lamps.length);
+      for (let j = 0; j < lamps.length; j++) { // the first lit lamp in view from a random start (the town has about 80)
+        const l = lamps[(start + j) % lamps.length];
+        if (!l.lit || l.radius < 50 || l.x < view.x || l.x > view.right || l.y < view.y || l.y > view.bottom) continue;
+        this.px = l.x + (this.rnd() - 0.5) * 8;
+        this.py = l.y + (this.rnd() - 0.5) * 4;
+        return true;
+      }
+      return false;
+    }
+    if (e.at === 'shaft') {
+      const rooms = this.scene.interiors;
+      const wins = rooms?.wins;
+      if (!wins?.length || rooms.day < 0.2) return false;
+      const w = wins[Math.floor(this.rnd() * wins.length)];
+      this.px = w.left + this.rnd() * w.sw;
+      this.py = w.top + this.rnd() * 44;
+      return true;
+    }
+    this.px = view.x + this.rnd() * view.width;
+    this.py = view.y + this.rnd() * view.height;
+    return !e.ground || this.ctx.surfaces.at(this.px, this.py) === e.ground;
+  }
+
+  // Pollen, butterflies, fireflies, fog, falling leaves and petals, lamp embers and dust motes: a steady trickle while their season, phase and weather fit.
   seasonal(dt, view) {
     const s = this.cfg.seasonal;
-    if (this.ctx.map.indoor || window.SCHULWEG_GAME?.ambienceOff) return; // ambienceOff: test hook, the scripted runs have no seasonal life
+    if (flag('ambienceOff')) return; // ambienceOff: test hook, the scripted runs have no seasonal life
+    const indoor = !!this.ctx.map.indoor;
     const mul = this.ctx.quality.tier.particleMul;
     for (let i = 0; i < s.list.length; i++) {
       const e = s.list[i];
-      if (!this.holds(e.when)) { this.seasonAcc[i] = 0; continue; }
-      this.seasonAcc[i] += e.rate * mul * (view.width * view.height) / s.refArea * dt;
+      if (!!e.indoor !== indoor || (e.flag && flag(e.flag)) || !this.holds(e.when)) { this.seasonAcc[i] = 0; continue; }
+      this.seasonAcc[i] += e.rate * mul * (e.at ? 1 : (view.width * view.height) / s.refArea) * dt;
       for (; this.seasonAcc[i] >= 1; this.seasonAcc[i]--) {
-        const x = view.x + this.rnd() * view.width;
-        const y = view.y + this.rnd() * view.height;
-        if (e.ground && this.ctx.surfaces.at(x, y) !== e.ground) continue;
-        this.emitters[e.emitter].emitter.emitParticleAt(x, y, 1);
+        if (this.place(e, view)) this.put(this.emitters[e.emitter].emitter, this.px, this.py, 1);
       }
     }
   }
 
-  // A grey puff behind every driving vehicle of the traffic services that is in view.
+  // Smoke behind every driving vehicle of the traffic services that is in view.
   exhaust(dt, view) {
     const t = this.ctx.traffic;
     const x = this.cfg.exhaust;
@@ -150,12 +239,12 @@ export class ParticleHub {
     for (const src of t.sources) {
       for (const v of src.pool ?? []) {
         if (!v.active || v.speed < x.minSpeed || v.x < view.x || v.x > view.right || v.y < view.y || v.y > view.bottom) continue;
-        this.emit('steam', v.x - Math.cos(v.heading) * x.rear, v.y - Math.sin(v.heading) * x.rear, { count: 1, tint: 0x888888 });
+        this.emit('smoke', v.x - Math.cos(v.heading) * x.rear, v.y - Math.sin(v.heading) * x.rear, { count: 1 });
       }
     }
   }
 
-  // Dust (sprint, drifting), leaves (grass) and splash + ring (puddles) at every mover's feet.
+  // Dust (sprint, drifting), footsteps and wheel dust per surface, leaves (grass), splash + crown + ring (puddles) and drips at every mover's feet.
   surfaceFx(dt) {
     const players = this.ctx.players;
     for (let i = 0; i < players.length; i++) this.playerFx(dt, players[i]);
@@ -167,15 +256,22 @@ export class ParticleHub {
     const i = p.index;
     this.fxIn[i] -= dt;
     this.ringIn[i] -= dt;
+    this.stepIn[i] -= dt;
     const fx = this.cfg.surfaceFx[this.ctx.surfaces.props(m.surface).particle];
+    const wet = fx?.name === 'splash';
+    this.drips(dt, p, wet);
     if (!fx) return;
     const speed = m.velSpeed;
-    const wet = fx.name === 'splash';
+    const bike = m.profile.faceHeading;
+    // a bike (faceHeading profile) kicks it up at the rear wheel, walkers at their feet
+    const x = bike ? p.x - Math.cos(m.heading) * s.rearOffset : p.x;
+    const y = bike ? p.y - Math.sin(m.heading) * s.rearOffset : p.y + s.feetOffset;
+    if (fx.step && this.stepIn[i] <= 0 && speed >= (bike ? s.wheelMinSpeed : s.stepMinSpeed) && !flag('footstepsOff')) {
+      this.stepIn[i] = (bike ? s.wheelInterval : wet ? s.crownInterval : s.stepInterval) / this.ctx.quality.tier.particleMul;
+      this.emit(fx.step.name, x, y, fx.step.tint !== undefined ? { count: 1, tint: fx.step.tint } : { count: 3 + Math.round(speed / 60) });
+    }
     if (speed < (wet ? s.puddleMinSpeed : s.minSpeed)) return;
     if (fx.name === 'dust' && !m.sprinting && m.slip < s.dustSlipDeg * DEG) return;
-    // a bike (faceHeading profile) kicks it up at the rear wheel, walkers at their feet
-    const x = m.profile.faceHeading ? p.x - Math.cos(m.heading) * s.rearOffset : p.x;
-    const y = m.profile.faceHeading ? p.y - Math.sin(m.heading) * s.rearOffset : p.y + s.feetOffset;
     if (this.fxIn[i] <= 0) {
       this.fxIn[i] = wet ? s.puddleInterval : s.interval;
       this.emit(fx.name, x, y, wet ? { count: 3 + Math.round(speed / 40) } : { tint: fx.tint });
@@ -184,6 +280,19 @@ export class ParticleHub {
       this.ringIn[i] = s.ringInterval;
       this.emit('ripple', x, y);
     }
+  }
+
+  // Water runs off a kid that just left a puddle or the shallows: a few drips from the feet.
+  drips(dt, p, wet) {
+    const i = p.index;
+    const f = this.cfg.footsteps;
+    if (wet) { this.wetT[i] = f.dripSeconds; return; }
+    if (this.wetT[i] <= 0) return;
+    this.wetT[i] -= dt;
+    this.dripIn[i] -= dt;
+    if (this.dripIn[i] > 0 || flag('dripsOff')) return;
+    this.dripIn[i] = f.dripInterval;
+    this.emit('drip', p.x + (this.rnd() - 0.5) * 5, p.y + this.cfg.surfaceEmit.feetOffset, { count: 1 });
   }
 
   // A burst of the surface's own effect (dust in its tint, splash, leaves) at a point: landings and skate clack.
@@ -199,14 +308,14 @@ export class ParticleHub {
     this.rainAcc += r.rate * k;
     this.impactAcc += r.impactRate * k;
     const drops = this.emitters.rain.emitter;
-    for (; this.rainAcc >= 1; this.rainAcc--) drops.emitParticleAt(view.x + Math.random() * view.width, view.y + Math.random() * view.height, 1);
+    for (; this.rainAcc >= 1; this.rainAcc--) this.put(drops, view.x + Math.random() * view.width, view.y + Math.random() * view.height, 1);
     const { surfaces } = this.ctx;
     for (; this.impactAcc >= 1; this.impactAcc--) {
       const x = view.x + Math.random() * view.width;
       const y = view.y + Math.random() * view.height;
       const ground = surfaces.at(x, y);
-      if (!surfaces.props(ground).solid) this.emitters.impact.emitter.emitParticleAt(x, y, 1);
-      else if (ground === 'water') this.emitters.ripple.emitter.emitParticleAt(x, y, 1); // a drop on the pond or canal rings
+      if (!surfaces.props(ground).solid) this.put(this.emitters.impact.emitter, x, y, 1);
+      else if (ground === 'water') this.put(this.emitters.ripple.emitter, x, y, 1); // a drop on the pond or canal rings
     }
   }
 
@@ -225,7 +334,8 @@ export class ParticleHub {
         if (this.ctx.surfaces.at(s.x, s.y) === 'water') this.emit('ripple', s.x, s.y); // splashes on water leave a ring
         continue;
       }
-      this.emit('steam', s.x, s.y, { count: 1, tint: s.chimney ? 0x777777 : 0xffffff });
+      if (s.chimney) this.emit('smoke', s.x, s.y, { count: 1 });
+      else this.emit('steam', s.x, s.y, { count: 1, tint: 0xffffff });
     }
     this.leafIn -= dt;
     if (this.leafIn <= 0) {
