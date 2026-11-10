@@ -35,6 +35,7 @@ Before drawing a tile, sprite, prop, building, interior, light, shader or partic
 - **Sprite or prop:** `new Pen(scene, key, w, h)` (`scenes/HiResArt.js`): `ell` for round masses, `px` for detail, `line`,
   then `.shadow(cx, cy, rx, ry)` and `.outline(OUT)` last, `.done()`. Draw lit shapes first, then the shade on the
   bottom-right half, then highlight pixels on the top-left.
+- **Tree, hedge, bush:** `scenes/VegArt.js` (`mass` = silhouette, lit body, light cap per lobe; `shade` = dithered lower right and upper left; `speckle`), trunk and tuft overlays in `scenes/EnvArt.js`; a crown is a sprite in the layer above the objects (`render/Vegetation.js`, sways in `render/pipelines/WindFx.js`), a hedge a y-sorted sprite slice, never a tile texture.
 - **Organic blob (canopy, bush, pond, cloud):** union of 3 to 6 overlapping `ell` calls with seeded radii and offsets
   (`rng(seed)`), then shade by shifting the lower-right rows one ramp step down and dither the boundary row.
 - **Ground tile variants:** seeded `speckle` from the ramp plus 2 to 4 features (tuft, flower, pebble, crack, leaf); the

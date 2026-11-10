@@ -303,24 +303,8 @@ function brickWall(p, d, r) {
 }
 
 const SPECIAL = {
-  tree(p, d, r) {
+  tree(p, d, r) { // the lawn under a tree; trunk and crown come from scenes/EnvArt.js and render/Vegetation.js (story 16.6)
     GROUND.grass(p, { base: d.base, speck: d.speck }, r, 0);
-    p.contact(16, 28, 10, 3, 0.28); // contact shadow under the trunk; the cast shadow comes from render/Shadows.js
-    p.px('#5a3a1e', 14, 22, 4, 8);                    // trunk
-    p.px('#7a5230', 14, 22, 1, 8);
-    p.px('#3b2412', 17, 22, 1, 8);
-    const g = ['#1f5a26', '#2c6a2c', '#3f8a3c', '#5aa84c', '#7fcb66'];
-    p.ell(g[0], 16, 14, 14, 13);
-    p.ell(g[1], 15, 13, 13, 12);
-    p.ell(g[2], 14, 11, 11, 10);
-    p.ell(g[3], 12, 9, 7, 6);
-    p.ell(g[4], 10, 7, 3.5, 3);
-    for (let i = 0; i < 18; i++) { // leaf texture
-      const a = r() * Math.PI * 2;
-      const rr = r() * 11;
-      p.px(r() < 0.5 ? g[1] : g[3], Math.round(15 + Math.cos(a) * rr), Math.round(13 + Math.sin(a) * rr * 0.9), 2, 1);
-    }
-    p.px('#e0483c', 21, 16, 2, 2); p.px('#e0483c', 9, 18, 2, 2); // a few apples
   },
   fence(p, d, r) {
     GROUND.concrete(p, d, r, 0);

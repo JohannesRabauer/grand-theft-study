@@ -1,0 +1,32 @@
+{
+  "_doc": "Vegetation (story 16.6, AD-31): crowns of the tree tiles as separate sprites drawn above every object (`depth`, below the light map and the particles), hedge runs, sway and the see-through fade. Lengths are base pixels (16 per tile); crown boxes are measured from the trunk's base point (the middle of the tile's bottom row) with up negative. `crown` is the ellipse that bounds the leaf mass: it is both the texture box and the area where a kid fades the crown.",
+  "depth": 8000,
+  "shapes": 3,
+  "seasonBlossom": { "oak": { "spring": "#f7c3d8" }, "birch": { "spring": "#f7c3d8" } },
+  "species": {
+    "oak": { "crown": { "rx": 16, "ry": 12, "cy": -17 }, "trunk": "#5a3a1e", "jitter": 2 },
+    "pine": { "crown": { "rx": 10, "ry": 17, "cy": -21 }, "trunk": "#4a2f1c", "jitter": 1 },
+    "birch": { "crown": { "rx": 12, "ry": 11, "cy": -17 }, "trunk": "#e8e4dc", "jitter": 2 }
+  },
+  "palettes": {
+    "oak": {
+      "summer": ["#1f5a26", "#2c6a2c", "#3f8a3c", "#5aa84c", "#7fcb66"],
+      "spring": ["#245f3a", "#37803f", "#58a850", "#86cf6a", "#d9f0a0"],
+      "autumn": ["#6e2a1a", "#a0441d", "#d27a26", "#e8a83a", "#f6d060"],
+      "winter": ["#2b4a43", "#3a5e55", "#4f7468", "#8fb0b4", "#e8f1f4"]
+    },
+    "pine": {
+      "summer": ["#12392c", "#1a4d37", "#236445", "#35805a", "#5aa874"],
+      "winter": ["#12392c", "#1a4d37", "#25604a", "#7fa6a4", "#e8f1f4"]
+    },
+    "birch": {
+      "summer": ["#2a6e34", "#3f8f45", "#62b556", "#8fd46c", "#c3ec8e"],
+      "spring": ["#2f7a46", "#4a9a52", "#74c262", "#a6dc7c", "#e4f4a8"],
+      "autumn": ["#8a5a14", "#b9801f", "#e0a93a", "#f2cd5c", "#fbe998"],
+      "winter": ["#3d5a52", "#58786c", "#6f9488", "#a6c2c4", "#eef4f6"]
+    },
+    "hedge": ["#16452b", "#256a2b", "#2e7a34", "#47a04a", "#7cc65a"]
+  },
+  "fade": { "alpha": 0.38, "speed": 5, "torso": 6 },
+  "sway": { "amp": 1.5, "hedgeAmp": 0.6, "lean": 1.2, "freq": 1.4, "phaseSpread": 6.28, "lowAmp": 0.7 }
+}

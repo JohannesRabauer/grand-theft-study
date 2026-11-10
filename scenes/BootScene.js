@@ -13,6 +13,7 @@ import { GameState } from '../state/GameState.js';
 import { SaveSlots } from '../state/SaveSlots.js';
 import { streetCatalog } from '../vehicles/streetLogic.js';
 import { makeEnvArt } from './EnvArt.js';
+import { makeCrowns } from './VegArt.js';
 import { makeCosmeticArt } from './CosmeticArt.js';
 import { makeExpansionArt } from './ExpansionArt.js';
 
@@ -52,6 +53,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('routes', 'data/routes.json');
     this.load.json('day', 'data/day.json');
     this.load.json('lighting', 'data/lighting.json');
+    this.load.json('vegetation', 'data/vegetation.json');
     this.load.json('postfx', 'data/postfx.json');
     this.load.json('timetable', 'data/timetable.json');
     this.load.json('morning', 'data/morning.json');
@@ -134,7 +136,8 @@ export class BootScene extends Phaser.Scene {
     makeVehicleArt(this, res.scale);
     makeExpansionArt(this, res.scale);
     makeCosmeticArt(this, res.scale); // story 10.1: hats and rings from the shop
-    makeEnvArt(this, tiles, this.cache.json.get('map-town').tileSize * res.scale); // AD-30: edges, shores, fences, hedges
+    makeEnvArt(this, tiles, this.cache.json.get('map-town').tileSize * res.scale); // AD-30: edges, shores, fences, trunks, tufts
+    makeCrowns(this, this.cache.json.get('vegetation'), res.scale / 2); // story 16.6: tree crowns per species, shape and season
     // The speed zoom scales the world by non-integer factors, where nearest-neighbour sampling makes
     // texels land on uneven screen pixels (shimmer). World textures are filtered bilinear instead; at
     // an exact integer zoom texels map 1:1 to pixels, so the result stays crisp. UI textures stay sharp.
@@ -177,9 +180,7 @@ export class BootScene extends Phaser.Scene {
   // Small pixel details so special tiles read at a glance.
   decorateTile(c, id, size) {
     const px = (col, x, y, w, h) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
-    if (id === 'tree') {
-      px('#2c6a2c', 2, 2, 12, 12); px('#3f8a3c', 3, 3, 10, 9); px('#6dbb5a', 5, 4, 3, 2); px('#5a3a1e', 7, 13, 2, 3);
-    } else if (id === 'water') {
+    if (id === 'water') {
       px('#8fc1ee', 2, 4, 5, 1); px('#8fc1ee', 9, 10, 5, 1);
     } else if (id === 'fence') {
       px('#9a9ea6', 0, 7, size, 2);

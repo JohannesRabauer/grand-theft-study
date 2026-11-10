@@ -259,3 +259,7 @@ Real render loop, headless Edge, software GL, uncapped (`--live --uncapped`), ms
 | e everything | Low | 1.91 / 2.80 | 2.31 / 3.35 |
 
 Worst p95 change +20 percent (Low e, 0.55 ms), limit +25; Medium and High at most +5 percent. p95 stays far below 16.7 ms. Software GL is not a phone GPU: the full-screen shadow pass on a real phone is unmeasured (see the phone protocol). Texture memory: a phone with a small `MAX_TEXTURE_SIZE` (under 2560) skips the layer.
+
+### Vegetation (story 16.6)
+
+`render/Vegetation.js` places 159 crown sprites (one atlas, one layer above the objects) and 68 hedge slices (11 runs) per outdoor map, once at map load. Per frame: a fade test of every crown against the players and active bullies (a rejecting box test first), one `sin` per hedge run, and on Medium and High three shared uniforms for the `SchulwegWind` pipeline (a `MultiPipeline`; the crowns batch in one draw call). Low and Canvas nudge the crowns near the view by one pixel instead. Real render loop, headless Edge, software GL, uncapped, p95 ms (median of paired runs, `--live --uncapped`, `8aac0f8` against this story): Medium `e everything` 1.70 > 1.80 (+6 percent), `a idle walking` 1.90 > 2.20 (+16 percent); High 1.90 > 1.80 and 1.80 > 2.30 (+28 percent, 0.5 ms, noise level of the runs). Lesson: a custom object pipeline on sprites that are y-sorted among the objects costs a batch break per sprite (first attempt +100 percent); keep such sprites in one layer. Smoke test: 1295 checks. Software GL is not a phone GPU; the phone measurement stays open.

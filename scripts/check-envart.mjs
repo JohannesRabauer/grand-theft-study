@@ -8,7 +8,8 @@ import { groundKeys, prepareEnvArtForTest, puddleKey, PUDDLE_SURFACES } from '..
 
 prepareEnvArtForTest({ grass: 4, asphalt: 4, cobble: 3, path: 3, concrete: 4, water: 3 });
 const mk = (...rows) => ({ legend: { A: 'asphalt', L: 'lane', C: 'cobble', G: 'grass', p: 'path', S: 'concrete', W: 'water', T: 'tree', F: 'fence', H: 'hedge', '#': 'wall', w: 'wood' }, rows });
-const at = (map, x, y) => groundKeys(map, x, y, `base-${map.legend[map.rows[y][x]]}`);
+const rawAt = (map, x, y) => groundKeys(map, x, y, `base-${map.legend[map.rows[y][x]]}`);
+const at = (map, x, y) => rawAt(map, x, y).filter(k => !k.startsWith('env-tuft')); // tufts are random dressing; the edge tests look past them
 const has = (keys, re) => keys.some(k => re.test(k));
 
 // grass bleeds onto asphalt, never the other way round
@@ -60,17 +61,24 @@ assert.ok(has(at(m, 1, 1), /^env-fence-x$/), 'a fence junction draws both direct
 assert.ok(has(at(mk('SSS', 'SFS', 'SSS'), 1, 1), /^env-fence-h$/), 'a lone fence section defaults to horizontal');
 assert.ok(!has(at(mk('HHH', 'SSS'), 1, 1), /^env-shadow/), 'hedge shadows come from the shadow layer (render/Shadows.js), not from tile keys');
 
-// hedges: only the top of a run gets the dark cap, only the bottom gets the base shadow
-m = mk('SSS', 'SHS', 'SHS', 'SHS', 'SSS');
-assert.match(at(m, 1, 1)[0], /^env-hedge-10-/, 'hedge top');
-assert.match(at(m, 1, 2)[0], /^env-hedge-00-/, 'hedge middle');
-assert.match(at(m, 1, 3)[0], /^env-hedge-01-/, 'hedge bottom');
+// hedges (story 16.6): the ground under a hedge is lawn, the lumpy mass is a sprite; the lawn behind a hedge gets a flower bed or tall grass
+m = mk('SSS', 'SHS', 'SHS', 'SGS', 'SSS');
+assert.match(at(m, 1, 2)[0], /^tile-grass/, 'a hedge tile stands on lawn');
+assert.ok(has(at(mk('GGG', 'GHG', 'GGG'), 1, 1), /^tile-grass/) && !has(at(m, 1, 2), /^env-hedge/), 'no hedge ground tiles any more');
+const row = (id) => { const mm = mk(id.repeat(40), 'G'.repeat(40)); return Array.from({ length: 40 }, (_, x) => rawAt(mm, x, 1)); };
+assert.ok(row('H').some(k => has(k, /^env-bed-/)), 'lawn south of a hedge gets flower beds');
+assert.ok(row('T').some(k => has(k, /^env-tuft-/)), 'tall grass tufts grow where lawn meets trees');
+
+// trees (story 16.6): the tile keeps lawn, trunk and root flare; the crown is a sprite
+m = mk('GGG', 'GTG', 'GGG');
+assert.equal(at(m, 1, 1)[0], 'base-tree', 'the base comes first');
+assert.match(at(m, 1, 1)[1], /^env-trunk-(oak|pine|birch)$/, 'a tree tile shows its trunk');
 
 // surfaces without blending rules stay untouched (indoor floors, walls, trees, bounds)
 m = mk('#ww#', '#ww#', '#TT#');
 assert.deepEqual(at(m, 1, 0), ['base-wood'], 'floors are unchanged');
 assert.deepEqual(at(m, 0, 0), ['base-wall'], 'walls are unchanged');
-assert.deepEqual(at(m, 1, 2), ['base-tree'], 'tree tiles are unchanged');
+assert.equal(at(m, 1, 2)[0], 'base-tree', 'tree tiles keep their base');
 assert.deepEqual(at(mk('G'), 0, 0), ['base-grass'], 'a one tile map has no neighbours and no edges');
 
 
@@ -121,7 +129,7 @@ const twin = { ...town, rows: ['##########', '#GGGGGGGG#', '#G##G##GG#', '#G##G#
 assert.ok(pal(groundKeys(twin, 2, 2, 'b', 'town')[0]) && pal(groundKeys(twin, 5, 2, 'b', 'town')[0]), 'two buildings are both styled');
 
 // every real map: only known key families, the base stays first, and nothing here touched the grid
-const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|hedge|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop))/;
+const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|trunk|tuft|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop))/;
 let tiles = 0;
 let extra = 0;
 for (const f of readdirSync(new URL('../data/maps/', import.meta.url)).filter(n => n.endsWith('.json') && n !== 'index.json')) {

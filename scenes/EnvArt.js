@@ -10,6 +10,7 @@
 // for the other three, so a strip set costs one drawing and every strip shares the same depth at its ends,
 // which keeps a run of strips continuous across tiles.
 import { hash2, edgeLevel, mapSeed } from './GroundArt.js';
+import { SPECIES, speciesOf } from '../render/vegetationMath.js';
 
 const U = 32;
 const SIDES = ['n', 'e', 's', 'w'];
@@ -316,7 +317,7 @@ function deepWater() {
   return tmp;
 }
 
-// -------------------------------------------------------------------------------------- fences and hedges
+// -------------------------------------------------------------------------------------- fences
 
 function postH(c, x) {
   px(c, 'rgba(0,0,0,0.22)', x, 19, 5, 4);
@@ -359,29 +360,7 @@ function fenceTile(kind) {
   return tmp;
 }
 
-function hedgeTile(base, v, top, bottom) {
-  const tmp = canvas();
-  const c = tmp.getContext('2d');
-  const r = rng(hash('hedge') + v * 977);
-  px(c, shade(base, -0.25), 0, 0, U, U);
-  const light = shade(base, 0.3);
-  for (let i = 0; i < 28; i++) {
-    const cx = Math.floor(r() * U);
-    const cy = Math.floor(r() * U);
-    const rad = 2 + Math.floor(r() * 3);
-    for (const dx of [0, cx < rad ? U : cx > U - rad ? -U : 0]) {
-      for (const dy of [0, cy < rad ? U : cy > U - rad ? -U : 0]) { // wraps both ways so stacked tiles join up
-        ell(c, shade(base, -0.1), cx + dx, cy + dy + 1, rad + 0.5, rad);
-        ell(c, base, cx + dx, cy + dy, rad, rad);
-        ell(c, shade(base, 0.15), cx + dx - 1, cy + dy - 1, rad * 0.55, rad * 0.5);
-        if (rad > 2) px(c, light, cx + dx - 1, cy + dy - 1, 1, 1);
-      }
-    }
-  }
-  if (top) { px(c, shade(base, -0.5), 0, 0, U, 3); px(c, shade(base, -0.35), 0, 3, U, 1); }
-  if (bottom) { px(c, shade(base, -0.45), 0, U - 3, U, 3); }
-  return tmp;
-}
+
 
 // Rain puddles (dynamic, see physics/Weather.js): a transparent overlay so the surface underneath shows through.
 // Irregular blob (a lumpy ellipse), a darker wet halo, a sky reflection that brightens towards the top, a thin
@@ -1024,6 +1003,59 @@ function potTexture(v) {
   return tmp;
 }
 
+// Trunk and root flare of a tree tile with a dithered contact shadow, in the ground under the crown (story 16.6). Units are
+// half base pixels; the crown (render/Vegetation.js) hides the upper trunk.
+const TRUNK = { oak: { base: '#5a3a1e', light: '#7a5230', dark: '#3b2412', half: 3 }, pine: { base: '#4a2f1c', light: '#664226', dark: '#2e1c10', half: 2 }, birch: { base: '#e8e4dc', light: '#f8f5ef', dark: '#a8a49c', half: 2 } };
+function trunkTexture(species) {
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const t = TRUNK[species];
+  const col = 'rgba(26,32,70,0.42)';
+  for (let y = 24; y < 34; y += 2) {
+    for (let x = 4; x < 28; x += 2) {
+      const d = ((x + 1 - 16) / 12) ** 2 + ((y + 1 - 29) / 4) ** 2;
+      if (d <= 0.5 || (d <= 1.1 && (((x + y) >> 1) & 1) === 0)) px(c, col, x, y, 2, 2);
+    }
+  }
+  const w = t.half;
+  px(c, '#16161e', 16 - w - 2, 17, w * 2 + 4, 14);                           // outline
+  px(c, '#16161e', 16 - w - 4, 26, w * 2 + 8, 5);
+  px(c, t.base, 16 - w, 18, w * 2, 12);                                       // trunk
+  px(c, t.light, 16 - w, 18, 2, 12);
+  px(c, t.dark, 16 + w - 2, 18, 2, 12);
+  px(c, t.base, 16 - w - 2, 26, w * 2 + 4, 4);                                // root flare
+  px(c, t.light, 16 - w - 2, 26, 2, 4);
+  px(c, t.dark, 16 + w, 26, 2, 4);
+  px(c, t.dark, 16 - w - 4, 28, 2, 2); px(c, t.dark, 16 + w + 2, 28, 2, 2);    // root tips
+  px(c, t.base, 16 - w - 3, 29, 2, 1);
+  if (species === 'birch') for (const y of [20, 23, 27]) px(c, '#3a3630', 16 - w + (y % 3) * 1, y, 2, 1);
+  else for (const y of [20, 24]) px(c, t.dark, 16 - w + 2, y, 2, 1);          // bark
+  return tmp;
+}
+
+// A clump of tall grass: blades that rise above the lawn, a seed head or a small flower on some.
+function tuftTexture(v) {
+  const tmp = canvas();
+  const c = tmp.getContext('2d');
+  const r = rng(7300 + v * 41);
+  const blades = ['#2c5f3a', '#3f8a3c', '#6bb85a'];
+  const heads = ['#f4f4ee', '#f2d04a', '#b58ad8', '#d9b86a'];
+  for (let k = 0; k < 2; k++) { // two clumps per tile
+    const x0 = 4 + Math.floor(r() * 20);
+    const y0 = 16 + Math.floor(r() * 12);
+    const n = 3 + Math.floor(r() * 3);
+    for (let i = 0; i < n; i++) {
+      const x = x0 + i * 2 + (i & 1);
+      const h = 6 + Math.floor(r() * 7);
+      const lean = r() < 0.5 ? -1 : 1;
+      px(c, blades[i % 3], x, y0 - h, 2, h);
+      px(c, blades[(i + 1) % 3], x + lean, y0 - h - 2, 2, 2);
+      if (r() < 0.35) px(c, heads[Math.floor(r() * heads.length)], x + lean, y0 - h - 4, 2, 2);
+    }
+    px(c, '#2c5f3a', x0 - 1, y0, n * 2 + 3, 1);
+  }
+  return tmp;
+}
 function tramStopTexture() {
   const tmp = canvas();
   const c = tmp.getContext('2d');
@@ -1042,6 +1074,8 @@ function makeDecorArt(scene, size) {
   emit(scene, 'env-tramstop', tramStopTexture(), size);
   for (let v = 0; v < 4; v++) emit(scene, `env-bed-${v}`, bedTexture(v), size);
   for (let v = 0; v < 2; v++) emit(scene, `env-pot-${v}`, potTexture(v), size);
+  for (const sp of SPECIES) emit(scene, `env-trunk-${sp}`, trunkTexture(sp), size);
+  for (let v = 0; v < 4; v++) emit(scene, `env-tuft-${v}`, tuftTexture(v), size);
 }
 
 // -------------------------------------------------------------------------------------- public API
@@ -1086,10 +1120,6 @@ export function makeEnvArt(scene, tileDefs, size) {
   }
   for (const k of ['h', 'v', 'x']) emit(scene, `env-fence-${k}`, fenceTile(k), size);
   for (const surface of PUDDLE_SURFACES) for (let v = 0; v < PUDDLE_VARIANTS; v++) emit(scene, `env-puddle-${surface}-${v}`, puddleTexture(surface, v), size);
-  const hedgeBase = tileDefs.hedge?.base ?? '#2e7a34';
-  for (let v = 0; v < 3; v++) {
-    for (const top of [0, 1]) for (const bottom of [0, 1]) emit(scene, `env-hedge-${top}${bottom}-${v}`, hedgeTile(hedgeBase, v, top, bottom), size);
-  }
   makeInteriorArt(scene, size);
   makeOutdoorArt(scene, size);
   makeDecorArt(scene, size);
@@ -1136,11 +1166,8 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
   const seed = mapSeed(map, mapId);
   const keys = [];
 
-  if (id === 'hedge') {
-    const top = idAt(tx, ty - 1) === 'hedge' ? 0 : 1;
-    const bottom = idAt(tx, ty + 1) === 'hedge' ? 0 : 1;
-    return [`env-hedge-${top}${bottom}-${(((tx * 73856093) ^ (ty * 19349663)) >>> 0) % 3}`];
-  }
+  if (id === 'hedge') return [variantOf('grass', tx, ty)]; // the lumpy hedge itself is a sprite (render/Vegetation.js); the ground under it is lawn
+
   const cls = CLASS[id];
   if (id === 'fence') keys.push(variantOf('concrete', tx, ty));
   else keys.push(baseKey);
@@ -1195,6 +1222,7 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
     }
   }
 
+  if (id === 'tree') keys.push(`env-trunk-${speciesOf(tx, ty)}`); // the crown is a sprite that overlaps the neighbours (render/Vegetation.js)
   if (id === 'fence') {
     const same = (x, y) => idAt(x, y) === 'fence';
     const h = same(tx - 1, ty) || same(tx + 1, ty);
@@ -1207,6 +1235,12 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
     const nextToDoor = doors.has(`${tx - 1},${ty}`) || doors.has(`${tx + 1},${ty}`);
     if (!doors.has(`${tx},${ty}`) && nextToDoor && (cls === 'concrete' || cls === 'grass' || cls === 'cobble')) keys.push(`env-pot-${h & 1}`);
     else if (cls === 'grass' && h < 62) keys.push(`env-bed-${h % 4}`);
+  }
+  if (cls === 'grass' && !keys.some(k => k.startsWith('env-bed') || k.startsWith('env-pot'))) { // story 16.6: beds under hedges, tall grass where lawn meets trees, hedges and fences, some at random
+    const g = (((tx * 3266489917) ^ (ty * 668265263)) >>> 0) % 100;
+    const green = [[0, -1], [0, 1], [-1, 0], [1, 0]].some(([ox, oy]) => ['tree', 'hedge', 'fence'].includes(idAt(tx + ox, ty + oy)));
+    if (idAt(tx, ty - 1) === 'hedge' && g < 55) keys.push(`env-bed-${g % 4}`);
+    else if (g < (green ? 32 : 7)) keys.push(`env-tuft-${g % 4}`);
   }
   if (outdoorInfo(map).stops.has(`${tx},${ty}`)) keys.push('env-tramstop');
   const entrance = indoorInfo(map).doorFloors.get(`${tx},${ty}`); // a stone step and a mat in front of every door

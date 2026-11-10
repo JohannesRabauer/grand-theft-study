@@ -17,20 +17,27 @@ function box(p) {
   p.px('#f4f0e6', 4, 14, 3, 1);
 }
 
+// A lumpy bush (story 16.6): overlapping lobes in three passes (silhouette, lit body, light cap), a dithered shaded lower right,
+// leaf dashes and a few berries; the lobes break the oval so it reads as foliage, not as a blob.
 function bush(p) {
-  const g = '#3f8f4a';
-  p.ell(darken(g, 0.45), 16, 20, 15, 4); // shade on the ground
-  p.ell(darken(g, 0.25), 9, 14, 8, 7);
-  p.ell(darken(g, 0.25), 23, 14, 8, 7);
-  p.ell(g, 16, 11, 11, 9);
-  p.ell(lighten(g, 0.18), 12, 8, 6, 5);
-  p.ell(lighten(g, 0.18), 21, 9, 5, 4);
-  p.px(lighten(g, 0.45), 10, 6, 3, 1);
+  const pal = ['#16452b', '#256a2b', '#3f8f4a', '#5aae56', '#8bd466'];
+  const lobes = [[8, 14, 6.5, 5.5], [24, 14, 7, 5.5], [16, 9, 8.5, 7], [12, 11, 6, 5.5], [21, 10, 6, 5], [16, 15, 9, 5]];
+  p.ell(darken(pal[0], 0.2), 16, 21, 15, 3.5); // shade on the ground
+  for (const [x, y, rx, ry] of lobes) p.ell(pal[1], x, y, rx, ry);
+  for (const [x, y, rx, ry] of lobes) p.ell(pal[2], x - 0.7, y - 1, rx - 1.6, ry - 1.6);
+  for (const [x, y, rx, ry] of lobes) p.ell(pal[3], x - 1.8, y - 2.2, rx * 0.5, ry * 0.4);
+  for (let x = 4; x < 29; x += 2) { // dithered shade on the lower right, light dashes on the upper left
+    for (let y = 8; y < 20; y += 2) {
+      const u = (x - 16) / 14 * 0.7 + (y - 13) / 7 * 0.9;
+      if (u > 0.45 && ((x + y) & 2) === 0) p.px(pal[0], x, y, 2, 1);
+      else if (u < -0.5 && ((x + y) & 2) === 0) p.px(pal[4], x, y, 1, 1);
+    }
+  }
+  for (const [x, y] of [[9, 12], [14, 7], [19, 13], [23, 9], [12, 16], [26, 14]]) p.px(pal[1], x, y, 2, 1); // leaf dashes
   p.px('#d9453a', 7, 13, 2, 2); // berries
   p.px('#d9453a', 20, 15, 2, 2);
   p.px('#d9453a', 24, 11, 2, 2);
 }
-
 function doorbell(p) {
   p.px('#4a4036', 0, 0, 6, 8);
   p.px('#d8d2c4', 1, 1, 4, 6);

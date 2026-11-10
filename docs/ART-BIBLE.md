@@ -50,6 +50,9 @@ A ramp is a ramp: do not invent a one-off colour for a shaded side, take the nex
   props break the grid: irregular outlines, canopy overhanging neighbouring tiles, notches and rounded corners.
 - **Overlap and depth.** Taller things overlap the tiles north of them (a tree canopy covers the tile behind it, a roof
   overhangs its wall). Depth sorts by the base line (feet) of the object; large objects get 2 or 3 depth slices.
+- **Trees** are a trunk with a root flare in the ground and a crown sprite of their own (`scenes/VegArt.js`): 3 species (oak, pine, birch) x 3 shapes x seasons, the crown is built from 6 to 9 lobes (silhouette, lit body, light cap), 
+  dithered towards the shadow step on the lower right, leaf dashes, 1-pixel outline in a dark ramp step, and reaches 2 to 3 base pixels past the tile on every side. All crowns are drawn above the objects and turn see-through (alpha 0.38) while a kid or a chasing bully stands behind the trunk.
+  Hedges are lumpy leaf masses drawn per connected run and sliced per tile (lumps overshoot the tile border); bushes, tall grass tufts and flower beds follow the same rules.
 - Repeated objects (trees, bushes, lamps) come in at least 3 variants differing in shape, not just colour, and are
   placed with seeded jitter off the tile centre.
 - Straight edges are allowed only for man-made objects (kerbs, walls, fences) and are broken every few tiles with detail

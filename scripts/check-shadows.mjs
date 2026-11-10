@@ -90,7 +90,7 @@ assert.ok(ms < 1500, `the town mask bakes in ${ms.toFixed(0)} ms (limit 1500)`);
 // ---- wiring: tiers, shader registration, baked once (no redraw in update)
 assert.equal(quality.tiers.low.shadows, false, 'Low keeps contact shadows only');
 assert.ok(quality.tiers.medium.shadows && quality.tiers.high.shadows, 'Medium and High cast shadows');
-assert.match(text('render/pipelines/index.js'), /OBJECT_PIPELINES = \[ShadowFx\]/, 'the shadow pipeline is registered');
+assert.match(text('render/pipelines/index.js'), /OBJECT_PIPELINES = \[ShadowFx, /, 'the shadow pipeline is registered');
 const sh = text('render/Shadows.js');
 assert.equal(sh.match(/putImageData/g).length, 1, 'the mask is uploaded once (at map load)');
 const update = sh.slice(sh.indexOf('  update() {'));

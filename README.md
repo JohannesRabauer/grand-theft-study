@@ -18,7 +18,7 @@ npx serve .
 python -m http.server 8080
 ```
 
-Open the printed URL (`http://localhost:3000` or `http://localhost:8080`). URL flags: `?debug` (FPS, physics outlines, pool counters, bully paths), `?q=low|medium|high` (quality for this load; Low has contact shadows only, Medium and High also cast shadows from buildings, trees, fences and hedges), `?renderer=canvas` (force the Canvas renderer: no light map, post passes or cast shadows), `?bench` (stepping benchmark and smoke test, see below). For a phone on the same network see the protocol in docs/PERFORMANCE.md.
+Open the printed URL (`http://localhost:3000` or `http://localhost:8080`). URL flags: `?debug` (FPS, physics outlines, pool counters, bully paths), `?q=low|medium|high` (quality for this load; Low has contact shadows only, Medium and High also cast shadows from buildings, trees, fences and hedges), `?renderer=canvas` (force the Canvas renderer: no light map, post passes, cast shadows or wind shader; crowns nudge by a pixel instead), `?bench` (stepping benchmark and smoke test, see below). For a phone on the same network see the protocol in docs/PERFORMANCE.md.
 
 ## Features
 

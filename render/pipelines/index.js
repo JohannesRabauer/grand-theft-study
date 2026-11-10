@@ -3,6 +3,7 @@
 import { BloomFx } from './BloomFx.js';
 import { GradeFx } from './GradeFx.js';
 import { ShadowFx } from './ShadowFx.js';
+import { WindFx } from './WindFx.js';
 
 export const CAMERA_PASSES = [BloomFx, GradeFx];
-export const OBJECT_PIPELINES = [ShadowFx];
+export const OBJECT_PIPELINES = [ShadowFx, WindFx];
