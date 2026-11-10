@@ -271,3 +271,20 @@ Worst p95 change +20 percent (Low e, 0.55 ms), limit +25; Medium and High at mos
 ### Water (story 16.8)
 
 `render/Water.js` builds seven water bodies of the town once per map (a distance field per body: about 40 ms for the largest, nothing per frame). Medium and High draw one mask image per body through the `SchulwegWater` pipeline; per frame the system sets the phase and, for bodies in view, copies up to 8 nearby lights into two small buffers (no allocation; bodies out of view are hidden). The pipeline flushes before it sets a body's lights, so one body never draws with another's. Low and Canvas show 6 pre-drawn frames per body and swap a texture every 0.2 s. Ripple rings use the existing pooled `ripple` emitter (share 0.06 > 0.1 of the tier cap). Real render loop, headless Edge, software GL, uncapped, p95 ms, interleaved runs against `a1cf3f3`: Medium `a` 2.2 > 2.2, `c` 1.8 > 1.8, `e` 1.9 > 1.8; High `a` 2.4 > 2.5, `c` 1.7 > 1.8, `e` 1.8 > 1.9; Low at most +0.2 ms. With the camera on the pond or the canal and `gl.finish()` after every step (so the shader is in the number), first of two runs, p95 ms before > after: Medium pond 1.9 > 2.0, canal 1.6 > 2.0; High pond 2.2 > 2.4, canal 2.0 > 2.0; at most +0.4 ms, far below the 16.7 ms limit and within +25 percent. Lesson: a measurement with `?debug` physics lines on (`batchLine`) was 0.5 ms off between trees for no reason of ours; measure with the debug draw off. Smoke test: 1313 checks. Software GL is not a phone GPU; the phone measurement stays open.
+
+## Story 16.10: interiors (CAP-35, AD-31)
+
+New work: walls, floors, rugs and worn paths of home, school and dojo are baked into the ground texture (no per-frame cost); `render/Interiors.js` places 65 furniture images, four backdrop strips, a shaft image per window and a fixture plus lit twin per lamp once per map load (display list fixed while playing). Per frame it walks at most 12 windows and 7 lamps (no allocation) and holds at most one pooled light each (`ctx.lights`: home 5 to 6, school 7 to 19 at most, dojo 4 to 5; Medium limit 30). The light map now also runs indoors on Medium and High (one 480x270 texture and one stamp per light, as outdoors).
+
+Outdoor frame times, real render loop, headless Edge, software GL, uncapped (`--live --uncapped`), ms per frame avg / p95, mean of two interleaved runs against a copy of 8069481:
+
+| Scenario | Tier | Before | After |
+| --- | --- | --- | --- |
+| a idle walking | Medium | 1.37 / 1.90 | 1.36 / 1.95 |
+| e everything | Medium | 1.22 / 1.65 | 1.21 / 1.55 |
+| a idle walking | High | 1.55 / 2.15 | 1.64 / 2.10 |
+| e everything | High | 1.34 / 1.70 | 1.37 / 1.80 |
+| e everything | Low | 0.84 / 1.05 | 0.84 / 1.10 |
+
+Worst p95 change +6 percent (limit +25). Inside the rooms (400 stepped frames each, avg / p95 ms, Medium): town noon 1.40 / 2.0, home noon 0.62 / 1.4, home at 21:30 0.81 / 1.4, school 0.21 / 0.3, dojo 0.51 / 1.4 (High and Low alike: at most 1.9 ms p95), so the rooms cost less than the town. Software GL is not a phone GPU.
+

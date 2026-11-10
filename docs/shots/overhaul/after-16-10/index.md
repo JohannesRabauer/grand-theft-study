@@ -1,0 +1,9 @@
+# after-16-10: interiors with depth, materials, furniture and light
+
+Shots from `node scripts/shots.mjs --label after-16-10` (Medium and Low). Only the interior shots changed against `after-16-8`; the 60 other shots are byte-identical (the two new night shots sit last in the list so the older sequence stays the same).
+
+- `interior-home-morning|night`: striped wallpaper, cornice, dado rail and wainscot that carries on into the floor row, skirting boards, plank floors with a tone per board, worn paths, rugs, shelves, kids' drawings, coat hooks with jackets, plants, toys, shoe rack; three pendant lamps and a table lamp light up in the evening (a pooled light each on Medium, a glow image and a dim layer on Low).
+- `interior-school-day|night`: linoleum classroom with a reading rug and cushions, desks with bags, the teacher's desk, bookcases, drawings, tiled hall with lockers, notice board, radiators under the windows; seven tube lamps; window light shafts by day.
+- `interior-dojo-day|night`: polished boards, tatami with hems, a shoji window with its light, cushions, geta, bonsai, a bench, a bokken rack, floor lanterns and paper pendant lamps; the brick backdrop fills the margin round the room.
+- Interior flat area (limit 4096), Medium: home 12960 > 2265 / 1863 (night), school 2861 > 1625, dojo 37440 > 1278; Low: home 32188 > 2122 / 1809, school 50801 > 2493, dojo 43140 > 2088; the new night shots 889 to 2358. Longest seam never rises (home 384 > 347, school 479.5 > 471.5, dojo 384 > 367.5); the walkable luminance at night stays above the 0.16 limit (home 0.22, school 0.28, dojo 0.17 on Medium).
+- The big flat areas were the black margin next to the smaller rooms (home and dojo) and the one-tone rugs and tatami: the margin is now a tinted brick backdrop, rugs are quilted, tatami mats have hems and dark ends.

@@ -35,6 +35,8 @@ const SHOTS = [
   { id: 'interior-school-day', map: 'school', time: 'day', weather: 'clear' },
   { id: 'interior-dojo-day', map: 'dojo', time: 'day', weather: 'clear' },
   ...DISTRICTS.flatMap(d => ['evening', 'night'].filter(t => d !== 'oldtown' && !(d === 'park' && t === 'night')).map(t => ({ id: `${d}-${t}`, map: 'town', at: d, time: t, weather: 'clear' }))), // story 16.3: lamps, signs and headlights in every district
+  { id: 'interior-school-night', map: 'school', time: 'night', weather: 'clear' }, // story 16.10: lamps indoors (last, so the sequence of the older shots stays the same)
+  { id: 'interior-dojo-night', map: 'dojo', time: 'night', weather: 'clear' },
 ].filter(s => !only || only.includes(s.id));
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.css': 'text/css', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml' };

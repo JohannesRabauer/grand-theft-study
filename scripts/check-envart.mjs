@@ -90,8 +90,9 @@ assert.match(inAt(2, 5)[0], /^env-idoor-home-l$/, 'the wall under the left door 
 assert.match(inAt(3, 5)[0], /^env-idoor-home-r$/, 'and the right jamb under the right door tile');
 assert.ok(has(inAt(2, 4), /^env-imat-l$/) && has(inAt(3, 4), /^env-imat-r$/), 'a door mat lies in front of the doorway');
 assert.match(inAt(2, 3)[0], /^env-ihall-home-/, 'concrete indoors is a tiled hall floor, not cracked asphalt grey');
-assert.equal(inAt(1, 1)[0], 'base-wood', 'wooden floors keep their texture');
-assert.ok(has(inAt(1, 1), /^env-ishade-n$/) && has(inAt(1, 1), /^env-ishade-w$/), 'floor beside a wall is shaded where the wall stands');
+assert.match(inAt(1, 1)[0], /^env-iplank-home-/, 'home wooden floors are plank boards (story 16.10)');
+assert.equal(groundKeys(room, 1, 1, 'base-wood', 'unknown-room')[0], 'base-wood', 'other rooms keep the plain texture');
+assert.ok(has(inAt(1, 1), /^env-iwall-home-/) && has(inAt(1, 1), /^env-ishade-w$/), 'floor beside a wall carries the wall foot and is shaded where the wall stands');
 assert.ok(has(inAt(3, 2), /^env-rug-home-nw$/), 'the home has its rug, with a corner where it starts');
 assert.ok(!has(groundKeys(room, 3, 2, 'b', 'school'), /^env-rug-/), 'other rooms have none');
 assert.ok(!has(inAt(1, 1), /^env-(edge|shore|bank)/), 'no outdoor edges indoors');
@@ -123,7 +124,7 @@ const twin = { ...town, rows: ['##########', '#GGGGGGGG#', '#G##G##GG#', '#G##G#
 assert.ok(pal(groundKeys(twin, 2, 2, 'b', 'town')[0]) && pal(groundKeys(twin, 5, 2, 'b', 'town')[0]), 'two buildings are both styled');
 
 // every real map: only known key families, the base stays first, and nothing here touched the grid
-const known = /^(base-|tile-|env-(edge|edgec|wbed|fence|trunk|tuft|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop|pipe|age|vent|bin))/;
+const known = /^(base-|tile-|env-(edge|edgec|wbed|fence|trunk|tuft|iface|iwall|icap|ihall|iplank|ilino|itatami|iwear|iaoc|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop|pipe|age|vent|bin))/;
 let tiles = 0;
 let extra = 0;
 for (const f of readdirSync(new URL('../data/maps/', import.meta.url)).filter(n => n.endsWith('.json') && n !== 'index.json')) {

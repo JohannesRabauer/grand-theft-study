@@ -1,0 +1,53 @@
+{
+  "_doc": "Interiors of the three maps that exist (story 16.10, AD-31). Lengths are base pixels or tile units as named. `ambient`: the multiply colour of the light map indoors, `day` by day and `night` once the outdoor darkness passes `from` (full at `to`). `daylight`: window light follows the outdoor darkness (`fade`) and the weather (`weather` factors). `lamps`: ceiling lamps switch on in the evening (schedule `lamp`, minutes, each a little earlier or later) or when it is dark or gloomy outside. `windows`: the light a window throws on the floor (a pooled light on Medium and High, an additive shaft sprite on every tier). `rooms.<map>`: `items` are furniture and clutter (type, variant v, tile x and y; wall items stand against the wall tile above row y, floor items stand in the tile), `desks` the school desks (the old School.js layout), `lamps` the lamp positions in tiles, `windows` extra windows where another module paints the wall, `wear` the walked paths (tiles) that polish the floor.",
+  "ambient": { "day": "#d9d4d6", "night": "#6470a0", "from": 0.08, "to": 0.5, "grade": 0.45 },
+  "daylight": { "fade": 0.4, "weather": { "clear": 1, "cloudy": 0.6, "rain": 0.4, "snow": 0.55 }, "radius": 40, "color": "#fff0c8", "intensity": 0.5, "drop": 16 },
+  "lamp": { "on": "17:30", "onSpread": 25, "off": "06:20", "offSpread": 15, "dark": 0.2, "radius": 74, "color": "#ffd9a0", "intensity": 0.95, "fade": 1.2, "warm": 1 },
+  "backdropNight": 0.35,
+  "lowDim": { "color": "#0f1648", "alpha": 0.5 },
+  "shaft": { "depth": -0.2, "alpha": 0.5, "minute0": 390, "minute1": 1170 },
+  "depth": { "wall": 2, "lamp": 7900 },
+  "rooms": {
+    "home": {
+      "items": [
+        { "t": "drawings", "v": 0, "x": 5, "y": 1 }, { "t": "shelf", "v": 0, "x": 8, "y": 1 }, { "t": "drawings", "v": 1, "x": 10, "y": 1 },
+        { "t": "shelf", "v": 1, "x": 14, "y": 1 }, { "t": "drawings", "v": 0, "x": 16, "y": 1 }, { "t": "dresser", "v": 0, "x": 19, "y": 1 },
+        { "t": "plant-tall", "v": 0, "x": 21, "y": 1 }, { "t": "toybox", "v": 0, "x": 1, "y": 6 }, { "t": "toys", "v": 0, "x": 2, "y": 7 },
+        { "t": "toys", "v": 1, "x": 17, "y": 7 }, { "t": "plant-pot", "v": 0, "x": 22, "y": 8 }, { "t": "plant-pot", "v": 1, "x": 1, "y": 8 },
+        { "t": "hooks", "v": 0, "x": 3, "y": 10 }, { "t": "hooks", "v": 1, "x": 16, "y": 10 }, { "t": "cabinet", "v": 0, "x": 17, "y": 10 },
+        { "t": "plant-tall", "v": 1, "x": 1, "y": 10 }, { "t": "plant-tall", "v": 0, "x": 22, "y": 10 }, { "t": "shoes", "v": 0, "x": 8, "y": 15 },
+        { "t": "umbrella", "v": 0, "x": 15, "y": 15 }, { "t": "plant-pot", "v": 0, "x": 1, "y": 15 }, { "t": "plant-pot", "v": 1, "x": 22, "y": 15 }
+      ],
+      "lamps": [ { "t": "pendant", "x": 5, "y": 5, "jitter": 0.1 }, { "t": "pendant", "x": 12, "y": 6, "jitter": 0.5 }, { "t": "pendant", "x": 19, "y": 5, "jitter": 0.8 },
+                 { "t": "pendant", "x": 6, "y": 13, "jitter": 0.3 }, { "t": "pendant", "x": 17, "y": 13, "jitter": 0.65 }, { "t": "table", "x": 19.5, "y": 1.4, "jitter": 0.4, "radius": 40 } ],
+      "windows": [],
+      "wear": [ { "from": "from-town", "to": ["breakfast", "schoolbag", "chore-board"] } ]
+    },
+    "school": {
+      "items": [
+        { "t": "bookcase", "v": 0, "x": 5, "y": 1 }, { "t": "bookcase", "v": 1, "x": 8, "y": 1 }, { "t": "drawings", "v": 0, "x": 11, "y": 1 }, { "t": "drawings", "v": 1, "x": 12, "y": 1 },
+        { "t": "drawings", "v": 1, "x": 20, "y": 1 }, { "t": "drawings", "v": 0, "x": 21, "y": 1 }, { "t": "hooks", "v": 2, "x": 26, "y": 1 }, { "t": "hooks", "v": 0, "x": 29, "y": 1 },
+        { "t": "plant-tall", "v": 0, "x": 30, "y": 1 }, { "t": "teacher-desk", "v": 0, "x": 15.5, "y": 2 }, { "t": "cushion", "v": 0, "x": 1, "y": 7 }, { "t": "cushion", "v": 1, "x": 2, "y": 8 },
+        { "t": "cushion", "v": 2, "x": 3, "y": 7 }, { "t": "bin", "v": 0, "x": 29, "y": 10 }, { "t": "plant-pot", "v": 1, "x": 1, "y": 10 }, { "t": "bench", "v": 0, "x": 5, "y": 12 },
+        { "t": "bench", "v": 0, "x": 24, "y": 12 }, { "t": "plant-tall", "v": 1, "x": 1, "y": 12 }, { "t": "plant-tall", "v": 0, "x": 30, "y": 12 }, { "t": "bin", "v": 0, "x": 10, "y": 12 }
+      ],
+      "desks": { "rows": [6, 9], "cols": [5, 10, 20, 25] },
+      "lamps": [ { "t": "tube", "x": 7, "y": 4, "jitter": 0.1 }, { "t": "tube", "x": 24, "y": 4, "jitter": 0.6 }, { "t": "tube", "x": 10, "y": 9, "jitter": 0.35 }, { "t": "tube", "x": 21, "y": 9, "jitter": 0.8 },
+                 { "t": "tube", "x": 6, "y": 15, "jitter": 0.2 }, { "t": "tube", "x": 16, "y": 15, "jitter": 0.5 }, { "t": "tube", "x": 26, "y": 15, "jitter": 0.7 } ],
+      "windows": [],
+      "wear": [ { "from": "from-town", "to": ["classroom"] } ]
+    },
+    "dojo": {
+      "items": [
+        { "t": "bokken", "v": 0, "x": 1, "y": 1 }, { "t": "shoji", "v": 0, "x": 17, "y": 1 }, { "t": "bench", "v": 1, "x": 8, "y": 1 }, { "t": "bonsai", "v": 0, "x": 15, "y": 1 }, { "t": "andon", "v": 0, "x": 1, "y": 3 },
+        { "t": "andon", "v": 0, "x": 22, "y": 3 }, { "t": "zabuton", "v": 0, "x": 4, "y": 11 }, { "t": "zabuton", "v": 1, "x": 5, "y": 11 }, { "t": "zabuton", "v": 2, "x": 6, "y": 11 },
+        { "t": "zabuton", "v": 1, "x": 17, "y": 11 }, { "t": "zabuton", "v": 0, "x": 18, "y": 11 }, { "t": "zabuton", "v": 2, "x": 19, "y": 11 }, { "t": "geta", "v": 0, "x": 9, "y": 12 },
+        { "t": "geta", "v": 1, "x": 15, "y": 12 }, { "t": "bonsai", "v": 1, "x": 2, "y": 12 }, { "t": "plant-pot", "v": 1, "x": 21, "y": 12 }
+      ],
+      "lamps": [ { "t": "paper", "x": 8, "y": 6, "jitter": 0.2 }, { "t": "paper", "x": 16, "y": 6, "jitter": 0.7 }, { "t": "andon", "x": 1.5, "y": 3.2, "jitter": 0.4, "radius": 44 }, { "t": "andon", "x": 22.5, "y": 3.2, "jitter": 0.55, "radius": 44 } ],
+      "explicitWindows": true,
+      "windows": [ { "x": 17, "w": 2, "kind": "shoji" } ],
+      "wear": [ { "from": "from-town", "to": ["dojo-sensei"] } ]
+    }
+  }
+}

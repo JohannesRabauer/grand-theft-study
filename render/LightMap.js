@@ -4,13 +4,15 @@
 // (physics/Weather.js) while it is `active`; on Low, with Canvas, or indoors, that overlay carries the mood.
 // Systems never create sprites: they ask ctx.lights (a LightPool, render/lightMath.js) for a handle.
 import { ambientFor, ambientRgb, darkness, lightPixels } from './lightMath.js';
+import { interiorAmbient, interiorNight, isInterior } from './interiorMath.js';
 
 export class LightMap {
-  constructor(scene, ctx, cfg, postFx) {
+  constructor(scene, ctx, cfg, postFx, interiors = null) {
     this.scene = scene;
     this.ctx = ctx;
     this.cfg = cfg;
     this.postFx = postFx;
+    this.interiors = interiors; // data/interiors.json: the light map also runs in home, school and dojo (story 16.10)
     this.webgl = scene.game.renderer.type === Phaser.WEBGL;
     this.amb = { r: 1, g: 1, b: 1 };
     this.rgb = 0xffffff;
@@ -23,7 +25,7 @@ export class LightMap {
     const refresh = () => { this.#refreshAmbient(); this.#apply(); };
     ctx.events.on('clock:tick', () => this.#refreshAmbient());
     ctx.events.on('quality:changed', refresh);
-    ctx.events.on('world:enter', () => this.#apply());
+    ctx.events.on('world:enter', () => { this.#refreshAmbient(); this.#apply(); });
     this.#refreshAmbient();
     this.#apply();
   }
@@ -51,15 +53,25 @@ export class LightMap {
   #apply() {
     const tier = this.ctx.quality.tier;
     this.ctx.lights.setLimit(tier.maxLights ?? 0);
-    this.enabled = !!(this.webgl && tier.lightMap && !this.ctx.map.indoor);
+    this.enabled = !!(this.webgl && tier.lightMap && (!this.ctx.map.indoor || this.#room()));
     this.ctx.lights.mapActive = this.enabled;
     this.rt?.setVisible(this.enabled);
   }
 
+  // Is the loaded map one of the interiors the light map lights (story 16.10)?
+  #room() { return !!this.interiors && this.ctx.map.indoor && isInterior(this.ctx.world?.id); }
+
+  // `dark` is always the outdoor darkness (vehicles and windows follow it); indoors the multiply colour is the interior ambient.
   #refreshAmbient() {
     ambientFor(this.ctx.day.tint, this.cfg.ambient, this.amb);
-    this.rgb = ambientRgb(this.amb);
     this.dark = darkness(this.amb);
+    if (this.#room()) {
+      interiorAmbient(this.interiors, this.dark, this.amb);
+      this.rgb = ambientRgb(this.amb);
+      this.postFx?.setNight(interiorNight(this.interiors, this.dark) * this.interiors.ambient.grade);
+      return;
+    }
+    this.rgb = ambientRgb(this.amb);
     this.postFx?.setNight(this.dark);
   }
 

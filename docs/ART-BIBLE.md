@@ -60,6 +60,7 @@ A ramp is a ramp: do not invent a one-off colour for a shaded side, take the nex
 - Ground never forms large flat fields: scatter tufts, flowers, pebbles, leaves, cracks and dirt patches so no region of
   one colour exceeds the flat-area limit.
 - Water has a shore (bank, reeds, stones) and a wavy, not a framed, outline.
+- **Interiors** (home, school, dojo; `scenes/InteriorArt.js`, `scenes/InteriorProps.js`, `data/interiors.json`): a wall has height. The face tile carries a cornice, the wall surface (striped wallpaper, painted wall, timber), a dado rail and the wainscot, which continues 7 base pixels into the floor row in front of it (skirting board, radiator or lockers, ambient occlusion). Floors are materials with wear: plank boards with a tone per board and butt joints, linoleum, hall tiles with grout and cracks, tatami with hems, rugs quilted in 8 px squares; the walked paths are polished. Furniture and clutter are sprites from data per room (shelves with books, plants, toys, drawings, coat hooks, desks with bags, benches, bonsai, lanterns) with a contact shadow and an outline, wall pieces stand against the wall and never in front of a door or an interaction spot. Beyond the walls a brick backdrop, never a flat black margin.
 
 ## 4. Light and shadow colours
 
@@ -74,6 +75,7 @@ A ramp is a ramp: do not invent a one-off colour for a shaded side, take the nex
   for something a map tile already casts.
 - **Time of day** comes from `data/day.json` tint stops: warm orange at 06:30, neutral by day, orange at 19:30, deep blue
   `#0a1038` to `#050a28` at night.
+- **Interior light:** the light map runs indoors with a soft interior ambient (`data/interiors.json` `ambient`, never darker than 0.3 luminance); ceiling lamps switch on in the evening, when it is dark or gloomy outside; windows throw a shaft of daylight on the floor that leans with the sun, as strong as the day and the weather allow.
 - **Light sources** (lamps, windows, headlights, shop signs) glow in warm `#ffd9a0` to `#ffb347` with a posterised
   falloff and an emissive core pixel; cold light (screens, snow glow) `#bfe3ff`.
 - Light is additive on the dark layer and pixel-crisp: the falloff steps are whole base pixels.

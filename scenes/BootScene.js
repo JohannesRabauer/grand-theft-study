@@ -15,6 +15,8 @@ import { streetCatalog } from '../vehicles/streetLogic.js';
 import { makeEnvArt } from './EnvArt.js';
 import { makeCrowns } from './VegArt.js';
 import { makeBuildingAtlas } from './BuildingArt.js';
+import { makeInteriorAtlas } from './InteriorProps.js';
+import { setInteriorRooms } from './InteriorArt.js';
 import { makeCosmeticArt } from './CosmeticArt.js';
 import { makeExpansionArt } from './ExpansionArt.js';
 
@@ -56,6 +58,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('lighting', 'data/lighting.json');
     this.load.json('vegetation', 'data/vegetation.json');
     this.load.json('buildings', 'data/buildings.json');
+    this.load.json('interiors', 'data/interiors.json'); // story 16.10: furniture, lamps and windows of home, school and dojo
     this.load.json('water', 'data/water.json');
     this.load.json('postfx', 'data/postfx.json');
     this.load.json('timetable', 'data/timetable.json');
@@ -139,9 +142,11 @@ export class BootScene extends Phaser.Scene {
     makeVehicleArt(this, res.scale);
     makeExpansionArt(this, res.scale);
     makeCosmeticArt(this, res.scale); // story 10.1: hats and rings from the shop
+    setInteriorRooms(this.cache.json.get('interiors').rooms); // the walked paths wear the floors of the interiors
     makeEnvArt(this, tiles, this.cache.json.get('map-town').tileSize * res.scale); // AD-30: edges, shores, fences, trunks, tufts
     makeCrowns(this, this.cache.json.get('vegetation'), res.scale / 2); // story 16.6: tree crowns per species, shape and season
     makeBuildingAtlas(this, this.cache.json.get('buildings'), res.scale); // story 16.7: eaves, chimneys, awnings and lit window panes
+    makeInteriorAtlas(this, res.scale); // story 16.10: furniture, lamps and shafts of daylight
     // The speed zoom scales the world by non-integer factors, where nearest-neighbour sampling makes
     // texels land on uneven screen pixels (shimmer). World textures are filtered bilinear instead; at
     // an exact integer zoom texels map 1:1 to pixels, so the result stays crisp. UI textures stay sharp.

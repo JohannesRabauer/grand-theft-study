@@ -42,13 +42,7 @@ export class School {
     this.spot = { x: (spot.x + 0.5) * ts, y: (spot.y + 0.5) * ts };
     const gfx = this.scene.add.graphics().setDepth(-0.3);
     this.parts.push(gfx);
-    gfx.fillStyle(0x234c3f).fillRect(11 * ts, ts, 10 * ts, ts);
-    gfx.lineStyle(2, 0xc59a61).strokeRect(11 * ts, ts, 10 * ts, ts);
-    for (const y of [6, 9]) for (const x of [5, 10, 20, 25]) {
-      gfx.fillStyle(0xb5834e).fillRect(x * ts, y * ts, 2 * ts, ts);
-      gfx.fillStyle(0x446c86).fillRect((x + 0.5) * ts, (y + 1) * ts, ts, ts / 2);
-      gfx.fillStyle(0xf3e9c9).fillRect((x + 0.3) * ts, (y + 0.2) * ts, ts / 2, ts / 2);
-    }
+    // the timetable board, the teacher's desk and the school desks are furniture of render/Interiors.js (story 16.10)
     gfx.fillStyle(0xd8ae64).fillCircle(this.spot.x, this.spot.y, 10);
     this.label(16 * ts, 3 * ts, 'school.classroom');
     this.label(16 * ts, 14 * ts, 'school.hint', 8);
