@@ -455,33 +455,48 @@ function makeFigures(scene) {
   });
 }
 
-// Top-down bike facing right; rider = jacket, sleeves, hands on the bars and a head seen from above.
+// Top-down bike facing right (story 16.20): rounded tyres with tread and a hub, mudguards in the frame colour, a frame tube with
+// the crank, handlebar with grips and a lamp, a rear light and a carrier. The rider has shoulders, a rucksack, thighs on the
+// pedals, arms to the grips and a head seen from above.
 export function bike(p, o) {
-  const tire = (x, y, w) => { p.px('#0e0e12', x, y, w, 5); p.px('#2e2e36', x + 1, y + 1, w - 2, 1); p.px('#6b6b78', x + (w >> 1) - 1, y + 2, 2, 1); };
+  const tire = (x, y, w) => {
+    p.px('#0e0e12', x + 1, y, w - 2, 6); p.px('#0e0e12', x, y + 1, w, 4);          // rounded tyre
+    p.px('#2e2e36', x + 2, y + 1, w - 4, 1);
+    for (let k = 3; k < w - 2; k += 3) p.px('#4a4a56', x + k, y + 4, 1, 1);          // tread
+    p.px('#8a8a96', x + (w >> 1) - 1, y + 2, 3, 2);                                 // hub
+  };
   tire(1, 9, 11);
   tire(28, 9, 11);
-  p.px(o.frameDark, 11, 10, 18, 4);
-  p.px(o.frame, 11, 10, 18, 3);
-  p.px(lighten(o.frame, 0.35), 12, 10, 16, 1);
-  p.px('#8a8a96', 27, 3, 3, 18);                        // handlebar
+  p.px(o.frameDark, 3, 10, 7, 4); p.px(o.frame, 3, 10, 7, 1);                        // rear mudguard
+  p.px(o.frameDark, 30, 10, 7, 4); p.px(o.frame, 30, 10, 7, 1);                      // front mudguard
+  p.px(o.frameDark, 10, 10, 20, 4);                                                  // frame tube
+  p.px(o.frame, 10, 10, 20, 3);
+  p.px(lighten(o.frame, 0.35), 11, 10, 18, 1);
+  p.px('#8a8a96', 12, 11, 3, 2);                                                     // crank
+  p.px('#16161e', 1, 11, 2, 2); p.px('#ff4a4a', 1, 11, 1, 2);                       // rear light
+  p.px('#5a5a66', 3, 6, 6, 1); p.px('#5a5a66', 3, 17, 6, 1); p.px('#7a7a86', 3, 7, 6, 1); // carrier
+  p.px('#8a8a96', 27, 3, 3, 18);                                                     // handlebar
   p.px('#c8c8d2', 27, 3, 1, 18);
-  p.px('#16161e', 26, 3, 5, 3);                         // grips
-  p.px('#16161e', 26, 18, 5, 3);
-  p.px('#d8d8e0', 36, 11, 2, 2);                        // headlamp
+  p.px('#16161e', 26, 2, 5, 3);                                                      // grips
+  p.px('#16161e', 26, 19, 5, 3);
+  p.px('#d8d8e0', 37, 10, 2, 4); p.px('#fff2a0', 38, 11, 1, 2);                      // headlamp
   if (o.rider) {
-    p.ell(o.jacketDark, 16, 12.5, 7.5, 7);
-    p.ell(o.jacket, 15.5, 11.5, 7, 6.2);
-    p.px(o.jacketLight, 10, 8, 8, 1);
-    p.px(o.jacket, 21, 6, 7, 3);                        // sleeves
-    p.px(o.jacket, 21, 16, 7, 3);
-    p.px('#f2c9a0', 27, 6, 2, 3);                       // hands
-    p.px('#f2c9a0', 27, 16, 2, 3);
-    p.ell(o.hair, 17.5, 12, 4.7, 4.7);                  // head from above
-    p.px(o.hairLight, 14, 9, 4, 1);
-    p.px('#f2c9a0', 21, 10, 2, 4);                      // forehead / face edge
+    const pants = o.pants ?? darken(o.jacket, 0.5);
+    p.px('#16161e', 11, 7, 4, 2); p.px('#16161e', 14, 15, 4, 2);                     // shoes on the pedals
+    p.px(pants, 14, 7, 7, 3); p.px(pants, 14, 14, 7, 3);                             // thighs
+    p.ell(o.jacketDark, 15, 12.5, 6.5, 6.8);                                         // back, with a rucksack
+    p.px(darken(o.jacket, 0.4), 8, 9, 5, 7); p.px(darken(o.jacket, 0.15), 8, 9, 5, 1);
+    p.ell(o.jacket, 16, 11.8, 5.8, 6);                                               // shoulders
+    p.px(o.jacketLight, 12, 7, 6, 1);
+    p.px(o.jacket, 20, 6, 8, 3); p.px(o.jacketDark, 20, 8, 8, 1);                    // arms to the grips
+    p.px(o.jacket, 20, 15, 8, 3); p.px(o.jacketDark, 20, 17, 8, 1);
+    p.px('#f2c9a0', 28, 5, 2, 3); p.px('#f2c9a0', 28, 16, 2, 3);                     // hands
+    p.ell(o.hair, 18, 12, 4.6, 4.6);                                                 // head from above
+    p.px(o.hairLight, 15, 9, 4, 1);
+    p.px('#f2c9a0', 21, 10, 2, 4);                                                   // face edge
     o.cap?.(p);
   } else {
-    p.ell('#222228', 18, 12, 4, 3);                     // saddle
+    p.ell('#222228', 18, 12, 4, 3);                                                  // saddle
     p.px('#44444e', 16, 10, 4, 1);
   }
 }

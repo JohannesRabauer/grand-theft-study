@@ -16,7 +16,18 @@ function makeTextures(scene, res) {
   };
   const r = (c, col, x, y, w, h) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
   make('critter-pigeon', 10, 8, c => { r(c, '#8d949e', 2, 3, 6, 4); r(c, '#6b7480', 1, 4, 2, 2); r(c, '#a9b1bb', 6, 1, 3, 3); r(c, '#f0b24a', 9, 2, 1, 1); r(c, '#1b1b1b', 8, 2, 1, 1); r(c, '#5a6068', 4, 7, 1, 1); r(c, '#5a6068', 6, 7, 1, 1); });
-  make('critter-cat', 12, 10, c => { r(c, '#d9873a', 3, 4, 6, 5); r(c, '#d9873a', 8, 2, 3, 3); r(c, '#b96a26', 8, 1, 1, 1); r(c, '#b96a26', 10, 1, 1, 1); r(c, '#d9873a', 0, 3, 3, 1); r(c, '#d9873a', 0, 1, 1, 3); r(c, '#1b1b1b', 9, 3, 1, 1); r(c, '#1b1b1b', 10, 3, 1, 1); r(c, '#b96a26', 4, 5, 1, 3); r(c, '#b96a26', 6, 5, 1, 3); });
+  // story 16.20: a sitting cat in profile: tail curled up behind, striped back, pale chest and paws, pointed ears, green eyes
+  make('critter-cat', 12, 10, c => {
+    const o = '#d9873a', d = '#b96a26', l = '#f2c38a', k = '#3a2416';
+    r(c, k, 3, 3, 6, 1); r(c, k, 2, 4, 1, 5); r(c, k, 9, 4, 1, 1);                                  // dark edge behind and above the body
+    r(c, d, 1, 8, 4, 1); r(c, d, 0, 5, 1, 3); r(c, d, 1, 4, 1, 1); r(c, k, 0, 4, 1, 1);               // tail curling up behind
+    r(c, o, 3, 4, 6, 5); r(c, o, 4, 3, 4, 1);                                                          // body
+    r(c, d, 4, 4, 1, 3); r(c, d, 6, 4, 1, 3); r(c, d, 3, 8, 6, 1);                                     // stripes and the shaded belly
+    r(c, l, 7, 6, 2, 3); r(c, l, 7, 9, 2, 1); r(c, l, 3, 9, 2, 1);                                     // pale chest and paws
+    r(c, o, 8, 2, 4, 4); r(c, d, 8, 1, 1, 1); r(c, o, 8, 1, 1, 1); r(c, o, 10, 1, 1, 1); r(c, d, 10, 0, 1, 1); // head, ears
+    r(c, l, 10, 4, 2, 2); r(c, '#6bd06b', 9, 3, 1, 1); r(c, '#6bd06b', 11, 3, 1, 1);                   // muzzle and eyes
+    r(c, '#e08a8a', 11, 4, 1, 1); r(c, k, 10, 3, 1, 1);
+  });
   make('critter-duck', 10, 8, c => { r(c, '#f2d24a', 2, 3, 6, 4); r(c, '#f2d24a', 6, 1, 3, 3); r(c, '#e58a2a', 9, 2, 1, 1); r(c, '#1b1b1b', 8, 2, 1, 1); r(c, '#cfae2c', 1, 4, 2, 2); r(c, 'rgba(255,255,255,0.4)', 1, 7, 8, 1); });
 }
 

@@ -39,7 +39,7 @@ Kids and parents see a warm, atmospheric, finished pixel-art town instead of a g
 
 ## Boundaries
 
-Rendering only: art, lighting, shaders, particles, camera feel and the visual skin of the UI. Not map layout, collision, gameplay, balance or new content. Character designs and the existing environment designs keep their identity (refine, do not replace). No external assets: everything stays procedural (AD-30, build brief).
+Rendering only: art, lighting, shaders, particles, camera feel and the visual skin of the UI. Not map layout, collision, gameplay, balance or new content. Character designs and the existing environment designs keep their identity (refine, do not replace); the exception is sprites that read as poorly drawn, which entry 20 may redraw as long as role, colours, name and trait stay recognisable and sizes, anchors, hit areas and texture keys do not change. No external assets: everything stays procedural (AD-30, build brief).
 
 ## References
 
@@ -61,5 +61,6 @@ Rendering only: art, lighting, shaders, particles, camera feel and the visual sk
 - Assumption: the epic frame-time limit is p95 16.7 ms headless (60 FPS) and at most +25 percent over the before baseline; AD-29 covers update time only, GPU pass cost needs this frame limit. Change it in Done when 3 if you want another number.
 - Assumption: characters, NPCs, animals and vehicles get a shading-only pass (entry 18) so they match the new world; their designs, sizes and anchors stay as they are.
 - Decision: 2026-11-08 independent validation applied: lights each owned by one entry (3 street, 7 windows, 10 interiors, 11 glowing particles), EnvArt-touching entries chained, atmosphere split into 12 and 19, look metrics added to entry 1 so visual verifies are measurable, interiors limited to the maps that exist (home, school, dojo).
+- Decision: 2026-11-10 user complaint: some characters look horrible and some cars and bikes look awful. Weak sprites may be redrawn (entry 20, before the shading pass 18), not only shaded.
 - Unknown: the frame rate on a real phone was never measured (HANDOFF); entry 15 measures headless and leaves the phone measurement to the user.
 - Observation 2026-11-08 (headless High, town at 07:45): trees are single squares inside their tile, hedges are blocks, buildings flat rectangles, the pond a framed rectangle, the grass a flat green field.

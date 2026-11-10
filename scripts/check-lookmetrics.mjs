@@ -52,7 +52,7 @@ assert.deepEqual(Object.keys(flat), LOOK_METRIC_KEYS, 'the metric keys are the d
 
 // ---- every recorded screenshot set: metrics.json schema, files present, medium and low cover the same shots
 const root = new URL('../docs/shots/overhaul/', import.meta.url);
-const sets = existsSync(root) ? readdirSync(root, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name) : [];
+const sets = existsSync(root) ? readdirSync(root, { withFileTypes: true }).filter(e => e.isDirectory() && !e.name.startsWith('sprites-')).map(e => e.name) : [];
 assert.ok(sets.includes('before'), 'the before set is recorded');
 for (const name of sets) {
   const m = JSON.parse(read(`docs/shots/overhaul/${name}/metrics.json`));

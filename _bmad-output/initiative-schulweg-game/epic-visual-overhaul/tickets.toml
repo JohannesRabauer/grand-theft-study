@@ -148,13 +148,24 @@ hitl = false
 risk = "medium"
 
 [[entry]]
+id = 20
+type = "story"
+title = "Redraw weak character, NPC and vehicle sprites"
+description = "Replaces the sprites that read as poorly drawn (user complaint 2026-11-10: some characters look horrible, some cars and bikes look awful) with better pixel art that keeps each one's identity (recognisable role, colours, name, trait) but fixes proportions, silhouette, readability and consistency with the new world. The weak ones are picked from a contact sheet of every kid, NPC type, animal and vehicle; sprites that already look good are left alone."
+verify = "A contact sheet before and after of every playable kid, NPC type, animal and vehicle, each at game scale and zoomed, with the redrawn ones listed and justified; sprite sizes, anchors, hit areas and texture keys are unchanged (check-characters, check-vehicles and check-critters pass) and no gameplay or collision changes."
+covers = ["CAP-35"]
+after = [12]
+hitl = false
+risk = "medium"
+
+[[entry]]
 id = 18
 type = "story"
 title = "Sprite shading pass: characters, NPCs, animals, vehicles"
 description = "Brings the sprites in line with the new world without changing their designs: art-bible shading ramps, a consistent top-left light with a subtle rim light, selective outlines, and emissive parts (bike lamp, vehicle lights) aligned with the light map, applied in CharacterArt, NpcArt, VehicleArt, SkatesArt and CosmeticArt."
 verify = "A side-by-side shot of every playable kid, NPC type, animal and vehicle before and after shows the same designs with the new shading, sprite sizes and anchors are unchanged (check-characters, check-vehicles and check-critters pass), and no texture key is lost."
 covers = ["CAP-35"]
-after = [19]
+after = [19, 20]
 hitl = false
 risk = "medium"
 

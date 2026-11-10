@@ -34,18 +34,22 @@ export function skates(p, o) {
   const pose = o.pose;
   const push = pose === 'pushA' ? -1 : pose === 'pushB' ? 1 : 0;
   const low = pose === 'crouch' || pose === 'grab';
-  // feet first, the torso covers their middle
+  // feet first: a wide stance, so both skates show beside the narrower torso (story 16.20); thighs run from the hips to the boots
+  const pants = o.pants ?? '#2a3f8f';
   if (push) {
     skate(p, o, 5, push < 0 ? 4 : 17, push * 0.45);            // the kicking foot, out and back
-    skate(p, o, 17, push < 0 ? 15 : 5, 0);                     // the gliding foot, ahead
+    skate(p, o, 17, push < 0 ? 16 : 3, 0);                     // the gliding foot, ahead
+    p.px(pants, 15, push < 0 ? 15 : 6, 4, 3);
+    p.px(pants, 12, push < 0 ? 8 : 14, 4, 3);
   } else {
-    skate(p, o, 12, 6, 0);
-    skate(p, o, 12, 14, 0);
+    skate(p, o, 12, 3, 0);
+    skate(p, o, 12, 17, 0);
+    p.px(pants, 15, 6, 4, 3); p.px(pants, 15, 15, 4, 3);
   }
-  const ty = low ? 6.2 : 7.6;
+  const ty = low ? 5 : 5.8;
   const lean = push ? 0.6 : 0;
-  p.ell(o.jacketDark, 17 + lean, 12.5, 5, ty);
-  p.ell(o.jacket, 16.6 + lean, 11.8, 4.5, ty - 0.7);
+  p.ell(o.jacketDark, 17 + lean, 12.5, 4.4, ty);
+  p.ell(o.jacket, 16.6 + lean, 11.8, 4, ty - 0.6);
   p.px(o.jacketLight, 13 + lean, 8, 1, 7);
   if (pose === 'grab') {
     p.px(o.jacket, 17, 8, 12, 3);                              // reaching arm to the handle
