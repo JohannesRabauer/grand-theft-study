@@ -5,7 +5,7 @@
 // phase change), phase:ended and phase:started ({ phase, reason, day }). The state already holds the
 // next phase when phase:ended fires, so the autosave on it stores where the game continues.
 // Without a save slot the clock runs in freeplay (data/day.json `freeplay`): no phase ends by time.
-import { compileDay, formatTime, phaseIndexAt, sanitizeClock, scheduledWeather, tintAt } from './dayTime.js';
+import { compileDay, formatTime, phaseIndexAt, sanitizeClock, scheduledWeather, sunAt, tintAt } from './dayTime.js';
 
 export class DayClock {
   constructor(ctx, raw) {
@@ -36,6 +36,7 @@ export class DayClock {
   get time() { return formatTime(this.minute); }
   get weather() { return scheduledWeather(this.cfg, this.day, this.minute); }
   get tint() { return tintAt(this.cfg, this.minute); }
+  get sun() { return sunAt(this.cfg, this.minute); }
   get running() { return this.mode === 'story' || this.cfg.freeplay.running; }
 
   snapshot() { return { day: this.day, minute: this.minute, phase: this.phase }; }

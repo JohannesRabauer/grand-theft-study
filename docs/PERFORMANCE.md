@@ -244,3 +244,18 @@ Real render loop, headless Edge, software GL, uncapped, ms per frame avg / p95 (
 | e everything | High | 0.58 / 0.80 | 0.64 / 0.90 | 0.66 / 0.90 | 0.68 / 0.90 |
 
 Worst case Medium e: average +20 percent over the epic baseline, p95 0.9 against 0.8 ms (+12 percent), far below 16.7 ms. The mood is the same cost by day and at night (headlights, lamps and the extra lights are a few stamp draws). Software GL is not a phone GPU; the phone measurement stays open.
+
+## Story 16.4: soft shadows (CAP-35, AD-31)
+
+New work: the cast-shadow layer is one 2560x1792 base-pixel mask (RGBA, about 18 MB of CPU canvas plus the GPU texture) baked once per outdoor map at load by `render/shadowMath.js` (about 60 to 110 ms for the town, node), drawn as one image with the `SchulwegShadow` pipeline (a fragment shader of three texture fetches for most pixels, three more only inside shadows). Per frame there is no redraw and no allocation: `Shadows.update` recomputes the offsets once per game minute. Low (`shadows: false`) and Canvas never build the mask. Contact shadows are baked into the sprites; props add one pooled `prop-contact` image each.
+
+Real render loop, headless Edge, software GL, uncapped (`--live --uncapped`), ms per frame avg / p95, mean of two interleaved runs against a copy of 0b77fee (the machine is noisy, single runs varied by 20 to 40 percent):
+
+| Scenario | Tier | Before | After |
+| --- | --- | --- | --- |
+| a idle walking | Medium | 3.35 / 5.50 | 3.52 / 5.55 |
+| e everything | Medium | 3.21 / 5.20 | 3.45 / 5.25 |
+| e everything | High | 3.24 / 4.95 | 3.37 / 4.85 |
+| e everything | Low | 1.91 / 2.80 | 2.31 / 3.35 |
+
+Worst p95 change +20 percent (Low e, 0.55 ms), limit +25; Medium and High at most +5 percent. p95 stays far below 16.7 ms. Software GL is not a phone GPU: the full-screen shadow pass on a real phone is unmeasured (see the phone protocol). Texture memory: a phone with a small `MAX_TEXTURE_SIZE` (under 2560) skips the layer.

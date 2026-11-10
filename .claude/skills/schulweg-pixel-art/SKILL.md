@@ -19,7 +19,7 @@ Before drawing a tile, sprite, prop, building, interior, light, shader or partic
 2. **Base pixels:** think in the 480x270 grid. Medium/High draw at 2x and display at 0.5; Low is 1x. Same keys for both sets.
 3. **Palette:** 5-step ramp per material (shadow, dark, base, light, highlight) from `docs/ART-BIBLE.md`; hue-shift shadows
    cool and highlights warm; outline colour `OUT` `#16161e`; no pure black or white.
-4. **Light from the top left:** lit top and left, shaded bottom and right, shadows to the bottom right, tinted blue-purple.
+4. **Light from the top left:** lit top and left, shaded bottom and right, shadows to the bottom right, tinted blue-purple. Contact shadows are `Pen.shadow` (dithered); things a map tile casts (walls, trees, fences, hedges) get their cast shadow from `render/Shadows.js`, so do not bake one into the art.
 5. **Hard edges, no anti-aliasing;** transitions by ordered dither or speckle, light falloff posterised in whole base pixels.
 6. **No tile-aligned rectangles:** silhouettes break the tile grid (irregular canopies, notched roofs, rounded ponds),
    tall things overlap the tile behind them, repeated objects have 3+ shape variants and seeded jitter.

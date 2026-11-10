@@ -62,6 +62,13 @@ A ramp is a ramp: do not invent a one-off colour for a shaded side, take the nex
 
 - **Shadows are tinted, not grey:** multiply the ground by `#5a6a9a` at about 35 percent (cool blue-purple), soft
   edge by a 1-pixel dither. At night the shadow is replaced by the darkness itself.
+- **Contact shadows:** every figure, vehicle, animal and prop stands on a dithered ellipse (solid core, checker rim, cells of
+  one base pixel) in `rgb(26,32,70)`; draw it with `Pen.shadow` (under the sprite) or `Pen.contact` (on a tile), never a smooth black blob.
+- **Cast shadows** (Medium and High): buildings, tree canopies, booths, fences, hedges and dumpsters cast a swept, dithered shadow to the
+  bottom right, baked once per map (`render/shadowMath.js`) and offset by the sun keyframes `day.json` `sun` (long at 06:30
+  and 19:30, shortest at 12:00); it fades out as the night darkens (`lighting.json` `shadows.fadeEnd`) and is softer in rain or snow.
+  The foot of a wall gets an ambient-occlusion band (2 base pixels dark, 2 faint). Never draw a shadow into a tile texture
+  for something a map tile already casts.
 - **Time of day** comes from `data/day.json` tint stops: warm orange at 06:30, neutral by day, orange at 19:30, deep blue
   `#0a1038` to `#050a28` at night.
 - **Light sources** (lamps, windows, headlights, shop signs) glow in warm `#ffd9a0` to `#ffb347` with a posterised

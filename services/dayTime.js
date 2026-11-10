@@ -28,6 +28,7 @@ export function compileDay(raw) {
     if (i && p.start !== phases[i - 1].end) throw new Error(`day: phase ${p.id} does not follow ${phases[i - 1].id}`);
   });
   const tint = raw.tint.map(k => ({ minute: parseTime(k.time), rgb: parseInt(k.color.slice(1), 16), alpha: k.alpha }));
+  const sun = raw.sun.map(k => ({ minute: parseTime(k.time), length: k.length, angle: k.angle }));
   const fp = raw.freeplay;
   return {
     secondsPerMinute: raw.secondsPerGameMinute,
@@ -36,6 +37,7 @@ export function compileDay(raw) {
     end,
     phases,
     tint,
+    sun,
     freeplay: { phase: fp.phase, minute: parseTime(fp.time), running: !!fp.running }
   };
 }
@@ -69,6 +71,22 @@ export function scheduledWeather(cfg, day, minute) {
     if (minute >= w.from && minute < w.to && hash01(day, pi, i) < w.chance) return w.state;
   }
   return 'clear';
+}
+
+// The sun for cast shadows (story 16.4): `length` (share of the tallest shadow, long at dawn and dusk, short at noon) and
+// `angle` in degrees below the +x axis, always in the bottom-right quadrant (the sun stands top left), blended between keyframes.
+export function sunAt(cfg, minute) {
+  const k = cfg.sun;
+  if (minute <= k[0].minute) return { length: k[0].length, angle: k[0].angle };
+  for (let i = 1; i < k.length; i++) {
+    if (minute > k[i].minute) continue;
+    const a = k[i - 1];
+    const b = k[i];
+    const t = (minute - a.minute) / (b.minute - a.minute);
+    return { length: a.length + (b.length - a.length) * t, angle: a.angle + (b.angle - a.angle) * t };
+  }
+  const last = k.at(-1);
+  return { length: last.length, angle: last.angle };
 }
 
 // Ambient light: { rgb, alpha } blended between the tint keyframes (dawn warm, day neutral, evening orange, bedtime dark).

@@ -12,6 +12,15 @@
 // fence, frisbees and kites stuck in trees) are static until knocked and then fall to the ground (`perchFly` seconds free of walls).
 import { addCircle, addRect, setPropFlying } from '../physics/bodies.js';
 import { CAT } from '../physics/categories.js';
+import { ScaledPen } from '../scenes/NpcArt.js';
+
+// One dithered contact-shadow texture under every prop (story 16.4), authored on the 24x32 grid of the figures.
+function contactTexture(scene, res) {
+  if (scene.textures.exists('prop-contact')) return;
+  const p = new ScaledPen(scene, 'prop-contact', 24, 8, res.scale / 2);
+  p.contact(12, 4, 11, 3, 0.32);
+  p.done();
+}
 
 export class Props {
   constructor(scene, ctx, cfg) {
@@ -28,6 +37,7 @@ export class Props {
     this.cullGeneration = 0;
     this.cullIn = 0;
     ctx.props = this;
+    contactTexture(scene, ctx.res);
     this.loadMap();
     ctx.world.register(this);
     scene.matter.world.on('collisionstart', ev => this.onCollide(ev));
@@ -48,6 +58,7 @@ export class Props {
     for (const p of this.props) {
       if (p.alive) this.matter.world.remove(p.body);
       p.sprite.destroy();
+      p.shade.destroy();
     }
     this.props = [];
     this.byBody.clear();
@@ -62,7 +73,8 @@ export class Props {
     this.matter.body.setMass(body, k.mass);
     if (o.perch) this.matter.body.setStatic(body, true);
     const sprite = this.scene.add.image(x, y, k.texture).setScale(this.ctx.res.inv).setVisible(false);
-    const prop = { id: o.id, kind: o.kind, k, body, sprite, alive: true, awake: false, tipped: false, cool: 0, hp: k.hp ?? Infinity, flyT: 0 };
+    const shade = this.scene.add.image(x, y, 'prop-contact').setScale(this.ctx.res.inv * Math.max(0.5, k.size / 8), this.ctx.res.inv).setVisible(false);
+    const prop = { id: o.id, kind: o.kind, k, body, sprite, shade, alive: true, awake: false, tipped: false, cool: 0, hp: k.hp ?? Infinity, flyT: 0 };
     this.sleeping.set(body, true);
     return prop;
   }
@@ -106,6 +118,7 @@ export class Props {
     if ((k.breakSpeed && speed >= k.breakSpeed) || p.hp <= 0) {
       p.alive = false;
       p.sprite.setVisible(false);
+      p.shade.setVisible(false);
       this.matter.world.remove(body);
       particles.emit(k.debrisFx ?? 'debris', body.position.x, body.position.y, { count: k.debris });
       events.emit('prop:broken', { prop: p, x: body.position.x, y: body.position.y, source: shot?.source, player: shot?.player });
@@ -169,6 +182,7 @@ export class Props {
     prop.awake = want;
     this.sleeping.set(prop.body, !want);
     prop.sprite.setVisible(want);
+    prop.shade.setVisible(want);
     if (want) this.sync(prop);
   }
 
@@ -184,6 +198,7 @@ export class Props {
   sync(p) {
     const b = p.body;
     p.sprite.setPosition(b.position.x, b.position.y).setRotation(b.angle).setDepth(b.position.y);
+    p.shade.setPosition(b.position.x, b.position.y + p.k.size * 0.45).setDepth(b.position.y - 0.5);
   }
 
   update(dt) {

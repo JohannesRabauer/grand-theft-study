@@ -22,9 +22,13 @@ export class PostFx {
 
   #register() {
     const pm = this.scene.game.renderer.pipelines;
-    for (const cls of [...CAMERA_PASSES, ...OBJECT_PIPELINES]) {
+    for (const cls of CAMERA_PASSES) {
       const name = new cls(this.scene.game).name;
       if (!pm.postPipelineClasses?.has(name)) pm.addPostPipeline(name, cls);
+    }
+    for (const cls of OBJECT_PIPELINES) {
+      const pipeline = new cls(this.scene.game);
+      if (!pm.has(pipeline.name)) pm.add(pipeline.name, pipeline);
     }
   }
 

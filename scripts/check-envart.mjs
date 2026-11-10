@@ -58,7 +58,7 @@ assert.ok(has(at(m, 2, 1), /^env-edge-grass-n-/), 'the pavement under a fence st
 m = mk('SFS', 'FFF', 'SFS');
 assert.ok(has(at(m, 1, 1), /^env-fence-x$/), 'a fence junction draws both directions');
 assert.ok(has(at(mk('SSS', 'SFS', 'SSS'), 1, 1), /^env-fence-h$/), 'a lone fence section defaults to horizontal');
-assert.ok(has(at(mk('HHH', 'SSS'), 1, 1), /^env-shadow-hedge$/), 'a hedge casts a shadow on the tile south of it');
+assert.ok(!has(at(mk('HHH', 'SSS'), 1, 1), /^env-shadow/), 'hedge shadows come from the shadow layer (render/Shadows.js), not from tile keys');
 
 // hedges: only the top of a run gets the dark cap, only the bottom gets the base shadow
 m = mk('SSS', 'SHS', 'SHS', 'SHS', 'SSS');
@@ -121,7 +121,7 @@ const twin = { ...town, rows: ['##########', '#GGGGGGGG#', '#G##G##GG#', '#G##G#
 assert.ok(pal(groundKeys(twin, 2, 2, 'b', 'town')[0]) && pal(groundKeys(twin, 5, 2, 'b', 'town')[0]), 'two buildings are both styled');
 
 // every real map: only known key families, the base stays first, and nothing here touched the grid
-const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|shadow|hedge|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop))/;
+const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|hedge|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop))/;
 let tiles = 0;
 let extra = 0;
 for (const f of readdirSync(new URL('../data/maps/', import.meta.url)).filter(n => n.endsWith('.json') && n !== 'index.json')) {

@@ -70,10 +70,24 @@ export class Pen {
     return this;
   }
 
-  // soft ground shadow drawn beneath everything else
+  // Contact shadow: a cool-tinted ellipse whose solid core is ringed by a one-pixel dither (2x2 base-pixel cells, checker
+  // on the rim), so it reads as soft without a smooth blend (art bible 4). Coordinates are those of the pen, cells are
+  // 2 authoring pixels = 1 base pixel.
+  contact(cx, cy, rx, ry, alpha = 0.3) {
+    const col = `rgba(26,32,70,${Math.min(0.7, alpha * 1.8)})`;
+    for (let y = Math.floor((cy - ry) / 2) * 2; y < cy + ry; y += 2) {
+      for (let x = Math.floor((cx - rx) / 2) * 2; x < cx + rx; x += 2) {
+        const d = ((x + 1 - cx) / rx) ** 2 + ((y + 1 - cy) / ry) ** 2;
+        if (d <= 0.5 || (d <= 1.1 && (((x + y) >> 1) & 1) === 0)) this.px(col, x, y, 2, 2);
+      }
+    }
+    return this;
+  }
+
+  // The contact shadow drawn beneath everything already on the sprite
   shadow(cx, cy, rx, ry, alpha = 0.3) {
     this.c.globalCompositeOperation = 'destination-over';
-    this.ell(`rgba(0,0,0,${alpha})`, cx, cy, rx, ry);
+    this.contact(cx, cy, rx, ry, alpha);
     this.c.globalCompositeOperation = 'source-over';
     return this;
   }
@@ -291,7 +305,7 @@ function brickWall(p, d, r) {
 const SPECIAL = {
   tree(p, d, r) {
     GROUND.grass(p, { base: d.base, speck: d.speck }, r, 0);
-    p.ell('rgba(0,0,0,0.28)', 17, 28, 10, 3); // ground shadow
+    p.contact(16, 28, 10, 3, 0.28); // contact shadow under the trunk; the cast shadow comes from render/Shadows.js
     p.px('#5a3a1e', 14, 22, 4, 8);                    // trunk
     p.px('#7a5230', 14, 22, 1, 8);
     p.px('#3b2412', 17, 22, 1, 8);
@@ -310,7 +324,6 @@ const SPECIAL = {
   },
   fence(p, d, r) {
     GROUND.concrete(p, d, r, 0);
-    p.px('rgba(0,0,0,0.25)', 0, 18, TILE, 3);          // shadow
     p.px('#6a6e76', 0, 16, TILE, 2);                   // rail underside
     p.px('#c4c8d0', 0, 12, TILE, 4);                   // rail
     p.px('#e6e9ee', 0, 12, TILE, 1);
@@ -324,7 +337,7 @@ const SPECIAL = {
   },
   dumpster(p, d, r) {
     GROUND.concrete(p, d, r, 0);
-    p.px('rgba(0,0,0,0.28)', 4, 27, 26, 3);
+    p.contact(17, 28.5, 13, 2.5, 0.28);
     p.px('#1a3a22', 2, 4, 28, 24);                     // outline
     p.px('#2f6b3a', 3, 5, 26, 22);                     // body
     p.px('#3f8a4c', 3, 13, 26, 1);
@@ -337,7 +350,7 @@ const SPECIAL = {
   },
   booth(p, d, r) {
     GROUND.concrete(p, d, r, 0);
-    p.px('rgba(0,0,0,0.28)', 6, 28, 22, 3);
+    p.contact(17, 29.5, 11, 2.5, 0.28);
     p.px('#4a1210', 5, 1, 22, 29);
     p.px('#c8352f', 6, 2, 20, 27);
     p.px('#8a1f1b', 6, 2, 20, 3);                      // roof band

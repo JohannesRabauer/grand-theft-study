@@ -383,15 +383,6 @@ function hedgeTile(base, v, top, bottom) {
   return tmp;
 }
 
-// Soft shadow on the tile south of a hedge or fence.
-function castShadow(kind) {
-  const tmp = canvas();
-  const c = tmp.getContext('2d');
-  const rows = kind === 'hedge' ? [0.3, 0.2, 0.12, 0.06] : [0.2, 0.1, 0.04];
-  rows.forEach((a, y) => px(c, `rgba(0,0,0,${a})`, 0, y, U, 1));
-  return tmp;
-}
-
 // Rain puddles (dynamic, see physics/Weather.js): a transparent overlay so the surface underneath shows through.
 // Irregular blob (a lumpy ellipse), a darker wet halo, a sky reflection that brightens towards the top, a thin
 // shaded rim, a glint and a couple of ripple rings. Four shapes per surface so no two puddles in a row match.
@@ -1095,8 +1086,6 @@ export function makeEnvArt(scene, tileDefs, size) {
   }
   for (const k of ['h', 'v', 'x']) emit(scene, `env-fence-${k}`, fenceTile(k), size);
   for (const surface of PUDDLE_SURFACES) for (let v = 0; v < PUDDLE_VARIANTS; v++) emit(scene, `env-puddle-${surface}-${v}`, puddleTexture(surface, v), size);
-  emit(scene, 'env-shadow-hedge', castShadow('hedge'), size);
-  emit(scene, 'env-shadow-fence', castShadow('fence'), size);
   const hedgeBase = tileDefs.hedge?.base ?? '#2e7a34';
   for (let v = 0; v < 3; v++) {
     for (const top of [0, 1]) for (const bottom of [0, 1]) emit(scene, `env-hedge-${top}${bottom}-${v}`, hedgeTile(hedgeBase, v, top, bottom), size);
@@ -1155,10 +1144,6 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
   const cls = CLASS[id];
   if (id === 'fence') keys.push(variantOf('concrete', tx, ty));
   else keys.push(baseKey);
-
-  // north neighbour casting a soft shadow onto this tile
-  const above = idAt(tx, ty - 1);
-  if (cls && cls !== 'water' && (above === 'hedge' || above === 'fence')) keys.push(`env-shadow-${above}`);
 
   if (cls === 'water') {
     let near = false;

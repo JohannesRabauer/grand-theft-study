@@ -209,7 +209,7 @@ export class BootScene extends Phaser.Scene {
     const tex = this.textures.createCanvas('player', 12, 16);
     const c = tex.getContext();
     const px = (col, x, y, w, h) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
-    px('#000000', 3, 14, 6, 2);   // shadow
+    px('rgba(26,32,70,0.45)', 4, 14, 4, 2); px('rgba(26,32,70,0.45)', 3, 15, 1, 1); px('rgba(26,32,70,0.45)', 8, 14, 1, 1);   // dithered contact shadow
     px('#2a3f8f', 3, 10, 2, 4);   // legs
     px('#2a3f8f', 7, 10, 2, 4);
     px('#e0483c', 2, 5, 8, 6);    // jacket
@@ -253,7 +253,7 @@ export class BootScene extends Phaser.Scene {
       tex.refresh();
     };
     mk('bully', 12, 16, px => {
-      px('#000000', 3, 14, 6, 2);   // shadow
+      px('rgba(26,32,70,0.45)', 4, 14, 4, 2); px('rgba(26,32,70,0.45)', 3, 15, 1, 1); px('rgba(26,32,70,0.45)', 8, 14, 1, 1);   // dithered contact shadow
       px('#3a3a48', 3, 10, 2, 4);   // legs
       px('#3a3a48', 7, 10, 2, 4);
       px('#5a2a7a', 2, 5, 8, 6);    // hoodie

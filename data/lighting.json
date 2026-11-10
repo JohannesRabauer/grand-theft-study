@@ -45,5 +45,17 @@
     "head": { "radius": 32, "ahead": 12, "color": "#fff1c8", "intensity": 0.9 },
     "tail": { "radius": 15, "behind": 2, "color": "#ff5a46", "intensity": 0.75 },
     "bike": { "radius": 36, "ahead": 14, "color": "#fff1c8", "intensity": 0.85 }
+  },
+  "shadows": {
+    "depth": -0.8,
+    "color": "#5a6a9a",
+    "strength": 0.62,
+    "fadeEnd": 0.36,
+    "overcast": 0.45,
+    "tall": 13,
+    "low": 4,
+    "taps": 4,
+    "ao": { "strong": 0.42, "weak": 0.24 },
+    "tree": { "x": 8, "y": 7, "rx": 7, "ry": 6.5 }
   }
 }
