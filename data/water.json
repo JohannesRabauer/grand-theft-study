@@ -1,0 +1,36 @@
+{
+  "_doc": "Water (story 16.8, AD-31, CAP-35). Lengths are base pixels (16 per tile). Every connected body of water tiles gets an organic shoreline: the tile edge is moved by seeded noise (`amp` px and `cell` px: small waves; `lobe`: wide bays and heads; `round`: blur radius that rounds the convex corners; `outward`: the share of a push past the tile edge that is kept, so the water pulls back far but only creeps over the land), so a pond or canal has no straight frame. The water itself is a mask image per body drawn by the water pipeline on Medium and High (render/pipelines/WaterFx.js) and, on Low and Canvas, as `fallback.frames` pre-drawn frames that loop at `fallback.fps` (render/waterMath.js draws both from the same formulas). Banks, stones, reeds and bridge piers are one static layer per body. `bands`: shore distances (px) where the depth colour steps from light to base to dark to deep. `foam`: the lapping foam band at the shore. `caustic`: shimmer in the shallows (distance in px). `swell`: wide slow bands (thresholds of a sine) one depth step lighter or darker, so open water is never one flat field. `ripple`: thin scrolling crests and troughs. `reflect`: lamps and lit windows in ctx.lights glint on the water within `reach` x their radius (at most `max` per body, nearest first). Banks are soft (sand and mud next to grass) or stone (next to paving).",
+  "margin": 8,
+  "amp": 3.2,
+  "cell": 7,
+  "lobe": { "amp": 8, "cell": 20 },
+  "outward": 0.5,
+  "round": 7,
+  "bands": [3, 8, 14],
+  "palette": {
+    "water": ["#5b9bd5", "#2f6fb0", "#255f9c", "#1d4a85"],
+    "foam": ["#b8e0f5", "#d4ecfb"],
+    "shimmer": "#8fc1ee",
+    "glint": "#b8e0f5"
+  },
+  "foam": { "base": 1.1, "swing": 1.2, "spread": 1.0 },
+  "caustic": { "depth": 7, "threshold": 0.78 },
+  "swell": { "up": 0.55, "down": 0.6 },
+  "ripple": { "threshold": 0.93, "minDepth": 2 },
+  "flow": { "speed": 1.1, "step": 8 },
+  "bank": {
+    "soft": ["#3d3226", "#5a4731", "#6e5a3b", "#8a7048", "#a89868"],
+    "stone": ["#43474f", "#868a93", "#a4a8b0", "#5b5f68"],
+    "wet": 1.2,
+    "sand": [2.5, 4.5, 6.5],
+    "stoneEdge": [1.2, 3.0, 4.2],
+    "shadow": "rgba(22,22,30,0.34)"
+  },
+  "reeds": { "rate": 0.012, "min": 5, "max": 9, "spacing": 7, "stalk": ["#3f7a35", "#5aa044", "#2e5a28"], "head": "#6b4a2a" },
+  "stones": { "rate": 0.02, "colors": ["#85898f", "#b3b7be", "#5d6270", "#3c3f48"] },
+  "pier": { "width": 3, "posts": [1, 4, 11, 14], "reach": 5, "stone": ["#43474f", "#868a93", "#5b5f68"], "shadow": "rgba(22,22,30,0.4)" },
+  "fallback": { "frames": 6, "fps": 5 },
+  "reflect": { "max": 8, "reach": 1.0, "intensity": 2.2, "steps": 3 },
+  "sky": { "day": "#9fcdf0", "mix": 0.2 },
+  "depth": { "water": -0.95, "shore": -0.9 }
+}

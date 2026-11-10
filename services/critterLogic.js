@@ -18,6 +18,7 @@ export class Critter {
     this.dx = 0;
     this.dy = 0;
     this.phase = (id * 1.7) % 6.28;
+    this.ripple = (id * 0.37) % 1; // seconds until a swimming duck next leaves a ring on the water
   }
 
   get visible() { return this.state !== C.AWAY; }

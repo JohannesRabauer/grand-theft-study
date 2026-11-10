@@ -56,6 +56,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('lighting', 'data/lighting.json');
     this.load.json('vegetation', 'data/vegetation.json');
     this.load.json('buildings', 'data/buildings.json');
+    this.load.json('water', 'data/water.json');
     this.load.json('postfx', 'data/postfx.json');
     this.load.json('timetable', 'data/timetable.json');
     this.load.json('morning', 'data/morning.json');
@@ -322,9 +323,11 @@ export class BootScene extends Phaser.Scene {
     mk('p-leaf', 3, 3, (c, px) => { px('#ffffff', 0, 1, 3, 1); px('#ffffff', 1, 0, 1, 3); });
     mk('p-debris', 3, 3, (c, px) => px('#ffffff', 0, 0, 3, 3));
     mk('p-rain', 1, 5, (c, px) => px('#bcd8ff', 0, 0, 1, 5));
-    mk('p-ring', 12, 12, c => {
-      c.strokeStyle = '#cfe8ff'; c.lineWidth = 1;
-      c.beginPath(); c.arc(6, 6, 5, 0, Math.PI * 2); c.stroke();
+    mk('p-ring', 12, 12, (c, px) => {
+      for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) {
+        const d = Math.hypot(x + 0.5 - 6, y + 0.5 - 6);
+        if (d > 4.6 && d < 5.7) px('#cfe8ff', x, y, 1, 1);
+      }
     });
     mk('prop-cone', 8, 8, (c, px) => { px('#7a3a10', 1, 1, 6, 6); px('#e8731c', 1, 0, 6, 6); px('#e8731c', 0, 1, 8, 4); px('#ffffff', 2, 2, 4, 3); px('#e8731c', 3, 3, 2, 1); });
     mk('prop-cone-tipped', 10, 6, (c, px) => { px('#e8731c', 0, 1, 8, 4); px('#ffffff', 3, 1, 2, 4); px('#7a3a10', 8, 0, 2, 6); });

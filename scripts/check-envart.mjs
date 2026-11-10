@@ -38,17 +38,11 @@ m = mk('CCS', 'ppC');
 assert.ok(has(at(m, 2, 0), /^env-edge-cobble-w-/), 'concrete gets cobble edges');
 assert.ok(has(at(m, 0, 0), /^env-edge-path-s-/), 'cobble gets path edges');
 
-// water: shore on the water, bank on the land, rounded convex corners, deep centre
+// water (story 16.8): the tile ground of water is a mud bed; shores, banks and the water come from render/Water.js (check-water.mjs)
 m = mk('SSSSS', 'SWWWS', 'SWWWS', 'SWWWS', 'SSSSS');
-assert.ok(has(at(m, 2, 1), /^env-shore-n-/), 'water shows shallow water and foam along its north bank');
-assert.ok(has(at(m, 2, 0), /^env-bank-stone-s-/), 'hard land gets a stone coping towards the water');
-assert.ok(has(at(mk('GGG', 'GWG', 'GGG'), 1, 0), /^env-bank-mud-s-/), 'soft land gets a mud bank');
-assert.ok(has(at(mk('SSS', 'SWS', 'SSS'), 1, 1), /^env-round-concrete-nw$/), 'a convex water corner is rounded using the land texture');
-const big = mk('SSSSSSS', 'SWWWWWS', 'SWWWWWS', 'SWWWWWS', 'SWWWWWS', 'SWWWWWS', 'SSSSSSS');
-assert.ok(has(at(big, 3, 3), /^env-deep$/), 'open water far from the shore is shaded deeper');
-assert.ok(!has(at(big, 3, 1), /^env-deep$/), 'water next to the shore is not');
-const canal = mk('SWWS', 'SWWS', 'SWWS');
-assert.ok(has(at(canal, 1, 1), /^env-shore-w-/) && !has(at(canal, 1, 1), /^env-bank-/), 'water tiles never get banks');
+assert.ok(has(at(m, 2, 1), /^env-wbed-\d$/) && !has(at(m, 2, 1), /^tile-water/), 'a water tile is drawn as a mud bed, the water comes over it');
+assert.ok(!has(at(m, 2, 1), /^env-(shore|deep|round)/), 'water tiles carry no framed shore strips any more');
+assert.ok(!has(at(m, 2, 0), /^env-bank/) && !has(at(mk('GGG', 'GWG', 'GGG'), 1, 0), /^env-bank/), 'land beside water carries no framed bank strips any more');
 
 // fences: orientation follows the neighbours, the ground under them blends
 m = mk('GGG', 'SFS', 'SFS', 'SFS');
@@ -129,7 +123,7 @@ const twin = { ...town, rows: ['##########', '#GGGGGGGG#', '#G##G##GG#', '#G##G#
 assert.ok(pal(groundKeys(twin, 2, 2, 'b', 'town')[0]) && pal(groundKeys(twin, 5, 2, 'b', 'town')[0]), 'two buildings are both styled');
 
 // every real map: only known key families, the base stays first, and nothing here touched the grid
-const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|trunk|tuft|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop|pipe|age|vent|bin))/;
+const known = /^(base-|tile-|env-(edge|edgec|wbed|fence|trunk|tuft|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop|pipe|age|vent|bin))/;
 let tiles = 0;
 let extra = 0;
 for (const f of readdirSync(new URL('../data/maps/', import.meta.url)).filter(n => n.endsWith('.json') && n !== 'index.json')) {
@@ -144,4 +138,4 @@ for (const f of readdirSync(new URL('../data/maps/', import.meta.url)).filter(n 
   }
   assert.equal(JSON.stringify(map.rows), before, `${f}: art must not modify map data`);
 }
-console.log(`envart ok: transitions, kerbs, shores and banks, round corners, oriented fences and hedges; ${tiles} map tiles give ${extra} extra layers`);
+console.log(`envart ok: transitions, kerbs, water beds, oriented fences and hedges; ${tiles} map tiles give ${extra} extra layers`);

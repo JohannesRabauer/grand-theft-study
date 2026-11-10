@@ -81,6 +81,11 @@ export class Critters {
       const s = this.sprites[i];
       s.setVisible(c.visible);
       if (!c.visible) continue;
+      if (c.kind === 'duck' && (c.ripple -= dt) <= 0) { // a duck on the pond leaves rings behind it (water ripples, story 16.8)
+        c.ripple = this.cfg.duck.rippleEvery;
+        const v = this.scene.cameras.main.worldView;
+        if (c.x > v.x - 16 && c.x < v.right + 16 && c.y > v.y - 16 && c.y < v.bottom + 16) ctx.particles.emit('ripple', c.x, c.y + 2);
+      }
       const bob = c.state === C.IDLE && c.kind === 'pigeon' ? Math.max(0, Math.sin(c.phase)) * 1.5 : 0;
       const flap = c.state === C.FLEE ? Math.sin(c.phase * 4) * 0.25 : 0;
       s.setPosition(c.x, c.y - c.lift - bob).setDepth(c.y + c.lift * 0.1 + 2).setAlpha(c.state === C.BACK ? 0.8 : 1).setRotation(flap);

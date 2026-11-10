@@ -25,7 +25,6 @@ const RANK = { asphalt: 1, lane: 1, concrete: 2, cobble: 3, path: 4, grass: 5 };
 // Tiles that carry no blend of their own but sit on a surface, so their neighbours blend against it.
 const GIVES_AS = { tree: 'grass', dumpster: 'concrete', booth: 'concrete' };
 const STYLE = { grass: 'tuft', path: 'soft', cobble: 'stone', concrete: 'curb' };
-const HARD = new Set(['asphalt', 'lane', 'concrete', 'cobble']); // water meets these with a stone edge, soft ground with a mud bank
 
 const STATE = { ready: false, variants: {} };
 
@@ -41,15 +40,6 @@ function sourceTile(scene, id, v) {
   c.imageSmoothingEnabled = false;
   c.drawImage(scene.textures.get(key).getSourceImage(), 0, 0, U, U);
   return out;
-}
-
-// Depth in units of a wet-mud bank strip (both ends 3, so neighbouring banks join).
-function bankProfile(r) {
-  const d = new Array(U);
-  const phase = r() * 6;
-  for (let x = 0; x < U; x++) d[x] = Math.max(3, Math.min(5, Math.round(5 + 2.2 * Math.sin(x * 0.4 + phase) + r() * 1.5)));
-  d[0] = d[U - 1] = 3;
-  return d;
 }
 
 // Border strips follow a seeded noise curve (story 16.5): the depth runs from the noise level (0..2) of the strip's first
@@ -183,95 +173,14 @@ function surfaceCorner(scene, cls, v) {
   return tmp;
 }
 
-// Shallow water on the water tile along a shore: foam line, then fading light water.
-function shoreStrip(v) {
+// Bed of a water tile (story 16.8): wet mud. The water itself is drawn over it (render/Water.js) with a shore bent by noise, so
+// wherever the shore recedes from the tile edge this is the bank that shows, and it matches the bank colours of the shore layer.
+function waterBed(v) {
   const tmp = canvas();
   const c = tmp.getContext('2d');
-  const r = rng(404 + v * 59);
-  const alphas = [0.9, 0.78, 0.62, 0.48, 0.36, 0.24, 0.12];
-  alphas.forEach((a, y) => px(c, `rgba(150,205,242,${a})`, 0, y, U, 1));
-  for (let x = 0; x < U; x++) {
-    if (r() < 0.78) px(c, '#f2faff', x, 0);
-    if (r() < 0.42) px(c, '#d4ecfb', x, 1);
-    if (r() < 0.16) px(c, '#e8f5ff', x, 3);
-  }
-  return tmp;
-}
-
-function shoreCorner() {
-  const tmp = canvas();
-  const c = tmp.getContext('2d');
-  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
-    const d = Math.hypot(x + 0.5, y + 0.5);
-    if (d >= 7) continue;
-    px(c, d < 2 ? '#f2faff' : `rgba(150,205,242,${(0.85 * (7 - d)) / 7})`, x, y);
-  }
-  return tmp;
-}
-
-// Bank on the land tile where it meets water: wet mud for soft ground, a stone coping for hard ground.
-function bankStrip(kind, v) {
-  const tmp = canvas();
-  const c = tmp.getContext('2d');
-  const r = rng(808 + v * 71 + (kind === 'stone' ? 5 : 0));
-  if (kind === 'stone') {
-    px(c, '#43474f', 0, 0, U, 1);
-    px(c, '#868a93', 0, 1, U, 1);
-    px(c, '#a4a8b0', 0, 2, U, 1);
-    px(c, 'rgba(0,0,0,0.2)', 0, 3, U, 1);
-    for (let x = 5 + v * 4; x < U; x += 9) px(c, '#5b5f68', x, 1, 1, 2);
-  } else {
-    const d = bankProfile(r);
-    for (let x = 0; x < U; x++) {
-      for (let y = 0; y < d[x]; y++) {
-        const col = y === 0 ? '#3d3226' : y === 1 ? '#5a4731' : r() < 0.3 ? '#8a7048' : '#6e5a3b';
-        px(c, col, x, y);
-      }
-    }
-  }
-  return tmp;
-}
-
-function bankCorner(kind) {
-  const tmp = canvas();
-  const c = tmp.getContext('2d');
-  for (let y = 0; y < 5; y++) for (let x = 0; x < 5; x++) {
-    const d = Math.hypot(x + 0.5, y + 0.5);
-    if (d >= 4.3) continue;
-    px(c, kind === 'stone' ? (d < 2 ? '#43474f' : d < 3.2 ? '#868a93' : '#a4a8b0') : (d < 2 ? '#3d3226' : '#6e5a3b'), x, y);
-  }
-  return tmp;
-}
-
-// Convex water corner (land on both sides): the corner is filled with the neighbouring land's texture,
-// cut by a quarter circle, with a bank rim and a thin foam ring.
-function roundCorner(scene, cls, kind) {
-  const tmp = canvas();
-  const c = tmp.getContext('2d');
-  c.drawImage(sourceTile(scene, cls, 0), 0, 0);
-  const im = c.getImageData(0, 0, U, U);
-  const a = im.data;
-  const R = 10;
-  const rim = kind === 'stone' ? [0x43, 0x47, 0x4f] : [0x3d, 0x32, 0x26];
-  const mid = kind === 'stone' ? [0x86, 0x8a, 0x93] : [0x6e, 0x5a, 0x3b];
-  for (let y = 0; y < U; y++) for (let x = 0; x < U; x++) {
-    const i = (y * U + x) * 4;
-    const d = Math.hypot(x + 0.5, y + 0.5);
-    if (d > R + 2) { a[i + 3] = 0; continue; }
-    if (d > R) { a[i] = 0xf2; a[i + 1] = 0xfa; a[i + 2] = 0xff; a[i + 3] = 150; continue; } // foam ring
-    if (d > R - 1.5) { a[i] = rim[0]; a[i + 1] = rim[1]; a[i + 2] = rim[2]; }
-    else if (d > R - 3) { a[i] = mid[0]; a[i + 1] = mid[1]; a[i + 2] = mid[2]; }
-  }
-  c.putImageData(im, 0, 0);
-  return tmp;
-}
-
-function deepWater() {
-  const tmp = canvas();
-  const c = tmp.getContext('2d');
-  px(c, 'rgba(10,36,84,0.2)', 0, 0, U, U);
-  const r = rng(515);
-  for (let i = 0; i < 6; i++) px(c, 'rgba(10,36,84,0.18)', Math.floor(r() * 24), 3 + Math.floor(r() * 26), 6 + Math.floor(r() * 6), 1);
+  const r = rng(515 + v * 37);
+  px(c, '#6e5a3b', 0, 0, U, U);
+  for (let i = 0; i < 40; i++) px(c, r() < 0.5 ? '#5a4731' : '#8a7048', Math.floor(r() * U), Math.floor(r() * U), 1 + Math.floor(r() * 3), 1);
   return tmp;
 }
 
@@ -833,26 +742,7 @@ export function makeEnvArt(scene, tileDefs, size) {
       SIDES.forEach((s, rot) => emit(scene, `env-edge-${cls}-${s}-${a}${b}${k}`, strip, size, rot));
     }
   }
-  for (let v = 0; v < VARIANTS; v++) {
-    const shore = shoreStrip(v);
-    SIDES.forEach((s, rot) => emit(scene, `env-shore-${s}-${v}`, shore, size, rot));
-    for (const kind of ['mud', 'stone']) {
-      const bank = bankStrip(kind, v);
-      SIDES.forEach((s, rot) => emit(scene, `env-bank-${kind}-${s}-${v}`, bank, size, rot));
-    }
-  }
-  const shoreC = shoreCorner();
-  CORNERS.forEach((s, rot) => emit(scene, `env-shorec-${s}`, shoreC, size, rot));
-  for (const kind of ['mud', 'stone']) {
-    const bc = bankCorner(kind);
-    CORNERS.forEach((s, rot) => emit(scene, `env-bankc-${kind}-${s}`, bc, size, rot));
-  }
-  emit(scene, 'env-deep', deepWater(), size);
-  for (const cls of ['grass', 'path', 'cobble', 'concrete', 'asphalt']) {
-    const kind = HARD.has(cls) ? 'stone' : 'mud';
-    const rc = roundCorner(scene, cls, kind);
-    CORNERS.forEach((k, rot) => emit(scene, `env-round-${cls}-${k}`, rc, size, rot));
-  }
+  for (let v = 0; v < VARIANTS; v++) emit(scene, `env-wbed-${v}`, waterBed(v), size);
   for (const k of ['h', 'v', 'x']) emit(scene, `env-fence-${k}`, fenceTile(k), size);
   for (const surface of PUDDLE_SURFACES) for (let v = 0; v < PUDDLE_VARIANTS; v++) emit(scene, `env-puddle-${surface}-${v}`, puddleTexture(surface, v), size);
   makeInteriorArt(scene, size);
@@ -871,10 +761,6 @@ function variantOf(id, tx, ty) {
   const n = STATE.variants[id] ?? 1;
   const v = (((tx * 73856093) ^ (ty * 19349663)) >>> 0) % n;
   return v === 0 ? `tile-${id}` : `tile-${id}-${v}`;
-}
-function landClass(id) {
-  const c = GIVES_AS[id] ?? CLASS[id];
-  return c === 'lane' || c === 'asphalt' ? 'asphalt' : STYLE[c] ? c : 'concrete';
 }
 const edgeVariant = (tx, ty) => (((tx * 2654435761) ^ (ty * 40503)) >>> 0) % VARIANTS;
 
@@ -908,29 +794,7 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
   else keys.push(baseKey);
 
   if (cls === 'water') {
-    let near = false;
-    for (const s of SIDES) {
-      const nid = idAt(tx + OFF[s][0], ty + OFF[s][1]);
-      if (nid && nid !== 'water') { keys.push(`env-shore-${s}-${v}`); near = true; }
-    }
-    const rounds = [];
-    for (const k of CORNERS) {
-      const [sa, sb] = CORNER_SIDES[k].map(s => idAt(tx + OFF[s][0], ty + OFF[s][1]));
-      if (sa && sb && sa !== 'water' && sb !== 'water') { rounds.push(`env-round-${landClass(sa)}-${k}`); continue; }
-      const nid = idAt(tx + CORNER_OFF[k][0], ty + CORNER_OFF[k][1]);
-      if (!nid || nid === 'water') continue;
-      near = true;
-      if (sa === 'water' && sb === 'water') keys.push(`env-shorec-${k}`);
-    }
-    keys.push(...rounds);
-    if (!near) {
-      let deep = true;
-      for (let dy = -2; dy <= 2 && deep; dy++) for (let dx = -2; dx <= 2; dx++) {
-        const nid = idAt(tx + dx, ty + dy);
-        if (nid && nid !== 'water') { deep = false; break; }
-      }
-      if (deep) keys.push('env-deep');
-    }
+    keys[0] = `env-wbed-${v}`; // the water and its shore are drawn over this bed by render/Water.js
   } else if (cls) {
     const rank = RANK[cls];
     const giver = nid => {
@@ -938,20 +802,16 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
       const g = GIVES_AS[nid] ?? (nid === 'fence' || nid === 'puddle' || nid === 'lane' || nid === 'asphalt' || nid === 'water' ? null : CLASS[nid]);
       return g && STYLE[g] && RANK[g] > rank ? g : null;
     };
-    const waterKind = HARD.has(cls) ? 'stone' : 'mud';
     const given = {};
     for (const s of SIDES) {
       const nid = idAt(tx + OFF[s][0], ty + OFF[s][1]);
-      if (nid === 'water') { keys.push(`env-bank-${waterKind}-${s}-${v}`); given[s] = 'water'; continue; }
+      if (nid === 'water') continue; // the bank is part of the water's shore layer (render/Water.js)
       const g = giver(nid);
       if (g) { keys.push(`env-edge-${g}-${s}-${stripVariant(seed, g, s, tx, ty)}`); given[s] = g; }
     }
     for (const k of CORNERS) {
       const nid = idAt(tx + CORNER_OFF[k][0], ty + CORNER_OFF[k][1]);
-      if (nid === 'water') {
-        if (!CORNER_SIDES[k].some(s => given[s] === 'water')) keys.push(`env-bankc-${waterKind}-${k}`);
-        continue;
-      }
+      if (nid === 'water') continue;
       const g = giver(nid);
       if (g && !CORNER_SIDES[k].some(s => given[s] === g)) keys.push(`env-edgec-${g}-${k}-${v}`);
     }

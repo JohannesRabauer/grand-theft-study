@@ -22,6 +22,7 @@ import { StreetLights } from '../render/StreetLights.js';
 import { Shadows } from '../render/Shadows.js';
 import { Vegetation } from '../render/Vegetation.js';
 import { Buildings } from '../render/Buildings.js';
+import { Water } from '../render/Water.js';
 import { PostFx } from '../render/PostFx.js';
 import { Zones } from '../entities/Zones.js';
 import { Doors } from '../entities/Doors.js';
@@ -238,6 +239,7 @@ export class GameScene extends Phaser.Scene {
     this.shadows = new Shadows(this, ctx, cache.get('lighting'), this.lightMap); // story 16.4: cast shadows baked per map
     this.vegetation = new Vegetation(this, ctx, cache.get('vegetation')); // story 16.6: tree crowns, hedges, wind sway, fade under a crown
     this.buildings = new Buildings(this, ctx, cache.get('buildings'), this.lightMap); // story 16.7: eaves, chimneys, awnings, lit windows
+    this.water = new Water(this, ctx, cache.get('water')); // story 16.8: organic shores, water shader or looping frames, reflections
     this.crowd = new CrowdDirector(this, ctx, cache.get('npcs')); // after the camera: it prefills the view
 
     // UIScene asks for pause (a freezing screen is open) / quit through events; the world is only changed here.
@@ -456,6 +458,7 @@ export class GameScene extends Phaser.Scene {
     this.shadows.update();
     this.vegetation.update(dt);
     this.buildings.update(dt);
+    this.water.update(dt);
     this.streamer.update();
     this.markers.update();
     this.beltTags.update();

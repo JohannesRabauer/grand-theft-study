@@ -109,7 +109,7 @@
     },
     "ripple": {
       "texture": "p-ring",
-      "share": 0.06,
+      "share": 0.1,
       "depth": 8400,
       "count": 1,
       "windGain": 0,
@@ -124,7 +124,7 @@
           "end": 1
         },
         "alpha": {
-          "start": 0.7,
+          "start": 0.85,
           "end": 0
         }
       }

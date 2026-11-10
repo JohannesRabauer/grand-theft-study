@@ -588,9 +588,11 @@ function makeFx(scene) {
   mk('p-rain', 2, 12, (p, c) => { // streak fading in from the top, 1 world px wide
     for (let y = 0; y < 12; y++) { c.fillStyle = `rgba(188,216,255,${0.2 + y * 0.07})`; c.fillRect(0, y, 2, 1); }
   });
-  mk('p-ring', 24, 24, (p, c) => {
-    c.lineWidth = 1.5; c.strokeStyle = '#cfe8ff';
-    c.beginPath(); c.arc(12, 12, 10.5, 0, Math.PI * 2); c.stroke();
+  mk('p-ring', 24, 24, p => { // a pixel circle, one base pixel (2x2) thick, so water ripples stay pixel art as they widen (story 16.8)
+    for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) {
+      const d = Math.hypot(x + 0.5 - 6, y + 0.5 - 6);
+      if (d > 4.6 && d < 5.7) p.px('#cfe8ff', x * 2, y * 2, 2, 2);
+    }
   });
 }
 

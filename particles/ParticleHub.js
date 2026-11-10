@@ -204,7 +204,9 @@ export class ParticleHub {
     for (; this.impactAcc >= 1; this.impactAcc--) {
       const x = view.x + Math.random() * view.width;
       const y = view.y + Math.random() * view.height;
-      if (!surfaces.props(surfaces.at(x, y)).solid) this.emitters.impact.emitter.emitParticleAt(x, y, 1);
+      const ground = surfaces.at(x, y);
+      if (!surfaces.props(ground).solid) this.emitters.impact.emitter.emitParticleAt(x, y, 1);
+      else if (ground === 'water') this.emitters.ripple.emitter.emitParticleAt(x, y, 1); // a drop on the pond or canal rings
     }
   }
 
@@ -220,6 +222,7 @@ export class ParticleHub {
       if (s.kind === 'sprinkler' || s.kind === 'fountain') {
         s.in = (s.kind === 'sprinkler' ? this.cfg.fountain.sprinklerEvery : this.cfg.fountain.fountainEvery) / mul;
         this.emit('splash', s.x, s.kind === 'fountain' ? s.y - 6 : s.y, { count: s.kind === 'fountain' ? 3 : 2 });
+        if (this.ctx.surfaces.at(s.x, s.y) === 'water') this.emit('ripple', s.x, s.y); // splashes on water leave a ring
         continue;
       }
       this.emit('steam', s.x, s.y, { count: 1, tint: s.chimney ? 0x777777 : 0xffffff });
