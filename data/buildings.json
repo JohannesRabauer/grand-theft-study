@@ -1,0 +1,11 @@
+{
+  "_doc": "Building exteriors (story 16.7, AD-31). Lengths are base pixels (16 per tile). `overhang`: how far a roof edge hangs over the ground beside the building (side = west and east, top = north); the pieces are images at the object depth of the tile's base line, lent from a fixed pool (`pool`) per chunk of tiles while it is near the view; panes likewise. `awningDepth`: awnings hang over whoever stands under them, so they sit in their own layer above the objects (below the crowns). `windows`: the lit panes. A window is lit when its household is up: from `on` (+ its own spread, minutes) until `off` (+ spread); `occupied` windows only. By day a lit pane is dull (`dayLevel`), it reaches full brightness when the ambient darkness passes `darkness`. Spill: a warm light on the ground below the window, taken from ctx.lights; the tier limits how many (quality.json `windowLights`), nearest to the view centre first.",
+  "overhang": { "side": 2, "top": 3 },
+  "pool": { "pieces": 260, "panes": 40 },
+  "awningDepth": 7900,
+  "windows": {
+    "on": 1050, "onSpread": 150, "off": 360, "offSpread": 40,
+    "darkness": 0.25, "dayLevel": 0.3, "fade": 1.5, "tick": 0.2, "depth": -0.5,
+    "light": { "radius": 22, "drop": 14, "color": "#ffc77a", "tvColor": "#a9d4ff", "intensity": 0.62 }
+  }
+}

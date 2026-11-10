@@ -119,8 +119,8 @@ const town = {
 };
 const outAt = (x, y) => groundKeys(town, x, y, 'base-x', 'town');
 const pal = k => k.match(/^env-(?:roof|facade|odoor)-(\w+?)-/)?.[1];
-assert.match(outAt(2, 2)[0], /^env-roof-\w+-1$/, 'the top row of a building is the roof ridge');
-assert.match(outAt(3, 3)[0], /^env-facade-\w+-(plain|window|shutter|flowers)$/, 'the south row of a building is its facade');
+assert.match(outAt(2, 2)[0], /^env-roof-\w+-(tile|slate|flat)-[1-7]$/, 'the top row of a building is a roof with its edge lip');
+assert.match(outAt(3, 3)[0], /^env-facade-\w+-(plain|window-\d|shutter-\d|flowers-\d|balcony-\d|shop-\d)$/, 'the south row of a building is its facade');
 assert.equal(outAt(0, 0)[0], 'base-x', 'the map border keeps its plain brick');
 assert.match(outAt(2, 3)[0], /^env-odoor-\w+-home-c$/, 'the wall above a door tile is a door in the style of where it leads');
 assert.ok(has(outAt(2, 4), /^env-ostep$/) && has(outAt(2, 4), /^env-imat-m$/), 'a step and a mat lie in front of the door');
@@ -129,7 +129,7 @@ const twin = { ...town, rows: ['##########', '#GGGGGGGG#', '#G##G##GG#', '#G##G#
 assert.ok(pal(groundKeys(twin, 2, 2, 'b', 'town')[0]) && pal(groundKeys(twin, 5, 2, 'b', 'town')[0]), 'two buildings are both styled');
 
 // every real map: only known key families, the base stays first, and nothing here touched the grid
-const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|trunk|tuft|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop))/;
+const known = /^(base-|tile-|env-(edge|edgec|shore|shorec|bank|bankc|round|deep|fence|trunk|tuft|iface|icap|ihall|idoor|ishade|ilight|imat|rug|roof|facade|odoor|ostep|bed|pot|tramstop|pipe|age|vent|bin))/;
 let tiles = 0;
 let extra = 0;
 for (const f of readdirSync(new URL('../data/maps/', import.meta.url)).filter(n => n.endsWith('.json') && n !== 'index.json')) {

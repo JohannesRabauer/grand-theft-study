@@ -12,7 +12,6 @@
 import { hash2, edgeLevel, mapSeed } from './GroundArt.js';
 import { SPECIES, speciesOf } from '../render/vegetationMath.js';
 
-const U = 32;
 const SIDES = ['n', 'e', 's', 'w'];
 const OFF = { n: [0, -1], e: [1, 0], s: [0, 1], w: [-1, 0] };
 const CORNERS = ['nw', 'ne', 'se', 'sw']; // rotation index 0..3, like SIDES
@@ -30,50 +29,9 @@ const HARD = new Set(['asphalt', 'lane', 'concrete', 'cobble']); // water meets 
 
 const STATE = { ready: false, variants: {} };
 
-function rng(seed) {
-  let s = (seed * 2654435761 + 12345) % 2147483647 || 1;
-  return () => (s = (s * 16807) % 2147483647) / 2147483647;
-}
-const hash = s => [...s].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7);
-
-function rgbOf(c) { const n = parseInt(c.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
-function shade(c, t) { // t > 0 lightens, t < 0 darkens
-  const target = t > 0 ? 255 : 0;
-  const k = Math.abs(t);
-  return '#' + rgbOf(c).map(v => Math.round(v + (target - v) * k).toString(16).padStart(2, '0')).join('');
-}
-
-function canvas() {
-  const c = document.createElement('canvas');
-  c.width = c.height = U;
-  return c;
-}
-const px = (c, col, x, y, w = 1, h = 1) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
-function ell(c, col, cx, cy, rx, ry) {
-  c.fillStyle = col;
-  for (let y = Math.floor(cy - ry); y < Math.ceil(cy + ry); y++) {
-    const dy = (y + 0.5 - cy) / ry;
-    if (Math.abs(dy) >= 1) continue;
-    const half = rx * Math.sqrt(1 - dy * dy);
-    const x0 = Math.round(cx - half);
-    const x1 = Math.round(cx + half);
-    if (x1 > x0) c.fillRect(x0, y, x1 - x0, 1);
-  }
-}
-
-// Writes the 32 unit canvas to a texture of the real size, rotated by quarter turns (0 n, 1 e, 2 s, 3 w).
-function emit(scene, key, src, size, rot = 0) {
-  if (scene.textures.exists(key)) scene.textures.remove(key);
-  const tex = scene.textures.createCanvas(key, size, size);
-  const c = tex.getContext();
-  c.imageSmoothingEnabled = size < U;
-  if (rot === 1) c.translate(size, 0);
-  else if (rot === 2) c.translate(size, size);
-  else if (rot === 3) c.translate(0, size);
-  c.rotate((rot * Math.PI) / 2);
-  c.drawImage(src, 0, 0, size, size);
-  tex.refresh();
-}
+import { U, rng, hash, rgbOf, shade, canvas, px, ell, emit } from './EnvDraw.js';
+import { makeOutdoorArt, wallKeys, outdoorInfo } from './BuildingArt.js';
+import { binAt } from '../render/buildingMath.js';
 
 // A 32 unit copy of an existing tile texture (variant v when the tier has variants).
 function sourceTile(scene, id, v) {
@@ -740,229 +698,6 @@ function indoorKeys(map, tx, ty, baseKey, mapId) {
   return keys;
 }
 
-// -------------------------------------------------------------------------------------- buildings outdoors (AD-30, 15.2)
-// Walls used to be one brick roof and one brick facade for the whole town. Each building (a connected block of wall
-// tiles, found once per map) now gets its own palette: roof colour, plaster or brick, shutters or flower boxes at the
-// windows, a chimney here and there, and doors with a frame, awning or canopy, a leaf in the style of where it leads,
-// a stone step and a mat. Derived from the grid and the door objects only; collision is untouched.
-const PALS = [
-  { id: 'brick', roof: '#b2553a', wall: '#a2553c', brick: true, mortar: '#c99a86', trim: '#f0e8da', shutter: '#2f5f4a', base: '#3e2018' },
-  { id: 'slate', roof: '#55657e', wall: '#dccaa0', brick: false, mortar: '#c9b78c', trim: '#ffffff', shutter: '#3f6aa0', base: '#6b5a44' },
-  { id: 'honey', roof: '#7c4b2d', wall: '#e3c27c', brick: false, mortar: '#cfa95f', trim: '#fff6df', shutter: '#9a3d2e', base: '#6a4a2a' },
-  { id: 'sage', roof: '#3f6f5a', wall: '#c3d1be', brick: false, mortar: '#a9bba5', trim: '#ffffff', shutter: '#8a4a3a', base: '#4e5a48' }
-];
-const OUT_FACES = ['plain', 'window', 'shutter', 'flowers'];
-const DOOR_KINDS = ['home', 'school', 'dojo', 'plain'];
-const DOOR_PARTS = ['c', 'l', 'r', 'sl', 'sr'];
-
-function roofTexture(pal, top, chimney) {
-  const tmp = canvas();
-  const c = tmp.getContext('2d');
-  const r = rng(hash(pal.id + 'roof') + (top ? 7 : 0));
-  px(c, pal.roof, 0, 0, U, U);
-  for (let row = 0; row < 8; row++) {
-    const y = row * 4;
-    const off = row % 2 ? 4 : 0;
-    px(c, shade(pal.roof, -0.3), 0, y + 3, U, 1);
-    for (let k = -1; k < 4; k++) {
-      const x = off + k * 8;
-      px(c, shade(pal.roof, -0.3), x, y, 1, 3);
-      const col = shade(pal.roof, (r() - 0.45) * 0.3);
-      px(c, col, x + 1, y, 7, 3);
-      px(c, shade(col, 0.2), x + 1, y, 7, 1);
-    }
-  }
-  if (top) { px(c, shade(pal.roof, 0.38), 0, 0, U, 2); px(c, shade(pal.roof, -0.45), 0, 2, U, 1); }
-  if (chimney) {
-    px(c, 'rgba(0,0,0,0.28)', 12, 15, 11, 13);
-    px(c, '#6e3d2d', 11, 8, 9, 15); px(c, '#8b4f3a', 11, 8, 3, 15);
-    for (let y = 10; y < 22; y += 4) px(c, '#4a2a20', 11, y, 9, 1);
-    px(c, '#3a3f48', 9, 5, 13, 4); px(c, '#59606b', 9, 5, 13, 1);
-  }
-  return tmp;
-}
-
-function wallBase(c, pal, seed) {
-  const r = rng(seed);
-  if (pal.brick) {
-    px(c, pal.mortar, 0, 0, U, U);
-    for (let row = 0; row < 7; row++) {
-      const y = row * 4;
-      const off = row % 2 ? 4 : 0;
-      for (let k = -1; k < 4; k++) {
-        const col = shade(pal.wall, (r() - 0.45) * 0.28);
-        px(c, col, off + k * 8 + 1, y + 1, 7, 3);
-        px(c, shade(col, -0.18), off + k * 8 + 1, y + 3, 7, 1);
-      }
-    }
-  } else {
-    px(c, pal.wall, 0, 0, U, U);
-    for (let i = 0; i < 40; i++) px(c, shade(pal.wall, r() < 0.5 ? -0.06 : 0.05), Math.floor(r() * U), Math.floor(r() * 27), 2, 1);
-    px(c, shade(pal.wall, -0.12), 0, 14, U, 1); // moulding
-    px(c, shade(pal.wall, 0.15), 0, 15, U, 1);
-  }
-  px(c, pal.base, 0, 28, U, 4);                      // plinth
-  px(c, shade(pal.base, 0.25), 0, 28, U, 1);
-  px(c, 'rgba(0,0,0,0.3)', 0, 0, U, 1);              // eave shadow
-  px(c, 'rgba(0,0,0,0.14)', 0, 1, U, 2);
-}
-
-function facadeTexture(pal, variant) {
-  const tmp = canvas();
-  const c = tmp.getContext('2d');
-  wallBase(c, pal, hash(pal.id + 'wall'));
-  if (variant === 'plain') return tmp;
-  if (variant === 'shutter') { for (const x of [3, 23]) { px(c, pal.shutter, x, 5, 6, 18); px(c, shade(pal.shutter, 0.2), x, 5, 1, 18); for (let y = 7; y < 22; y += 3) px(c, shade(pal.shutter, -0.3), x + 1, y, 4, 1); } }
-  px(c, '#2a1a14', 8, 4, 16, 18);
-  px(c, pal.trim, 8, 4, 16, 17);
-  const sky = c.createLinearGradient(0, 6, 0, 19);
-  sky.addColorStop(0, '#5f86ad'); sky.addColorStop(1, '#2d3f55');
-  c.fillStyle = sky; c.fillRect(10, 6, 12, 13);
-  px(c, '#8fb4d6', 11, 7, 4, 3); px(c, '#cfe3f4', 11, 7, 2, 1);
-  px(c, pal.trim, 15, 6, 2, 13); px(c, pal.trim, 10, 12, 12, 1);
-  px(c, '#b8b0a2', 7, 21, 18, 2); px(c, '#8a8274', 7, 23, 18, 1);
-  if (variant === 'flowers') {
-    px(c, '#6e4a33', 8, 22, 16, 4); px(c, '#8b6244', 8, 22, 16, 1);
-    for (let x = 9; x < 24; x += 3) { px(c, '#3f8a3c', x, 20, 1, 3); px(c, x % 2 ? '#ff6f91' : '#ffd84d', x - 1, 19, 3, 2); }
-  }
-  return tmp;
-}
-
-function doorTexture(pal, kind, part) {
-  const tmp = canvas();
-  const c = tmp.getContext('2d');
-  wallBase(c, pal, hash(pal.id + 'wall'));
-  px(c, pal.base, 0, 28, U, 4);
-  const side = part === 'sl' || part === 'sr';
-  if (side) { // a narrow side window beside the door
-    px(c, '#2a1a14', 7, 6, 18, 22); px(c, pal.trim, 8, 7, 16, 20);
-    px(c, kind === 'school' ? '#9fcfe8' : '#3a5472', 10, 9, 12, 16); px(c, 'rgba(255,255,255,0.35)', 11, 10, 3, 1);
-    px(c, pal.trim, 15, 9, 2, 16);
-  } else {
-    const x0 = part === 'c' ? 5 : part === 'l' ? 6 : 0;
-    const x1 = part === 'c' ? 27 : part === 'l' ? 32 : 26;
-    const w = x1 - x0;
-    px(c, '#241810', x0 - 1, 5, w + 2, 27);                          // frame shadow
-    if (kind === 'home') {
-      px(c, '#3f6f9a', x0, 6, w, 26);
-      px(c, '#5b8fba', x0, 6, w, 1);
-      px(c, '#2b4d6c', x0 + 3, 11, w - 6, 8); px(c, '#2b4d6c', x0 + 3, 21, w - 6, 8); // panels
-      px(c, '#9fcfe8', x0 + 4, 12, w - 8, 6);
-      px(c, '#e8c15a', part === 'l' ? x1 - 4 : part === 'r' ? x0 + 2 : x1 - 6, 20, 2, 2);  // handle
-    } else if (kind === 'school') {
-      px(c, '#2f4a58', x0, 6, w, 26);
-      px(c, '#9fcfe8', x0 + 2, 8, w - 4, 20);
-      px(c, 'rgba(255,255,255,0.4)', x0 + 3, 9, 4, 1);
-      px(c, '#d8dde3', x0 + 2, 19, w - 4, 2);                          // push bar
-      if (part !== 'c') px(c, '#2f4a58', part === 'l' ? x1 - 1 : x0, 6, 1, 26);
-    } else if (kind === 'dojo') {
-      px(c, '#a43a2e', x0, 6, w, 26);
-      px(c, '#3a2a1e', x0, 6, w, 1);
-      for (let x = x0 + 3; x < x1 - 1; x += 4) px(c, '#7d2a22', x, 7, 1, 25);
-      px(c, '#e8c15a', part === 'l' ? x1 - 4 : x0 + 2, 19, 2, 3);
-    } else {
-      px(c, '#7d838c', x0, 6, w, 26); px(c, '#9aa1ab', x0, 6, w, 1);
-      px(c, '#5d636c', x0 + 3, 12, w - 6, 16); px(c, '#d8dde3', x0 + 3, 20, 2, 2);
-    }
-    px(c, pal.trim, x0 - 1, 4, w + 2, 2);                              // lintel
-  }
-  // covering over the entrance: striped awning (home), concrete canopy (school), tiled eave (dojo)
-  if (kind === 'home') {
-    for (let x = 0; x < U; x += 4) px(c, (x / 4) % 2 ? '#f4efe2' : '#c0392b', x, 0, 4, 6);
-    px(c, 'rgba(0,0,0,0.3)', 0, 6, U, 2); px(c, 'rgba(0,0,0,0.15)', 0, 8, U, 1);
-  } else if (kind === 'school') {
-    px(c, '#aab1ba', 0, 0, U, 5); px(c, '#d4d9df', 0, 0, U, 1); px(c, 'rgba(0,0,0,0.3)', 0, 5, U, 3);
-  } else if (kind === 'dojo') {
-    px(c, '#3a2a1e', 0, 0, U, 4); px(c, '#6d4a31', 0, 0, U, 1); px(c, 'rgba(0,0,0,0.3)', 0, 4, U, 2);
-  }
-  return tmp;
-}
-
-function stepTexture() {
-  const tmp = canvas();
-  const c = tmp.getContext('2d');
-  px(c, '#a7a79f', 0, 0, U, 5); px(c, '#cfcfc6', 0, 0, U, 1); px(c, '#7c7c75', 0, 4, U, 1);
-  px(c, 'rgba(0,0,0,0.22)', 0, 5, U, 2); px(c, 'rgba(0,0,0,0.1)', 0, 7, U, 1);
-  return tmp;
-}
-
-function makeOutdoorArt(scene, size) {
-  for (const pal of PALS) {
-    emit(scene, `env-roof-${pal.id}-0`, roofTexture(pal, false, false), size);
-    emit(scene, `env-roof-${pal.id}-1`, roofTexture(pal, true, false), size);
-    emit(scene, `env-roof-${pal.id}-c`, roofTexture(pal, false, true), size);
-    for (const v of OUT_FACES) emit(scene, `env-facade-${pal.id}-${v}`, facadeTexture(pal, v), size);
-    for (const kind of DOOR_KINDS) for (const part of DOOR_PARTS) emit(scene, `env-odoor-${pal.id}-${kind}-${part}`, doorTexture(pal, kind, part), size);
-  }
-  emit(scene, 'env-ostep', stepTexture(), size);
-}
-
-const OUTDOOR = new WeakMap(); // map -> { pal: Uint8Array per tile (building palette), doors: Map "x,y" -> { kind, part } }
-
-function outdoorInfo(map) {
-  let info = OUTDOOR.get(map);
-  if (info) return info;
-  const rows = map.rows.length;
-  const cols = map.rows[0].length;
-  const wall = (x, y) => map.legend[map.rows[y][x]] === 'wall';
-  const border = (x, y) => x === 0 || y === 0 || x === cols - 1 || y === rows - 1;
-  const pal = new Uint8Array(rows * cols);
-  const seen = new Uint8Array(rows * cols);
-  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
-    if (seen[y * cols + x] || !wall(x, y) || border(x, y)) continue;
-    const stack = [[x, y]];
-    const cells = [];
-    seen[y * cols + x] = 1;
-    while (stack.length) { // one building: connected wall tiles that are not the map border
-      const [cx, cy] = stack.pop();
-      cells.push(cy * cols + cx);
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const nx = cx + dx;
-        const ny = cy + dy;
-        if (nx < 0 || ny < 0 || nx >= cols || ny >= rows || seen[ny * cols + nx] || !wall(nx, ny) || border(nx, ny)) continue;
-        seen[ny * cols + nx] = 1;
-        stack.push([nx, ny]);
-      }
-    }
-    const first = Math.min(...cells);
-    const p = (((first % cols) * 73856093) ^ (Math.floor(first / cols) * 19349663)) >>> 0;
-    for (const i of cells) pal[i] = p % PALS.length;
-  }
-  const doors = new Map();
-  for (const o of map.objects ?? []) {
-    if (o.type !== 'door') continue;
-    const kind = DOOR_KINDS.includes(o.to) ? o.to : o.to === 'test-room' ? 'plain' : 'plain';
-    for (let i = 0; i < o.w; i++) {
-      const part = o.w === 1 ? 'c' : o.w === 2 ? (i === 0 ? 'l' : 'r') : i === 0 ? 'sl' : i === o.w - 1 ? 'sr' : 'c';
-      doors.set(`${o.x + i},${o.y - 1}`, { kind, part });
-    }
-  }
-  const stops = new Set((map.objects ?? []).filter(o => o.type === 'tram-stop').map(o => `${o.x},${o.y}`));
-  info = { pal, doors, cols, stops };
-  OUTDOOR.set(map, info);
-  return info;
-}
-
-// Keys for an outdoor wall tile: roof, facade (with windows) or a door; the map border stays plain brick.
-function wallKeys(map, tx, ty, baseKey, idAt) {
-  const rows = map.rows.length;
-  const cols = map.rows[0].length;
-  if (tx === 0 || ty === 0 || tx === cols - 1 || ty === rows - 1) return [baseKey];
-  const info = outdoorInfo(map);
-  const pal = PALS[info.pal[ty * cols + tx]];
-  const door = info.doors.get(`${tx},${ty}`);
-  if (door) return [`env-odoor-${pal.id}-${door.kind}-${door.part}`];
-  const south = idAt(tx, ty + 1);
-  if (south !== 'wall') {
-    if (tx % 2 !== 0) return [`env-facade-${pal.id}-plain`];
-    const v = (((tx * 2654435761) ^ (ty * 40503)) >>> 0) % 3;
-    return [`env-facade-${pal.id}-${['window', 'shutter', 'flowers'][v]}`];
-  }
-  if (idAt(tx, ty - 1) !== 'wall') return [`env-roof-${pal.id}-1`];
-  const chimney = (((tx * 83492791) ^ (ty * 2971215073)) >>> 0) % 31 === 4;
-  return [`env-roof-${pal.id}-${chimney ? 'c' : 0}`];
-}
-
 // -------------------------------------------------------------------------------------- garden dressing (15.3)
 // Flower beds with small shrubs along the front of buildings, and potted plants beside doors. Drawn into the
 // ground texture next to the neighbours they belong to; nothing here is an object, so nothing collides.
@@ -1161,7 +896,7 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
   const cols = map.rows[0].length;
   const idAt = (x, y) => (x < 0 || y < 0 || x >= cols || y >= rows ? null : map.legend[map.rows[y][x]]);
   const id = idAt(tx, ty);
-  if (id === 'wall') return wallKeys(map, tx, ty, baseKey, idAt);
+  if (id === 'wall') return wallKeys(map, tx, ty, baseKey, mapId);
   const v = edgeVariant(tx, ty);
   const seed = mapSeed(map, mapId);
   const keys = [];
@@ -1235,6 +970,7 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
     const nextToDoor = doors.has(`${tx - 1},${ty}`) || doors.has(`${tx + 1},${ty}`);
     if (!doors.has(`${tx},${ty}`) && nextToDoor && (cls === 'concrete' || cls === 'grass' || cls === 'cobble')) keys.push(`env-pot-${h & 1}`);
     else if (cls === 'grass' && h < 62) keys.push(`env-bed-${h % 4}`);
+    else if (cls === 'concrete' || cls === 'cobble') { const bin = binAt(outdoorInfo(map, mapId), tx, ty); if (bin >= 0) keys.push(`env-bin-${bin}`); } // a wheelie bin along the wall
   }
   if (cls === 'grass' && !keys.some(k => k.startsWith('env-bed') || k.startsWith('env-pot'))) { // story 16.6: beds under hedges, tall grass where lawn meets trees, hedges and fences, some at random
     const g = (((tx * 3266489917) ^ (ty * 668265263)) >>> 0) % 100;
@@ -1242,7 +978,7 @@ export function groundKeys(map, tx, ty, baseKey, mapId) {
     if (idAt(tx, ty - 1) === 'hedge' && g < 55) keys.push(`env-bed-${g % 4}`);
     else if (g < (green ? 32 : 7)) keys.push(`env-tuft-${g % 4}`);
   }
-  if (outdoorInfo(map).stops.has(`${tx},${ty}`)) keys.push('env-tramstop');
+  if (outdoorInfo(map, mapId).stops.has(`${tx},${ty}`)) keys.push('env-tramstop');
   const entrance = indoorInfo(map).doorFloors.get(`${tx},${ty}`); // a stone step and a mat in front of every door
   if (entrance) keys.push('env-ostep', `env-imat-${entrance}`);
   return keys;

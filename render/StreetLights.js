@@ -150,7 +150,7 @@ export class StreetLights {
     const pool = this.ctx.lights;
     const view = this.scene.cameras.main.worldView;
     if (!pool.mapActive && this.fixed + this.dyn > 0) this.#dropLights();
-    const budget = fixedBudget(pool.limit, this.cfg.vehicles.reserve);
+    const budget = fixedBudget(pool.limit, this.cfg.vehicles.reserve) - (this.ctx.quality.tier.windowLights ?? 0); // the window lights of render/Buildings.js have their own slots
     for (const l of this.live ?? []) {
       if (l.lit && l.since < l.sched.warm) l.since += dt;
       const level = l.lit ? warmupLevel(l.since, l.sched.warm, l.seed) : 0;

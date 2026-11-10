@@ -40,6 +40,7 @@ checks.push('check-lookmetrics.mjs');
 checks.push('check-lighting.mjs');
 checks.push('check-shadows.mjs');
 checks.push('check-vegetation.mjs');
+checks.push('check-buildings.mjs');
 for (const c of checks) {
   console.log(`\n== ${c}`);
   const r = spawnSync(process.execPath, [join(dir, c)], { stdio: 'inherit', cwd: join(dir, '..') });

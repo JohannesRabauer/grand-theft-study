@@ -7,19 +7,19 @@
       "renderScale": 1,
       "particleMul": 0.5, "maxParticles": 150, "maxProps": 30, "maxNPCs": 6, "maxBullies": 2,
       "rainDensity": 0.4, "skidPool": 60, "smokePool": 12, "bellPool": 2, "shadows": false, "aimDots": 8,
-      "lightMap": false, "windFx": false, "maxLights": 0, "postFx": { "grade": false, "vignette": false, "bloomTaps": 0 }
+      "lightMap": false, "windFx": false, "maxLights": 0, "windowLights": 0, "postFx": { "grade": false, "vignette": false, "bloomTaps": 0 }
     },
     "medium": {
       "renderScale": 2,
       "particleMul": 1, "maxParticles": 300, "maxProps": 60, "maxNPCs": 12, "maxBullies": 3,
       "rainDensity": 1, "skidPool": 120, "smokePool": 24, "bellPool": 3, "shadows": true, "aimDots": 14,
-      "lightMap": true, "windFx": true, "maxLights": 24, "postFx": { "grade": true, "vignette": true, "bloomTaps": 8 }
+      "lightMap": true, "windFx": true, "maxLights": 30, "windowLights": 6, "postFx": { "grade": true, "vignette": true, "bloomTaps": 8 }
     },
     "high": {
       "renderScale": 2,
       "particleMul": 1.5, "maxParticles": 500, "maxProps": 100, "maxNPCs": 20, "maxBullies": 4,
       "rainDensity": 1.6, "skidPool": 240, "smokePool": 48, "bellPool": 4, "shadows": true, "aimDots": 20,
-      "lightMap": true, "windFx": true, "maxLights": 48, "postFx": { "grade": true, "vignette": true, "bloomTaps": 16 }
+      "lightMap": true, "windFx": true, "maxLights": 60, "windowLights": 12, "postFx": { "grade": true, "vignette": true, "bloomTaps": 16 }
     }
   }
 }
