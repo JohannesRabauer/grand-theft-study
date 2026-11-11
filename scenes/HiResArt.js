@@ -417,21 +417,26 @@ export const OUT = '#16161e';
 
 export function figure(p, o) {
   const { jacket, jacketDark, jacketLight, pants, hair, brows } = o;
-  p.px(pants, 7, 20, 4, 8);                             // legs
-  p.px(pants, 13, 20, 4, 8);
-  p.px(darken(pants, 0.3), 10, 20, 1, 8);
-  p.px(darken(pants, 0.3), 16, 20, 1, 8);
-  p.px('#2c2018', 6, 27, 5, 2);                         // shoes
-  p.px('#2c2018', 13, 27, 5, 2);
+  // o.stride (story 16.13, walk and run in-betweens): -2..2, positive lifts the left foot and swings the right arm forward, negative
+  // the other way; only legs, shoes, arms and hands move, the figure stays the same.
+  const st = o.stride ?? 0;
+  const lift = [Math.max(0, st), Math.max(0, -st)];
+  const swing = Math.sign(st) * Math.min(2, Math.abs(st));
+  p.px(pants, 7, 20, 4, 8 - lift[0]);                   // legs
+  p.px(pants, 13, 20, 4, 8 - lift[1]);
+  p.px(darken(pants, 0.3), 10, 20, 1, 8 - lift[0]);
+  p.px(darken(pants, 0.3), 16, 20, 1, 8 - lift[1]);
+  p.px('#2c2018', 6, 27 - lift[0], 5, 2);               // shoes
+  p.px('#2c2018', 13, 27 - lift[1], 5, 2);
   p.px(jacket, 4, 11, 16, 11);                          // torso
   p.px(jacketDark, 15, 12, 5, 10);
   p.px(jacketLight, 5, 12, 2, 9);
   p.px(jacketDark, 4, 21, 16, 1);
-  p.px(jacket, 2, 12, 3, 9);                            // arms
-  p.px(jacket, 19, 12, 3, 9);
-  p.px(jacketDark, 21, 13, 1, 8);
-  p.px('#f2c9a0', 2, 21, 3, 2);                         // hands
-  p.px('#f2c9a0', 19, 21, 3, 2);
+  p.px(jacket, 2, 12 - swing, 3, 9);                    // arms
+  p.px(jacket, 19, 12 + swing, 3, 9);
+  p.px(jacketDark, 21, 13 + swing, 1, 8);
+  p.px('#f2c9a0', 2, 21 - swing, 3, 2);                 // hands
+  p.px('#f2c9a0', 19, 21 + swing, 3, 2);
   if (o.straps) {
     p.px(o.straps, 8, 12, 1, 8);
     p.px(o.straps, 15, 12, 1, 8);
@@ -449,17 +454,22 @@ export function figure(p, o) {
   p.px('#c4755b', 11, 11, 3, 1);                        // mouth
 }
 
+// Walk (wa, wb) and run (ra, rb) stride frames of a figure, keyed `<key>-<frame>` (story 16.13).
+export const STRIDES = { wa: 1, wb: -1, ra: 2, rb: -2 };
+
 function makeFigures(scene) {
-  const mk = (key, o) => {
-    const p = new Pen(scene, key, 24, 32);
-    figure(p, o);
-    p.lit(OUT, true).shadow(12, 29.5, 8, 2.5);
-    p.done();
+  const mk = (key, o, strides = false) => {
+    for (const [name, stride] of [['', 0], ...(strides ? Object.entries(STRIDES) : [])]) {
+      const p = new Pen(scene, name ? `${key}-${name}` : key, 24, 32);
+      figure(p, { ...o, stride });
+      p.lit(OUT, true).shadow(12, 29.5, 8, 2.5);
+      p.done();
+    }
   };
   mk('player', {
     jacket: '#e0483c', jacketDark: '#b2352c', jacketLight: '#f06a5c', pants: '#2a3f8f', straps: '#e8c24a', zip: '#f6b3ab',
     hair: p => { p.ell('#5a3a1e', 12, 4.5, 6.5, 3.5); p.px('#5a3a1e', 6, 5, 2, 4); p.px('#5a3a1e', 17, 5, 2, 3); p.px('#7a5230', 9, 2, 4, 1); }
-  });
+  }, true);
   mk('bully', {
     jacket: '#5a2a7a', jacketDark: '#411c5a', jacketLight: '#7a3fa0', pants: '#3a3a48', zip: '#2c1740',
     hair: p => { p.ell('#1a1a1a', 12, 4.5, 7, 3.5); p.px('#1a1a1a', 5, 5, 14, 2); p.px('#2c2c2c', 8, 2, 5, 1); p.px('#0c0c0c', 8, 6, 12, 1); },
@@ -494,8 +504,9 @@ export function bike(p, o) {
   p.px('#d8d8e0', 37, 10, 2, 4); p.px('#fff2a0', 38, 11, 1, 2);                      // headlamp
   if (o.rider) {
     const pants = o.pants ?? darken(o.jacket, 0.5);
-    p.px('#16161e', 11, 7, 4, 2); p.px('#16161e', 14, 15, 4, 2);                     // shoes on the pedals
-    p.px(pants, 14, 7, 7, 3); p.px(pants, 14, 14, 7, 3);                             // thighs
+    const pd = o.pedal ?? 0;                                                         // pedal frames (story 16.13): +1 right foot forward, -1 left foot
+    p.px('#16161e', 11 + pd * 3, 7, 4, 2); p.px('#16161e', 14 - pd * 3, 15, 4, 2);   // shoes on the pedals
+    p.px(pants, 14 + pd, 7, 7 - pd, 3); p.px(pants, 14 - pd, 14, 7 + pd, 3);         // thighs
     p.ell(o.jacketDark, 15, 12.5, 6.5, 6.8);                                         // back, with a rucksack
     p.px(darken(o.jacket, 0.4), 8, 9, 5, 7); p.px(darken(o.jacket, 0.15), 8, 9, 5, 1);
     p.ell(o.jacket, 16, 11.8, 5.8, 6);                                               // shoulders
@@ -540,7 +551,11 @@ export function skate(p, o) {
   if (!o.rider) return;
   const crouch = o.pose === 'crouch';
   p.px('#2c2018', 21, 10, 4, 4);                                                // front foot
-  p.px('#2c2018', 11, 10, 4, 4);                                                // back foot
+  if (o.pose === 'pushA' || o.pose === 'pushB') {                               // push-off (story 16.13): the back foot kicks along the ground
+    const fy = o.pose === 'pushA' ? 14 : 6;
+    p.px(o.pants, 8, fy + 1, 8, 3);
+    p.px('#2c2018', 3, fy, 5, 4);
+  } else p.px('#2c2018', 11, 10, 4, 4);                                         // back foot
   if (crouch) { p.ell(o.pants, 22, 8, 3.6, 2.4); p.ell(o.pants, 22, 16, 3.6, 2.4); }
   const ty = crouch ? 6.2 : 7.8;
   p.ell(o.jacketDark, 17, 12.5, 5, ty);
@@ -565,6 +580,8 @@ function makeBikes(scene) {
   const rider = { jacket: '#e0483c', jacketDark: '#b2352c', jacketLight: '#f06a5c', hair: '#5a3a1e', hairLight: '#7a5230' };
   mk('bike', { frame: '#3b7dd8', frameDark: '#24508f' });
   mk('player-bike', { rider: true, frame: '#3b7dd8', frameDark: '#24508f', ...rider });
+  mk('player-bike-pa', { rider: true, frame: '#3b7dd8', frameDark: '#24508f', ...rider, pedal: 1 });
+  mk('player-bike-pb', { rider: true, frame: '#3b7dd8', frameDark: '#24508f', ...rider, pedal: -1 });
   mk('bully-scooter', {
     rider: true, frame: '#2fb5c8', frameDark: '#1c7482', jacket: '#5a2a7a', jacketDark: '#411c5a', jacketLight: '#7a3fa0', hair: '#1a1a1a', hairLight: '#3a3a48',
     cap: p => { p.px('#0c0c0c', 21, 8, 3, 8); p.px('#2c2c2c', 21, 9, 2, 1); }

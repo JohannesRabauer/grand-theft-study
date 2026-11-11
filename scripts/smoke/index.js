@@ -30,6 +30,7 @@ import { interiors } from './interiors.js';
 import { water } from './water.js';
 import { particles } from './particles.js';
 import { atmosphere } from './atmosphere.js';
+import { motion } from './motion.js';
 import { season } from './season.js';
 import { critters } from './critters.js';
 import { prompts } from './prompts.js';
@@ -65,4 +66,4 @@ import { home } from './home.js';
 import { openWorld } from './open-world.js';
 import { fullDay } from './fullday.js';
 
-export const scenarios = [rideToSchool, turfChase, chaseLevels, grownups, talk, pedestrians, slingshot, weather, snow, ambience, vegetation, buildings, water, particles, atmosphere, season, critters, prompts, dayClock, language, quality, pause, screenStack, hints, commute, shop, quests, missions, progress, stickers, achievements, lernbuch, parent, activities, minimap, phone, important, age, audio, music, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, belts, traffic, karate, school, schoolEvents, dayFlow, zeugnis, home, openWorld, fullDay, interiors, street];
+export const scenarios = [rideToSchool, turfChase, chaseLevels, grownups, talk, pedestrians, slingshot, weather, snow, ambience, vegetation, buildings, water, particles, atmosphere, motion, season, critters, prompts, dayClock, language, quality, pause, screenStack, hints, commute, shop, quests, missions, progress, stickers, achievements, lernbuch, parent, activities, minimap, phone, important, age, audio, music, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, belts, traffic, karate, school, schoolEvents, dayFlow, zeugnis, home, openWorld, fullDay, interiors, street];

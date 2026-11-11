@@ -37,7 +37,7 @@ export const worldDoors = {
     assert('now in the test room: map, surfaces and path grid follow', world.id === 'test-room' && room.indoor && ctx.surfaces.cols === 12 && ctx.chase.nav.cols === 12 && gs.worldW === 192, `${world.id} cols ${ctx.surfaces.cols}`);
     assert('every player stands at the entry point, still', ctx.players.every(p => Math.hypot(p.x - T(entry.x), p.y - T(entry.y)) < 1 && p.move.velSpeed < 1));
     assert('world:leave and world:enter fired in order with the entry id', JSON.stringify(log) === JSON.stringify([['leave', 'town'], ['enter', 'test-room', 'from-town']]), JSON.stringify(log));
-    assert('a quick fade runs', gs.cameras.main.fadeEffect.isRunning);
+    assert('a quick fade runs', !!world.fade && world.curtain.visible);
     assert('town content is gone: props, ammo, flags, bikes, sensors, pedestrians, bullies', ctx.props.props.length === 0 && gs.ammo.items.length === 0 && gs.flags.flags.length === 0 && gs.bikes.parked.length === 0 && gs.zones.zones.length === 0 && live('npcs') === 0 && ctx.chase.pool.live() === 0, `${live('npcs')} npcs`);
     assert('bodies: the town props and sensors left the physics world', mapBodies(gs) === rawBodies - townProps - townZones, `${mapBodies(gs)} vs ${rawBodies} - ${townProps} - ${townZones}`);
     assert('only the room walls are streamed', live('walls') > 0 && live('walls') <= ctx.pools.byName.get('walls').cap && ctx.pools.byName.get('walls').cap < 40, `${live('walls')}/${ctx.pools.byName.get('walls').cap}`);
@@ -67,6 +67,18 @@ export const worldDoors = {
     const worldStatics = Phaser.Physics.Matter.Matter.Composite.allBodies(gs.matter.world.localWorld).filter(b => b.collisionFilter.category === CAT.STATIC).length;
     assert('the wall streamer owns exactly the walls in the physics world and the town is walled again', worldStatics === walls.live() && walls.cap > 100, `${worldStatics}/${walls.live()}/${walls.cap}`);
     assert('the pedestrians are back in the town', gs.crowd.liveCount > 0 && live('npcs') === gs.crowd.liveCount, `${gs.crowd.liveCount}`);
+    // ---- story 16.13: with the fades on, a door request fades to black first, the map switches at full black and the screen fades back in
+    game.transitionsOff = false;
+    ctx.events.emit('world:enter-request', { map: 'test-room', entry: 'from-town' });
+    step(4);
+    assert('a door fades out before the map switches (no cut to black)', world.id === 'town' && world.curtain.alpha > 0 && world.curtain.alpha < 1, `${world.id} alpha ${world.curtain.alpha.toFixed(2)}`);
+    const fadeFrames = until(() => world.id === 'test-room', 40);
+    assert('the map switches at full black', fadeFrames >= 0 && world.curtain.alpha > 0.9, `${fadeFrames} frames, alpha ${world.curtain.alpha.toFixed(2)}`);
+    world.load('town', 'from-test-room');
+    until(() => !world.fade, 120);
+    assert('and the fade ends with nothing left on screen', !world.fade && !world.curtain.visible);
+    game.transitionsOff = true;
+    step(2);
     assert('pools stay within their caps', [...ctx.pools.byName].every(([, p]) => p.live() >= 0 && p.live() <= p.cap), [...ctx.pools.byName].filter(([, p]) => p.live() > p.cap).map(([n]) => n).join());
   }
 };

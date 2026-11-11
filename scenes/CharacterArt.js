@@ -3,7 +3,7 @@
 // freckles), so the three differ in outfit colours, hair, face and accessory. Per character it makes `player-<id>` (walking), `player-<id>-bike`
 // (riding), `player-<id>-skate` plus `-crouch` and `-manual` (skateboard poses), `player-<id>-skates` plus `-pushA`, `-pushB`, `-crouch` and `-grab` (inline skates, scenes/SkatesArt.js) and `portrait-<id>` (character select card). Drawn on the 24x32 / 40x24 authoring grids and scaled to
 // the render class like the pedestrians (NpcArt.js): 2x with outline on Medium/High, 1x on Low.
-import { figure, bike, skate, OUT } from './HiResArt.js';
+import { figure, bike, skate, OUT, STRIDES } from './HiResArt.js';
 import { ScaledPen } from './NpcArt.js';
 import { skates } from './SkatesArt.js';
 import { scooter } from './VehicleArt.js';
@@ -66,7 +66,7 @@ function ride(c) {
 }
 
 const BOARD = { frame: '#e8a33a', frameDark: '#a8701c' };
-const POSES = ['', '-crouch', '-manual'];
+const POSES = ['', '-crouch', '-manual', '-pushA', '-pushB'];
 const SKATE_POSES = ['', '-pushA', '-pushB', '-crouch', '-grab'];
 const NEW_RIDES = [
   { id: 'scooter', draw: scooter, palette: { frame: '#39b6c0', frameDark: '#21717c' }, poses: ['', '-crouch'] },
@@ -117,15 +117,21 @@ export function makeCharacterArt(scene, cfg, scale) {
   }
   newRidePoses('player', DEFAULT_KID);
   for (const c of cfg.characters) {
-    const walk = new ScaledPen(scene, `player-${c.id}`, 24, 32, f);
-    figure(walk, look(c));
-    finish(walk, false).shadow(12, 29.5, 8, 2.5);
-    walk.done();
+    // the standing figure, then the walk and run stride frames (story 16.13: only legs and arms move)
+    for (const [name, stride] of [['', 0], ...Object.entries(STRIDES)]) {
+      const walk = new ScaledPen(scene, name ? `player-${c.id}-${name}` : `player-${c.id}`, 24, 32, f);
+      figure(walk, { ...look(c), stride });
+      finish(walk, false).shadow(12, 29.5, 8, 2.5);
+      walk.done();
+    }
 
-    const rider = new ScaledPen(scene, `player-${c.id}-bike`, 40, 24, f);
-    bike(rider, ride(c));
-    finish(rider).shadow(20, 20.5, 16, 2.5, 0.25);
-    rider.done();
+    // the bike and its two pedal frames
+    for (const [name, pedal] of [['', 0], ['-pa', 1], ['-pb', -1]]) {
+      const rider = new ScaledPen(scene, `player-${c.id}-bike${name}`, 40, 24, f);
+      bike(rider, { ...ride(c), pedal });
+      finish(rider).shadow(20, 20.5, 16, 2.5, 0.25);
+      rider.done();
+    }
 
     poses(`player-${c.id}-skate`, ride(c));
     skatePoses(`player-${c.id}-skates`, ride(c));

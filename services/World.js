@@ -3,8 +3,8 @@ import { tileKey } from '../scenes/HiResArt.js';
 import { groundKeys } from '../scenes/EnvArt.js';
 import { paintGround, mapSeed } from '../scenes/GroundArt.js';
 import { resolveEntry } from './worldLogic.js';
+import { fadeAlpha } from '../camera/motionMath.js';
 
-const FADE_MS = 160; // quick fade-in from black after a switch
 const HEADING = { up: -Math.PI / 2, down: Math.PI / 2, left: Math.PI, right: 0 };
 
 // ctx.world (AD-28): owns the current map's ground texture and wall bodies, and is the only way to change maps.
@@ -31,6 +31,9 @@ export class World {
     this.systems = [];
     this.pending = null;
     ctx.world = this;
+    this.fade = null; // { t, loaded } while a door or map fade runs (story 16.13)
+    this.curtain = scene.add.rectangle(scene.cameras.main.width / 2, scene.cameras.main.height / 2, 5000, 5000, 0x000000)
+      .setScrollFactor(0).setDepth(1e9).setVisible(false);
     ctx.events.on('world:enter-request', ev => { this.pending = ev; });
   }
 
@@ -53,12 +56,43 @@ export class World {
     this.build(mapId);
   }
 
-  // A pending door request is applied between frames, never in the middle of a system's update.
-  update() {
-    if (!this.pending) return;
+  // A pending door request is applied between frames, never in the middle of a system's update. With fades on (data/motion.json
+  // transition) the screen eases to black first, the map switches at full black and fades back in: no cut to black, no pop.
+  // `dt` is real seconds (a hit-stop does not slow the fade).
+  update(dt = 0) {
+    const f = this.fade;
+    if (f) this.stepFade(f, dt);
+    if (!this.pending || f?.loaded === false) return;
+    if (this.scene.game.transitionsOff) { this.enter(); return; }
+    this.fade = { t: 0, loaded: false };
+    this.stepFade(this.fade, 0);
+  }
+
+  stepFade(f, dt) {
+    const cfg = this.ctx.motion.cfg.transition;
+    const reduced = this.ctx.motion.reduced;
+    f.t += dt;
+    const out = reduced ? cfg.reduced : cfg.out;
+    if (!f.loaded && f.t >= out) { // a direct load() meanwhile took the request: nothing left to switch
+      if (this.pending) this.enter(); else { this.fade = null; this.curtain.setVisible(false); }
+      return;
+    } // the switch starts the fade-in (startFadeIn)
+    const total = out + cfg.hold + (reduced ? cfg.reduced : cfg.in);
+    const a = f.t >= total ? 0 : fadeAlpha(cfg, f.t, reduced);
+    this.curtain.setAlpha(a).setVisible(a > 0);
+    if (f.t >= total) this.fade = null;
+  }
+
+  // Applies the pending door request; a refused one (unknown map or entry) ends the fade at once.
+  enter() {
     const { map, entry } = this.pending;
     this.pending = null;
-    this.load(map, entry);
+    if (!this.load(map, entry)) { this.fade = null; this.curtain.setVisible(false); }
+  }
+
+  // The fade-in of a switch keeps running while a screen pauses the world.
+  tickFade(dt) {
+    if (this.fade?.loaded) this.stepFade(this.fade, dt);
   }
 
   load(mapId, entryId) {
@@ -69,6 +103,7 @@ export class World {
       console.warn(`world.load: cannot enter '${mapId}' at '${entryId}'`);
       return false;
     }
+    this.pending = null; // a direct load answers any door request still waiting
     ctx.events.emit('world:leave', { map: this.id });
     for (let i = this.systems.length - 1; i >= 0; i--) this.systems[i].unloadMap();
     this.build(mapId);
@@ -76,9 +111,17 @@ export class World {
     for (const p of ctx.players) p.teleport((entry.x + 0.5) * ts, (entry.y + 0.5) * ts, HEADING[entry.facing]);
     scene.snapCamera();
     for (const s of this.systems) s.loadMap();
-    scene.cameras.main.fadeIn(FADE_MS, 0, 0, 0);
+    this.startFadeIn();
     ctx.events.emit('world:enter', { map: mapId, entry: entry.id });
     return true;
+  }
+
+  // After a switch the screen is black and eases in (also for loads that skipped the fade-out).
+  startFadeIn() {
+    const cfg = this.ctx.motion.cfg.transition;
+    const out = this.ctx.motion.reduced ? cfg.reduced : cfg.out;
+    this.fade = { t: out, loaded: true };
+    this.curtain.setAlpha(1).setVisible(true);
   }
 
   // Replaces ctx.map, the surface grid, the ground texture and the wall bodies (the streamer owns removing the old ones).

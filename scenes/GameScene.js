@@ -16,6 +16,9 @@ import { Player } from '../entities/Player.js';
 import { installPlayers, startPlayers } from '../entities/players.js';
 import { PlayerMarkers } from '../entities/PlayerMarkers.js';
 import { CameraRig } from '../camera/CameraRig.js';
+import { Motion } from '../camera/Motion.js';
+import { stepLookAhead } from '../camera/motionMath.js';
+import { PlayerMotion } from '../entities/PlayerMotion.js';
 import { LightPool } from '../render/lightMath.js';
 import { LightMap } from '../render/LightMap.js';
 import { StreetLights } from '../render/StreetLights.js';
@@ -127,12 +130,14 @@ export class GameScene extends Phaser.Scene {
     ctx.minigames = new Minigames(this, ctx, cache.get('minigames')); // AD-20
     this.ctx = ctx;
 
+    new Motion(ctx, cache.get('motion'), this.game); // story 16.13: reducedMotion, camera shake and hit-stop presets
     new World(this, ctx, index, maps).start(startMap); // AD-28: ground, walls and ctx.map of the first map
 
     // map objects are in tile coordinates
     const spawn = map.objects.find(o => o.type === 'spawn' && o.id === 'player');
     this.toolCfg = cache.get('tool');
     this.zoomCfg = cache.get('camera');
+    this.cfgMotion = cache.get('motion');
     const starters = startPlayers(state.shared, state.players, ctx.maxPlayers, this.startOverride);
     const offsets = starters.length > 1 ? this.zoomCfg.coop.spawnOffsets : [[0, 0]];
     for (const s of starters) {
@@ -215,7 +220,9 @@ export class GameScene extends Phaser.Scene {
     this.garage = new Garage(this, ctx);
     this.caught = new Caught(this, ctx, cache.get('chase').caught, this.mountables);
     this.theft = new BikeTheft(this, ctx, cache.get('theft'), this.bikes, this.parking, cache.get('vehicles')); // needs the chase director's spawns and paths
+    this.look = { x: 0, y: 0 }; // eased camera look-ahead offset (story 16.13)
     this.rig = new CameraRig(ctx, this.zoomCfg); // AD-18: focus, fit zoom and tether of all players
+    this.motion = new PlayerMotion(this, ctx, cache.get('motion')); // story 16.13: stride frames, bob, breathing, squash
     this.markers = new PlayerMarkers(this, ctx, this.zoomCfg.coop);
     this.streamer = new WallStreamer(this, ctx, cache.get('quality').wallRadius);
 
@@ -305,8 +312,10 @@ export class GameScene extends Phaser.Scene {
   // Puts the camera on the players at once (start, map switch) instead of easing towards them.
   snapCamera() {
     this.rig.update(0);
+    this.look.x = this.look.y = 0;
     this.camX = this.camOutX = this.focus.x;
     this.camY = this.camOutY = this.focus.y;
+    this.shX = this.shY = 0;
     this.followCamera(1);
     this.cameras.main.preRender(); // worldView, which prop culling and the crowd's first fill read
   }
@@ -352,13 +361,13 @@ export class GameScene extends Phaser.Scene {
     const cam = this.cameras.main;
     const hw = cam.width / 2;
     const hh = cam.height / 2;
-    if (Math.abs(cam.scrollX + hw - this.camOutX) > 0.01 || Math.abs(cam.scrollY + hh - this.camOutY) > 0.01) {
+    if (Math.abs(cam.scrollX + hw - this.camOutX - this.shX) > 0.01 || Math.abs(cam.scrollY + hh - this.camOutY - this.shY) > 0.01) {
       this.camX = cam.scrollX + hw;
       this.camY = cam.scrollY + hh;
     }
     const k = 1 - Math.pow(1 - this.zoomCfg.follow, dt * 60);
-    this.camX += (this.focus.x - this.camX) * k;
-    this.camY += (this.focus.y - this.camY) * k;
+    this.camX += (this.focus.x + this.look.x - this.camX) * k;
+    this.camY += (this.focus.y + this.look.y - this.camY) * k;
     const z = cam.zoom;
     const vw = cam.width / z / 2; // half of the visible world, so the view stays inside the map
     const vh = cam.height / z / 2;
@@ -367,7 +376,10 @@ export class GameScene extends Phaser.Scene {
     const snap = Phaser.Math.Clamp(1 - Math.abs(z - Math.round(z)) / SNAP_RANGE, 0, 1);
     this.camOutX = cx + (Math.round(cx * z) / z - cx) * snap;
     this.camOutY = cy + (Math.round(cy * z) / z - cy) * snap;
-    cam.setScroll(this.camOutX - hw, this.camOutY - hh);
+    // whole base px, added after the snap so the shake stays pixel-crisp; the view still stays inside the map
+    this.shX = this.worldW > vw * 2 ? Phaser.Math.Clamp(this.camOutX + this.ctx.motion.shakeX, vw, this.worldW - vw) - this.camOutX : 0;
+    this.shY = this.worldH > vh * 2 ? Phaser.Math.Clamp(this.camOutY + this.ctx.motion.shakeY, vh, this.worldH - vh) - this.camOutY : 0;
+    cam.setScroll(this.camOutX + this.shX - hw, this.camOutY + this.shY - hh);
   }
 
   setPaused(on) {
@@ -398,10 +410,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(time, delta) {
-    const dt = Math.min(delta, 50) / 1000;
+    const real = Math.min(delta, 50) / 1000;
+    const scale = this.ctx.motion.timeScale(real); // a hit-stop slows the world for a few frames (story 16.13)
+    const dt = real * scale;
+    delta *= scale;
     this.ctx.input.update();
-    if (this.paused) return;
-    this.ctx.world.update();
+    if (this.paused) { this.ctx.world.tickFade(real); return; } // a fade started behind a screen still ends
+    this.ctx.motion.update(real);
+    this.ctx.world.update(real);
     this.stepPhysics(delta);
     if (this.ctx.input.intent.weather) this.ctx.weather.toggle(); // global intents come from P1 only
     if (this.ctx.input.intent.map) this.ctx.minimap?.toggle(); // story 11.2
@@ -414,6 +430,7 @@ export class GameScene extends Phaser.Scene {
     if (this.ctx.frozen) {
       this.flags.update(dt);
       this.ctx.particles.update(dt);
+      this.followCamera(0); // no easing, but a running shake (being caught) still moves the view
       return;
     }
     for (const p of this.ctx.players) if (p.pinned) p.hold(); else p.update(dt);
@@ -448,7 +465,10 @@ export class GameScene extends Phaser.Scene {
     this.doors.update();
     this.doorbells.update(dt);
     this.chase.update(dt);
+    this.motion.update(dt);
     this.rig.update(dt);
+    if (this.ctx.coop.active) this.look.x = this.look.y = 0; // co-op: the fit zoom and the tether own the view
+    else stepLookAhead(this.look, this.focus.vx, this.focus.vy, dt, this.cfgMotion.lookAhead, this.ctx.motion.reduced ? 0 : 1);
     this.updateZoom(dt);
     this.followCamera(dt);
     this.crowd.update(dt);

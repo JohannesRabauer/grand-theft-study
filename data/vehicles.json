@@ -50,7 +50,15 @@
     "radius": 5,
     "poses": {
       "crouch": "-crouch",
-      "manual": "-manual"
+      "manual": "-manual",
+      "push": [
+        "-pushA",
+        "-pushB"
+      ]
+    },
+    "push": {
+      "interval": 0.24,
+      "glideFrac": 0.9
     },
     "trick": {
       "ollie": {

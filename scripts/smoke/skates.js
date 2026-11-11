@@ -4,6 +4,7 @@
 // the skates' top speed with sparks, rope and risk bar, swinging sideways, the failure with its comic stumble, release by
 // letting go and by jumping (Style 'bus ride'), failure odds with seeded randomness (cobble worse, the perk better) and
 // independent co-op grabs.
+import { baseKey } from './frames.js';
 import { CAT } from '../../physics/categories.js';
 export const skates = {
   name: 'skates',
@@ -43,7 +44,7 @@ export const skates = {
     const skatesSvc = gs.skates;
     const vehicleLine = ui.hud.get('status').vehicle.text;
     assert('Lorenz starts on skates (no fallback to running): vehicle, mounted, own rider look, HUD line',
-      player.character.startVehicle === 'skates' && player.startVehicle === 'skates' && player.vehicle === 'skates' && skatesSvc.isMounted(0) && player.sprite.texture.key.startsWith('player-lorenz-skates') && vehicleLine === ctx.t('hud.vehicle', { name: ctx.t('vehicle.skates') }), `${player.vehicle} ${player.sprite.texture.key} "${vehicleLine}"`);
+      player.character.startVehicle === 'skates' && player.startVehicle === 'skates' && player.vehicle === 'skates' && skatesSvc.isMounted(0) && baseKey(player.sprite).startsWith('player-lorenz-skates') && vehicleLine === ctx.t('hud.vehicle', { name: ctx.t('vehicle.skates') }), `${player.vehicle} ${player.sprite.texture.key} "${vehicleLine}"`);
     const buses = grabs.pool.filter(t => t.active && t.kind === 'bus');
     assert('the town has lying skates to pick up and two buses on the main road', skatesSvc.parked.filter(b => b.visible).length >= 2 && buses.length === 2 && buses.every(t => t.y > 54 * 16 && t.y < 58 * 16));
 
@@ -147,7 +148,7 @@ export const skates = {
     const lorenzTop = sk.maxSpeed * player.move.speedMult;
     assert('towed at the bus speed: clearly above the skates top speed, same direction', Math.abs(player.move.velSpeed - bus.speed) < bus.speed * 0.06 && player.move.velSpeed > lorenzTop * 1.1 && Math.abs(player.move.heading - bus.heading) < 0.15, `${player.move.velSpeed.toFixed(0)} vs bus ${bus.speed} / top ${lorenzTop.toFixed(0)}, heading ${player.move.heading.toFixed(2)} vs ${bus.heading.toFixed(2)}`);
     const ropeLen = Math.hypot(bus.x - bus.kcfg.length / 2 - player.x, bus.y - player.y);
-    assert('the rider hangs on a rope behind the handle, in the grab pose with sparks, rope and risk bar drawn', Math.abs(ropeLen - cfg.ropeLength) < 6 && player.sprite.texture.key === 'player-lorenz-skates-grab' && fx.spark > sparks0 + 2 && grabs.drawn && slotOf(player).g.risk >= 0, `rope ${ropeLen.toFixed(1)}, sparks +${fx.spark - sparks0}`);
+    assert('the rider hangs on a rope behind the handle, in the grab pose with sparks, rope and risk bar drawn', Math.abs(ropeLen - cfg.ropeLength) < 6 && baseKey(player.sprite) === 'player-lorenz-skates-grab' && fx.spark > sparks0 + 2 && grabs.drawn && slotOf(player).g.risk >= 0, `rope ${ropeLen.toFixed(1)}, sparks +${fx.spark - sparks0}`);
     assert('interact while hanging on does not get off the skates', (() => { intent.interact = true; step(1); intent.interact = false; return player.vehicle === 'skates' && player.grabbing; })());
 
     // steering sideways swings it a little
@@ -311,7 +312,7 @@ export const skates = {
     intent.interact = true;
     step(1);
     intent.interact = false;
-    assert('walking to the lying skates and pressing interact puts them on again', player.vehicle === 'skates' && skatesSvc.isMounted(0) && player.sprite.texture.key.startsWith('player-lorenz-skates'));
+    assert('walking to the lying skates and pressing interact puts them on again', player.vehicle === 'skates' && skatesSvc.isMounted(0) && baseKey(player.sprite).startsWith('player-lorenz-skates'));
 
     // ---- co-op: each player has their own grab
     if (ctx.players.length < 2) gs.addDebugPlayer();
@@ -365,6 +366,6 @@ export const skates = {
     quiet();
     skatesSvc.unloadMap(); // back to the map's own lying skates: the starter pair and the dropped one are gone
     skatesSvc.loadMap();
-    assert('neutral kid restored on foot', player.vehicle === 'foot' && player.sprite.texture.key === 'player' && player.character === null && !player.grabbing && !player.stumbling);
+    assert('neutral kid restored on foot', player.vehicle === 'foot' && baseKey(player.sprite) === 'player' && player.character === null && !player.grabbing && !player.stumbling);
   }
 };

@@ -236,6 +236,13 @@ export const ACTIONS = {
     return { path: ['shared.quests', 'shared.flags'] };
   },
 
+  // The accessibility switch of story 16.13 (shake, squash, hit-stop and look-ahead off); entry 15 wires it to the Effekte setting.
+  'settings.reducedMotion'(s, { value }) {
+    if (typeof value !== 'boolean') return reject('bad-payload');
+    s.shared.flags.reducedMotion = value;
+    return { path: 'shared.flags.reducedMotion' };
+  },
+
   'flags.set'(s, { key, value = true }) {
     if (!key) return reject('bad-payload');
     s.shared.flags[key] = value;

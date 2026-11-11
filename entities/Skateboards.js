@@ -141,8 +141,13 @@ export class Skateboards {
 
   // Texture suffix of the rider's pose: crouched for a hop, nose up in a manual, else rolling.
   poseFor(dt, player, r, s, i) {
-    const poses = this.profile.poses;
-    return s.air > 0 || s.grind || (i.jump && !s.manual) ? poses.crouch : s.manual ? poses.manual : '';
+    const { poses, push } = this.profile;
+    if (s.air > 0 || s.grind || (i.jump && !s.manual)) return poses.crouch;
+    if (s.manual) return poses.manual;
+    const m = player.move;
+    if (!push || (i.move.x === 0 && i.move.y === 0) || m.velSpeed >= push.glideFrac * this.profile.maxSpeed * m.speedMult * this.ctx.surfaces.props(m.surface).speed[this.id]) return '';
+    r.pushT += dt; // kicking off again and again while accelerating (story 16.13), as on inline skates
+    return poses.push[Math.floor(r.pushT / push.interval) % 2];
   }
 
   ride(dt, player, r, i) {

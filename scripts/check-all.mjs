@@ -46,6 +46,7 @@ checks.push('check-interiors.mjs'); // story 16.10
 checks.push('check-water.mjs');
 checks.push('check-particles.mjs');
 checks.push('check-atmosphere.mjs'); // story 16.12
+checks.push('check-motion.mjs'); // story 16.13
 checks.push('check-season.mjs'); // story 16.19
 checks.push('check-spriteshade.mjs'); // story 16.18
 for (const c of checks) {

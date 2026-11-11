@@ -12,7 +12,7 @@ export class CameraRig {
   constructor(ctx, cfg) {
     this.ctx = ctx;
     this.cfg = cfg;
-    this.focus = { x: 0, y: 0, speed: 0, zoomCap: Infinity };
+    this.focus = { x: 0, y: 0, speed: 0, vx: 0, vy: 0, zoomCap: Infinity };
     this.view = { w: ctx.res.w, h: ctx.res.h };
     this.tether = new Tether(cfg.tether, ctx.res.w / ctx.res.h);
     ctx.coop = { active: false, distance: 0, tetherRatio: 0 };
@@ -22,7 +22,12 @@ export class CameraRig {
     const { ctx, cfg, focus } = this;
     const players = ctx.players;
     focus.speed = 0;
-    for (const p of players) focus.speed = Math.max(focus.speed, p.move.velSpeed);
+    focus.vx = focus.vy = 0;
+    for (const p of players) {
+      focus.speed = Math.max(focus.speed, p.move.velSpeed);
+      focus.vx += p.move.vel.x / players.length; // the camera look-ahead (story 16.13) aims along the mean velocity
+      focus.vy += p.move.vel.y / players.length;
+    }
     weightedCenter(focus, players, cfg.coop.pinnedWeight);
     const coop = ctx.coop;
     coop.active = players.length > 1;

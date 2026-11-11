@@ -2,6 +2,7 @@
 // Kilian starts on his board, measured top speeds per surface follow the profile and differ from bike and foot,
 // the ollie clears a cone (no prop contact while airborne), the manual meter runs and ends softly, and the player can
 // switch between board, foot and bike.
+import { baseKey } from './frames.js';
 export const skateboard = {
   name: 'skateboard',
   run(game, assert, env) {
@@ -30,7 +31,7 @@ export const skateboard = {
     const board = gs.skateboards;
     const vehicleLine = ui.hud.get('status').vehicle.text;
     assert('Kilian starts on the board: vehicle, mounted state, own rider look, HUD line',
-      player.vehicle === 'skateboard' && board.isMounted(0) && player.sprite.texture.key === 'player-kilian-skate' && vehicleLine === ctx.t('hud.vehicle', { name: ctx.t('vehicle.skateboard') }), `${player.vehicle} ${player.sprite.texture.key} "${vehicleLine}"`);
+      player.vehicle === 'skateboard' && board.isMounted(0) && baseKey(player.sprite) === 'player-kilian-skate' && vehicleLine === ctx.t('hud.vehicle', { name: ctx.t('vehicle.skateboard') }), `${player.vehicle} ${player.sprite.texture.key} "${vehicleLine}"`);
     assert('the town has lying boards to pick up', board.parked.filter(b => b.visible).length >= 2);
 
     // ---- measured top speed per surface (the surface lookup is forced, the controller is the real one)
@@ -123,7 +124,7 @@ export const skateboard = {
     intent.manual = true;
     step(3);
     const rig = board.riders[0].skate;
-    const started = rig.manual && player.sprite.texture.key === 'player-kilian-skate-manual';
+    const started = rig.manual && baseKey(player.sprite) === 'player-kilian-skate-manual';
     const meter0 = rig.meter;
     step(10);
     assert('the manual starts in the sweet spot with the nose-up pose and a speed boost', started && rig.sweetNow && player.move.boostMult === sk.trick.manual.boost && rig.meter > meter0 && manualEvents[0]?.phase === 'start' && manualEvents[0].player === 0, `meter ${rig.meter.toFixed(2)}`);
@@ -131,7 +132,7 @@ export const skateboard = {
     while (rig.manual && n < 200) { step(1); n++; }
     intent.manual = false;
     const end = manualEvents.find(e => e.phase === 'end');
-    assert('held too long it tips over softly: back to rolling, no speed loss, vehicle unchanged', !rig.manual && end?.reason === 'over' && end.sweet > 0.2 && player.move.boostMult === 1 && player.move.velSpeed > 60 && player.vehicle === 'skateboard' && player.sprite.texture.key === 'player-kilian-skate', `${end?.reason} after ${(end?.time ?? 0).toFixed(2)}s, speed ${player.move.velSpeed.toFixed(0)}`);
+    assert('held too long it tips over softly: back to rolling, no speed loss, vehicle unchanged', !rig.manual && end?.reason === 'over' && end.sweet > 0.2 && player.move.boostMult === 1 && player.move.velSpeed > 60 && player.vehicle === 'skateboard' && baseKey(player.sprite) === 'player-kilian-skate', `${end?.reason} after ${(end?.time ?? 0).toFixed(2)}s, speed ${player.move.velSpeed.toFixed(0)}`);
     ctx.events.off('trick:manual', onManual);
     intent.move.x = 0;
     delete ctx.surfaces.at;
@@ -152,7 +153,7 @@ export const skateboard = {
     place(drop.x, drop.y);
     step(2);
     press('interact');
-    assert('walking to a lying board and pressing interact mounts it again', player.vehicle === 'skateboard' && board.isMounted(0) && player.sprite.texture.key === 'player-kilian-skate');
+    assert('walking to a lying board and pressing interact mounts it again', player.vehicle === 'skateboard' && board.isMounted(0) && baseKey(player.sprite) === 'player-kilian-skate');
     press('interact');
     assert('and off again (foot)', player.vehicle === 'foot' && player.move.boostMult === 1);
 
@@ -173,6 +174,6 @@ export const skateboard = {
     quiet();
     board.unloadMap(); // back to the map's own boards: the starter board and the one dropped here are gone
     board.loadMap();
-    assert('neutral kid restored on foot', player.vehicle === 'foot' && player.sprite.texture.key === 'player' && player.character === null);
+    assert('neutral kid restored on foot', player.vehicle === 'foot' && baseKey(player.sprite) === 'player' && player.character === null);
   }
 };

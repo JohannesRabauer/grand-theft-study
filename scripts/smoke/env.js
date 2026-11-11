@@ -16,6 +16,8 @@ export function createEnv(game, h, assert, savedLang) {
   game.lookoutsOff = true; // lookouts (story 7.2) are switched on by the scenario that tests them
   game.hintsOff = true; // contextual tips freeze the world until confirmed; the scripted runs switch them off (the `hints` scenario turns them on)
   for (const f of ['footstepsOff', 'dripsOff', 'petalsOff', 'leavesFallOff', 'embersOff', 'motesOff', 'glowOff']) game[f] = true; // the particle overhaul (story 16.11) is switched on by the `particles` scenario
+  game.motionFxOff = true; // shake and hit-stop on bumps and hits (story 16.13) shift the seeded runs; the `motion` scenario switches them on
+  game.transitionsOff = true; // door fade-outs (story 16.13) wait for the camera: scripted door requests load at once (the `motion` scenario turns them on)
   game.trafficOff = true; // the scripted route runners ride the main road blind: buses only hit players in the `traffic` scenario
   step(3);
   const menu = game.scene.getScene('Menu');

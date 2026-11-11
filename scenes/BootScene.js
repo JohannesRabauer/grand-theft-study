@@ -32,6 +32,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('vehicles', 'data/vehicles.json');
     this.load.json('tiles', 'data/tiles.json');
     this.load.json('camera', 'data/camera.json');
+    this.load.json('motion', 'data/motion.json');
     this.load.json('input', 'data/input.json');
     this.load.json('quality', 'data/quality.json');
     this.load.json('weather', 'data/weather.json');

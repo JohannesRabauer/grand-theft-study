@@ -1,6 +1,7 @@
 // Smoke scenarios: characters. Each export is { name, run(game, assert, env) }; registered in scripts/smoke/index.js.
 // CAP-12: attribute modifiers show up in measured top speed and stamina, the three looks differ, growth hooks raise
 // attributes and growth survives a save and load (into an in-memory storage, so no real save slot is touched).
+import { baseKey } from './frames.js';
 import { SaveSlots } from '../../state/SaveSlots.js';
 
 const memoryStorage = () => {
@@ -45,17 +46,17 @@ export const characters = {
 
     // ---- identity: distinct looks, start vehicles, bully weights, perks
     become('helena');
-    assert('Helena looks like Helena and starts on the bike, bullies weight her up (1.25), precision slingshot, yellow belt, stronger Kiai', player.sprite.texture.key === 'player-helena' && player.startVehicle === 'bike' && player.bullyWeight === 1.25 && player.perks.aimPrecision > 0 && player.perks.kiaiPower > 1 && ctx.state.players[0].karate.belt === 'yellow', `${player.sprite.texture.key}/${player.startVehicle}/${player.bullyWeight}`);
+    assert('Helena looks like Helena and starts on the bike, bullies weight her up (1.25), precision slingshot, yellow belt, stronger Kiai', baseKey(player.sprite) === 'player-helena' && player.startVehicle === 'bike' && player.bullyWeight === 1.25 && player.perks.aimPrecision > 0 && player.perks.kiaiPower > 1 && ctx.state.players[0].karate.belt === 'yellow', `${player.sprite.texture.key}/${player.startVehicle}/${player.bullyWeight}`);
     become('kilian');
-    assert('Kilian: own look, starts on his skateboard, trick and stick perks', player.sprite.texture.key === 'player-kilian' && player.startVehicle === 'skateboard' && player.perks.trickMultiplier > 1 && player.perks.stickThrowRange > 1);
+    assert('Kilian: own look, starts on his skateboard, trick and stick perks', baseKey(player.sprite) === 'player-kilian' && player.startVehicle === 'skateboard' && player.perks.trickMultiplier > 1 && player.perks.stickThrowRange > 1);
     become('lorenz');
-    assert('Lorenz: own look, starts on skates, bus and talk perks', player.sprite.texture.key === 'player-lorenz' && player.startVehicle === 'skates' && player.perks.busGrabBonus > 0 && player.perks.talkDownBonus > 0);
+    assert('Lorenz: own look, starts on skates, bus and talk perks', baseKey(player.sprite) === 'player-lorenz' && player.startVehicle === 'skates' && player.perks.busGrabBonus > 0 && player.perks.talkDownBonus > 0);
     assert('Lorenz (8) is drawn a bit smaller than the others', Math.abs(player.sprite.scaleX / ctx.res.inv - 0.9) < 1e-9, String(player.sprite.scaleX));
     become('kilian');
     assert('Kilian and Helena are drawn at normal size', Math.abs(player.sprite.scaleX / ctx.res.inv - 1) < 1e-9);
     become('lorenz');
     player.setVehicle('bike');
-    assert('the bike look is the character own', player.sprite.texture.key === 'player-lorenz-bike');
+    assert('the bike look is the character own', baseKey(player.sprite) === 'player-lorenz-bike');
     player.setVehicle('foot');
     const looks = ['player-helena', 'player-kilian', 'player-lorenz', 'player-helena-bike', 'player-kilian-bike', 'player-lorenz-bike', 'player'];
     assert('every walk and bike look is a different picture', new Set(looks.map(hash)).size === looks.length);
@@ -91,6 +92,6 @@ export const characters = {
     intent.move.x = 0;
     intent.sprint = false;
     quiet();
-    assert('neutral kid restored (default look, no modifiers)', player.sprite.texture.key === 'player' && player.move.speedMult === 1 && player.character === null);
+    assert('neutral kid restored (default look, no modifiers)', baseKey(player.sprite) === 'player' && player.move.speedMult === 1 && player.character === null);
   }
 };

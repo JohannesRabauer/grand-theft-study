@@ -151,7 +151,7 @@ const settle = (th, a, b, ma, mb, seconds = 3) => { for (let t = 0; t < seconds 
 }
 
 // ---- rig with fake players
-const mkPlayer = (index, x, y, speed = 0) => ({ index, x, y, pinned: false, move: { velSpeed: speed, tetherMult: 1, nudgeX: 0, nudgeY: 0 } });
+const mkPlayer = (index, x, y, speed = 0) => ({ index, x, y, pinned: false, move: { velSpeed: speed, vel: { x: speed, y: 0 }, tetherMult: 1, nudgeX: 0, nudgeY: 0 } });
 const ctx = { res: { w: 480, h: 270 }, players: [mkPlayer(0, 100, 100, 30)], input: { intents: [{ move: { x: 0, y: 0 } }, { move: { x: 0, y: 0 } }] } };
 const rig = new CameraRig(ctx, cam);
 assert.deepEqual(ctx.coop, { active: false, distance: 0, tetherRatio: 0 });

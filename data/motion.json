@@ -1,0 +1,30 @@
+{
+  "_doc": "Smooth motion (story 16.13, camera/motionMath.js, camera/Motion.js, entities/PlayerMotion.js). reducedMotion: the data default of the flag (the family or entry 15 Effekte setting saves shared.flags.reducedMotion through the settings.reducedMotion state action; a saved flag wins over this default); with it on there is no shake, no hit-stop, no squash, no bob, no breathing and no camera look-ahead, and door fades are short. lookAhead: the camera aims `distance` world px ahead of the kid, reached at `speedFor` px/s, eased with `response` per second; it is off in co-op (the fit zoom and the tether own the view). cycle: stride frames advance by distance (`stepLen` world px per step; a 4-step cycle of stride A, standing, stride B, standing), `moveFrom` px/s is the speed above which a kid counts as moving, `runFrom` px/s switches walk to run frames (`runStepLen`), bob: px the body rises between strides; bike.stepLen: px per half turn of the pedals. breathe: the standing figure rises one base px while the breathing sine at `rate` Hz is above `above`. squash: preset scales of the sprite (sx, sy at the extreme, `time` s, eased back to 1): land is a small squash of the standing kid (mounting, dismounting), rideJump stretches a rider along its heading, rideLand squashes it, hop is the bike bell and mounting hop. transition: door and map fades (`out` and `in` s, `hold` s at black, `reduced` is both under reducedMotion). shake: presets of whole-base-pixel camera offsets (amp px, `time` s, `hz` wobble rate, decays). hitStop: presets of `time` s at `scale` times normal speed. events: which game events trigger which presets (phase: only that phase of the event).",
+  "reducedMotion": false,
+  "lookAhead": { "distance": 16, "speedFor": 110, "response": 2.6 },
+  "cycle": { "moveFrom": 6, "stepLen": 9, "runFrom": 62, "runStepLen": 12, "bob": 1, "bike": { "stepLen": 11 } },
+  "breathe": { "above": 0.3, "rate": 0.42 },
+  "squash": {
+    "land": { "sx": 1.12, "sy": 0.86, "time": 0.2 },
+    "rideJump": { "sx": 1.1, "sy": 0.92, "time": 0.16 },
+    "rideLand": { "sx": 0.88, "sy": 1.1, "time": 0.18 },
+    "hop": { "sx": 0.94, "sy": 1.08, "time": 0.12 }
+  },
+  "transition": { "out": 0.16, "in": 0.26, "reduced": 0.08, "hold": 0.02 },
+  "shake": {
+    "bump": { "amp": 2, "time": 0.18, "hz": 28 },
+    "land": { "amp": 1, "time": 0.14, "hz": 30 },
+    "caught": { "amp": 3, "time": 0.3, "hz": 24 },
+    "hit": { "amp": 3, "time": 0.22, "hz": 26 }
+  },
+  "hitStop": {
+    "bump": { "time": 0.05, "scale": 0.05 },
+    "hit": { "time": 0.08, "scale": 0.05 }
+  },
+  "events": {
+    "bully:bump": { "shake": "bump", "hitStop": "bump" },
+    "traffic:hit": { "shake": "hit", "hitStop": "hit" },
+    "player:caught": { "shake": "caught" },
+    "trick:ollie": { "shake": "land", "phase": "end" }
+  }
+}

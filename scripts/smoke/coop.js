@@ -1,5 +1,6 @@
 // Smoke scenarios: coop. Each export is { name, run(game, assert, env) }; registered in scripts/smoke/index.js.
 
+import { baseKey } from './frames.js';
 const memoryStorage = () => {
   const m = new Map();
   return { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k) };
@@ -77,7 +78,7 @@ export const coopMenu = {
     // ---- two different kids: per-player start vehicles (Kilian on his skateboard, Helena on her bike)
     const { gs, ui, ctx } = menuStart(game, env, { coop: true, characters: ['kilian', 'helena'], slot: 1 });
     const [p1, p2] = ctx.players;
-    assert('P1 Kilian starts on his skateboard, P2 Helena on her bike', p1.character.id === 'kilian' && p2.character.id === 'helena' && p1.vehicle === 'skateboard' && gs.skateboards.isMounted(0) && !gs.bikes.isMounted(0) && gs.bikes.isMounted(1) && p1.sprite.texture.key === 'player-kilian-skate' && p2.sprite.texture.key === 'player-helena-bike', `${p1.sprite.texture.key} ${p2.sprite.texture.key}`);
+    assert('P1 Kilian starts on his skateboard, P2 Helena on her bike', p1.character.id === 'kilian' && p2.character.id === 'helena' && p1.vehicle === 'skateboard' && gs.skateboards.isMounted(0) && !gs.bikes.isMounted(0) && gs.bikes.isMounted(1) && baseKey(p1.sprite) === 'player-kilian-skate' && baseKey(p2.sprite) === 'player-helena-bike', `${p1.sprite.texture.key} ${p2.sprite.texture.key}`);
     assert('the HUD shows one slice per player', ui.hud.has('status.1') && !ui.hud.has('status'));
 
     // ---- the pause menu shows the mode

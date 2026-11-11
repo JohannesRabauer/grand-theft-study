@@ -6,6 +6,8 @@
 import { ambientFor, ambientRgb, darkness, lightPixels } from './lightMath.js';
 import { interiorAmbient, interiorNight, isInterior } from './interiorMath.js';
 
+const PAD = 1; // light-map px of margin round the view, so a snapped origin never leaves an unlit sliver
+
 export class LightMap {
   constructor(scene, ctx, cfg, postFx, interiors = null) {
     this.scene = scene;
@@ -43,7 +45,7 @@ export class LightMap {
     c.putImageData(img, 0, 0);
     tex.refresh();
     tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
-    this.rt = scene.add.renderTexture(0, 0, this.w, this.h).setOrigin(0).setDepth(cfg.depth).setBlendMode(Phaser.BlendModes.MULTIPLY).setVisible(false);
+    this.rt = scene.add.renderTexture(0, 0, this.w + 2 * PAD, this.h + 2 * PAD).setOrigin(0).setDepth(cfg.depth).setBlendMode(Phaser.BlendModes.MULTIPLY).setVisible(false);
     this.rt.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
     // one reusable stamp (not on the display list) draws every pool
     this.stamp = scene.make.image({ key: t.key, add: false }).setOrigin(0.5).setBlendMode(Phaser.BlendModes.ADD);
@@ -79,17 +81,25 @@ export class LightMap {
     this.time += dt;
     if (!this.enabled) return;
     const { rt, stamp, ctx } = this;
-    const v = this.scene.cameras.main.worldView;
-    const k = this.w / v.width; // light-map pixels per world unit
-    rt.setPosition(v.x, v.y).setDisplaySize(v.width, v.height);
+    // The view from scroll and zoom (always current; worldView refreshes at render time). The origin snaps to the light-map
+    // grid, so every light keeps its world position while the camera moves sub-pixel (story 16.13: no light jitter).
+    const cam = this.scene.cameras.main;
+    const vw = cam.width / cam.zoom;
+    const vh = cam.height / cam.zoom;
+    const k = this.w / vw; // light-map pixels per world unit
+    const vx = cam.scrollX + (cam.width - vw) / 2;
+    const vy = cam.scrollY + (cam.height - vh) / 2;
+    const ox = Math.round(vx * k) / k;
+    const oy = Math.round(vy * k) / k;
+    rt.setPosition(ox - PAD / k, oy - PAD / k).setDisplaySize((this.w + 2 * PAD) / k, (this.h + 2 * PAD) / k);
     rt.fill(this.rgb, 1);
     const radius = this.cfg.texture.radius;
     rt.beginDraw();
     for (const l of ctx.lights.active) {
-      if (l.x + l.radius < v.x || l.x - l.radius > v.right || l.y + l.radius < v.y || l.y - l.radius > v.bottom) continue;
+      if (l.x + l.radius < vx || l.x - l.radius > vx + vw || l.y + l.radius < vy || l.y - l.radius > vy + vh) continue;
       const fl = l.flicker ? 1 - l.flicker * 0.5 * (1 + Math.sin(this.time * 9 + l.phase) * Math.sin(this.time * 3.1 + l.phase * 2)) : 1;
       stamp.setScale(l.radius * k / radius).setTint(l.color).setAlpha(Math.min(1, l.intensity * fl));
-      rt.batchDraw(stamp, Math.round((l.x - v.x) * k), Math.round((l.y - v.y) * k));
+      rt.batchDraw(stamp, Math.round((l.x - ox) * k) + PAD, Math.round((l.y - oy) * k) + PAD);
     }
     rt.endDraw();
   }
