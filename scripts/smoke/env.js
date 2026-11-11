@@ -9,6 +9,7 @@ export function createEnv(game, h, assert, savedLang) {
   game.ambienceOff = true; // the seasonal ambience (story 12.2) is switched on by the scenario that tests it
   game.fogOff = true; // the scheduled morning fog (story 16.12) is switched on by the scenario that tests it
   game.ripplesOff = true; // rain rings on the puddles (story 16.12), same
+  game.sparkleOff = true; // glints on snowy roofs (story 16.19), switched on by the `season` scenario
   game.snowOff = true; // the scheduled snow of the winter school window (story 12.1) is switched on by the scenario that tests it
   game.talkOff = true; // the talk-down at levels 1-2 (story 7.5) is switched on by the scenario that tests it
   game.grownupsOff = true; // the janitor, the inspector and the neighbor dog (story 7.4) are switched on by the scenario that tests them

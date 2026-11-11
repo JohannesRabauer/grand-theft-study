@@ -64,6 +64,7 @@ export class BootScene extends Phaser.Scene {
     this.load.json('interiors', 'data/interiors.json'); // story 16.10: furniture, lamps and windows of home, school and dojo
     this.load.json('water', 'data/water.json');
     this.load.json('atmosphere', 'data/atmosphere.json'); // story 16.12: rain, wet ground, fog and cloud shadows
+    this.load.json('season', 'data/season.json'); // story 16.19: snow cover, frost, heat shimmer and god rays
     this.load.json('postfx', 'data/postfx.json');
     this.load.json('timetable', 'data/timetable.json');
     this.load.json('morning', 'data/morning.json');

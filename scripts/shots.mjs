@@ -20,7 +20,7 @@ const only = arg('only', '') ? arg('only').split(',') : null;
 const outDir = join(root, 'docs', 'shots', 'overhaul', label);
 
 // minutes of the day for the lighting variants (data/day.json phases)
-const TIMES = { morning: 7 * 60, day: 12 * 60, evening: 19 * 60 + 45, night: 21 * 60 + 30, dusk: 21 * 60 };
+const TIMES = { afternoon: 16 * 60, sunset: 20 * 60, morning: 7 * 60, day: 12 * 60, evening: 19 * 60 + 45, night: 21 * 60 + 30, dusk: 21 * 60 };
 // The fixed shot list. `at` is a district of the town map (the npc node or spawn nearest to the centre of its npc points), a map id for the interiors.
 const DISTRICTS = ['park', 'oldtown', 'road', 'school', 'market', 'riverside', 'skate', 'plaza'];
 const SHOTS = [
@@ -39,6 +39,14 @@ const SHOTS = [
   { id: 'interior-dojo-night', map: 'dojo', time: 'night', weather: 'clear' },
   { id: 'oldtown-fog', map: 'town', at: 'oldtown', time: 'day', weather: 'fog' }, // story 16.12: fog banks
   { id: 'oldtown-rain-night', map: 'town', at: 'oldtown', time: 'night', weather: 'rain' }, // wet ground and lamp reflections
+  { id: 'oldtown-afternoon', map: 'town', at: 'oldtown', time: 'afternoon', weather: 'clear' }, // story 16.19: heat shimmer and god rays on a hot afternoon (spring in the game's calendar)
+  { id: 'road-afternoon', map: 'town', at: 'road', time: 'afternoon', weather: 'clear' },
+  { id: 'park-afternoon', map: 'town', at: 'park', time: 'afternoon', weather: 'clear' },
+  { id: 'road-summer', map: 'town', at: 'road', time: 'sunset', weather: 'clear' }, // summer is the evening phase (from 20:00)
+  { id: 'park-summer', map: 'town', at: 'park', time: 'sunset', weather: 'clear' },
+  { id: 'park-snow', map: 'town', at: 'park', time: 'day', weather: 'snow' }, // snow on crowns and hedges, frost
+  { id: 'road-snow', map: 'town', at: 'road', time: 'day', weather: 'snow' }, // snow on roofs and kerbs
+  { id: 'oldtown-snow-night', map: 'town', at: 'oldtown', time: 'night', weather: 'snow' },
 ].filter(s => !only || only.includes(s.id));
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.css': 'text/css', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml' };
@@ -128,7 +136,8 @@ async function captureTier(tier) {
         ctx.state.dispatch('clock.set', { day: 1, minute, phase: phase.id });
         ctx.events.emit('clock:tick', ctx.day.snapshot());
         ctx.weather.set(shot.weather);
-        gs.atmosphere.settle(); // the layers of story 16.12 ease in over seconds; a shot shows them settled
+        gs.atmosphere.settle(); // the layers of story 16.12 and 16.19 ease in over seconds; a shot shows them settled
+        gs.season.settle();
         let x, y;
         if (shot.map === 'town') {
           const obj = shot.at.startsWith('object:') ? ctx.map.objects.find(o => o.id === shot.at.slice(7)) : null;

@@ -9,6 +9,9 @@ export const fx = {
   cloud: [0, 120, 0, 0], // strength, scale, drift x, drift y (world units)
   shade: [0.8, 0.85, 0.95, 0.5], // shadow colour and band lo
   veil: [0, 0.22, 140, 0], // veil strength (rain amount x alpha), slant, speed
+  frost: [0, 30, 0.62, 3], // strength, reach in base px, alpha, levels (story 16.19)
+  frostRgb: [0.86, 0.94, 1],
+  heat: [0, 0.42, 0.07, 0], // strength, band speed, lift
   amb: [1, 1, 1], time: 0, drift: [0, 0], hi: 0.58
 };
 
@@ -21,6 +24,9 @@ uniform vec4 uShade;
 uniform vec4 uVeil;
 uniform vec4 uTime; // time, haze drift x, y, cloud band hi
 uniform vec4 uAmb; // ambient light colour
+uniform vec4 uFrost; // strength, reach (base px), alpha, levels
+uniform vec4 uFrostRgb;
+uniform vec4 uHeat; // strength, band speed, lift
 `;
 
 export const GLSL_FUNCS = `
@@ -45,6 +51,28 @@ float bayer(vec2 p) {
   vec2 x = abs(a - b);
   return (x.x * 8.0 + a.y * 4.0 + x.y * 2.0 + b.y + 0.5) / 16.0;
 }
+// Hot ground: dark, hardly coloured pixels (asphalt, slate roofs).
+float hot(vec3 c) {
+  float l = dot(c, vec3(0.299, 0.587, 0.114));
+  float sat = max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b));
+  return step(l, 0.42) * step(sat, 0.2);
+}
+vec2 heatCell(vec2 uv) {
+  return floor(vec2(uView.x + uv.x * uView.z, uView.y + (1.0 - uv.y) * uView.w));
+}
+float heatBand(vec2 cell) {
+  float n = vnoise(vec2(cell.x / 41.0, cell.y / 11.0 - uTime.x * 0.15));
+  return sin(cell.y * 0.45 - uTime.x * 2.4 + n * 7.0);
+}
+// Where to read the picture: over hot ground the rows swing sideways by up to a base pixel (only between two hot pixels).
+vec2 heatUV(sampler2D tex, vec2 uv) {
+  if (uHeat.x < 0.001) return uv;
+  vec2 cell = heatCell(uv);
+  float sx = floor(heatBand(cell) * 1.3 * uHeat.x + 0.5);
+  if (sx == 0.0) return uv;
+  vec2 other = uv + vec2(sx / uView.z, 0.0);
+  return hot(texture2D(tex, uv).rgb) * hot(texture2D(tex, other).rgb) > 0.5 ? other : uv;
+}
 vec3 atmosphere(vec3 rgb, vec2 uv) {
   vec2 cell = floor(vec2(uView.x + uv.x * uView.z, uView.y + (1.0 - uv.y) * uView.w));
   float dither = bayer(cell);
@@ -68,6 +96,20 @@ vec3 atmosphere(vec3 rgb, vec2 uv) {
     float run = fract((cell.y - uTime.x * uVeil.z + h21(vec2(col, 9.0)) * 64.0) / 26.0);
     rgb = mix(rgb, uAmb.rgb * vec3(0.8, 0.88, 0.97), on * step(run, 0.3) * uVeil.x);
   }
+  if (uHeat.x > 0.001) {
+    float b = heatBand(cell) * 0.5 + 0.5;
+    float lift = step(0.62, b + (dither - 0.5) * 0.4);
+    rgb += vec3(1.0, 0.95, 0.85) * lift * uHeat.z * uHeat.x * hot(rgb) * uAmb.rgb;
+  }
+  if (uFrost.x > 0.001) {
+    vec2 px = uv * uView.zw;
+    vec2 e = min(px, uView.zw - px);
+    float d = 2.0 / (1.0 / max(e.x, 0.5) + 1.0 / max(e.y, 0.5));
+    float reach = uFrost.y * (0.5 + fbm(floor(px) / 7.0 + 31.0));
+    float s = clamp(1.0 - d / reach, 0.0, 1.0);
+    float lvl = floor(s * uFrost.w + bayer(floor(px))) / uFrost.w;
+    rgb = mix(rgb, uFrostRgb.rgb * uAmb.rgb, clamp(lvl, 0.0, 1.0) * uFrost.x * uFrost.z);
+  }
   return rgb;
 }
 `;
@@ -82,4 +124,7 @@ export function setUniforms(p) {
   p.set4f('uVeil', fx.veil[0], fx.veil[1], fx.veil[2], fx.veil[3]);
   p.set4f('uTime', fx.time, fx.drift[0], fx.drift[1], fx.hi);
   p.set4f('uAmb', fx.amb[0], fx.amb[1], fx.amb[2], 1);
+  p.set4f('uFrost', fx.frost[0], fx.frost[1], fx.frost[2], fx.frost[3]);
+  p.set4f('uFrostRgb', fx.frostRgb[0], fx.frostRgb[1], fx.frostRgb[2], 1);
+  p.set4f('uHeat', fx.heat[0], fx.heat[1], fx.heat[2], 0);
 }

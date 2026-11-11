@@ -46,6 +46,7 @@ checks.push('check-interiors.mjs'); // story 16.10
 checks.push('check-water.mjs');
 checks.push('check-particles.mjs');
 checks.push('check-atmosphere.mjs'); // story 16.12
+checks.push('check-season.mjs'); // story 16.19
 for (const c of checks) {
   console.log(`\n== ${c}`);
   const r = spawnSync(process.execPath, [join(dir, c)], { stdio: 'inherit', cwd: join(dir, '..') });

@@ -117,6 +117,8 @@ HUD into `docs/shots/overhaul/<name>/`, with `metrics.json`. The run is determin
 images and metrics. `index.md` beside a set names what still looks unfinished in each shot.
 
 Story 16.12 atmosphere (`render/Atmosphere.js`, `render/atmosphereMath.js`, `data/atmosphere.json`, switches `atmosphere` per tier in `data/quality.json`): the weather state (`clear`, `rain`, `snow`, `fog`) and the hour drive layers that ease
+
+Story 16.19 seasonal atmosphere (`render/Season.js`, `render/seasonMath.js`, `data/season.json`): snow is hard-edged lumps in a five-step cool ramp (`#ffffff`, `#e6eefa`, `#cfdcf1`, `#a3b6d8`, `#7f93bd`, shade at the lower rim, no outline) on roof tiles (4 variants), kerb edges (15 side masks), hedge tops and tree crowns; each tile turns white at its own threshold, so the cover builds up tile by tile. Frost and the heat shimmer live in the grade shader (Bayer-dithered levels, whole base pixels); beams are flat bands with a dithered edge, additive, never above alpha 0.28. Rules: nothing scrolls faster than the wind drift, no flicker above 3 Hz, glints last 0.7 s.
 over seconds (never a pop): fog banks (state `fog`, some mornings), a thin morning mist (06:30 to 07:55 in every weather), drifting cloud shadows on clear days, a faint veil of
 distant rain, a wet-ground sheen on paved tiles that spreads tile by tile and dries slowly, lamp reflections on wet ground and rings on puddles. Haze is cut into four flat levels with ordered
 dither, never denser than 0.5, and spares bright pixels so lamps keep glowing. Medium and High compute it per base pixel inside the grade shader; Low and Canvas use scrolling pre-drawn noise banks.
