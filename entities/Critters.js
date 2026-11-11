@@ -3,6 +3,7 @@
 // fast vehicles, ducks gather when a kid on foot feeds them (interact). Emits `critter:scatter` { kind, id }, `critter:back` { kind, id } and
 // `duck:fed` { player, ducks }.
 import { C, Critter } from '../services/critterLogic.js';
+import { shadeSprite } from '../render/spriteShadeMath.js';
 
 function makeTextures(scene, res) {
   const s = res.scale;
@@ -12,6 +13,9 @@ function makeTextures(scene, res) {
     const c = tex.getContext();
     c.scale(s, s);
     draw(c);
+    const img = c.getImageData(0, 0, w * s, h * s);
+    shadeSprite(img.data, w * s, h * s, { hi: s > 1, out: null }); // story 16.18: ramp and rim like the other sprites
+    c.putImageData(img, 0, 0);
     tex.refresh();
   };
   const r = (c, col, x, y, w, h) => { c.fillStyle = col; c.fillRect(x, y, w, h); };

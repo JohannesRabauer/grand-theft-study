@@ -30,6 +30,7 @@ export function makeCosmeticArt(scene, scale) {
   for (const [id, draw] of Object.entries(HATS)) {
     const p = new ScaledPen(scene, `cosm-${id}`, 16, 11, scale);
     draw(p);
+    p.lit(null, scale > 1);
     p.done();
   }
   for (const [id, [main, light]] of Object.entries(RINGS)) {

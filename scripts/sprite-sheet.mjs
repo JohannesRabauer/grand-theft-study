@@ -31,6 +31,7 @@ const GROUPS = {
   'other-riders': [/^(player|bully)(-|$)/],
   npcs: [/^npc-(?!dog|bench)/],
   animals: [/^critter-/, /^npc-(dog|bench)/],
+  cosmetics: [/^cosm-/],
   vehicles: [/^(bike|skateboard|skates|scooter|rollerblades|bus|car|van|tram|garage-|lock-|bike-chain|skate-shadow)/]
 };
 

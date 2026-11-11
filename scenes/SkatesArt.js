@@ -97,7 +97,7 @@ export function bus(p) {
 export function makeBusArt(scene, scale) {
   const p = new ScaledPen(scene, 'bus', 64, 26, scale);
   bus(p);
-  if (scale > 1) p.outline('#16161e');
+  p.lit('#16161e', scale > 1, true);
   p.shadow(34, 24.5, 29, 2, 0.25);
   p.done();
 }

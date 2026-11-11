@@ -76,7 +76,8 @@ export const DEFAULT_KID = { jacket: '#e0483c', jacketDark: '#b2352c', jacketLig
 
 export function makeCharacterArt(scene, cfg, scale) {
   const f = scale / 2;
-  const finish = p => { if (scale > 1) p.outline(OUT); return p; };
+  // riders, boards and rides turn with the heading in game, the standing figure does not
+  const finish = (p, turn = true) => p.lit(OUT, scale > 1, turn);
   // Boards and rider poses; the rider has no baked shadow because the sprite lifts off it (entities/Skateboards.js)
   const board = new ScaledPen(scene, 'skateboard', 40, 24, f);
   skate(board, BOARD);
@@ -118,7 +119,7 @@ export function makeCharacterArt(scene, cfg, scale) {
   for (const c of cfg.characters) {
     const walk = new ScaledPen(scene, `player-${c.id}`, 24, 32, f);
     figure(walk, look(c));
-    finish(walk).shadow(12, 29.5, 8, 2.5);
+    finish(walk, false).shadow(12, 29.5, 8, 2.5);
     walk.done();
 
     const rider = new ScaledPen(scene, `player-${c.id}-bike`, 40, 24, f);
@@ -133,7 +134,7 @@ export function makeCharacterArt(scene, cfg, scale) {
     const portrait = new ScaledPen(scene, `portrait-${c.id}`, 24, 32, f);
     portrait.ell(c.palette.backdrop, 12, 16, 11.5, 15.5);
     figure(portrait, look(c));
-    finish(portrait);
+    if (scale > 1) portrait.outline(OUT);
     portrait.done();
   }
 }

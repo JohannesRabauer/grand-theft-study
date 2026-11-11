@@ -108,7 +108,7 @@ export function makeExpansionArt(scene, scale) {
   for (const [kind, length, width, color] of [['car', 34, 18, '#e87567'], ['van', 42, 20, '#75b6d5'], ['tram', 72, 22, '#d8bd58']]) {
     const p = new ScaledPen(scene, kind, length + 8, width + 6, scale);
     draw[kind](p, length, width, color);
-    if (scale > 1) p.outline(OUT);
+    p.lit(OUT, scale > 1, true);
     p.done();
   }
 }

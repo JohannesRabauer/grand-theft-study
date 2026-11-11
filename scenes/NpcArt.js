@@ -114,7 +114,7 @@ function bench(p) {
 
 export function makeNpcArt(scene, cfg, scale) {
   const f = scale / 2;
-  const finish = p => { if (scale > 1) p.outline(OUT); return p; };
+  const finish = p => p.lit(OUT, scale > 1);
   for (const o of cfg.outfits) {
     for (let frame = 0; frame < 3; frame++) {
       const p = new ScaledPen(scene, `npc-${o.id}-${frame}`, 24, 32, f);

@@ -80,7 +80,7 @@ export function makeDefenseArt(scene, cfg, scale) {
     for (const [pose, draw] of [['block', block], ['kiai', kiai], ['dodge', dodge]]) {
       const p = new ScaledPen(scene, `player-${id}-${pose}`, 24, 32, f);
       draw(p, o);
-      if (scale > 1) p.outline(OUT);
+      p.lit(OUT, scale > 1);
       p.shadow(12, 29.5, 8, 2.5);
       p.done();
     }

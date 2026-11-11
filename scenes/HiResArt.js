@@ -3,6 +3,8 @@
 // 1x set in BootScene (which Low still uses) and is displayed at scale 0.5: one texture pixel is
 // one screen pixel. Same keys as the 1x set. Everything is deterministic (seeded), nothing is
 // loaded. Sprites get a dark outline pass; tiles get seeded variants so the ground is not a grid.
+import { shadeSprite } from '../render/spriteShadeMath.js';
+
 const TILE = 32;
 const VARIANTS = { asphalt: 4, cobble: 3, grass: 4, path: 3, concrete: 4, water: 3, lane: 2, hedge: 3, puddle: 1, wood: 3, tatami: 2 };
 
@@ -67,6 +69,16 @@ export class Pen {
         if (!solid(x, y) && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) this.c.fillRect(x, y, 1, 1);
       }
     }
+    return this;
+  }
+
+  // Shading pass of story 16.18 (render/spriteShadeMath.js): ramp, rim light, selective outline and emissive halos in place of
+  // the plain outline. `hi` is Medium/High; Low only gets the ramp. `turn`: the sprite rotates in game (no baked light direction). Call it last before `.shadow()`.
+  lit(out, hi, turn = false) {
+    const img = this.c.getImageData(0, 0, this.w, this.h);
+    const n = out ? parseInt(out.slice(1), 16) : 0;
+    shadeSprite(img.data, this.w, this.h, { hi, turn, out: out && hi ? [n >> 16, (n >> 8) & 255, n & 255] : null });
+    this.c.putImageData(img, 0, 0);
     return this;
   }
 
@@ -441,7 +453,7 @@ function makeFigures(scene) {
   const mk = (key, o) => {
     const p = new Pen(scene, key, 24, 32);
     figure(p, o);
-    p.outline(OUT).shadow(12, 29.5, 8, 2.5);
+    p.lit(OUT, true).shadow(12, 29.5, 8, 2.5);
     p.done();
   };
   mk('player', {
@@ -547,7 +559,7 @@ function makeBikes(scene) {
   const mk = (key, o) => {
     const p = new Pen(scene, key, 40, 24);
     bike(p, o);
-    p.outline(OUT).shadow(20, 20.5, 16, 2.5, 0.25);
+    p.lit(OUT, true, true).shadow(20, 20.5, 16, 2.5, 0.25);
     p.done();
   };
   const rider = { jacket: '#e0483c', jacketDark: '#b2352c', jacketLight: '#f06a5c', hair: '#5a3a1e', hairLight: '#7a5230' };

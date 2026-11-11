@@ -412,3 +412,4 @@ Learning content schema beyond `choice` and `typed` (all validated by `scripts/c
 | `docs/` | `PERFORMANCE.md`: benchmark results, optimizations, manual phone test |
 
 Design rules live in `_bmad-output/initiative-schulweg/architecture-schulweg-prototype/`.
+- **Sprite shading** (`render/spriteShadeMath.js`, story 16.18): kids, NPCs, animals, vehicles and hats share one shading pass (top-left ramp, rim light, selective outline, emissive halos); see `docs/ART-BIBLE.md`.
