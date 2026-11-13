@@ -1,4 +1,4 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame, uiFace } from '../uiKit.js';
 import { ChoiceCursor } from '../../minigames/minigameCore.js';
 import { canPlay } from '../../services/activityLogic.js';
 
@@ -22,13 +22,16 @@ export class ChoreScreen {
     const { scene, ctx } = this;
     const { w, h } = ctx.res;
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, w, h, 0x10131a, 0.95).setOrigin(0).setDepth(40).setInteractive());
-    own(scene.add.rectangle(w / 2, h / 2, w - 24, h - 20, 0x232a38).setStrokeStyle(2, 0xe2bb65).setDepth(40.5));
-    const text = (y, size, color) => own(uiText(scene, w / 2, y, '', { fontFamily: 'monospace', fontSize: `${size}px`, color, align: 'center', wordWrap: { width: w - 70 } }).setOrigin(0.5, 0).setDepth(43));
-    this.title = text(14, 14, '#ffe14d');
-    this.nav = text(h - 24, 8, '#8fa6b2');
+    const frame = uiScreenFrame(scene, ctx, { dimAlpha: 0.95 });
+    own(frame.dim);
+    own(frame.panel);
+    const text = (y, size, color) => own(uiLabel(scene, w / 2, y, '', 'body', 'ink', { size, color, align: 'center', wordWrap: { width: w - 70 } }).setOrigin(0.5, 0).setDepth(43));
+    this.title = text(14, 14, '#ffd36b');
+    this.nav = text(h - 24, 8, '#b4c2d8');
+    this.faces = [];
     this.buttons = this.ids.map((id, i) => {
-      const b = own(uiText(scene, w / 2, 44 + i * 24, '', { fontFamily: 'monospace', fontSize: '11px', color: '#ffffff', backgroundColor: '#2b3446', padding: { x: 14, y: 4 }, align: 'center' }).setOrigin(0.5, 0).setDepth(43).setInteractive({ useHandCursor: true }));
+      const b = own(uiLabel(scene, w / 2, 44 + i * 24, '', 'body', 'ink', { size: 11, padding: { x: 14, y: 4 }, align: 'center', shadow: false }).setOrigin(0.5, 0).setDepth(43).setInteractive({ useHandCursor: true }));
+      this.faces.push(own(uiFace(scene, b)));
       b.on('pointerdown', () => { this.sel = i; this.confirm(); });
       return b;
     });
@@ -47,7 +50,8 @@ export class ChoreScreen {
     this.buttons.forEach((b, i) => {
       const open = this.open(i);
       b.setText(`${i === this.sel ? '> ' : '  '}${ctx.t(`activity.${this.ids[i]}.title`)}${open ? '' : `  ✓ ${ctx.t('chores.done')}`}`)
-        .setBackgroundColor(i === this.sel ? '#2f6f4f' : '#2b3446').setColor(open ? '#ffffff' : '#8fa6b2');
+        .setColor('#f6efdc');
+      this.faces[i].sync(i === this.sel ? 'focus' : 'idle', open);
     });
   }
 
@@ -73,6 +77,6 @@ export class ChoreScreen {
   }
 
   destroy() {
-    for (const o of this.objects) o.destroy();
+    uiLeave(this.scene, this.ctx, this.objects);
   }
 }

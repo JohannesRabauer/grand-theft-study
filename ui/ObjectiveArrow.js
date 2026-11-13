@@ -1,7 +1,10 @@
 // GTA-style objective arrow for one player (or, with playerIndex null, for the camera centre of a co-op game): orbits it on screen and points at the school goal, with the
 // distance in meters. While a bike is stolen (flag `stolenBike`, entities/BikeTheft.js) it points at the hideout instead,
 // until the epic 9 quest runner takes the objective over. Drawn in UIScene space (480x270, whatever the render size); reads the game camera, never the world state mutably.
-import { uiText } from './uiKit.js';
+import { uiLabel, HudPlate } from './uiKit.js';
+
+// Floating labels over the world (the distance, the arrival) carry a hard outline in the kit's edge colour; the mission line sits on a plate.
+const OUTLINE = { stroke: '#16161e', strokeThickness: 2, shadow: false };
 
 export class ObjectiveArrow {
   constructor(scene, ctx, game, playerIndex = 0) {
@@ -10,13 +13,15 @@ export class ObjectiveArrow {
     this.game = game;
     this.cam = game.cameras.main;
     this.arrow = scene.add.image(0, 0, 'arrow').setScale(ctx.res.inv).setDepth(10);
-    this.text = uiText(scene, 0, 0, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffe14d', stroke: '#000000', strokeThickness: 2 })
-      .setOrigin(0.5).setDepth(10);
-    this.questLine = uiText(scene, ctx.res.w / 2, 40, '', { fontFamily: 'monospace', fontSize: '9px', color: '#9be58f', stroke: '#000000', strokeThickness: 2, align: 'center' }).setOrigin(0.5).setDepth(10).setVisible(false);
+    this.text = uiLabel(scene, 0, 0, '', 'hud', 'ink', { color: 'gold', ...OUTLINE }).setOrigin(0.5).setDepth(10);
+    this.questPlate = new HudPlate(scene, 'plate', 460, 16);
+    this.questPlate.g.setDepth(9.9);
+    this.questPlate.setVisible(false);
+    this.questLine = uiLabel(scene, ctx.res.w / 2, 62, '', 'hud', 'ink', { color: 'green', align: 'center' }).setOrigin(0.5).setDepth(10).setVisible(false);
     this.lastMeters = -1;
     this.done = false;
     const sw = ctx.res.w;
-    this.msg = uiText(scene, sw / 2, 60, ctx.t('msg.arrived'), { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 })
+    this.msg = uiLabel(scene, sw / 2, 80, ctx.t('msg.arrived'), 'heading', 'ink', { color: 'text', stroke: '#16161e', strokeThickness: 3, shadow: false })
       .setOrigin(0.5).setDepth(10).setVisible(false);
     this.onReached = (ev) => {
       if ((this.playerIndex !== null && ev.player !== this.playerIndex) || this.done) return; // the shared arrow shows the arrival once
@@ -68,6 +73,11 @@ export class ObjectiveArrow {
     const line = quest ? `${quest.title ? `${quest.title}: ` : ''}${this.ctx.t(quest.text)}${quest.live ? ` (${quest.checkpoint}/${quest.total}, ${quest.timer}s)` : ''}` : '';
     this.questLine.setVisible(!!quest);
     if (line !== this.questLineText) { this.questLine.setText(line); this.questLineText = line; }
+    this.questPlate.setVisible(!!quest);
+    if (quest) {
+      const w = Math.ceil(this.questLine.width) + 10;
+      this.questPlate.fit(Math.round(this.ctx.res.w / 2 - w / 2), 55, w, 14);
+    }
   }
 
   destroy() {
@@ -77,6 +87,7 @@ export class ObjectiveArrow {
     this.text.destroy();
     this.msg.destroy();
     this.questLine.destroy();
+    this.questPlate.destroy();
     this.ctx.events.off('state:changed', this.onState);
   }
 

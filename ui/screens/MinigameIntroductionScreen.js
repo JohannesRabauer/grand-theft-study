@@ -1,4 +1,4 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame, uiFace } from '../uiKit.js';
 import { ChoiceCursor } from '../../minigames/minigameCore.js';
 
 export class MinigameIntroductionScreen {
@@ -17,23 +17,26 @@ export class MinigameIntroductionScreen {
   create() {
     const { scene, ctx } = this;
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, ctx.res.w, ctx.res.h, 0x12151c).setOrigin(0).setDepth(40).setInteractive());
-    const text = (y, size, color, wrap) => own(uiText(scene, ctx.res.w / 2, y, '', {
-      fontFamily: 'monospace', fontSize: `${size}px`, color, align: 'center',
+    const frame = uiScreenFrame(scene, ctx, { x: 14, y: 14, w: ctx.res.w - 28, h: ctx.res.h - 28, dimAlpha: 1 });
+    own(frame.dim);
+    own(frame.panel);
+    const text = (y, size, color, wrap) => own(uiLabel(scene, ctx.res.w / 2, y, '', 'body', 'ink', {
+      size, color, align: 'center',
       ...(wrap ? { wordWrap: { width: ctx.res.w - 50 } } : {})
     }).setOrigin(0.5).setDepth(41));
-    this.title = text(28, 14, '#ffe14d');
-    this.message = text(112, 11, '#ffe7ac', true);
-    this.hint = text(195, 9, '#b8d6e5', true);
+    this.title = text(28, 14, '#ffd36b');
+    this.message = text(112, 11, '#f6efdc', true);
+    this.hint = text(195, 9, '#b4c2d8', true);
+    this.faces = [];
     this.buttons = this.session.players.map((player, i) => {
-      const button = own(uiText(scene, ctx.res.w * (i + 1) / (this.session.players.length + 1), 224, '', {
-        fontFamily: 'monospace', fontSize: '10px', color: '#ffe14d', backgroundColor: '#243b44',
-        padding: { x: 8, y: 4 }
+      const button = own(uiLabel(scene, ctx.res.w * (i + 1) / (this.session.players.length + 1), 224, '', 'body', 'ink', {
+        padding: { x: 8, y: 4 }, shadow: false
       }).setOrigin(0.5).setDepth(41).setInteractive({ useHandCursor: true }));
+      this.faces.push(own(uiFace(scene, button)));
       button.on('pointerdown', () => this.confirm(player));
       return button;
     });
-    this.back = text(251, 9, '#ffffff').setInteractive({ useHandCursor: true });
+    this.back = text(251, 9, '#f6efdc').setInteractive({ useHandCursor: true });
     this.back.on('pointerdown', this.onCancel);
     this.retext();
   }
@@ -47,6 +50,7 @@ export class MinigameIntroductionScreen {
       const player = session.players[i];
       const who = ctx.players[player].character?.name ?? ctx.t('menu.slot.player', { n: player + 1 });
       b.setText(ctx.t(this.ready.has(player) ? 'minigame.introduction.ready' : 'minigame.introduction.continue', { who }));
+      this.faces[i].sync(this.ready.has(player) ? 'selected' : 'focus');
     });
     this.back.setText(ctx.t('school.back'));
   }
@@ -67,5 +71,5 @@ export class MinigameIntroductionScreen {
     }
   }
 
-  destroy() { for (const o of this.objects) o.destroy(); }
+  destroy() { uiLeave(this.scene, this.ctx, this.objects); }
 }

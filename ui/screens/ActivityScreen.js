@@ -1,4 +1,4 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame, uiFace } from '../uiKit.js';
 import { fits, questionsIn, stagesOf } from '../../services/activityLogic.js';
 import { ChoiceCursor } from '../../minigames/minigameCore.js';
 
@@ -31,17 +31,20 @@ export class ActivityScreen {
     const { scene, ctx } = this;
     const { w, h } = ctx.res;
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, w, h, 0x10131a, 0.95).setOrigin(0).setDepth(40).setInteractive());
-    own(scene.add.rectangle(w / 2, h / 2, w - 24, h - 20, 0x232a38).setStrokeStyle(2, 0xe2bb65).setDepth(40.5));
-    const text = (x, y, size, color, wrap, align = 'center') => own(uiText(scene, x, y, '', { fontFamily: 'monospace', fontSize: `${size}px`, color, align, ...(wrap ? { wordWrap: { width: wrap } } : {}) }).setOrigin(0.5, 0).setDepth(43));
-    this.title = text(w / 2, 18, 14, '#ffe14d');
-    this.header = text(w / 2, 36, 9, '#9be58f');
-    this.progress = text(w - 40, 20, 8, '#8fa6b2');
-    this.body = text(w / 2, 62, 12, '#ffffff', w - 70);
-    this.feedback = text(w / 2, 214, 9, '#ffe7ac', w - 70);
-    this.nav = text(w / 2, h - 26, 8, '#8fa6b2');
+    const frame = uiScreenFrame(scene, ctx, { dimAlpha: 0.95 });
+    own(frame.dim);
+    own(frame.panel);
+    const text = (x, y, size, color, wrap, align = 'center') => own(uiLabel(scene, x, y, '', 'body', 'ink', { size, color, align, ...(wrap ? { wordWrap: { width: wrap } } : {}) }).setOrigin(0.5, 0).setDepth(43));
+    this.title = text(w / 2, 18, 14, '#ffd36b');
+    this.header = text(w / 2, 36, 9, '#9ddc7a');
+    this.progress = text(w - 40, 20, 8, '#b4c2d8');
+    this.body = text(w / 2, 62, 12, '#f6efdc', w - 70);
+    this.feedback = text(w / 2, 214, 9, '#f6efdc', w - 70);
+    this.nav = text(w / 2, h - 26, 8, '#b4c2d8');
+    this.faces = [];
     this.buttons = [0, 1, 2, 3].map(i => {
-      const b = own(uiText(scene, w / 2, 112 + i * 24, '', { fontFamily: 'monospace', fontSize: '11px', color: '#ffffff', backgroundColor: '#2b3446', padding: { x: 14, y: 4 }, align: 'center', wordWrap: { width: w - 110 } }).setOrigin(0.5, 0).setDepth(43).setInteractive({ useHandCursor: true }));
+      const b = own(uiLabel(scene, w / 2, 112 + i * 24, '', 'body', 'ink', { size: 11, padding: { x: 14, y: 4 }, align: 'center', wordWrap: { width: w - 110 }, shadow: false }).setOrigin(0.5, 0).setDepth(43).setInteractive({ useHandCursor: true }));
+      this.faces.push(own(uiFace(scene, b)));
       b.on('pointerdown', () => { this.sel = i; this.confirm(); });
       return b;
     });
@@ -80,7 +83,7 @@ export class ActivityScreen {
     const id = this.activity;
     this.title.setText(ctx.t(`activity.${id}.title`));
     this.nav.setText(ctx.t(this.phase === 'ask' ? 'activity.nav.ask' : 'activity.nav.next'));
-    const hide = from => this.buttons.forEach((b, i) => { if (i >= from) b.setVisible(false); });
+    const hide = from => this.buttons.forEach((b, i) => { if (i >= from) { b.setVisible(false); this.faces[i].setVisible(false); } });
     if (this.phase === 'choose') {
       this.header.setText('');
       this.progress.setText('');
@@ -113,9 +116,10 @@ export class ActivityScreen {
   colour(n) {
     this.buttons.forEach((b, i) => {
       if (i >= n) return;
-      let bg = i === this.sel ? '#2f6f4f' : '#2b3446';
-      if (this.phase === 'feedback') bg = this.view.answers[i].correct ? '#2f8f4f' : i === this.last.picked ? '#8f3f3f' : '#2b3446';
-      b.setBackgroundColor(bg);
+      let state = i === this.sel ? 'focus' : 'idle';
+      if (this.phase === 'feedback') state = this.view.answers[i].correct ? 'selected' : i === this.last.picked ? 'wrong' : 'idle';
+      this.faces[i].sync(state);
+      this.faces[i].setVisible(b.visible);
     });
   }
 
@@ -165,6 +169,6 @@ export class ActivityScreen {
   }
 
   destroy() {
-    for (const o of this.objects) o.destroy();
+    uiLeave(this.scene, this.ctx, this.objects);
   }
 }

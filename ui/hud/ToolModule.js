@@ -1,5 +1,5 @@
 import { HudModule } from './HudModule.js';
-import { uiText } from '../uiKit.js';
+import { uiLabel, HudPlate } from '../uiKit.js';
 import { sliceOf } from './layout.js';
 
 // The bound player's current tool and its ammo or status (bottom centre); a wind arrow with strength appears above it while charging.
@@ -12,9 +12,14 @@ export class ToolModule extends HudModule {
     const { right } = sliceOf(this.playerIndex ?? 0, this.players, width);
     const x = this.players > 1 ? (right ? width - 4 : 4) : width / 2;
     this.ax = this.players > 1 ? (right ? width - 60 : 60) : width / 2;
-    const style = { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff', stroke: '#000000', strokeThickness: 2 };
-    this.tool = this.track(uiText(scene, x, height - 3, '', style).setOrigin(this.players > 1 ? (right ? 1 : 0) : 0.5, 1));
-    this.windText = this.track(uiText(scene, this.ax + 14, height - 17, '', { ...style, color: '#9fe0ff' }).setOrigin(0, 1).setVisible(false));
+    this.x = x;
+    this.align = this.players > 1 ? (right ? 1 : 0) : 0.5;
+    this.plate = new HudPlate(scene);
+    this.track(this.plate.g);
+    this.tool = this.track(uiLabel(scene, x, height - 4, '', 'hud').setOrigin(this.align, 1));
+    this.windPlate = new HudPlate(scene).setVisible(false);
+    this.track(this.windPlate.g);
+    this.windText = this.track(uiLabel(scene, this.ax + 14, height - 19, '', 'hud', 'ink', { color: 'blue' }).setOrigin(0, 1).setVisible(false));
     this.windGfx = this.track(scene.add.graphics().setVisible(false));
     this.windKey = -1;
     this.on('tool:ammo', (ev) => { if (this.mine(ev)) this.show(); });
@@ -24,11 +29,14 @@ export class ToolModule extends HudModule {
 
   show() {
     const { ctx } = this;
+    const ui = this.scene.cache.json.get('ui');
     const t = this.player.toolbelt.current;
     const name = ctx.t(`tool.${t.id}`);
     // a tool with one retrievable item (the throwing stick) shows where that item is instead of a count
     this.tool.setText(t.status ? ctx.t('hud.toolStatus', { name, status: ctx.t(`tool.status.${t.status}`) }) : ctx.t('hud.tool', { name, n: t.ammo, max: t.max }));
-    this.tool.setColor(t.ammo === 0 ? '#ff8a7a' : '#ffffff');
+    this.tool.setColor(t.ammo === 0 ? ui.text.ink.red : ui.text.ink.text);
+    const w = Math.ceil(this.tool.width) + 8;
+    this.plate.fit(Math.round(this.x - w * this.align), this.height - 16, w, 14);
   }
 
   retext() {
@@ -42,6 +50,7 @@ export class ToolModule extends HudModule {
     if (aiming !== this.windGfx.visible) {
       this.windGfx.setVisible(aiming);
       this.windText.setVisible(aiming);
+      this.windPlate.setVisible(aiming);
       this.windKey = -1;
     }
     if (!aiming) return;
@@ -56,10 +65,11 @@ export class ToolModule extends HudModule {
     const len = 3 + ctx.wind.strength * 14;
     const ex = cx + Math.cos(a) * len;
     const ey = cy + Math.sin(a) * len;
-    const g = this.windGfx.clear().lineStyle(2, 0x9fe0ff, 1);
+    const g = this.windGfx.clear().lineStyle(2, 0x8fd0ff, 1);
     g.lineBetween(cx, cy, ex, ey);
     g.lineBetween(ex, ey, ex - Math.cos(a - 0.5) * 4, ey - Math.sin(a - 0.5) * 4);
     g.lineBetween(ex, ey, ex - Math.cos(a + 0.5) * 4, ey - Math.sin(a + 0.5) * 4);
     this.windText.setText(ctx.t('hud.wind', { n: Math.round(ctx.wind.strength * 50) * 2 }));
+    this.windPlate.fit(this.ax - 24, this.height - 33, 38 + Math.ceil(this.windText.width), 17);
   }
 }

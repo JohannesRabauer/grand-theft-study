@@ -1,4 +1,4 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame } from '../uiKit.js';
 import { formatTime } from '../../services/dayTime.js';
 import { ChoiceCursor } from '../../minigames/minigameCore.js';
 
@@ -15,15 +15,14 @@ export class TimetableScreen {
   create() {
     const { scene, ctx } = this;
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, ctx.res.w, ctx.res.h, 0x000000, 0.86).setOrigin(0).setDepth(40).setInteractive());
-    own(scene.add.rectangle(24, 12, 432, 246, 0x1a2830).setOrigin(0).setDepth(41).setStrokeStyle(2, 0xe2bb65));
-    const text = (x, y, size = 11, color = '#ffffff') => own(uiText(scene, x, y, '', {
-      fontFamily: 'monospace', fontSize: `${size}px`, color
-    }).setDepth(42));
-    this.title = text(240, 28, 14, '#ffe14d').setOrigin(0.5);
+    const frame = uiScreenFrame(scene, ctx, { x: 24, y: 12, w: 432, h: 246, dimAlpha: 0.88 });
+    own(frame.dim);
+    own(frame.panel);
+    const text = (x, y, size = 11, color = '#f6efdc') => own(uiLabel(scene, x, y, '', 'body', 'ink', { size, color }).setDepth(42));
+    this.title = text(240, 28, 14, '#ffd36b').setOrigin(0.5);
     this.rows = this.school.schedule().lessons.map((_, i) => text(40, 52 + i * 23));
-    this.hint = text(240, 201, 9, '#b8d6e5').setOrigin(0.5);
-    this.button = text(240, 226, 11, '#ffe14d').setOrigin(0.5).setInteractive({ useHandCursor: true });
+    this.hint = text(240, 201, 9, '#b4c2d8').setOrigin(0.5);
+    this.button = text(240, 226, 11, '#ffd36b').setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.button.on('pointerdown', () => this.attend());
     this.back = text(420, 242, 9).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
     this.back.on('pointerdown', () => this.close());
@@ -41,7 +40,7 @@ export class TimetableScreen {
         return record ? ctx.t('minigame.result.grade', { grade: record.grade }) : '-';
       }).join(' / ');
       row.setText(`${formatTime(lesson.start)}  ${ctx.t(`minigame.${lesson.minigame}.title`)}  ${grades}`);
-      row.setColor(school.pendingPlayers(lesson).length ? '#ffffff' : '#9be58f');
+      row.setColor(school.pendingPlayers(lesson).length ? '#f6efdc' : '#9ddc7a');
     });
     this.hint.setText(ctx.t('school.wait'));
     this.button.setText(ctx.t(school.canAttend() ? 'school.attend' : school.next() ? 'school.closed' : 'school.finished'));
@@ -65,5 +64,5 @@ export class TimetableScreen {
   }
 
   close() { if (this.ctx.screens.top() === this) this.ctx.screens.pop(); }
-  destroy() { for (const o of this.objects) o.destroy(); }
+  destroy() { uiLeave(this.scene, this.ctx, this.objects); }
 }

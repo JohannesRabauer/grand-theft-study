@@ -1,9 +1,9 @@
 import { HudModule } from './HudModule.js';
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiIcon, drawBar, HudPlate } from '../uiKit.js';
 import { sliceOf } from './layout.js';
 
 const BAR_W = 40;
-const LABEL_W = 34;
+const LABEL_W = 22;
 
 // The "Mut" (courage) bar of one kid (story 6.3, read-only): the pool that block, dodge and Kiai spend, with a thin strip under it that
 // fills while the Kiai cools down and turns bright when the shout is ready. Reads the kid's defense slot (ctx.defense) once a frame and
@@ -11,11 +11,16 @@ const LABEL_W = 34;
 export class DefenseModule extends HudModule {
   constructor(scene, ctx, opts) {
     super(scene, ctx, opts);
-    const { right, x } = sliceOf(this.playerIndex ?? 0, this.players, ctx.res.w);
-    this.barX = right ? x - LABEL_W - BAR_W - 2 : x + LABEL_W; // bottom corner of the kid's side, just above the tool line
-    this.y = ctx.res.h - 25;
-    const style = { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff' };
-    this.label = this.track(uiText(scene, x, this.y, ctx.t('hud.courage'), style).setOrigin(right ? 1 : 0, 0));
+    const { right } = sliceOf(this.playerIndex ?? 0, this.players, ctx.res.w);
+    const w = 3 + 9 + 3 + LABEL_W + BAR_W + 2 + 3;
+    const x0 = right ? ctx.res.w - 2 - w : 2; // bottom corner of the kid's side, just above the tool line
+    this.y = ctx.res.h - 32;
+    this.barX = x0 + 3 + 9 + 3 + LABEL_W;
+    this.plate = new HudPlate(scene);
+    this.plate.fit(x0, this.y - 3, w, 18);
+    this.track(this.plate.g);
+    this.icon = this.track(uiIcon(scene, x0 + 3, this.y, 'shield'));
+    this.label = this.track(uiLabel(scene, x0 + 15, this.y, ctx.t('hud.courage'), 'hud'));
     this.bar = this.track(scene.add.graphics());
     this.key = -1;
   }
@@ -33,10 +38,8 @@ export class DefenseModule extends HudModule {
     this.key = key;
     const { barX: x, y } = this;
     const g = this.bar.clear();
-    g.fillStyle(0x000000, 0.6).fillRect(x, y, BAR_W + 2, 6);
-    g.fillStyle(mut / BAR_W > 0.25 ? 0xf0a030 : 0xe0483c).fillRect(x + 1, y + 1, mut, 4);
-    g.fillStyle(0x000000, 0.6).fillRect(x, y + 7, BAR_W + 2, 4);
-    g.fillStyle(ready ? 0xffe14d : 0x8a8a96).fillRect(x + 1, y + 8, cool, 2);
+    drawBar(this.scene, g, x, y, BAR_W + 2, 6, mut / BAR_W, mut / BAR_W > 0.25 ? 'orange' : 'red');
+    drawBar(this.scene, g, x, y + 8, BAR_W + 2, 4, cool / BAR_W, ready ? 'gold' : 'grey');
   }
 
   retext() { this.label.setText(this.ctx.t('hud.courage')); }

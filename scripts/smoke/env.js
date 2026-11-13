@@ -18,6 +18,7 @@ export function createEnv(game, h, assert, savedLang) {
   for (const f of ['footstepsOff', 'dripsOff', 'petalsOff', 'leavesFallOff', 'embersOff', 'motesOff', 'glowOff']) game[f] = true; // the particle overhaul (story 16.11) is switched on by the `particles` scenario
   game.motionFxOff = true; // shake and hit-stop on bumps and hits (story 16.13) shift the seeded runs; the `motion` scenario switches them on
   game.transitionsOff = true; // door fade-outs (story 16.13) wait for the camera: scripted door requests load at once (the `motion` scenario turns them on)
+  game.uiAnimOff = true; // screens ease in and out over a few frames (story 16.14); the scripted runs open and close them at once (the `uikit` scenario turns the easing on)
   game.trafficOff = true; // the scripted route runners ride the main road blind: buses only hit players in the `traffic` scenario
   step(3);
   const menu = game.scene.getScene('Menu');

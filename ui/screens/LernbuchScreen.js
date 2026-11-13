@@ -1,10 +1,13 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame, uiIcon, paintRects, uiCfg } from '../uiKit.js';
+import { barRects, over } from '../uiTheme.js';
 import { bookOf, barColor } from '../../learning/lernbuch.js';
 
 // The Lernbuch (story 10.5): for one kid a bar per subject with the real accuracy of everything they answered, a bronze / silver /
 // gold medal when they earned one, and two small badges (a long streak of right answers, many questions learned for good).
 // Q / E switch to the other kid in co-op, Esc closes. Read-only; every number comes from the saved learning stats.
-const MEDAL = { bronze: 0xcd7f32, silver: 0xc4c9d4, gold: 0xffd84d };
+// The page is paper (story 16.14): the paper tone of the UI kit, the icons of the kit for the medal and the badges.
+const MEDAL = { bronze: 0xcd7f32, silver: 0xc4c9d4, gold: 0xffffff };
+const BAR = { x: 150, w: 170, h: 10 };
 
 export class LernbuchScreen {
   constructor(scene, ctx, stack, cfg, player = 0) {
@@ -15,27 +18,31 @@ export class LernbuchScreen {
     this.cfg = cfg;
     this.player = player;
     this.objects = [];
-    this.marks = [];
   }
 
   create() {
     const { scene, ctx } = this;
     const { w, h } = ctx.res;
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, w, h, 0x10131a, 0.95).setOrigin(0).setDepth(40).setInteractive());
-    own(scene.add.rectangle(w / 2, h / 2, w - 24, h - 20, 0xf3ecd6).setStrokeStyle(2, 0x8a6a35).setDepth(40.5));
-    const text = (x, y, size, color, wrap) => own(uiText(scene, x, y, '', { fontFamily: 'monospace', fontSize: `${size}px`, color, ...(wrap ? { wordWrap: { width: wrap } } : {}) }).setDepth(43));
-    this.title = text(w / 2, 16, 15, '#5a3b16').setOrigin(0.5, 0);
-    this.owner = text(w / 2, 34, 9, '#7a5b2a').setOrigin(0.5, 0);
+    const frame = uiScreenFrame(scene, ctx, { tone: 'paper', dimAlpha: 0.95 });
+    own(frame.dim);
+    own(frame.panel);
+    const text = (x, y, size, color, wrap) => own(uiLabel(scene, x, y, '', 'body', 'paper', { size, color, ...(wrap ? { wordWrap: { width: wrap } } : {}) }).setDepth(43));
+    this.title = text(w / 2, 16, 15, 'gold').setOrigin(0.5, 0);
+    this.owner = text(w / 2, 34, 9, 'muted').setOrigin(0.5, 0);
     this.gfx = own(scene.add.graphics().setDepth(42));
     const topics = this.ctx.learning.topics();
     this.rows = topics.map((topic, i) => {
       const y = 58 + i * 30;
-      return { topic, y, name: text(34, y + 2, 10, '#3a2a14'), pct: text(352, y + 2, 10, '#3a2a14').setOrigin(1, 0), info: text(34, y + 16, 7, '#6a5a3a') };
+      const icon = (x, name) => own(uiIcon(scene, x, y + 3, name).setDepth(43));
+      return {
+        topic, y, name: text(34, y + 2, 10, 'text'), pct: text(352, y + 2, 10, 'text').setOrigin(1, 0), info: text(34, y + 16, 7, 'muted'),
+        medal: icon(376, 'medal'), letter: text(389, y + 4, 8, 'text'), streak: icon(408, 'flame'), learner: icon(424, 'book')
+      };
     });
-    this.total = text(34, 58 + topics.length * 30 + 2, 9, '#5a3b16', 400);
-    this.legend = text(34, 58 + topics.length * 30 + 16, 7, '#7a6a4a', 400);
-    this.nav = text(w / 2, h - 26, 8, '#7a6a4a').setOrigin(0.5, 0);
+    this.total = text(34, 58 + topics.length * 30 + 2, 9, 'gold', 400);
+    this.legend = text(34, 58 + topics.length * 30 + 16, 7, 'muted', 400);
+    this.nav = text(w / 2, h - 28, 8, 'muted').setOrigin(0.5, 0);
     this.render();
   }
 
@@ -48,30 +55,25 @@ export class LernbuchScreen {
 
   render() {
     const { ctx, gfx, cfg } = this;
+    const ui = uiCfg(this.scene);
     const book = this.book();
     gfx.clear();
-    this.marks.forEach(m => m.destroy());
-    this.marks = [];
     this.title.setText(ctx.t('lernbuch.title'));
     this.owner.setText(ctx.t('lernbuch.owner', { who: this.who() }));
     const pct = v => `${Math.round(v * 100)}%`;
     this.rows.forEach((row, i) => {
       const r = book.rows[i];
       this.name(row, r);
-      const x = 150;
-      gfx.fillStyle(0xd8cdb0).fillRect(x, row.y + 2, 170, 10);
-      if (r.answered) gfx.fillStyle(parseInt(barColor(r.accuracy, cfg).slice(1), 16)).fillRect(x, row.y + 2, Math.max(2, Math.round(170 * r.accuracy)), 10);
-      gfx.lineStyle(1, 0x8a6a35).strokeRect(x + 0.5, row.y + 2.5, 169, 9);
+      const base = barColor(r.accuracy, cfg);
+      const color = { base, light: over('#fff1c4', base, 0.4), dark: over(ui.edge, base, 0.3) };
+      paintRects(gfx, barRects(BAR.w, BAR.h, r.answered ? Math.max(2 / (BAR.w - 2), r.accuracy) : 0, color, ui.tones.paper.dark, ui.edge), BAR.x, row.y + 2);
       row.pct.setText(r.answered ? pct(r.accuracy) : '-');
       row.info.setText(ctx.t('lernbuch.info', { n: r.answered, level: r.level.toFixed(1).replace('.', ctx.i18n.lang === 'de' ? ',' : '.'), learned: r.learned, pool: r.pool }));
-      // the medal and the two badges
-      const my = row.y + 7;
-      if (r.medal) { gfx.fillStyle(MEDAL[r.medal]).fillCircle(380, my, 8); gfx.lineStyle(1, 0x5a3b16).strokeCircle(380, my, 8); this.mark(380, my, ctx.t(`lernbuch.medal.${r.medal}`).slice(0, 1)); }
-      else { gfx.lineStyle(1, 0xb8aa86).strokeCircle(380, my, 8); }
-      if (r.badges.streak) { gfx.fillStyle(0xe0605a).fillTriangle(404, my - 8, 396, my + 7, 412, my + 7); }
-      else { gfx.lineStyle(1, 0xb8aa86).strokeTriangle(404, my - 8, 396, my + 7, 412, my + 7); }
-      if (r.badges.learner) { gfx.fillStyle(0x4aa3df).fillRect(420, my - 6, 12, 13); gfx.fillStyle(0xffffff, 0.7).fillRect(423, my - 3, 6, 2); gfx.fillRect(423, my + 1, 6, 2); }
-      else { gfx.lineStyle(1, 0xb8aa86).strokeRect(420.5, my - 5.5, 11, 12); }
+      // the medal and the two badges: earned ones in colour, the others as a faint slot
+      if (r.medal) row.medal.setAlpha(1).setTint(MEDAL[r.medal]); else row.medal.setAlpha(0.22).clearTint();
+      row.letter.setText(r.medal ? ctx.t(`lernbuch.medal.${r.medal}`).slice(0, 1) : '');
+      row.streak.setAlpha(r.badges.streak ? 1 : 0.22);
+      row.learner.setAlpha(r.badges.learner ? 1 : 0.22);
     });
     this.total.setText(book.answered ? ctx.t('lernbuch.total', { n: book.answered, pct: pct(book.accuracy), medals: book.medals }) : ctx.t('lernbuch.empty'));
     this.legend.setText(ctx.t('lernbuch.legend', { streak: cfg.badges.streakMin, learned: cfg.badges.learnedMin }));
@@ -79,11 +81,6 @@ export class LernbuchScreen {
   }
 
   name(row, r) { row.name.setText(this.ctx.t(`grades.subject.${r.topic}`)); }
-
-  mark(x, y, letter) {
-    const t = uiText(this.scene, x, y, letter, { fontFamily: 'monospace', fontSize: '9px', color: '#3a2a14', fontStyle: 'bold' }).setOrigin(0.5).setDepth(44);
-    this.marks.push(t);
-  }
 
   retext() { this.render(); }
 
@@ -105,7 +102,6 @@ export class LernbuchScreen {
   }
 
   destroy() {
-    this.marks.forEach(m => m.destroy());
-    for (const o of this.objects) o.destroy();
+    uiLeave(this.scene, this.ctx, this.objects);
   }
 }

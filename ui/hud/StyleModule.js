@@ -1,5 +1,5 @@
 import { HudModule } from './HudModule.js';
-import { uiText } from '../uiKit.js';
+import { uiLabel, drawBar, HudPlate } from '../uiKit.js';
 import { sliceOf } from './layout.js';
 
 const BAR_W = 60;
@@ -25,13 +25,16 @@ export class StyleModule extends HudModule {
     const { right, x, dy } = sliceOf(this.playerIndex ?? 0, this.players, ctx.res.w);
     const o = right ? 1 : 0;
     this.x = x;
-    this.y = dy + 62;
+    this.y = dy + (this.players > 1 ? 72 : 90);
+    this.right = right;
+    this.width = ctx.res.w;
     this.barX = right ? x - BAR_W : x;
-    const style = { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff', stroke: '#000000', strokeThickness: 2 };
-    this.head = this.track(uiText(scene, x, this.y, '', { ...style, fontSize: '10px', color: '#ffe14d' }).setOrigin(o, 0).setVisible(false));
+    this.plate = new HudPlate(scene).setVisible(false);
+    this.track(this.plate.g);
+    this.head = this.track(uiLabel(scene, x, this.y, '', 'body', 'ink', { color: 'gold' }).setOrigin(o, 0).setVisible(false));
     this.bar = this.track(scene.add.graphics().setVisible(false));
-    this.list = this.track(uiText(scene, x, this.y + 20, '', style).setOrigin(o, 0).setVisible(false));
-    this.note = this.track(uiText(scene, x, this.y + 32, '', { ...style, fontSize: '10px', color: '#ffe14d' }).setOrigin(o, 0).setAlpha(0));
+    this.list = this.track(uiLabel(scene, x, this.y + 20, '', 'hud').setOrigin(o, 0).setVisible(false));
+    this.note = this.track(uiLabel(scene, x, this.y + 32, '', 'body', 'ink', { color: 'gold' }).setOrigin(o, 0).setAlpha(0));
     this.fx = ctx.particles.createFor(scene, 'spark', 0.15);
     this.sparkX = right ? x - 40 : x + 40;
     this.on('style:changed', e => { if (this.mine(e)) this.changed(e.points, e.multiplier); });
@@ -49,6 +52,7 @@ export class StyleModule extends HudModule {
     const on = points > 0;
     if (!on) this.names.length = 0;
     this.head.setVisible(on);
+    this.plate.setVisible(on);
     this.bar.setVisible(on);
     this.list.setVisible(on);
     this.barPx = -1;
@@ -83,15 +87,16 @@ export class StyleModule extends HudModule {
     const px = Math.max(0, Math.round(BAR_W * Math.min(1, this.combo.timer / this.window)));
     if (px === this.barPx) return;
     this.barPx = px;
-    const g = this.bar.clear();
-    g.fillStyle(0x000000, 0.6).fillRect(this.barX, this.y + 12, BAR_W, 6);
-    g.fillStyle(this.hot ? 0xff9a2b : 0xffe14d).fillRect(this.barX + 1, this.y + 13, Math.max(0, px - 2), 4);
+    drawBar(this.scene, this.bar.clear(), this.barX, this.y + 12, BAR_W, 6, Math.max(0, px - 2) / (BAR_W - 2), this.hot ? 'orange' : 'gold');
   }
 
   retext() {
     const { ctx } = this;
-    this.head.setText(ctx.t('hud.style', { p: this.points, m: this.mult.toFixed(1) })).setColor(this.hot ? '#ff9a2b' : '#ffe14d');
+    const ink = this.scene.cache.json.get('ui').text.ink;
+    this.head.setText(ctx.t('hud.style', { p: this.points, m: this.mult.toFixed(1) })).setColor(this.hot ? '#ffb24a' : ink.gold);
     this.list.setText(this.names.map(n => ctx.t(n)).join(' · '));
+    const w = Math.ceil(Math.max(this.head.width, this.list.width, BAR_W) + 8);
+    this.plate.fit(this.right ? this.width - 2 - w : 2, this.y - 3, w, 36);
   }
 
   destroy() {

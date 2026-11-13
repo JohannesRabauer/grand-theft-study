@@ -1,4 +1,4 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame, uiFace } from '../uiKit.js';
 import { ChoiceCursor } from '../../minigames/minigameCore.js';
 
 // The tram map (story 9.4): from a known stop the kid picks any known stop to ride to (the fare is the usual one, a day ticket
@@ -22,14 +22,17 @@ export class FastTravelScreen {
     const { scene, ctx } = this;
     const { w, h } = ctx.res;
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, w, h, 0x10131a, 0.95).setOrigin(0).setDepth(40).setInteractive());
-    own(scene.add.rectangle(w / 2, h / 2, w - 24, h - 20, 0x232a38).setStrokeStyle(2, 0xe2bb65).setDepth(40.5));
-    const text = (y, size, color) => own(uiText(scene, w / 2, y, '', { fontFamily: 'monospace', fontSize: `${size}px`, color, align: 'center', wordWrap: { width: w - 70 } }).setOrigin(0.5, 0).setDepth(43));
-    this.title = text(18, 14, '#ffe14d');
-    this.here = text(44, 9, '#9be58f');
-    this.nav = text(h - 26, 8, '#8fa6b2');
+    const frame = uiScreenFrame(scene, ctx, { dimAlpha: 0.95 });
+    own(frame.dim);
+    own(frame.panel);
+    const text = (y, size, color) => own(uiLabel(scene, w / 2, y, '', 'body', 'ink', { size, color, align: 'center', wordWrap: { width: w - 70 } }).setOrigin(0.5, 0).setDepth(43));
+    this.title = text(18, 14, '#ffd36b');
+    this.here = text(44, 9, '#9ddc7a');
+    this.nav = text(h - 26, 8, '#b4c2d8');
+    this.faces = [];
     this.buttons = this.targets.map((o, i) => {
-      const b = own(uiText(scene, w / 2, 80 + i * 28, '', { fontFamily: 'monospace', fontSize: '12px', color: '#ffffff', backgroundColor: '#2b3446', padding: { x: 16, y: 5 }, align: 'center' }).setOrigin(0.5, 0).setDepth(43).setInteractive({ useHandCursor: true }));
+      const b = own(uiLabel(scene, w / 2, 80 + i * 28, '', 'body', 'ink', { size: 12, padding: { x: 16, y: 5 }, align: 'center', shadow: false }).setOrigin(0.5, 0).setDepth(43).setInteractive({ useHandCursor: true }));
+      this.faces.push(own(uiFace(scene, b)));
       b.on('pointerdown', () => { this.sel = i; this.confirm(); });
       return b;
     });
@@ -41,7 +44,7 @@ export class FastTravelScreen {
     this.title.setText(ctx.t('tram.fast.title'));
     this.here.setText(ctx.t('tram.fast.here', { stop: ctx.t(`tram.stop.${this.stop.id}`) }));
     this.nav.setText(ctx.t('tram.fast.nav'));
-    this.buttons.forEach((b, i) => b.setText(`${i === this.sel ? '> ' : '  '}${ctx.t(`tram.stop.${this.targets[i].id}`)}`).setBackgroundColor(i === this.sel ? '#2f6f4f' : '#2b3446'));
+    this.buttons.forEach((b, i) => { b.setText(`${i === this.sel ? '> ' : '  '}${ctx.t(`tram.stop.${this.targets[i].id}`)}`); this.faces[i].sync(i === this.sel ? 'focus' : 'idle'); });
   }
 
   retext() { this.render(); }
@@ -65,6 +68,6 @@ export class FastTravelScreen {
   }
 
   destroy() {
-    for (const o of this.objects) o.destroy();
+    uiLeave(this.scene, this.ctx, this.objects);
   }
 }

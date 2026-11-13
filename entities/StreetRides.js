@@ -7,7 +7,7 @@ export class StreetRides {
     this.ctx = ctx;
     this.services = [];
     this.hints = Array.from({ length: ctx.maxPlayers }, () => scene.add.text(0, 0, '', {
-      fontFamily: 'monospace', fontSize: '8px', color: '#fff2a8', backgroundColor: '#243d46', resolution: ctx.res.scale
+      fontFamily: 'monospace', fontSize: '8px', color: '#f6efdc', backgroundColor: '#2b3850', resolution: ctx.res.scale
     }).setOrigin(0.5).setDepth(8100).setVisible(false));
     ctx.street = this;
     ctx.state.dispatch('street.restore');

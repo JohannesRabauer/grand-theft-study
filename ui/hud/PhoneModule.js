@@ -1,8 +1,8 @@
 import { HudModule } from './HudModule.js';
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiIcon, HudPlate, withSeededRandom } from '../uiKit.js';
 
-// The phone badge (story 11.3): an envelope with the number of unread messages, shown only while there are some; a tap opens the phone.
-// The text object is made when the first message comes.
+// The phone badge (story 11.3, 16.14): an envelope with the number of unread messages on a small plate, shown only while there are some; a tap
+// opens the phone. The objects are made when the first message comes, with Math.random swapped out (a Phaser text takes a random texture key).
 export class PhoneModule extends HudModule {
   constructor(scene, ctx, opts) {
     super(scene, ctx, opts);
@@ -16,15 +16,22 @@ export class PhoneModule extends HudModule {
     const n = this.ctx.phone?.unread ?? 0;
     if (!this.badge) {
       if (n <= 0) return;
-      const keep = Math.random; // a Phaser text takes a random texture key: leave the game's random sequence (the seeded smoke runs) alone
-      let seed = 0x9e3779b9;
-      Math.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
-      this.badge = this.track(uiText(this.scene, 4, this.ctx.res.h - 14, '', { fontFamily: 'monospace', fontSize: '9px', color: '#ffe14d', backgroundColor: '#243d46', padding: { x: 3, y: 2 } }).setOrigin(0, 0).setDepth(9).setInteractive({ useHandCursor: true }));
-      Math.random = keep;
+      const { scene, ctx } = this;
+      this.plate = new HudPlate(scene);
+      this.track(this.plate.g);
+      this.icon = this.track(uiIcon(scene, 6, ctx.res.h - 15, 'mail'));
+      this.badge = this.track(withSeededRandom(() => uiLabel(scene, 18, ctx.res.h - 15, '', 'hud', 'ink', { color: 'gold', padding: { x: 2, y: 1 } })).setDepth(9).setInteractive({ useHandCursor: true }));
+      this.plate.g.setDepth(8.9);
+      this.icon.setDepth(9);
       this.badge.on('pointerdown', () => this.ctx.phone?.toggle());
     }
     this.badge.setVisible(n > 0);
-    if (n > 0) this.badge.setText(this.ctx.t('phone.badge', { n }));
+    this.plate.setVisible(n > 0);
+    this.icon.setVisible(n > 0);
+    if (n > 0) {
+      this.badge.setText(this.ctx.t('phone.badge', { n }));
+      this.plate.fit(2, this.ctx.res.h - 17, Math.ceil(this.badge.width) + 22, 15);
+    }
   }
 
   retext() { this.show(); }

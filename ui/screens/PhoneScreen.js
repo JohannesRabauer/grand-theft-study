@@ -1,4 +1,4 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame, uiPanel, uiIcon } from '../uiKit.js';
 import { ChoiceCursor } from '../../minigames/minigameCore.js';
 
 // The phone (story 11.3): the newest messages with who sent them and on which day, opening marks them read. Closed by a fresh confirm,
@@ -20,11 +20,14 @@ export class PhoneScreen {
     const { scene, ctx } = this;
     const { w, h } = ctx.res;
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, w, h, 0x10131a, 0.95).setOrigin(0).setDepth(40).setInteractive());
-    own(scene.add.rectangle(w / 2, h / 2, w - 24, h - 20, 0x232a38).setStrokeStyle(2, 0xe2bb65).setDepth(40.5));
-    this.title = own(uiText(scene, w / 2, 14, '', { fontFamily: 'monospace', fontSize: '14px', color: '#ffe14d' }).setOrigin(0.5, 0).setDepth(43));
-    this.body = own(uiText(scene, 28, 40, '', { fontFamily: 'monospace', fontSize: '10px', color: '#ffe7ac', lineSpacing: 6, wordWrap: { width: w - 56 } }).setOrigin(0, 0).setDepth(43));
-    this.nav = own(uiText(scene, w / 2, h - 24, '', { fontFamily: 'monospace', fontSize: '8px', color: '#8fa6b2' }).setOrigin(0.5, 0).setDepth(43));
+    const frame = uiScreenFrame(scene, ctx, { dimAlpha: 0.95 });
+    own(frame.dim);
+    own(frame.panel);
+    own(uiIcon(scene, w / 2 - 70, 17, 'mail').setDepth(43));
+    this.title = own(uiLabel(scene, w / 2 - 56, 14, '', 'heading').setOrigin(0, 0).setDepth(43));
+    own(uiPanel(scene, 24, 36, w - 48, h - 72, { tone: 'paper', shadow: false, depth: 42 }));
+    this.body = own(uiLabel(scene, 34, 44, '', 'body', 'paper', { lineSpacing: 6, wordWrap: { width: w - 68 } }).setOrigin(0, 0).setDepth(43));
+    this.nav = own(uiLabel(scene, w / 2, h - 28, '', 'small').setOrigin(0.5, 0).setDepth(43));
     this.wasUnread = this.phone.inbox.filter(m => !m.read).map(m => m.id + m.day);
     this.phone.read();
     this.render();
@@ -51,6 +54,6 @@ export class PhoneScreen {
   }
 
   destroy() {
-    for (const o of this.objects) o.destroy();
+    uiLeave(this.scene, this.ctx, this.objects);
   }
 }

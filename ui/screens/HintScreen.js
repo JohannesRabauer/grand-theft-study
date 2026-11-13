@@ -1,4 +1,4 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame } from '../uiKit.js';
 import { controlParams } from '../controlLabels.js';
 import { ChoiceCursor } from '../../minigames/minigameCore.js';
 
@@ -25,18 +25,18 @@ export class HintScreen {
     const { scene, ctx } = this;
     const { w, h } = ctx.res;
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, w, h, 0x12151c, 0.94).setOrigin(0).setDepth(40).setInteractive());
-    own(scene.add.rectangle(w / 2, h / 2, w - 36, h - 44, 0x1d2430).setStrokeStyle(2, 0xffe14d).setDepth(40.5));
-    const text = (y, size, color, wrap) => own(uiText(scene, w / 2, y, '', {
-      fontFamily: 'monospace', fontSize: `${size}px`, color, align: 'center',
-      ...(wrap ? { wordWrap: { width: w - 76 } } : {})
+    const frame = uiScreenFrame(scene, ctx, { x: 18, y: 22, w: w - 36, h: h - 44 });
+    own(frame.dim);
+    own(frame.panel);
+    const text = (y, size, color, wrap) => own(uiLabel(scene, w / 2, y, '', 'body', 'ink', {
+      size, color, align: 'center', ...(wrap ? { wordWrap: { width: w - 76 } } : {})
     }).setOrigin(0.5, 0).setDepth(41));
-    this.who = text(34, 9, '#9be58f');
-    this.title = text(48, 15, '#ffe14d', true);
-    this.body = text(84, 11, '#ffe7ac', true);
-    this.footer = text(h - 70, 10, '#ffffff', true).setInteractive({ useHandCursor: true });
+    this.who = text(34, 9, 'green');
+    this.title = text(48, 15, 'gold', true);
+    this.body = text(84, 11, 'text', true);
+    this.footer = text(h - 70, 10, 'muted', true).setInteractive({ useHandCursor: true });
     this.footer.on('pointerdown', () => this.confirm());
-    this.counter = text(h - 46, 8, '#8fa6b2');
+    this.counter = text(h - 46, 8, 'muted');
     this.retext();
   }
 
@@ -89,7 +89,7 @@ export class HintScreen {
   }
 
   destroy() {
-    for (const o of this.objects) o.destroy();
+    uiLeave(this.scene, this.ctx, this.objects);
     this.opts.onDone?.(this.finished);
   }
 }

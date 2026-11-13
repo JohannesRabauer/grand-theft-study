@@ -1,0 +1,43 @@
+{
+  "_doc": "The pixel UI kit (story 16.14, ui/uiKit.js, ui/uiTheme.js, ui/uiIcons.js, AD-27 layers stay). Colours come from the art bible ramps (docs/ART-BIBLE.md section 1): OUT is the outline colour, `ink` panels are the slate ramp, `paper` panels (Lernbuch, Zeugnis, speech bubbles) the plaster ramp, accents are wood and hedge. A tone is { fill, inset, light, high, dark, edge, accent, shadow }: 1 base-pixel outline in `edge` with notched corners, a lit top and left bevel (`light`, corner pixel `high`), a shaded bottom and right (`dark`), a drop shadow to the bottom right, an optional accent frame. `text` gives the readable colours per tone (every pair is checked by scripts/check-uikit.mjs against `minContrast`, WCAG AA 4.5:1; `plate` is the dark HUD plate whose colours are checked over the worst case, a white world pixel). `roles` are the text styles: size in base px, colour key. `button` has the face colours of idle, selected and focused buttons and the focus ring (2 base px, 3:1 against the edge). `anim` are the open and close times in ms (eased, ignored under reducedMotion, `game.uiAnimOff` in the scripted runs).",
+  "edge": "#16161e",
+  "minContrast": 4.5,
+  "minLargeContrast": 3,
+  "tones": {
+    "ink": { "fill": "#2b3850", "inset": "#1f2940", "light": "#4a5f7f", "high": "#62799a", "dark": "#1f2940", "accent": "#c4915a" },
+    "paper": { "fill": "#f1e6c8", "inset": "#e3d4ae", "light": "#fbf4de", "high": "#fff8e6", "dark": "#cdbd96", "accent": "#8a6a35" },
+    "sheet": { "fill": "#e8dcb8", "inset": "#d9c9a0", "light": "#fbf4de", "high": "#fff8e6", "dark": "#c4b284", "accent": "#8a6a35" },
+    "well": { "fill": "#1f2940", "inset": "#16161e", "light": "#16161e", "high": "#16161e", "dark": "#3a4b68", "accent": "#c4915a" },
+    "plate": { "fill": "#2b3850", "inset": "#1f2940", "light": "#4a5f7f", "high": "#62799a", "dark": "#1f2940", "accent": "#c4915a", "alpha": 0.93 }
+  },
+  "text": {
+    "ink": { "text": "#f6efdc", "muted": "#b4c2d8", "gold": "#ffd36b", "green": "#9ddc7a", "red": "#ff9f8e", "blue": "#8fd0ff" },
+    "paper": { "text": "#3a2a1a", "muted": "#6a5636", "gold": "#8a4e0e", "green": "#1a6a2a", "red": "#8a2a1a", "blue": "#1f4e8c" }
+  },
+  "button": {
+    "idle": { "face": "#3a4b68", "text": "#f6efdc" },
+    "selected": { "face": "#256a2b", "text": "#f6efdc" },
+    "wrong": { "face": "#8f3f3f", "text": "#f6efdc" },
+    "focus": { "face": "#e2b684", "text": "#16161e", "ring": "#fff1c4" }
+  },
+  "bars": {
+    "track": "#16161e",
+    "green": { "base": "#62d26f", "light": "#a6e8a0", "dark": "#2f8a45" },
+    "red": { "base": "#e0483c", "light": "#ff8f7a", "dark": "#992a2e" },
+    "orange": { "base": "#f0a030", "light": "#ffd27a", "dark": "#b06a1c" },
+    "gold": { "base": "#ffd36b", "light": "#fff1b8", "dark": "#c4915a" },
+    "blue": { "base": "#4dd2ff", "light": "#b8ecff", "dark": "#2f7fb0" },
+    "grey": { "base": "#6a7488", "light": "#8d97aa", "dark": "#4a5265" }
+  },
+  "roles": {
+    "title": { "size": 24, "color": "gold" },
+    "heading": { "size": 14, "color": "gold" },
+    "sub": { "size": 10, "color": "muted" },
+    "body": { "size": 10, "color": "text" },
+    "small": { "size": 8, "color": "muted" },
+    "hud": { "size": 8, "color": "text" },
+    "num": { "size": 10, "color": "gold" }
+  },
+  "anim": { "open": 150, "close": 90, "rise": 6, "pulse": 520 },
+  "hud": { "pad": 3, "gap": 2 }
+}

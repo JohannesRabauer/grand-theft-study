@@ -49,6 +49,7 @@ checks.push('check-atmosphere.mjs'); // story 16.12
 checks.push('check-motion.mjs'); // story 16.13
 checks.push('check-season.mjs'); // story 16.19
 checks.push('check-spriteshade.mjs'); // story 16.18
+checks.push('check-uikit.mjs'); // story 16.14
 for (const c of checks) {
   console.log(`\n== ${c}`);
   const r = spawnSync(process.execPath, [join(dir, c)], { stdio: 'inherit', cwd: join(dir, '..') });

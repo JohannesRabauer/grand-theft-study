@@ -7,6 +7,7 @@ export class ScreenStack {
   constructor(defs, onFreeze) {
     this.defs = defs;
     this.onFreeze = onFreeze;
+    this.onOpen = null; // optional (story 16.14): UIScene eases a screen in after its create()
     this.screens = [];
     this.freezes = 0;
   }
@@ -24,6 +25,7 @@ export class ScreenStack {
     this.screens.push(screen);
     if (screen.freezesWorld && ++this.freezes === 1) this.onFreeze(true);
     screen.create();
+    this.onOpen?.(screen);
     return screen;
   }
 

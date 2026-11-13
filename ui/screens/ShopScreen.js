@@ -1,4 +1,5 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame, paintRects, uiCfg } from '../uiKit.js';
+import { faceTone, panelRects } from '../uiTheme.js';
 import { controlParams } from '../controlLabels.js';
 import { itemStatus } from '../../services/shopLogic.js';
 import { ChoiceCursor } from '../../minigames/minigameCore.js';
@@ -21,7 +22,7 @@ export class ShopScreen {
     this.sel = 0;
     this.top = 0;
     this.note = '';
-    this.noteColor = '#9be58f';
+    this.noteColor = 'green';
     this.objects = [];
     this.cursor = new ChoiceCursor();
   }
@@ -29,25 +30,29 @@ export class ShopScreen {
   create() {
     const { scene, ctx } = this;
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, ctx.res.w, ctx.res.h, 0x000000, 0.88).setOrigin(0).setDepth(40).setInteractive());
-    own(scene.add.rectangle(24, 12, 432, 246, 0x1a2830).setOrigin(0).setDepth(41).setStrokeStyle(2, 0xe2bb65));
-    const text = (x, y, size = 10, color = '#ffffff') => own(uiText(scene, x, y, '', { fontFamily: 'monospace', fontSize: `${size}px`, color }).setDepth(43));
-    this.title = text(240, 24, 14, '#ffe14d').setOrigin(0.5);
-    this.money = text(432, 24, 10, '#9be58f').setOrigin(1, 0.5);
-    this.cursorBar = own(scene.add.rectangle(34, 0, 412, 20, 0x35505c).setOrigin(0).setDepth(42));
+    const frame = uiScreenFrame(scene, ctx, { x: 24, y: 12, w: 432, h: 246, dimAlpha: 0.88, depth: 40 });
+    own(frame.dim);
+    own(frame.panel);
+    const text = (x, y, size = 10, color = 'text') => own(uiLabel(scene, x, y, '', 'body', 'ink', { size, color }).setDepth(43));
+    this.title = text(240, 24, 14, 'gold').setOrigin(0.5);
+    this.money = text(432, 24, 10, 'green').setOrigin(1, 0.5);
+    const cfg = uiCfg(scene);
+    this.cursorBar = own(scene.add.graphics().setDepth(42));
+    paintRects(this.cursorBar, panelRects(412, 20, faceTone(cfg.button.idle.face, cfg.edge, cfg.tones.ink.accent), cfg.edge, { shadow: false }));
+    paintRects(this.cursorBar, [[2, 3, 2, 14, cfg.button.focus.face, 1]]);
     this.rows = Array.from({ length: ROWS }, (_, i) => {
       const y = 48 + i * 22;
       const name = text(42, y + 4, 10);
-      const price = text(438, y + 4, 10, '#ffe7ac').setOrigin(1, 0);
+      const price = text(438, y + 4, 10, 'gold').setOrigin(1, 0);
       const hit = own(scene.add.rectangle(34, y, 412, 20, 0xffffff, 0.001).setOrigin(0).setDepth(44).setInteractive({ useHandCursor: true }));
       hit.on('pointerdown', () => { this.sel = Math.min(this.items.length - 1, this.top + i); this.act(); if (this.ctx.screens.top() === this) this.retext(); });
       return { name, price, y };
     });
-    this.more = text(240, 183, 9, '#8fa6b2').setOrigin(0.5);
-    this.desc = text(40, 195, 10, '#ffe7ac');
+    this.more = text(240, 183, 9, 'muted').setOrigin(0.5);
+    this.desc = text(40, 195, 10, 'text');
     this.desc.setWordWrapWidth(400);
     this.noteText = text(240, 229, 10).setOrigin(0.5);
-    this.hint = text(240, 246, 9, '#b8d6e5').setOrigin(0.5);
+    this.hint = text(240, 246, 9, 'muted').setOrigin(0.5);
     this.hint.setInteractive({ useHandCursor: true });
     this.hint.on('pointerdown', () => this.close());
     this.retext();
@@ -76,23 +81,24 @@ export class ShopScreen {
       if (!item) return;
       const st = itemStatus(this.shops.cfg, data, this.player, item);
       const cos = item.type === 'cosmetic';
-      row.name.setText(`${this.top + i === this.sel ? '> ' : '  '}${this.itemName(item)}`).setColor(st.owned && !cos ? '#8fa6b2' : st.affordable || st.owned ? '#ffffff' : '#9a8f86');
+      const ink = uiCfg(this.scene).text.ink;
+      row.name.setText(`${this.top + i === this.sel ? '> ' : '  '}${this.itemName(item)}`).setColor(st.owned && !cos ? ink.muted : st.affordable || st.owned ? ink.text : ink.muted);
       row.price.setText(st.worn ? ctx.t('shop.worn') : st.owned ? ctx.t(cos ? 'shop.owned.change' : 'shop.owned') : this.priceText(item))
-        .setColor(st.worn ? '#9be58f' : st.owned ? '#8fa6b2' : st.affordable ? '#ffe7ac' : '#c9786b');
+        .setColor(st.worn ? ink.green : st.owned ? ink.muted : st.affordable ? ink.gold : ink.red);
     });
     const shown = this.sel - this.top;
-    this.cursorBar.setY(48 + shown * 22);
+    this.cursorBar.setPosition(34, 48 + shown * 22);
     this.more.setText(this.items.length > ROWS ? ctx.t('shop.more', { n: this.sel + 1, total: this.items.length }) : '');
     const item = this.item();
     this.desc.setText(item ? ctx.t(`item.${item.id}.desc`) : '');
-    this.noteText.setText(this.note).setColor(this.noteColor);
+    this.noteText.setText(this.note).setColor(uiCfg(this.scene).text.ink[this.noteColor]);
     const keys = controlParams(this.shops.inputCfg, [this.player], ctx.input.type, ctx.t);
     this.hint.setText(ctx.t('shop.hint', { keys: [keys.jump, keys.interact].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(' / ') }));
   }
 
   say(key, params, ok) {
     this.note = this.ctx.t(key, params);
-    this.noteColor = ok ? '#9be58f' : '#ff9d8a';
+    this.noteColor = ok ? 'green' : 'red';
   }
 
   act() {
@@ -125,6 +131,6 @@ export class ShopScreen {
   }
 
   destroy() {
-    for (const o of this.objects) o.destroy();
+    uiLeave(this.scene, this.ctx, this.objects);
   }
 }

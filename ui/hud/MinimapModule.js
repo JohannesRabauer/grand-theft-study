@@ -1,4 +1,5 @@
 import { HudModule } from './HudModule.js';
+import { uiIcon, uiPanel } from '../uiKit.js';
 
 // The minimap (story 11.2): the tile map of the current world drawn once as one pixel per tile, with the players, the objective and the
 // bullies' spotted radius on top. Hidden until a player presses the map key (global intent, P1) and toggled from GameScene through
@@ -16,8 +17,9 @@ export class MinimapModule extends HudModule {
     this.made = new Set();
     this.uid = ++uids;
     this.image = this.track(scene.add.image(0, 0, '__DEFAULT').setOrigin(0).setVisible(false).setDepth(9));
-    this.back = this.track(scene.add.rectangle(0, 0, 10, 10, 0x000000, 0.65).setOrigin(0).setVisible(false).setDepth(8.9));
+    this.back = null; // the panel under the map, made per world (its size follows the map)
     this.gfx = this.track(scene.add.graphics().setDepth(9.1));
+    this.goalIcon = this.track(uiIcon(scene, 0, 0, 'star').setDepth(9.2).setVisible(false));
     ctx.minimap = this;
     this.on('world:enter', () => this.build());
     this.build();
@@ -40,7 +42,7 @@ export class MinimapModule extends HudModule {
     const g = tex.getContext();
     const tiles = scene.cache.json.get('tiles');
     for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
-      g.fillStyle = tiles[map.legend[map.rows[y][x]]]?.base ?? '#000000';
+      g.fillStyle = tiles[map.legend[map.rows[y][x]]]?.base ?? '#16161e';
       g.fillRect(x, y, 1, 1);
     }
     tex.refresh();
@@ -49,7 +51,9 @@ export class MinimapModule extends HudModule {
     this.x0 = ctx.res.w - 6 - w;
     this.y0 = ctx.res.h - 6 - h;
     this.image.setTexture(this.key).setScale(this.s).setPosition(this.x0, this.y0);
-    this.back.setPosition(this.x0 - 2, this.y0 - 2).setSize(w + 4, h + 4);
+    this.back?.destroy();
+    this.objects = this.objects.filter(o => o !== this.back);
+    this.back = this.track(uiPanel(this.scene, Math.round(this.x0) - 4, Math.round(this.y0) - 4, Math.ceil(w) + 8, Math.ceil(h) + 8, { depth: 8.9 }).setVisible(this.shown));
     this.draw();
   }
 
@@ -58,6 +62,7 @@ export class MinimapModule extends HudModule {
     this.image.setVisible(this.shown);
     this.back.setVisible(this.shown);
     this.gfx.setVisible(this.shown);
+    if (!this.shown) this.goalIcon.setVisible(false);
     this.ctx.events.emit('minimap:toggled', { on: this.shown });
     if (this.shown) this.draw();
   }
@@ -76,7 +81,8 @@ export class MinimapModule extends HudModule {
     const ts = ctx.map.tileSize;
     gfx.clear();
     const goal = this.objective();
-    if (goal) gfx.fillStyle(0xffe14d).fillCircle(x0 + goal.x * s, y0 + goal.y * s, 2.5).lineStyle(1, 0x000000).strokeCircle(x0 + goal.x * s, y0 + goal.y * s, 2.5);
+    this.goalIcon.setVisible(!!goal && this.shown);
+    if (goal) this.goalIcon.setPosition(Math.round(x0 + goal.x * s - 4), Math.round(y0 + goal.y * s - 4));
     const lr = ctx.chase?.cfg?.lookout?.radius ?? 0;
     for (const o of ctx.map.objects) if (lr && o.type === 'lookout') gfx.lineStyle(1, 0xff9a3a, 0.5).strokeCircle(x0 + (o.x + 0.5) * s, y0 + (o.y + 0.5) * s, (lr / ts) * s);
     const view = ctx.chase?.cfg?.perception?.viewDistance ?? 0;
@@ -85,9 +91,16 @@ export class MinimapModule extends HudModule {
       const bx = x0 + (b.x / ts) * s;
       const by = y0 + (b.y / ts) * s;
       if (view) gfx.lineStyle(1, 0xff5a4a, 0.55).strokeCircle(bx, by, (view / ts) * s);
-      gfx.fillStyle(0xff5a4a).fillCircle(bx, by, 1.6);
+      this.dot(0xff5a4a, bx, by);
     }
-    for (const p of ctx.players) gfx.fillStyle(p.index === 0 ? 0x4dd2ff : 0x9be58f).fillCircle(x0 + (p.x / ts) * s, y0 + (p.y / ts) * s, 2).lineStyle(1, 0xffffff).strokeCircle(x0 + (p.x / ts) * s, y0 + (p.y / ts) * s, 2);
+    for (const p of ctx.players) this.dot(p.index === 0 ? 0x4dd2ff : 0x9be58f, x0 + (p.x / ts) * s, y0 + (p.y / ts) * s, 2);
+  }
+
+  // A marker: a square of whole pixels with an outline.
+  dot(color, x, y, r = 1) {
+    const px = Math.round(x);
+    const py = Math.round(y);
+    this.gfx.fillStyle(0x16161e).fillRect(px - r - 1, py - r - 1, 2 * r + 3, 2 * r + 3).fillStyle(color).fillRect(px - r, py - r, 2 * r + 1, 2 * r + 1);
   }
 
   update() {

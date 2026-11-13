@@ -1,4 +1,4 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame, uiFace } from '../uiKit.js';
 import { Gate } from '../../services/parentLogic.js';
 import { ChoiceCursor } from '../../minigames/minigameCore.js';
 
@@ -26,18 +26,21 @@ export class ParentGateScreen {
     const { scene, ctx } = this;
     const { w, h } = ctx.res;
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, w, h, 0x10131a, 0.95).setOrigin(0).setDepth(40).setInteractive());
-    own(scene.add.rectangle(w / 2, h / 2, w - 60, h - 50, 0x232a38).setStrokeStyle(2, 0xe2bb65).setDepth(40.5));
-    const text = (x, y, size, color, wrap) => own(uiText(scene, x, y, '', { fontFamily: 'monospace', fontSize: `${size}px`, color, align: 'center', ...(wrap ? { wordWrap: { width: wrap } } : {}) }).setOrigin(0.5, 0).setDepth(43));
-    this.title = text(w / 2, 40, 14, '#ffe14d');
-    this.intro = text(w / 2, 62, 9, '#b8d6e5', w - 100);
-    this.question = text(w / 2, 100, 18, '#ffffff');
-    this.status = text(w / 2, 196, 9, '#ff9d8a', w - 100);
-    this.nav = text(w / 2, 226, 8, '#8fa6b2');
+    const frame = uiScreenFrame(scene, ctx, { x: 30, y: 25, w: w - 60, h: h - 50, dimAlpha: 0.95 });
+    own(frame.dim);
+    own(frame.panel);
+    const text = (x, y, size, color, wrap) => own(uiLabel(scene, x, y, '', 'body', 'ink', { size, color, align: 'center', ...(wrap ? { wordWrap: { width: wrap } } : {}) }).setOrigin(0.5, 0).setDepth(43));
+    this.title = text(w / 2, 40, 14, '#ffd36b');
+    this.intro = text(w / 2, 62, 9, '#b4c2d8', w - 100);
+    this.question = text(w / 2, 100, 18, '#f6efdc');
+    this.status = text(w / 2, 196, 9, '#ff9f8e', w - 100);
+    this.nav = text(w / 2, 226, 8, '#b4c2d8');
+    this.faces = [];
     this.options = [0, 1, 2, 3].map(i => {
       const x = w / 2 + (i % 2 ? 62 : -62);
       const y = 140 + Math.floor(i / 2) * 28;
-      const t = own(uiText(scene, x, y, '', { fontFamily: 'monospace', fontSize: '13px', color: '#ffffff', backgroundColor: '#2b3446', padding: { x: 12, y: 4 } }).setOrigin(0.5).setDepth(43).setInteractive({ useHandCursor: true }));
+      const t = own(uiLabel(scene, x, y, '', 'body', 'ink', { size: 13, padding: { x: 12, y: 4 }, shadow: false }).setOrigin(0.5).setDepth(43).setInteractive({ useHandCursor: true }));
+      this.faces[i] = own(uiFace(scene, t));
       t.on('pointerdown', () => { this.sel = i; this.choose(); });
       return t;
     });
@@ -50,7 +53,7 @@ export class ParentGateScreen {
     this.title.setText(ctx.t('parent.gate.title'));
     this.intro.setText(ctx.t('parent.gate.intro'));
     this.question.setText(ctx.t('parent.gate.question', { a: q.a, b: q.b, c: q.c }));
-    this.options.forEach((t, i) => t.setText(String(q.options[i])).setBackgroundColor(i === this.sel ? '#2f6f4f' : '#2b3446').setAlpha(gate.locked(this.now()) ? 0.4 : 1));
+    this.options.forEach((t, i) => { t.setText(String(q.options[i])).setAlpha(gate.locked(this.now()) ? 0.4 : 1); this.faces[i].sync(i === this.sel ? 'focus' : 'idle'); });
     this.status.setText(this.note);
     this.nav.setText(ctx.t('parent.gate.nav'));
   }
@@ -85,6 +88,6 @@ export class ParentGateScreen {
   }
 
   destroy() {
-    for (const o of this.objects) o.destroy();
+    uiLeave(this.scene, this.ctx, this.objects);
   }
 }

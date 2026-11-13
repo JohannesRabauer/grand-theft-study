@@ -21,7 +21,7 @@ export class Commute {
     this.spawned = new Set();
     this.rng = Math.random; // tests replace it
     this.labels = Array.from({ length: ctx.maxPlayers }, () => scene.add.text(0, 0, '', {
-      fontFamily: 'monospace', fontSize: '8px', color: '#fff2a8', backgroundColor: '#243d46', resolution: ctx.res.scale
+      fontFamily: 'monospace', fontSize: '8px', color: '#f6efdc', backgroundColor: '#2b3850', resolution: ctx.res.scale
     }).setOrigin(0.5).setDepth(8100).setVisible(false));
     this.timer = 0;
     ctx.events.on('goal:reached', e => { if (e.id === 'school') this.arrive(e.player); });

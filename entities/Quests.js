@@ -20,7 +20,7 @@ export class Quests {
     this.counts = {}; // progress of count steps (not saved; a step starts again after a reload)
     this.race = null; // the race in progress: { key, id, idx, left }
     this.labels = Array.from({ length: ctx.maxPlayers }, () => scene.add.text(0, 0, '', {
-      fontFamily: 'monospace', fontSize: '8px', color: '#fff2a8', backgroundColor: '#243d46', resolution: ctx.res.scale
+      fontFamily: 'monospace', fontSize: '8px', color: '#f6efdc', backgroundColor: '#2b3850', resolution: ctx.res.scale
     }).setOrigin(0.5).setDepth(8100).setVisible(false));
     const names = new Set();
     for (const m of cfg.missions) {

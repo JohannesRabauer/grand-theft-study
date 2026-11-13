@@ -1,9 +1,10 @@
 import { ButtonMenu } from '../ButtonMenu.js';
 import { settingsRows } from '../settingsRows.js';
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame } from '../uiKit.js';
 import { modeSummary } from '../menuFlow.js';
 
-// The pause overlay: Resume, language, quality and back to the menu. Esc / the touch pause button close it.
+// The pause overlay: Resume, the pages (help, album, achievements, Lernbuch, parents), language, quality and back to the menu. Esc / the touch
+// pause button close it. The buttons are the kit's pixel buttons in a few rows; arrows move the focus, which wears the 2 px ring.
 export class PauseScreen {
   constructor(scene, ctx, stack) {
     this.id = 'pause';
@@ -14,26 +15,33 @@ export class PauseScreen {
 
   create() {
     const { scene, ctx } = this;
-    const { w: width, h: height } = ctx.res;
-    const dim = scene.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0).setDepth(20).setInteractive(); // swallows clicks
-    this.title = uiText(scene, width / 2, 54, ctx.t('pause.title'), { fontFamily: 'monospace', fontSize: '20px', color: '#ffe14d', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(21);
-    this.slot = uiText(scene, width / 2, 72, '', { fontFamily: 'monospace', fontSize: '10px', color: '#cccccc' }).setOrigin(0.5).setDepth(21);
-    this.mode = uiText(scene, width / 2, 83, '', { fontFamily: 'monospace', fontSize: '10px', color: '#ffe14d' }).setOrigin(0.5).setDepth(21);
-    this.belts = uiText(scene, width / 2, 94, '', { fontFamily: 'monospace', fontSize: '10px', color: '#9be58f' }).setOrigin(0.5).setDepth(21);
-    this.objects = [dim, this.title, this.slot, this.mode, this.belts];
+    const { w: width } = ctx.res;
+    const frame = uiScreenFrame(scene, ctx, { x: 60, y: 8, w: width - 120, h: 254, dimAlpha: 0.72, depth: 20 });
+    this.title = uiLabel(scene, width / 2, 28, ctx.t('pause.title'), 'heading', 'ink', { size: 20 }).setOrigin(0.5).setDepth(21);
+    this.slot = uiLabel(scene, width / 2, 48, '', 'small').setOrigin(0.5).setDepth(21);
+    this.mode = uiLabel(scene, width / 2, 59, '', 'small', 'ink', { color: 'gold' }).setOrigin(0.5).setDepth(21);
+    this.belts = uiLabel(scene, width / 2, 70, '', 'small', 'ink', { color: 'green', align: 'center', wordWrap: { width: width - 140 } }).setOrigin(0.5).setDepth(21);
+    this.objects = [frame.dim, frame.panel, this.title, this.slot, this.mode, this.belts];
     const rows = [
       { items: [{ label: () => ctx.t('pause.resume'), on: () => this.close() }] },
-      { items: [{ label: () => ctx.t('pause.help'), on: () => ctx.openHelp?.() }] },
-      { items: [{ label: () => ctx.t('pause.album'), on: () => ctx.openAlbum?.() }] },
-      { items: [{ label: () => ctx.t('pause.achievements'), on: () => ctx.openAchievements?.() }] },
-      { items: [{ label: () => ctx.t('pause.lernbuch'), on: () => ctx.openLernbuch?.() }] },
-      { items: [{ label: () => ctx.t('pause.parent'), on: () => ctx.openParent?.() }] },
+      { items: [
+        { label: () => ctx.t('pause.help'), on: () => ctx.openHelp?.() },
+        { label: () => ctx.t('pause.album'), on: () => ctx.openAlbum?.() },
+        { label: () => ctx.t('pause.achievements'), on: () => ctx.openAchievements?.() }
+      ] },
+      { items: [
+        { label: () => ctx.t('pause.lernbuch'), on: () => ctx.openLernbuch?.() },
+        { label: () => ctx.t('pause.parent'), on: () => ctx.openParent?.() }
+      ] },
       ...settingsRows(ctx),
-      ...(ctx.minigames?.active ? [{ items: [{ label: () => ctx.t('minigame.quit'), on: () => ctx.minigames.quit() }] }] : []),
-      { items: [{ label: () => ctx.t('pause.menu'), on: () => ctx.events.emit('game:quit') }] }
+      { items: [
+        ...(ctx.minigames?.active ? [{ label: () => ctx.t('minigame.quit'), on: () => ctx.minigames.quit() }] : []),
+        { label: () => ctx.t('pause.menu'), on: () => ctx.events.emit('game:quit') }
+      ] }
     ];
-    this.menu = new ButtonMenu(scene, ctx.t, rows, width / 2, 110, 28);
+    this.menu = new ButtonMenu(scene, ctx.t, rows, width / 2, 100, 26);
     this.menu.objects.forEach(o => o.setDepth(21));
+    this.objects.push(...this.menu.objects);
     this.retext();
   }
 
@@ -57,7 +65,7 @@ export class PauseScreen {
   }
 
   destroy() {
-    this.menu.destroy();
-    for (const o of this.objects) o.destroy();
+    this.menu.release();
+    uiLeave(this.scene, this.ctx, this.objects);
   }
 }

@@ -11,7 +11,7 @@ export class PlayObjects {
     this.groups = [];
     this.links = [];
     this.hints = Array.from({ length: ctx.maxPlayers }, () => scene.add.text(0, 0, '', {
-      fontFamily: 'monospace', fontSize: '8px', color: '#d1f7ff', backgroundColor: '#243d46', resolution: ctx.res.scale
+      fontFamily: 'monospace', fontSize: '8px', color: '#8fd0ff', backgroundColor: '#2b3850', resolution: ctx.res.scale
     }).setOrigin(0.5).setDepth(8100).setVisible(false));
     this.gfx = scene.add.graphics().setDepth(0);
     this.places = scene.add.graphics().setDepth(-1);

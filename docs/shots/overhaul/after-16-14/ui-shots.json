@@ -1,0 +1,336 @@
+{
+ "schema": 1,
+ "label": "after-16-14",
+ "shots": [
+  {
+   "id": "menu-title",
+   "tier": "medium",
+   "file": "ui-menu-title-medium.png",
+   "size": "960x540",
+   "hash": "6ed0ff878933dab0"
+  },
+  {
+   "id": "menu-slots",
+   "tier": "medium",
+   "file": "ui-menu-slots-medium.png",
+   "size": "960x540",
+   "hash": "4c21e83343a9dcb8"
+  },
+  {
+   "id": "menu-mode",
+   "tier": "medium",
+   "file": "ui-menu-mode-medium.png",
+   "size": "960x540",
+   "hash": "bf0aaf81998d75b4"
+  },
+  {
+   "id": "menu-character",
+   "tier": "medium",
+   "file": "ui-menu-character-medium.png",
+   "size": "960x540",
+   "hash": "5da8f98b99d96364"
+  },
+  {
+   "id": "hud-day",
+   "tier": "medium",
+   "file": "ui-hud-day-medium.png",
+   "size": "960x540",
+   "hash": "3cebd97f165fc547"
+  },
+  {
+   "id": "hud-evening",
+   "tier": "medium",
+   "file": "ui-hud-evening-medium.png",
+   "size": "960x540",
+   "hash": "a130b2762e1acbce"
+  },
+  {
+   "id": "hud-night",
+   "tier": "medium",
+   "file": "ui-hud-night-medium.png",
+   "size": "960x540",
+   "hash": "339ad8939a855413"
+  },
+  {
+   "id": "hud-rain",
+   "tier": "medium",
+   "file": "ui-hud-rain-medium.png",
+   "size": "960x540",
+   "hash": "92f4f34ca107dc78"
+  },
+  {
+   "id": "hud-rain-night",
+   "tier": "medium",
+   "file": "ui-hud-rain-night-medium.png",
+   "size": "960x540",
+   "hash": "5af64e0bf23bbfb0"
+  },
+  {
+   "id": "hud-snow",
+   "tier": "medium",
+   "file": "ui-hud-snow-medium.png",
+   "size": "960x540",
+   "hash": "a7727e7feb349fc2"
+  },
+  {
+   "id": "pause",
+   "tier": "medium",
+   "file": "ui-pause-medium.png",
+   "size": "960x540",
+   "hash": "6b8e719b2cf2f1c7"
+  },
+  {
+   "id": "shop-day",
+   "tier": "medium",
+   "file": "ui-shop-day-medium.png",
+   "size": "960x540",
+   "hash": "5edddf18b7408de4",
+   "probe": [
+    "43,56,80,255",
+    "58,75,104,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255"
+   ],
+   "uiHasNoPasses": true
+  },
+  {
+   "id": "phone",
+   "tier": "medium",
+   "file": "ui-phone-medium.png",
+   "size": "960x540",
+   "hash": "fd154e260476e1b9"
+  },
+  {
+   "id": "lernbuch",
+   "tier": "medium",
+   "file": "ui-lernbuch-medium.png",
+   "size": "960x540",
+   "hash": "fa8a010be348509b"
+  },
+  {
+   "id": "zeugnis",
+   "tier": "medium",
+   "file": "ui-zeugnis-medium.png",
+   "size": "960x540",
+   "hash": "3b70423c15645a56"
+  },
+  {
+   "id": "message",
+   "tier": "medium",
+   "file": "ui-message-medium.png",
+   "size": "960x540",
+   "hash": "162f3ffa1d9354a3"
+  },
+  {
+   "id": "album",
+   "tier": "medium",
+   "file": "ui-album-medium.png",
+   "size": "960x540",
+   "hash": "396f0bfec1f0d497"
+  },
+  {
+   "id": "achievements",
+   "tier": "medium",
+   "file": "ui-achievements-medium.png",
+   "size": "960x540",
+   "hash": "2149a3f2c35dce25"
+  },
+  {
+   "id": "help",
+   "tier": "medium",
+   "file": "ui-help-medium.png",
+   "size": "960x540",
+   "hash": "6a7ad8b246b89244"
+  },
+  {
+   "id": "pause-rain-night",
+   "tier": "medium",
+   "file": "ui-pause-rain-night-medium.png",
+   "size": "960x540",
+   "hash": "ef5258d51b305b2b"
+  },
+  {
+   "id": "shop-rain-night",
+   "tier": "medium",
+   "file": "ui-shop-rain-night-medium.png",
+   "size": "960x540",
+   "hash": "0966fd77eb4f285a",
+   "probe": [
+    "43,56,80,255",
+    "58,75,104,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255"
+   ],
+   "uiHasNoPasses": true
+  },
+  {
+   "id": "menu-title",
+   "tier": "low",
+   "file": "ui-menu-title-low.png",
+   "size": "480x270",
+   "hash": "1bf3b7eee2dc8b3a"
+  },
+  {
+   "id": "menu-slots",
+   "tier": "low",
+   "file": "ui-menu-slots-low.png",
+   "size": "480x270",
+   "hash": "0462acd23ff2009d"
+  },
+  {
+   "id": "menu-mode",
+   "tier": "low",
+   "file": "ui-menu-mode-low.png",
+   "size": "480x270",
+   "hash": "22e0c9271756bf90"
+  },
+  {
+   "id": "menu-character",
+   "tier": "low",
+   "file": "ui-menu-character-low.png",
+   "size": "480x270",
+   "hash": "f7a45345739786e5"
+  },
+  {
+   "id": "hud-day",
+   "tier": "low",
+   "file": "ui-hud-day-low.png",
+   "size": "480x270",
+   "hash": "15877cec850c92e9"
+  },
+  {
+   "id": "hud-evening",
+   "tier": "low",
+   "file": "ui-hud-evening-low.png",
+   "size": "480x270",
+   "hash": "3424fa4846cbfe91"
+  },
+  {
+   "id": "hud-night",
+   "tier": "low",
+   "file": "ui-hud-night-low.png",
+   "size": "480x270",
+   "hash": "a0bfdb5a32249afe"
+  },
+  {
+   "id": "hud-rain",
+   "tier": "low",
+   "file": "ui-hud-rain-low.png",
+   "size": "480x270",
+   "hash": "5949fdb935cc5aa4"
+  },
+  {
+   "id": "hud-rain-night",
+   "tier": "low",
+   "file": "ui-hud-rain-night-low.png",
+   "size": "480x270",
+   "hash": "69a6e14da959af10"
+  },
+  {
+   "id": "hud-snow",
+   "tier": "low",
+   "file": "ui-hud-snow-low.png",
+   "size": "480x270",
+   "hash": "a3dcf93b43f929f9"
+  },
+  {
+   "id": "pause",
+   "tier": "low",
+   "file": "ui-pause-low.png",
+   "size": "480x270",
+   "hash": "fa10917fb687d19f"
+  },
+  {
+   "id": "shop-day",
+   "tier": "low",
+   "file": "ui-shop-day-low.png",
+   "size": "480x270",
+   "hash": "41c64ebaf2a3e87a",
+   "probe": [
+    "43,56,80,255",
+    "58,75,104,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255"
+   ],
+   "uiHasNoPasses": true
+  },
+  {
+   "id": "phone",
+   "tier": "low",
+   "file": "ui-phone-low.png",
+   "size": "480x270",
+   "hash": "28e53096fe512350"
+  },
+  {
+   "id": "lernbuch",
+   "tier": "low",
+   "file": "ui-lernbuch-low.png",
+   "size": "480x270",
+   "hash": "39e9ea050c3deff6"
+  },
+  {
+   "id": "zeugnis",
+   "tier": "low",
+   "file": "ui-zeugnis-low.png",
+   "size": "480x270",
+   "hash": "a95a1954538553a9"
+  },
+  {
+   "id": "message",
+   "tier": "low",
+   "file": "ui-message-low.png",
+   "size": "480x270",
+   "hash": "b832cfa33be2d338"
+  },
+  {
+   "id": "album",
+   "tier": "low",
+   "file": "ui-album-low.png",
+   "size": "480x270",
+   "hash": "37fa1747bb32325f"
+  },
+  {
+   "id": "achievements",
+   "tier": "low",
+   "file": "ui-achievements-low.png",
+   "size": "480x270",
+   "hash": "faf9815c5756755b"
+  },
+  {
+   "id": "help",
+   "tier": "low",
+   "file": "ui-help-low.png",
+   "size": "480x270",
+   "hash": "d93d729d6e0a7eed"
+  },
+  {
+   "id": "pause-rain-night",
+   "tier": "low",
+   "file": "ui-pause-rain-night-low.png",
+   "size": "480x270",
+   "hash": "65743eadd30398b0"
+  },
+  {
+   "id": "shop-rain-night",
+   "tier": "low",
+   "file": "ui-shop-rain-night-low.png",
+   "size": "480x270",
+   "hash": "0bfb53c5cd918b20",
+   "probe": [
+    "43,56,80,255",
+    "58,75,104,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255"
+   ],
+   "uiHasNoPasses": true
+  }
+ ]
+}

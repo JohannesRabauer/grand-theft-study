@@ -1,10 +1,10 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiScreenFrame } from '../uiKit.js';
 import { ChoiceCursor, lineFor, starsFor } from '../../minigames/minigameCore.js';
 
 const DEPTH = 40;
 const CARD = { x: 40, y: 14, w: 400, h: 242 };
 const STAR = { y: 66, gap: 50, r: 17 };
-const COLORS = { on: 0xffd23f, off: 0x3a4152, edge: 0x7a5a00 };
+const COLORS = { on: 0xffd36b, off: 0x3a4b68, edge: 0x16161e };
 
 // The result screen of a minigame (AD-20, AD-27): score, stars drawn procedurally, the German grade with a kind headline,
 // the funny line of the result band, XP and money, and "continue" (click, tap, confirm key or pad button of any
@@ -26,19 +26,20 @@ export class MinigameResultScreen {
     const { scene, ctx, result } = this;
     const { w, h } = ctx.res;
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, w, h, 0x000000, 0.88).setOrigin(0).setDepth(DEPTH).setInteractive()); // swallows clicks
-    own(scene.add.rectangle(CARD.x, CARD.y, CARD.w, CARD.h, 0x1a1d26).setOrigin(0).setDepth(DEPTH + 1).setStrokeStyle(2, 0xd9a521));
+    const frame = uiScreenFrame(scene, ctx, { ...CARD, dimAlpha: 0.88, depth: DEPTH }); // the dim swallows clicks
+    own(frame.dim);
+    own(frame.panel);
     const cx = w / 2;
-    const text = (y, size, color, extra = {}) => own(uiText(scene, cx, y, '', {
-      fontFamily: 'monospace', fontSize: `${size}px`, color, align: 'center', wordWrap: { width: CARD.w - 30 }, ...extra
+    const text = (y, size, color, extra = {}) => own(uiLabel(scene, cx, y, '', 'body', 'ink', {
+      size, color, align: 'center', wordWrap: { width: CARD.w - 30 }, ...extra
     }).setOrigin(0.5).setDepth(DEPTH + 2));
-    this.title = text(CARD.y + 18, 14, '#ffe14d', { stroke: '#000000', strokeThickness: 3 });
-    this.grade = text(112, 26, '#ffffff', { fontStyle: 'bold', stroke: '#000000', strokeThickness: 4 });
-    this.headline = text(140, 12, '#9be58f');
-    this.line = text(164, 10, '#9fd0ff');
-    this.score = text(188, 10, '#ffffff');
-    this.rewards = text(202, 10, '#ffe14d');
-    this.players = result.perPlayer.length > 1 ? result.perPlayer.map((_, i) => text(216 + i * 11, 8, '#cccccc')) : [];
+    this.title = text(CARD.y + 18, 14, '#ffd36b');
+    this.grade = text(112, 26, '#f6efdc', { fontStyle: 'bold' });
+    this.headline = text(140, 12, '#9ddc7a');
+    this.line = text(164, 10, '#8fd0ff');
+    this.score = text(188, 10, '#f6efdc');
+    this.rewards = text(202, 10, '#ffd36b');
+    this.players = result.perPlayer.length > 1 ? result.perPlayer.map((_, i) => text(216 + i * 11, 8, '#b4c2d8')) : [];
     const earned = starsFor(result.score, this.cfg.stars);
     this.stars = this.cfg.stars.map((_, i) => {
       const star = own(drawStar(scene, cx + (i - 1) * STAR.gap, STAR.y, STAR.r, i < earned).setDepth(DEPTH + 2));
@@ -48,9 +49,7 @@ export class MinigameResultScreen {
       }
       return star;
     });
-    this.button = own(uiText(scene, cx, CARD.y + CARD.h - 14, '', {
-      fontFamily: 'monospace', fontSize: '10px', color: '#000000', backgroundColor: '#d9a521', padding: { x: 12, y: 4 }
-    }).setOrigin(0.5).setDepth(DEPTH + 2).setInteractive({ useHandCursor: true }));
+    this.button = own(uiLabel(scene, cx, CARD.y + CARD.h - 14, '', 'body', 'ink', { color: '#16161e', backgroundColor: '#e2b684', padding: { x: 12, y: 4 }, shadow: false }).setOrigin(0.5).setDepth(DEPTH + 2).setInteractive({ useHandCursor: true }));
     this.button.on('pointerdown', () => this.proceed());
     this.retext();
   }

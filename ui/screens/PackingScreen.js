@@ -1,4 +1,4 @@
-import { uiText } from '../uiKit.js';
+import { uiLabel, uiLeave, uiScreenFrame, uiPanel } from '../uiKit.js';
 import { ChoiceCursor } from '../../minigames/minigameCore.js';
 import { missingItems } from '../../services/Morning.js';
 
@@ -21,22 +21,21 @@ export class PackingScreen {
     const { scene, ctx, morning } = this;
     morning.begin();
     const own = o => { this.objects.push(o); return o; };
-    own(scene.add.rectangle(0, 0, ctx.res.w, ctx.res.h, 0x000000, 0.86).setOrigin(0).setDepth(40).setInteractive());
-    own(scene.add.rectangle(24, 12, 432, 246, 0x1a2830).setOrigin(0).setDepth(41).setStrokeStyle(2, 0xe2bb65));
-    const text = (x, y, size = 10, extra = {}) => own(uiText(scene, x, y, '', {
-      fontFamily: 'monospace', fontSize: `${size}px`, color: '#ffffff', ...extra
-    }).setDepth(42));
-    this.title = text(240, 26, 13, { color: '#ffe14d' }).setOrigin(0.5);
+    const frame = uiScreenFrame(scene, ctx, { x: 24, y: 12, w: 432, h: 246, dimAlpha: 0.88 });
+    own(frame.dim);
+    own(frame.panel);
+    const text = (x, y, size = 10, extra = {}) => own(uiLabel(scene, x, y, '', 'body', 'ink', { size, ...extra }).setDepth(42));
+    this.title = text(240, 26, 13, { color: '#ffd36b' }).setOrigin(0.5);
     this.tabs = ctx.players.map((p, i) => {
       const tab = text(120 + i * 220, 49, 10).setOrigin(0.5).setInteractive({ useHandCursor: true });
       tab.on('pointerdown', () => { this.player = i; this.focus = 0; this.retext(); });
       return tab;
     });
-    own(scene.add.rectangle(BAG.x, BAG.y, BAG.w, BAG.h, 0x355e81).setOrigin(0).setDepth(42).setStrokeStyle(2, 0x88b5d5));
-    this.bagLabel = text(BAG.x + BAG.w / 2, BAG.y + 13, 11, { color: '#ffe14d' }).setOrigin(0.5);
+    own(uiPanel(scene, BAG.x, BAG.y, BAG.w, BAG.h, { tone: 'well', shadow: false, depth: 41.5 }));
+    this.bagLabel = text(BAG.x + BAG.w / 2, BAG.y + 13, 11, { color: '#ffd36b' }).setOrigin(0.5);
     this.contents = text(BAG.x + 8, BAG.y + 29, 8, { wordWrap: { width: BAG.w - 16 } });
-    this.missing = text(BAG.x, 180, 8, { color: '#ffe1a0', wordWrap: { width: BAG.w }, lineSpacing: 2 });
-    this.help = text(40, 219, 8, { color: '#b8d6e5' });
+    this.missing = text(BAG.x, 180, 8, { color: '#ffd36b', wordWrap: { width: BAG.w }, lineSpacing: 2 });
+    this.help = text(40, 219, 8, { color: '#b4c2d8' });
     this.cards = morning.cfg.items.map((item, i) => {
       const card = text(40, 68 + i * 14, 9, { padding: { x: 4, y: 1 } }).setInteractive({ useHandCursor: true });
       scene.input.setDraggable(card);
@@ -53,7 +52,7 @@ export class PackingScreen {
       card.on('pointerup', () => { if (!card.dragged) this.toggle(item.id); });
       return card;
     });
-    this.done = text(240, 243, 10, { color: '#ffe14d' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    this.done = text(240, 243, 10, { color: '#ffd36b' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.done.on('pointerdown', () => this.finish());
     this.retext();
   }
@@ -74,7 +73,7 @@ export class PackingScreen {
     this.title.setText(ctx.t('home.packing', { day: morning.day }));
     this.tabs.forEach((tab, i) => {
       const who = ctx.players[i].character?.name ?? ctx.t('menu.slot.player', { n: i + 1 });
-      tab.setText(who).setColor(i === this.player ? '#ffe14d' : '#ffffff');
+      tab.setText(who).setColor(i === this.player ? '#ffd36b' : '#f6efdc');
     });
     this.cards.forEach((card, i) => {
       const item = morning.cfg.items[i];
@@ -90,8 +89,10 @@ export class PackingScreen {
   }
 
   paint() {
-    this.cards.forEach((c, i) => c.setBackgroundColor(i === this.focus ? '#78612c' : '#243b44'));
-    this.done.setBackgroundColor(this.focus === this.cards.length ? '#78612c' : '#243b44');
+    const b = this.scene.cache.json.get('ui').button;
+    const look = (o, on) => o.setBackgroundColor(on ? b.focus.face : b.idle.face).setColor(on ? b.focus.text : b.idle.text);
+    this.cards.forEach((c, i) => look(c, i === this.focus));
+    look(this.done, this.focus === this.cards.length);
   }
 
   handleIntent(intent) {
@@ -118,5 +119,5 @@ export class PackingScreen {
   close() {
     if (this.ctx.screens.top() === this) { this.morning.save(); this.ctx.screens.pop(); }
   }
-  destroy() { for (const o of this.objects) o.destroy(); }
+  destroy() { uiLeave(this.scene, this.ctx, this.objects); }
 }

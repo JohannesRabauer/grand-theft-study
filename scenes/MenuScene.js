@@ -4,9 +4,10 @@ import { CharacterSelect } from '../ui/CharacterSelect.js';
 import { slotSummary } from '../ui/slotSummary.js';
 import { NewGameFlow, coopAvailable, padJoinHint, startActions } from '../ui/menuFlow.js';
 import { PadNav } from '../ui/PadNav.js';
-import { uiText, setupUiCamera, bindRestartNote } from '../ui/uiKit.js';
+import { uiLabel, uiPanel, setupUiCamera, bindRestartNote } from '../ui/uiKit.js';
+import { drawBackdrop } from '../ui/menuBackdrop.js';
 
-const NOTE = { fontFamily: 'monospace', fontSize: '8px', color: '#dddddd', align: 'center' };
+const NOTE = { align: 'center', color: 'text' };
 
 // Screens: title (Play + toggles) -> slots (three slots, each New game / Continue / Delete) ->
 // confirm (overwrite or delete); New game continues to the mode screen (solo or co-op), then to the character select
@@ -21,9 +22,10 @@ export class MenuScene extends Phaser.Scene {
     setupUiCamera(this, app.res);
     const { w: width, h: height } = app.res;
     const cx = width / 2;
-    const title = uiText(this, cx, 52, '', { fontFamily: 'monospace', fontSize: '32px', color: '#ffe14d', stroke: '#000000', strokeThickness: 4 }).setOrigin(0.5);
-    const tag = uiText(this, cx, 84, '', { fontFamily: 'monospace', fontSize: '10px', color: '#cccccc' }).setOrigin(0.5);
-    const hint = uiText(this, cx, height - 10, '', { fontFamily: 'monospace', fontSize: '8px', color: '#888888' }).setOrigin(0.5);
+    drawBackdrop(this, app.res);
+    const title = uiLabel(this, cx, 52, '', 'title', 'ink', { size: 32, stroke: '#16161e', strokeThickness: 4, shadow: false }).setOrigin(0.5);
+    const tag = uiLabel(this, cx, 84, '', 'sub', 'ink', { color: 'text' }).setOrigin(0.5);
+    const hint = uiLabel(this, cx, height - 10, '', 'small', 'ink', { color: 'text' }).setOrigin(0.5);
     const brokenSlots = new Set(); // slots found unreadable this visit; their note stays until you leave
     let menu = null;
     let extras = [];
@@ -39,7 +41,9 @@ export class MenuScene extends Phaser.Scene {
       extras.forEach(o => o.destroy());
       extras = [];
     };
-    const note = (x, y, str, style = NOTE) => { const o = uiText(this, x, y, str, style).setOrigin(0.5); extras.push(o); return o; };
+    const note = (x, y, str, over = NOTE) => { const o = uiLabel(this, x, y, str, 'small', 'ink', { ...NOTE, ...over }).setOrigin(0.5); extras.push(o); return o; };
+    // the panel behind a screen's buttons and lines (below the default depth 0, above the backdrop)
+    const backing = (x, y, w, h, accent = true) => extras.push(uiPanel(this, x, y, w, h, { accent, depth: -5 }));
 
     const play = (action) => { action(); this.scene.start('Game'); };
     // a new game in `slot` with the chosen mode and characters (saved at once, so Continue brings the same kids back)
@@ -69,6 +73,8 @@ export class MenuScene extends Phaser.Scene {
     const showTitle = () => {
       title.setPosition(cx, 52); tag.setVisible(true);
       back = null;
+      backing(cx - 140, 22, 280, 80);
+      backing(cx - 130, 112, 260, 100);
       menu = new ButtonMenu(this, t, [
         { items: [{ label: () => t('menu.play'), on: () => show('slots') }] },
         ...settingsRows(app)
@@ -78,6 +84,7 @@ export class MenuScene extends Phaser.Scene {
     const showSlots = () => {
       title.setPosition(cx, 28); tag.setVisible(false);
       back = () => show('title');
+      backing(24, 10, width - 48, height - 36);
       for (const r of saves.list()) if (r.status === 'corrupt') { saves.load(r.slot); brokenSlots.add(r.slot); }
       const rows = saves.list().map(r => {
         const items = r.status === 'ok' ? [{ label: () => t('menu.slot.continue'), on: () => play(() => saves.load(r.slot)) }] : [];
@@ -87,50 +94,53 @@ export class MenuScene extends Phaser.Scene {
       });
       rows.push({ items: [{ label: () => t('menu.back'), on: back }] });
       menu = new ButtonMenu(this, t, rows, cx, 90, 40);
-      note(cx, 56, t('menu.slots.title'), { ...NOTE, fontSize: '10px', color: '#ffffff' });
+      note(cx, 56, t('menu.slots.title'), { size: 10 });
       for (const r of rows) {
         if (!r.row) continue;
         const n = r.row.slot;
-        note(cx, r.y - 22, t('menu.slot.name', { n }), { ...NOTE, color: '#ffe14d' });
-        note(cx, r.y - 13, slotSummary(r.row, t, app.i18n.lang, brokenSlots.has(n) && saves.hasBackup(n)));
+        note(cx, r.y - 27, t('menu.slot.name', { n }), { color: 'gold' });
+        note(cx, r.y - 18, slotSummary(r.row, t, app.i18n.lang, brokenSlots.has(n) && saves.hasBackup(n)));
       }
     };
 
     const showConfirm = ({ kind, slot }) => {
       title.setPosition(cx, 28); tag.setVisible(false);
       back = () => show('slots');
+      backing(40, 10, width - 80, 210);
       const yes = kind === 'new' ? () => newGame(slot) : () => { saves.delete(slot); show('slots'); };
       menu = new ButtonMenu(this, t, [{ items: [
         { label: () => t(`menu.confirm.${kind}Yes`), on: yes },
         { label: () => t(`menu.confirm.${kind}No`), on: back }
       ] }], cx, 150, 28);
       menu.focus(0, 1); // the gentle default is "no"
-      note(cx, 110, t(`menu.confirm.${kind}`, { n: slot }), { ...NOTE, fontSize: '10px', color: '#ffffff', wordWrap: { width: width - 60 } });
+      note(cx, 110, t(`menu.confirm.${kind}`, { n: slot }), { size: 10, wordWrap: { width: width - 60 } });
     };
 
     const showMode = ({ slot }) => {
       title.setPosition(cx, 28); tag.setVisible(false);
       back = () => stepBack(slot);
+      backing(40, 10, width - 80, 200);
       const items = [{ label: () => t('menu.mode.solo'), on: () => chooseMode(slot, 'solo') }];
       if (flow.coopAllowed) items.push({ label: () => t('menu.mode.coop'), on: () => chooseMode(slot, 'coop') });
       items.push({ label: () => t('menu.back'), on: back });
       menu = new ButtonMenu(this, t, [{ items }], cx, 120, 28);
-      note(cx, 70, t('menu.mode.title'), { ...NOTE, fontSize: '10px', color: '#ffffff' });
+      note(cx, 70, t('menu.mode.title'), { size: 10 });
       if (flow.coopAllowed) {
-        note(cx, 160, t('menu.mode.controls'), { ...NOTE, color: '#ffe14d' });
+        note(cx, 160, t('menu.mode.controls'), { color: 'gold' });
         if (padJoinHint({ pads: padCount(), coopAllowed: true })) {
-          note(cx, 176, t('menu.mode.padJoin'), { ...NOTE, color: '#6fd08a' });
+          note(cx, 176, t('menu.mode.padJoin'), { color: 'green' });
           // A on any connected pad joins as player 2
           joinPad = new PadNav(this, n => Array.from({ length: n }, (_, i) => i), a => { if (a === 'confirm') chooseMode(slot, 'coop'); });
         }
       } else {
-        note(cx, 160, t('menu.mode.touchOnly'), { ...NOTE, color: '#ffe14d', wordWrap: { width: width - 60 } });
+        note(cx, 160, t('menu.mode.touchOnly'), { color: 'gold', wordWrap: { width: width - 60 } });
       }
     };
 
     const showCharacter = ({ slot }) => {
       title.setPosition(cx, 22); tag.setVisible(false);
       back = () => stepBack(slot);
+      backing(4, 4, width - 8, height - 20, false);
       menu = new CharacterSelect(this, app, id => pickCharacter(slot, id), back, { player: flow.picker, coop: flow.coop });
     };
 

@@ -1,4 +1,4 @@
-import { setupUiCamera } from '../ui/uiKit.js';
+import { setupUiCamera, uiOpen } from '../ui/uiKit.js';
 import { createHud } from '../ui/hud/index.js';
 import { ScreenStack } from '../ui/ScreenStack.js';
 import { PauseScreen } from '../ui/screens/PauseScreen.js';
@@ -26,6 +26,7 @@ export class UIScene extends Phaser.Scene {
     this.hudList = [...this.hud.values()];
     this.screens = new ScreenStack(cache.get('screens'), (on) => events.emit(on ? 'game:pause' : 'game:resume'));
     ctx.screens = this.screens;
+    this.screens.onOpen = screen => uiOpen(this, ctx, screen.objects ?? []); // story 16.14: every screen eases in
     // Story 11.5: contextual explanations open here (reading freezes the world until a fresh confirmation) and the
     // pause menu's Help pages through all of them. Read-only for the world, like the rest of this scene.
     const hintCfg = cache.get('hints');
