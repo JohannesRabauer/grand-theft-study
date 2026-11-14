@@ -1,7 +1,7 @@
 // Runs the ?bench page in a headless Edge/Chrome through the DevTools protocol (no dependencies,
 // Node 22+): the benchmark table and, with --live, real rendering frame rates, in a browser that
 // is not throttled like a hidden tab. Needs the game served, e.g. `python -m http.server 8080`.
-//   node scripts/bench-cdp.mjs [--url http://localhost:8080] [--live [--uncapped]] [--smoke] [--cpu scenario --tier medium] [--eval "js expression"] [--alloc scenario --tier medium] [--steps 600] [--json out.json]
+//   node scripts/bench-cdp.mjs [--url http://localhost:8080] [--live [--uncapped]] [--smoke] [--cpu scenario [--live] --tier medium] [--eval "js expression"] [--alloc scenario --tier medium] [--steps 600] [--json out.json]
 import { writeFileSync } from 'node:fs';
 import { launchBrowser } from './lib/headless-browser.mjs';
 
@@ -66,7 +66,8 @@ try {
     await send('Profiler.enable');
     await send('Profiler.setSamplingInterval', { interval: 100 });
     await send('Profiler.start');
-    await evalJs(`SCHULWEG_BENCH.runAll({ steps: ${steps}, tiers: ['${arg('tier', 'medium')}'], scenarios: ['${arg('cpu', 'all')}'] })`);
+    if (arg('live', false)) await evalJs(`SCHULWEG_BENCH.live({ tiers: ['${arg('tier', 'medium')}'], scenarios: ['${arg('cpu', 'all')}'], seconds: 8 })`); // with --live: the real render loop (story 16.15)
+    else await evalJs(`SCHULWEG_BENCH.runAll({ steps: ${steps}, tiers: ['${arg('tier', 'medium')}'], scenarios: ['${arg('cpu', 'all')}'] })`);
     const prof = (await send('Profiler.stop')).result.profile;
     const byId = new Map(prof.nodes.map(n => [n.id, n]));
     const selfT = new Map();

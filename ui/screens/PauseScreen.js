@@ -33,13 +33,13 @@ export class PauseScreen {
         { label: () => ctx.t('pause.lernbuch'), on: () => ctx.openLernbuch?.() },
         { label: () => ctx.t('pause.parent'), on: () => ctx.openParent?.() }
       ] },
-      ...settingsRows(ctx),
+      ...settingsRows(ctx, { effects: true }),
       { items: [
         ...(ctx.minigames?.active ? [{ label: () => ctx.t('minigame.quit'), on: () => ctx.minigames.quit() }] : []),
         { label: () => ctx.t('pause.menu'), on: () => ctx.events.emit('game:quit') }
       ] }
     ];
-    this.menu = new ButtonMenu(scene, ctx.t, rows, width / 2, 100, 26);
+    this.menu = new ButtonMenu(scene, ctx.t, rows, width / 2, 98, 24);
     this.menu.objects.forEach(o => o.setDepth(21));
     this.objects.push(...this.menu.objects);
     this.retext();

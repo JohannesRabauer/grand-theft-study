@@ -78,9 +78,13 @@
   "menu.hint": "Arrow keys + Enter, mouse or touch",
   "menu.language": "Language",
   "menu.quality": "Quality",
+  "menu.effects": "Effects",
   "quality.low": "Low",
   "quality.medium": "Medium",
   "quality.high": "High",
+  "effects.full": "Full",
+  "effects.reduced": "Reduced",
+  "effects.off": "Off",
   "pause.title": "Quick break",
   "pause.resume": "Back to it",
   "pause.menu": "Back to menu",
@@ -1042,6 +1046,7 @@
   "talk.question.ok": "Right! He is impressed and backs off.",
   "talk.gentle": "Not quite. He lets you go this time - run!",
   "parent.sound": "Sound",
+  "parent.effects": "Effects",
   "critter.feed": "Feed the ducks",
   "critter.fed": "The ducks quack happily and swim over!"
 }

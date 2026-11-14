@@ -1,0 +1,138 @@
+{
+ "schema": 1,
+ "label": "after-16-15-off",
+ "shots": [
+  {
+   "id": "park-day",
+   "tier": "medium",
+   "file": "park-day-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "lights": 0,
+   "lightLimit": 0,
+   "hash": "c5a2554646042831",
+   "metrics": {
+    "longestSeamPx": 64,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 1179,
+    "largestFlatShare": 0.0091,
+    "walkableLuminanceMin": 0.3975,
+    "walkableLuminanceP5": 0.4717,
+    "meanLuminance": 0.4991,
+    "distinctColors": 1301
+   }
+  },
+  {
+   "id": "oldtown-day",
+   "tier": "medium",
+   "file": "oldtown-day-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "clear",
+   "lights": 0,
+   "lightLimit": 0,
+   "hash": "7306b3ba0e72ed5f",
+   "metrics": {
+    "longestSeamPx": 172,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 360.75,
+    "largestFlatShare": 0.0028,
+    "walkableLuminanceMin": 0.3443,
+    "walkableLuminanceP5": 0.4614,
+    "meanLuminance": 0.5735,
+    "distinctColors": 971
+   }
+  },
+  {
+   "id": "oldtown-night",
+   "tier": "medium",
+   "file": "oldtown-night-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 1290,
+   "weather": "clear",
+   "lights": 0,
+   "lightLimit": 0,
+   "hash": "cfcde034ea501808",
+   "metrics": {
+    "longestSeamPx": 161,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 1787.25,
+    "largestFlatShare": 0.0138,
+    "walkableLuminanceMin": 0.2273,
+    "walkableLuminanceP5": 0.2922,
+    "meanLuminance": 0.2748,
+    "distinctColors": 363
+   }
+  },
+  {
+   "id": "oldtown-rain",
+   "tier": "medium",
+   "file": "oldtown-rain-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 720,
+   "weather": "rain",
+   "lights": 0,
+   "lightLimit": 0,
+   "hash": "de38c01843e5b6c0",
+   "metrics": {
+    "longestSeamPx": 160,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 360.75,
+    "largestFlatShare": 0.0028,
+    "walkableLuminanceMin": 0.2871,
+    "walkableLuminanceP5": 0.3723,
+    "meanLuminance": 0.4471,
+    "distinctColors": 823
+   }
+  },
+  {
+   "id": "lamp-dusk",
+   "tier": "medium",
+   "file": "lamp-dusk-medium.png",
+   "size": "960x540",
+   "map": "town",
+   "minute": 1260,
+   "weather": "clear",
+   "lights": 0,
+   "lightLimit": 0,
+   "hash": "4f49344fea05dd6a",
+   "metrics": {
+    "longestSeamPx": 161,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 1705.75,
+    "largestFlatShare": 0.0132,
+    "walkableLuminanceMin": 0.2447,
+    "walkableLuminanceP5": 0.3029,
+    "meanLuminance": 0.3451,
+    "distinctColors": 841
+   }
+  },
+  {
+   "id": "interior-home-night",
+   "tier": "medium",
+   "file": "interior-home-night-medium.png",
+   "size": "960x540",
+   "map": "home",
+   "minute": 1290,
+   "weather": "clear",
+   "lights": 0,
+   "lightLimit": 0,
+   "hash": "b2ba7c74245ab8f2",
+   "metrics": {
+    "longestSeamPx": 230,
+    "longestSeamAxis": "horizontal",
+    "largestFlatAreaPx": 1939.5,
+    "largestFlatShare": 0.015,
+    "walkableLuminanceMin": 0.2613,
+    "walkableLuminanceP5": 0.306,
+    "meanLuminance": 0.446,
+    "distinctColors": 774
+   }
+  }
+ ]
+}

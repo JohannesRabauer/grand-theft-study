@@ -2,7 +2,7 @@
 // achievements, help) captured WITH the UI scene into docs/shots/overhaul/<label>/ui-*.png, so one set shows the whole look in one consistent style. A second
 // check reads the same opaque panel (the shop) over a bright day and over a rainy night and fails when one pixel differs: the UI scene is never touched by the light
 // map or the post passes (AD-31). Seeded and fixed-step like scripts/shots.mjs, so two runs give the same bytes.
-//   node scripts/ui-shots.mjs --label after-16-14 [--tier medium|low] [--renderer canvas]
+//   node scripts/ui-shots.mjs --label after-16-14 [--tier medium|low] [--renderer canvas] [--effects full|reduced|off]
 // Node 22+.
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
@@ -55,6 +55,7 @@ const WORLD = [
   { id: 'album', at: 'park', time: 'day', weather: 'clear', open: 'album' },
   { id: 'achievements', at: 'park', time: 'day', weather: 'clear', open: 'achievements' },
   { id: 'help', at: 'park', time: 'day', weather: 'clear', open: 'help' },
+  { id: 'parent-settings', at: 'park', time: 'day', weather: 'clear', open: 'parent' }, // story 16.15: the Effekte row
   { id: 'pause-rain-night', at: 'oldtown', time: 'night', weather: 'rain', open: 'pause' },
   { id: 'shop-rain-night', at: 'oldtown', time: 'night', weather: 'rain', open: 'shop', probe: true }
 ];
@@ -96,6 +97,7 @@ async function captureTier(tier) {
     }
     if (!ready) throw new Error('game did not start');
     await sleep(500);
+    if (arg('effects', '')) await evalJs(`SCHULWEG_GAME.registry.get('app').quality.setEffects('${arg('effects')}')`); // story 16.15: the Effekte mode (full, reduced, off)
     await evalJs(`(() => {
       const game = SCHULWEG_GAME;
       game.loop.sleep();
@@ -186,6 +188,10 @@ async function captureTier(tier) {
         else if (open === 'album') ctx.openAlbum();
         else if (open === 'achievements') ctx.openAchievements();
         else if (open === 'help') ctx.openHelp();
+        else if (open === 'parent') {
+          const { ParentSettingsScreen } = await import('./ui/screens/ParentSettingsScreen.js');
+          ui.screens.push(new ParentSettingsScreen(ui, ctx, ui.screens, ui.cache.json.get('parent')));
+        }
         else if (open === 'message') {
           const { MessageScreen } = await import('./ui/screens/MessageScreen.js');
           ui.screens.push(new MessageScreen(ui, ctx, ui.screens, { title: ctx.t('day.bedtime.title'), lines: [ctx.t('zeugnis.end.body')], inputCfg: ui.cache.json.get('input') }));

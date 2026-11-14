@@ -1,0 +1,178 @@
+{
+ "schema": 1,
+ "label": "after-16-15",
+ "shots": [
+  {
+   "id": "menu-title",
+   "tier": "medium",
+   "file": "ui-menu-title-medium.png",
+   "size": "960x540",
+   "hash": "6ed0ff878933dab0"
+  },
+  {
+   "id": "menu-slots",
+   "tier": "medium",
+   "file": "ui-menu-slots-medium.png",
+   "size": "960x540",
+   "hash": "4c21e83343a9dcb8"
+  },
+  {
+   "id": "menu-mode",
+   "tier": "medium",
+   "file": "ui-menu-mode-medium.png",
+   "size": "960x540",
+   "hash": "bf0aaf81998d75b4"
+  },
+  {
+   "id": "menu-character",
+   "tier": "medium",
+   "file": "ui-menu-character-medium.png",
+   "size": "960x540",
+   "hash": "5da8f98b99d96364"
+  },
+  {
+   "id": "hud-day",
+   "tier": "medium",
+   "file": "ui-hud-day-medium.png",
+   "size": "960x540",
+   "hash": "3cebd97f165fc547"
+  },
+  {
+   "id": "hud-evening",
+   "tier": "medium",
+   "file": "ui-hud-evening-medium.png",
+   "size": "960x540",
+   "hash": "a130b2762e1acbce"
+  },
+  {
+   "id": "hud-night",
+   "tier": "medium",
+   "file": "ui-hud-night-medium.png",
+   "size": "960x540",
+   "hash": "339ad8939a855413"
+  },
+  {
+   "id": "hud-rain",
+   "tier": "medium",
+   "file": "ui-hud-rain-medium.png",
+   "size": "960x540",
+   "hash": "92f4f34ca107dc78"
+  },
+  {
+   "id": "hud-rain-night",
+   "tier": "medium",
+   "file": "ui-hud-rain-night-medium.png",
+   "size": "960x540",
+   "hash": "5af64e0bf23bbfb0"
+  },
+  {
+   "id": "hud-snow",
+   "tier": "medium",
+   "file": "ui-hud-snow-medium.png",
+   "size": "960x540",
+   "hash": "a7727e7feb349fc2"
+  },
+  {
+   "id": "pause",
+   "tier": "medium",
+   "file": "ui-pause-medium.png",
+   "size": "960x540",
+   "hash": "97f1ffd27c9fd19b"
+  },
+  {
+   "id": "shop-day",
+   "tier": "medium",
+   "file": "ui-shop-day-medium.png",
+   "size": "960x540",
+   "hash": "5edddf18b7408de4",
+   "probe": [
+    "43,56,80,255",
+    "58,75,104,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255"
+   ],
+   "uiHasNoPasses": true
+  },
+  {
+   "id": "phone",
+   "tier": "medium",
+   "file": "ui-phone-medium.png",
+   "size": "960x540",
+   "hash": "fd154e260476e1b9"
+  },
+  {
+   "id": "lernbuch",
+   "tier": "medium",
+   "file": "ui-lernbuch-medium.png",
+   "size": "960x540",
+   "hash": "fa8a010be348509b"
+  },
+  {
+   "id": "zeugnis",
+   "tier": "medium",
+   "file": "ui-zeugnis-medium.png",
+   "size": "960x540",
+   "hash": "3b70423c15645a56"
+  },
+  {
+   "id": "message",
+   "tier": "medium",
+   "file": "ui-message-medium.png",
+   "size": "960x540",
+   "hash": "162f3ffa1d9354a3"
+  },
+  {
+   "id": "album",
+   "tier": "medium",
+   "file": "ui-album-medium.png",
+   "size": "960x540",
+   "hash": "396f0bfec1f0d497"
+  },
+  {
+   "id": "achievements",
+   "tier": "medium",
+   "file": "ui-achievements-medium.png",
+   "size": "960x540",
+   "hash": "2149a3f2c35dce25"
+  },
+  {
+   "id": "help",
+   "tier": "medium",
+   "file": "ui-help-medium.png",
+   "size": "960x540",
+   "hash": "6a7ad8b246b89244"
+  },
+  {
+   "id": "parent-settings",
+   "tier": "medium",
+   "file": "ui-parent-settings-medium.png",
+   "size": "960x540",
+   "hash": "fb6c42832a41db32"
+  },
+  {
+   "id": "pause-rain-night",
+   "tier": "medium",
+   "file": "ui-pause-rain-night-medium.png",
+   "size": "960x540",
+   "hash": "ce8c8769b35f0b53"
+  },
+  {
+   "id": "shop-rain-night",
+   "tier": "medium",
+   "file": "ui-shop-rain-night-medium.png",
+   "size": "960x540",
+   "hash": "db372a2644acdd12",
+   "probe": [
+    "43,56,80,255",
+    "58,75,104,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255",
+    "43,56,80,255"
+   ],
+   "uiHasNoPasses": true
+  }
+ ]
+}

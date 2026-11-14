@@ -1,7 +1,7 @@
 // Screenshot set and look metrics (story 16.1, CAP-35). Captures a fixed shot list of the game without any debug overlay or
 // HUD into docs/shots/overhaul/<label>/ and writes metrics.json beside the images. Runs the game in a headless Edge/Chrome
 // from a tiny static server of its own, with a seeded Math.random and a fixed-step clock, so two runs give the same bytes.
-//   node scripts/shots.mjs --label before [--tier medium|low] [--only id,id] [--renderer canvas]
+//   node scripts/shots.mjs --label before [--tier medium|low] [--only id,id] [--renderer canvas] [--effects full|reduced|off]
 // Without --tier both Medium and Low are captured. Node 22+.
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
@@ -100,6 +100,7 @@ async function captureTier(tier) {
     }
     if (!ready) throw new Error('game did not start');
     await sleep(500);
+    if (arg('effects', '')) await evalJs(`SCHULWEG_GAME.registry.get('app').quality.setEffects('${arg('effects')}')`); // story 16.15: the Effekte mode (full, reduced, off)
     // ?debug exposes SCHULWEG_GAME; the overlays (physics lines, zones, markers, debug HUD) check the flag when the game scene starts
     await evalJs(`(() => {
       window.SCHULWEG_DEBUG = false;

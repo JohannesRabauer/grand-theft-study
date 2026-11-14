@@ -78,9 +78,13 @@
   "menu.hint": "Pfeiltasten + Enter, Maus oder Touch",
   "menu.language": "Sprache",
   "menu.quality": "Qualität",
+  "menu.effects": "Effekte",
   "quality.low": "Niedrig",
   "quality.medium": "Mittel",
   "quality.high": "Hoch",
+  "effects.full": "Voll",
+  "effects.reduced": "Weniger",
+  "effects.off": "Aus",
   "pause.title": "Kurze Pause",
   "pause.resume": "Weiter geht's",
   "pause.menu": "Zurück zum Menü",
@@ -1042,6 +1046,7 @@
   "talk.question.ok": "Richtig! Er ist beeindruckt und zieht ab.",
   "talk.gentle": "Nicht ganz. Diesmal lässt er dich laufen - renn!",
   "parent.sound": "Ton",
+  "parent.effects": "Effekte",
   "critter.feed": "Enten füttern",
   "critter.fed": "Die Enten quaken fröhlich und schwimmen heran!"
 }

@@ -35,6 +35,11 @@ export const parent = {
     assert('chases off are saved and no bully is raised any more', flags().chasesOff === true && ctx.chase.lvl.enabled === false && ctx.chase.lvl.level === 0);
     row(2).items[1].on(); // reminder: 20 minutes
     assert('the break reminder setting is saved', flags().playReminder === 20 && count('parent:setting') === 3);
+    const fxBefore = ctx.quality.effects;
+    row(4).items[1].on(); // Effekte (story 16.15): reduced
+    assert('the Effekte setting is saved, applied at once and sets reducedMotion', flags().effects === 'reduced' && ctx.quality.effects === 'reduced' && flags().reducedMotion === true && row(4).items[1].selected() && !row(4).items[0].selected(), `${flags().effects}`);
+    row(4).items[0].on();
+    ctx.quality.setEffects(fxBefore);
     env.press('pause');
     assert('Esc leaves the settings and unfreezes the world', !top() && !ctx.frozen);
 

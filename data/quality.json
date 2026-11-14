@@ -2,6 +2,21 @@
   "wallRadius": 160,
   "base": { "w": 480, "h": 270 },
   "default": { "desktop": "high", "mobile": "medium" },
+  "_effects": "The Effekte setting (story 16.15, services/qualityLogic.js, scripts/check-effects.mjs): `reduced` and `off` only take away from the tier in use (a number is capped, false switches a feature off, a key not named stays). Gameplay caps (maxProps, maxNPCs, maxBullies, aimDots, pools, renderScale) are never named. off is the Low look at any render scale: no light map, no WebGL pass, the old tint overlay carries the mood.",
+  "effects": {
+    "default": "full",
+    "reduced": {
+      "particleMul": 0.7, "maxParticles": 220, "rainDensity": 1, "maxLights": 24, "particleLights": 2, "windowLights": 4,
+      "postFx": { "bloomTaps": 0 },
+      "atmosphere": { "curtain": false, "wet": 300, "reflections": 0, "ripples": 8, "snow": 300, "crowns": 50, "hedges": 50, "sparkle": 0, "shimmer": 0, "rays": 0 }
+    },
+    "off": {
+      "particleMul": 0.5, "maxParticles": 150, "rainDensity": 0.4, "shadows": false,
+      "lightMap": false, "windFx": false, "waterFx": false, "maxLights": 0, "particleLights": 0, "windowLights": 0,
+      "postFx": { "grade": false, "vignette": false, "bloomTaps": 0 },
+      "atmosphere": { "pass": false, "curtain": false, "clouds": false, "wet": 260, "reflections": 0, "ripples": 6, "snow": 300, "crowns": 30, "hedges": 40, "sparkle": 0, "frost": false, "shimmer": 0, "rays": 0 }
+    }
+  },
   "tiers": {
     "low": {
       "renderScale": 1,

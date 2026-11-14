@@ -20,6 +20,8 @@ async function startGame(game, tier) {
   game.loop.sleep();
   const app = game.registry.get('app');
   app.quality.set(tier);
+  const fx = new URLSearchParams(location.search).get('effects'); // &effects=reduced|off benchmarks the Effekte setting (story 16.15)
+  if (fx) app.quality.setEffects(fx);
   if (game.scene.isActive('Game')) game.scene.getScene('Game').scene.restart();
   else {
     game.scene.stop('Menu');

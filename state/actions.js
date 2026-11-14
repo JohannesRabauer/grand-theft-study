@@ -3,6 +3,7 @@ import { applyRecord, validEntry, moveKopfnote } from '../grading/gradeCore.js';
 import { safeStreetPosition, streetRecord } from '../vehicles/streetLogic.js';
 import { itemById, itemStatus, ticketKey, upgradeKey } from '../services/shopLogic.js';
 import { canStart, missionById } from '../services/questLogic.js';
+import { isEffectMode, motionReducedFor } from '../services/qualityLogic.js';
 
 // Registered state actions (AD-16). Each gets a mutable draft copy, the payload and the config and
 // returns { path } (the changed path(s)) or { reject: reason }. New systems add their actions here.
@@ -236,7 +237,16 @@ export const ACTIONS = {
     return { path: ['shared.quests', 'shared.flags'] };
   },
 
-  // The accessibility switch of story 16.13 (shake, squash, hit-stop and look-ahead off); entry 15 wires it to the Effekte setting.
+  // The Effekte setting (story 16.15): full, reduced or off. It also sets the reducedMotion flag of story 16.13 (reduced and off: no shake,
+  // squash, hit-stop or look-ahead); the passes and caps follow through ctx.quality.setEffects (services/quality.js).
+  'settings.effects'(s, { value }) {
+    if (!isEffectMode(value)) return reject('bad-payload');
+    s.shared.flags.effects = value;
+    s.shared.flags.reducedMotion = motionReducedFor(value);
+    return { path: ['shared.flags.effects', 'shared.flags.reducedMotion'] };
+  },
+
+  // The accessibility switch of story 16.13 (shake, squash, hit-stop and look-ahead off); the Effekte setting above sets it too.
   'settings.reducedMotion'(s, { value }) {
     if (typeof value !== 'boolean') return reject('bad-payload');
     s.shared.flags.reducedMotion = value;

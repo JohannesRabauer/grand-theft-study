@@ -31,6 +31,7 @@ import { Atmosphere } from '../render/Atmosphere.js';
 import { Season } from '../render/Season.js';
 import { Water } from '../render/Water.js';
 import { PostFx } from '../render/PostFx.js';
+import { installCulling } from '../render/Culling.js';
 import { Zones } from '../entities/Zones.js';
 import { Doors } from '../entities/Doors.js';
 import { World } from '../services/World.js';
@@ -117,6 +118,7 @@ export class GameScene extends Phaser.Scene {
       map,
       surfaces: new Surfaces(map, cache.get('surfaces'))
     };
+    quality.setEffects(state.shared.flags.effects); // story 16.15: the slot's saved Effekte mode (none saved: the device's own stays)
     const inputCfg = cache.get('input');
     installPlayers(ctx, inputCfg.maxPlayers); // AD-18: ctx.players, helpers and the deprecated ctx.player alias
     ctx.input = new Input(this, events, inputCfg, ctx.players);
@@ -230,6 +232,8 @@ export class GameScene extends Phaser.Scene {
     // covers the same world area as at 480x270; the speed zoom (camera.json) multiplies it.
     const cam = this.cameras.main;
     cam.setZoom(res.scale * this.zoomCfg.max);
+    installCulling(); // story 16.15: images far outside the view are not batched
+    cam.cullOffscreen = true;
     // Phaser floors the scroll of a roundPixels camera to whole world pixels in preRender (2 screen pixels
     // at zoom 2). followCamera snaps to screen pixels itself, so that floor is skipped here; sprites are
     // rounded to pixels only at an exactly integer zoom.
