@@ -17,7 +17,7 @@ export function createTouchState() {
     move: { x: 0, y: 0 },
     aimDir: { x: 0, y: 0 },
     aiming: false,
-    btn: { jump: false, manual: false, toolUse: false, defend: false, kiai: false, sprint: false, interact: false, toolNext: false, pause: false }
+    btn: { jump: false, manual: false, toolUse: false, defend: false, kiai: false, sprint: false, interact: false, toolNext: false, pause: false, map: false, phone: false }
   };
 }
 
@@ -136,9 +136,9 @@ export function mapIntent(intent, slot, bind, src, dz) {
   edge(intent, slot, 'toolPrev', k('toolPrev') || pb(PAD.LB));
   edge(intent, slot, 'kiai', k('kiai') || btn.kiai || pb(PAD.RSTICK));
   const g = bind.global;
-  edge(intent, slot, 'map', g && (k('map') || pb(PAD.BACK)));
+  edge(intent, slot, 'map', g && (k('map') || btn.map || pb(PAD.BACK)));
   edge(intent, slot, 'weather', g && k('weather'));
-  edge(intent, slot, 'phone', g && (k('phone') || pb(PAD.LSTICK))); // the pad opens the phone with a click of the left stick (story 14.2)
+  edge(intent, slot, 'phone', g && (k('phone') || btn.phone || pb(PAD.LSTICK))); // the pad opens the phone with a click of the left stick (story 14.2)
   edge(intent, slot, 'pause', g && (k('pause') || btn.pause || pb(PAD.START)));
   intent.answer = 0;
   for (let i = 0; i < ANSWER_KEYS.length; i++) {

@@ -104,6 +104,7 @@ export class World {
       return false;
     }
     this.pending = null; // a direct load answers any door request still waiting
+    if (mapId !== 'town' && ctx.players.length > 1) this.dismountAll(); // co-op: everybody is teleported into the room, so nobody stays on a bike, board or skates; the ride stays outside
     ctx.events.emit('world:leave', { map: this.id });
     for (let i = this.systems.length - 1; i >= 0; i--) this.systems[i].unloadMap();
     this.build(mapId);
@@ -114,6 +115,14 @@ export class World {
     this.startFadeIn();
     ctx.events.emit('world:enter', { map: mapId, entry: entry.id });
     return true;
+  }
+
+  // Every player on a ride (bike, board, scooter, skates) gets off where they stand; the ride stays there, parked (as when caught).
+  dismountAll() {
+    for (const p of this.ctx.players) {
+      if (p.vehicle === 'foot') continue;
+      this.scene.mountables?.find(r => r.isMounted(p.index))?.dismount(p);
+    }
   }
 
   // After a switch the screen is black and eases in (also for loads that skipped the fade-out).

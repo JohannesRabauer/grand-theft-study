@@ -256,8 +256,6 @@ export const newRides = {
       intent.jump = true; step(1); intent.jump = false;
       assert(`${id}: jump uses its crouch pose and trick service`, service.riders[0].skate.air > 0 && p1.sprite.texture.key.endsWith('-crouch') && gs.tricks.rollerOf(0) === service);
       const mounted = service.riders[0].mounted;
-      ctx.world.load('test-room', 'from-town'); step(2);
-      assert(`${id}: map travel retains the active item and rider`, service.riders[0].mounted === mounted && service.parked.includes(mounted) && !mounted.visible && p1.vehicle === id);
       press();
       assert(`${id}: fresh interact dismounts and clears pose and prop mask`, p1.vehicle === 'foot' && mounted.visible && !service.isMounted(0) && service.riders[0].skate.air === 0 && p1.body.collisionFilter.mask === MASK.PLAYER && !service.riders[0].shadow.visible);
       p1.teleport(mounted.x, mounted.y);
@@ -267,6 +265,11 @@ export const newRides = {
       gs.caught.trigger(0);
       gs.caught.respawn(0);
       assert(`${id}: caught lifecycle dismounts without stale collision or sprite`, p1.vehicle === 'foot' && !service.isMounted(0) && mounted.visible && !p1.pinned && p1.body.collisionFilter.mask === MASK.PLAYER && !service.riders[0].shadow.visible);
+      p1.teleport(mounted.x, mounted.y);
+      p2.teleport(mounted.x + 50, mounted.y);
+      press();
+      ctx.world.load('test-room', 'from-town'); step(2);
+      assert(`${id}: map travel gets every kid off the ride, which stays outside`, p1.vehicle === 'foot' && p2.vehicle === 'foot' && !service.isMounted(0) && p1.body.collisionFilter.mask === MASK.PLAYER && !service.riders[0].shadow.visible);
       ctx.world.load('town', 'from-test-room'); step(2);
     }
 

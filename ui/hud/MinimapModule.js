@@ -52,7 +52,10 @@ export class MinimapModule extends HudModule {
     this.y0 = ctx.res.h - 6 - h;
     this.image.setTexture(this.key).setScale(this.s).setPosition(this.x0, this.y0);
     this.back?.destroy();
-    this.objects = this.objects.filter(o => o !== this.back);
+    this.floor?.destroy();
+    this.objects = this.objects.filter(o => o !== this.back && o !== this.floor);
+    // an opaque dark floor under the whole map and its frame, so the minimap reads on any world behind it
+    this.floor = this.track(scene.add.rectangle(Math.round(this.x0) - 4, Math.round(this.y0) - 4, Math.ceil(w) + 8, Math.ceil(h) + 8, 0x16161e, 1).setOrigin(0).setDepth(8.8).setVisible(this.shown));
     this.back = this.track(uiPanel(this.scene, Math.round(this.x0) - 4, Math.round(this.y0) - 4, Math.ceil(w) + 8, Math.ceil(h) + 8, { depth: 8.9 }).setVisible(this.shown));
     this.draw();
   }
@@ -61,6 +64,7 @@ export class MinimapModule extends HudModule {
     this.shown = !this.shown;
     this.image.setVisible(this.shown);
     this.back.setVisible(this.shown);
+    this.floor.setVisible(this.shown);
     this.gfx.setVisible(this.shown);
     if (!this.shown) this.goalIcon.setVisible(false);
     this.ctx.events.emit('minimap:toggled', { on: this.shown });

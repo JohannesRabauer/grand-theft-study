@@ -3,12 +3,8 @@
   "deadzone": 0.2,
   "aimReach": 80,
   "aimDragMin": 8,
-  "hitPad": 6,
-  "joystick": {
-    "radius": 36,
-    "knob": 14,
-    "zone": 0.45
-  },
+  "hitPad": 10,
+  "joystick": { "radius": 44, "knob": 18, "zone": 0.5, "deadzone": 0.12, "restX": 70, "restY": 205 },
   "maxPlayers": 2,
   "soloShare": [
     "left",
@@ -151,69 +147,16 @@
     }
   ],
   "buttons": [
-    {
-      "id": "jump",
-      "icon": "jump",
-      "x": 436,
-      "y": 222,
-      "r": 28
-    },
-    {
-      "id": "toolUse",
-      "icon": "tool",
-      "x": 378,
-      "y": 236,
-      "r": 22
-    },
-    {
-      "id": "defend",
-      "icon": "shield",
-      "x": 392,
-      "y": 120,
-      "r": 17
-    },
-    {
-      "id": "kiai",
-      "icon": "kiai",
-      "x": 340,
-      "y": 176,
-      "r": 17
-    },
-    {
-      "id": "manual",
-      "icon": "manual",
-      "when": "trick",
-      "x": 440,
-      "y": 104,
-      "r": 16
-    },
-    {
-      "id": "sprint",
-      "icon": "sprint",
-      "x": 440,
-      "y": 150,
-      "r": 20
-    },
-    {
-      "id": "interact",
-      "icon": "interact",
-      "x": 384,
-      "y": 170,
-      "r": 20
-    },
-    {
-      "id": "toolNext",
-      "icon": "next",
-      "x": 336,
-      "y": 248,
-      "r": 12
-    },
-    {
-      "id": "pause",
-      "icon": "pause",
-      "x": 462,
-      "y": 16,
-      "r": 12
-    }
+    {"id": "jump", "icon": "jump", "x": 430, "y": 222, "r": 30},
+    {"id": "toolUse", "icon": "tool", "x": 370, "y": 236, "r": 24},
+    {"id": "defend", "icon": "shield", "x": 326, "y": 200, "r": 20},
+    {"id": "kiai", "icon": "kiai", "x": 322, "y": 150, "r": 20},
+    {"id": "manual", "icon": "manual", "when": "trick", "x": 448, "y": 112, "r": 18},
+    {"id": "sprint", "icon": "sprint", "x": 446, "y": 160, "r": 22},
+    {"id": "interact", "icon": "interact", "x": 386, "y": 178, "r": 24},
+    {"id": "toolNext", "icon": "next", "x": 326, "y": 250, "r": 14},
+    {"id": "pause", "icon": "pause", "x": 338, "y": 16, "r": 13},
+    {"id": "map", "icon": "map", "x": 368, "y": 16, "r": 13},
+    {"id": "phone", "icon": "phone", "x": 398, "y": 16, "r": 13}
   ]
 }

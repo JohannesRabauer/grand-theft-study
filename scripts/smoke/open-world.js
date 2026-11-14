@@ -48,16 +48,13 @@ export const openWorld = {
       assert(`${kind}: the claim grants no family unlock, and contention explains unavailable`, ctx.state.shared.ownedVehicles.join() === 'foot' && log.some(([e,d])=>e==='ui:toast'&&d.key==='street.unavailable'));
       if (kind === 'bike') assert('a nearby witness gives comic localized disapproval and existing trouble feedback', log.some(([e])=>e==='street:witnessed') && ctx.chase.level > 0);
       ctx.chase.reset();
-      // Carried identity survives both interior travel and return without an origin clone.
+      // Nobody takes a ride into a room: it is dropped outside, stays one identifiable object and is there again on return.
       ctx.world.load('school', 'from-town'); step(2);
-      assert(`${kind}: same hidden sprite travels to school`, svc.riders[0].mounted === item && records()[id].map === 'school' && sprites(id).length === 1);
-      svc.dismount(ctx.players[0]);
+      assert(`${kind}: the ride stays outside when the kids go into the school`, svc.riders[0].mounted === null && ctx.players[0].vehicle === 'foot' && records()[id].status === 'dropped' && records()[id].map === 'town' && sprites(id).length === 0);
       const dropped = { ...records()[id] };
       ctx.world.load('town', 'from-school'); step(2);
-      assert(`${kind}: dropping in school does not respawn an origin copy`, sprites(id).length === 0 && records()[id].status === 'dropped' && records()[id].map === 'school');
-      ctx.world.load('school', 'from-town'); step(2);
       const restored = sprites(id)[0];
-      assert(`${kind}: return to school restores one object at its actual dropped location`, sprites(id).length === 1 && Math.abs(restored.x - dropped.x) < 1 && Math.abs(restored.y - dropped.y) < 1);
+      assert(`${kind}: back in the town the object lies where it was dropped, once`, sprites(id).length === 1 && Math.abs(restored.x - dropped.x) < 1 && Math.abs(restored.y - dropped.y) < 1);
       at(restored.x, restored.y);
       press();
       ctx.world.load('town', 'from-school'); step(2);
