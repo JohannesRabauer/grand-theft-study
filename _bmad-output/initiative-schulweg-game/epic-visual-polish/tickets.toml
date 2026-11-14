@@ -1,0 +1,102 @@
+# Epic 17: visual polish follow-ups. Build in table order, one story at a time (shared files: EnvArt.js, Interiors, quality.json).
+# Every art story first loads the project skill `schulweg-pixel-art` and follows AD-31 and docs/ART-BIBLE.md.
+# Every art story re-runs `node scripts/shots.mjs` and its look metrics and must not make a metric worse outside its own target.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Break the long straight seams in the interiors"
+description = "Breaks the straight wall-base and wall-cap rows across whole rooms in the school, dojo and home interiors (up to about 470 px against the 96 px limit; school day 471, dojo day 368, home morning 347, school night 262, home night 230, dojo night 179) with seeded jogs, baseboard breaks, door and furniture overlap, wear, shadow and light variation, keeping each room recognisable and its collision, furniture anchors and map data unchanged."
+verify = "`node scripts/shots.mjs` shows the longest seam at most 96 px in every interior shot (day, morning and night; Medium and Low), or a named exception in the shots index.md; zoom-sweep gap and shimmer numbers do not get worse; check-all and the seeded smoke test pass."
+covers = ["CAP-35"]
+after = ["16.16"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Break the long seams in building exteriors and roofs"
+description = "Breaks the long straight roof ridges, facade edges and the school block (school exterior 297, oldtown 160 to 174, road 116 to 146, plaza and market 120 to 124, lamp-dusk 165) with seeded ridge steps, chimneys, dormers, eaves, gutters, facade offsets, trim and weathering, keeping each building recognisable and its footprint, doors and collision unchanged."
+verify = "`node scripts/shots.mjs` shows the longest seam at most 96 px in every exterior shot where a roof, ridge or facade caused it, or a named exception in index.md; building shadows and lit windows still line up; check-envart, check-all and the seeded smoke test pass."
+covers = ["CAP-35"]
+after = [1]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Break the long seams in kerbs, fences and the river edge"
+description = "Breaks the long straight kerb and fence lines and the river edge (riverside 193 to 197, skate 121 to 190, park summer Low 192, road kerbs) with seeded jogs, posts and gaps, kerb wear and dropped kerbs, fence height and lean variation, reeds, stones and a wandering water edge, keeping walkable area, collision and map data unchanged."
+verify = "`node scripts/shots.mjs` shows the longest seam at most 96 px in riverside, skate, road and park shots (Medium and Low), or a named exception in index.md; water shader and shore shots do not regress; check-all and the seeded smoke test pass."
+covers = ["CAP-35"]
+after = [2]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Break the large flat areas on the Low tier"
+description = "Adds a cheap pass or dither for Low (no WebGL pipeline) so large dark or one-tone ground and water no longer exceed 4096 px2 in oldtown-rain-night (7623), market-evening (6938), riverside-night (6063) and riverside-evening (5119): for example a baked, dithered tone variation or a pre-lit ground layer, and re-checks the oldtown Medium value. Medium and High output stay pixel-identical."
+verify = "`node scripts/shots.mjs` shows the flat-area metric at most 4096 px2 in all Low shots, Medium and High shots are byte-identical to before this story, bench shows no Low frame-time regression, check-all passes."
+covers = ["CAP-35", "CAP-33"]
+after = [3]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Confirm the frame-time limit on a quiet machine"
+description = "The +25 percent relative frame-time limit was never reliably shown on the shared dev machine (+9 percent against interleaved medians, +30 to +45 percent against best runs; the absolute limit p95 <= 2.1 ms was met). Repeats the headless bench with `scripts/bench-cdp.mjs` on a quiet machine against the 16.1 baseline (8330e10), records the numbers in docs/PERFORMANCE.md, and tunes caps and per-tier switches in data/quality.json if the limit does not hold."
+verify = "docs/PERFORMANCE.md holds a table with interleaved medians and best runs on a quiet machine showing Medium and High at most 16.7 ms p95 and at most +25 percent over the baseline, or the tuning that makes it hold, and check-all and the seeded smoke test pass."
+covers = ["CAP-35", "CAP-33"]
+after = [4]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Measure the frame rate on a real phone"
+description = "Runs the by-hand phone protocol of docs/PERFORMANCE.md and docs/CROSS-BROWSER.md on a real phone for Voll, Weniger and Aus, and records device, browser, tier and frame rate in docs/PERFORMANCE.md; if a tier misses 60 FPS, notes a tuning follow-up. A person must do the measuring."
+verify = "docs/PERFORMANCE.md holds at least one real-phone row per Effekte mode with device and browser, and any miss is recorded as a new entry or note."
+covers = ["CAP-33"]
+after = [5]
+hitl = true
+risk = "low"
+
+[[entry]]
+id = 7
+type = "story"
+title = "Review and redraw the remaining weak NPC and kid sprites"
+description = "Epic 16 entry 20 redrew the car, van, tram, bike and rider, skate riders and the cat; kids and NPC types were only shaded (entry 18). With the user's visual review list as input, triages the remaining weak sprites (kids, NPC types, animals, others), agrees with the user which to redraw, and redraws them procedurally in NpcArt and related files while role, colours, name and trait stay recognisable and sizes, anchors, hit areas and texture keys do not change."
+verify = "A before/after contact sheet of every triaged sprite is accepted by the user, texture keys, sizes and anchors are unchanged (a node check compares them), shots and check-all pass."
+covers = ["CAP-35"]
+after = [6]
+hitl = true
+risk = "medium"
+
+[[entry]]
+id = 8
+type = "story"
+title = "Fix list from the user's visual review"
+description = "Placeholder that collects whatever the user finds in the epic 16 visual review (16.17): each remark is written down here, sized, and either fixed in this story or split into a new entry of this epic. Replan this entry once the list exists."
+verify = "Every remark from the user's review is fixed or recorded as its own entry, the user accepts the after set, and the epic Done when checks are ticked in the epic file."
+covers = ["CAP-35", "CAP-34"]
+after = [7]
+hitl = true
+risk = "low"
+
+[[entry]]
+id = 9
+type = "story"
+title = "Make the UI screenshot set reproducible"
+description = "Phaser tweens in the UI use wall-clock time, so two runs of `ui-shots.mjs` differ in 36 of 44 images. Drives the UI tweens from a test clock (or settles them) in the shots script only, so UI shots can be compared byte for byte, without changing gameplay or the seeded smoke sequence."
+verify = "Two runs of `ui-shots.mjs` give byte-identical images, the seeded smoke test shows the same check count and no new console problems, and check-ui and check-all pass."
+covers = ["CAP-35"]
+after = [8]
+hitl = false
+risk = "low"

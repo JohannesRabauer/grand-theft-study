@@ -107,3 +107,10 @@ slug = "epic-visual-overhaul"
 title = "Visual overhaul: a finished-looking pixel world with lighting, shaders and particles"
 covers = ["CAP-35", "CAP-34", "CAP-31", "CAP-30", "CAP-33"]
 after = [{ epic = 15, needs = "the AD-30 ground and building art in EnvArt.js that this epic reworks" }, { epic = 12, needs = "season, weather and particle systems that the atmosphere passes and particle overhaul extend" }]
+
+[[epic]]
+id = 17
+slug = "epic-visual-polish"
+title = "Visual polish: follow-ups from the epic 16 review"
+covers = ["CAP-35", "CAP-33"]
+after = [{ epic = 16, needs = "the stories pinned in its entries' after (16.16: the after-16-16 shots, look metrics and art-limit status)" }]

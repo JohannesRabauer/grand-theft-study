@@ -59,6 +59,8 @@ Still exceeding the bible limits on the last shot set (`after-16-16`, listed in 
 
 Open stories: none except the parked 2.6. **Still open for the user:** the Klasse 3 boss (Rocco the Rowdy Boss, trait `unshakable`) is an assumption in `data/chase.json` `boss` and the i18n texts `boss.*`; the real-phone frame rate has never been measured (`docs/CROSS-BROWSER.md` and `docs/PERFORMANCE.md` hold the protocol and the by-hand browser checklist); a few Sachkunde facts were written from memory (see Gotchas).
 
+Visual follow-ups are planned (not built) in epic 17 (`epic-visual-polish`: seams, Low flat areas, quiet-machine frame time, phone measurement, sprite review, the fix list); 16.17 stays the user's own visual review and feeds epic 17 entry 8.
+
 Suggested next: play it, run the by-hand checklist in `docs/CROSS-BROWSER.md`, measure on a phone, then decide about 2.6. New HUD modules or systems that create a Phaser Text at run time must do it with `Math.random` swapped out (see `ui/hud/PhoneModule.js`), and new always-on random effects need a test hook flag like the other `...Off` flags in `scripts/smoke/env.js`, or the seeded smoke scenarios shift. The browser caches ES modules: hard-reload (Ctrl+F5) after pulling, or use the published page.
 
 **Parked by the user:** story **2.6 three-player co-op** (status `draft`). Do not build until asked.
