@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "_doc": "Numeric limits of the art bible (docs/ART-BIBLE.md, section 'Numeric limits'), measured by scripts/shots.mjs on the fixed shot set (scripts/lib/look-metrics.mjs). Lengths and areas are base pixels (the 480x270 grid). The before set exceeds the seam and flat limits on purpose: they are the target of epic 16, checked again in story 16.19.",
+  "_doc": "Numeric limits of the art bible (docs/ART-BIBLE.md, section 'Numeric limits'), measured by scripts/shots.mjs on the fixed shot set (scripts/lib/look-metrics.mjs). Lengths and areas are base pixels (the 480x270 grid). The before set exceeds the seam and flat limits on purpose: they are the target of epic 16, checked again in story 16.19 and 16.16; status in docs/ART-BIBLE.md.",
   "longestSeamPx": { "max": 96, "note": "longest unbroken straight colour edge in any shot (6 tiles)" },
   "largestFlatAreaPx": { "max": 4096, "note": "largest connected region of one 5-bit colour in any shot (16 tiles)" },
   "minWalkableLuminance": { "min": 0.16, "note": "5th percentile of the mean luminance of visible walkable tiles, night shots only (ids ending -night, outdoors)" },

@@ -12,8 +12,8 @@ import {
   approach, layerTargets, hazeBlend, wetStep, wetThreshold, wetAlpha, collectWet, noiseTile, hazePixels, shadowPixels,
   rippleFrame, pickReflections, drift, hash01
 } from './atmosphereMath.js';
+import { hex, rgba } from './baseMath.js';
 
-const hex = s => [parseInt(s.slice(1, 3), 16), parseInt(s.slice(3, 5), 16), parseInt(s.slice(5, 7), 16)];
 const rgbHex = c => (Math.round(c[0] * 255) << 16) | (Math.round(c[1] * 255) << 8) | Math.round(c[2] * 255);
 const SHEEN = 'atmo-sheen';
 const RIPPLE = 'atmo-ripple';
@@ -101,7 +101,7 @@ export class Atmosphere {
     this.wet = 0;
     this.time = 0;
     this.hx = 0; this.hy = 0; this.cx = 0; this.cy = 0; // haze and cloud offsets
-    this.shade = hex('#28345c');
+    this.shade = rgba(hex('#28345c')).slice(0, 3);
     this.ambient = [1, 1, 1];
     this.seed = 0x5eed1234;
     this.spr = []; // wet sheen sprites

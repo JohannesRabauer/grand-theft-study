@@ -9,13 +9,12 @@
 //   a pooled image that fades in; on Medium and High a warm light on the ground below it comes from ctx.lights, nearest to the
 //   view first and at most the tier's `windowLights`. Low and Canvas show the panes without the spill. Nothing here is random.
 import { BLD_ATLAS, CHIMNEY, AWNING, PALS, litKey, outdoorInfo, rimKey } from '../scenes/BuildingArt.js';
+import { clamp01, hex } from './baseMath.js';
 import { ROOFS, chimneyTiles, facadeLook, roofEdges, windowList, windowLit } from './buildingMath.js';
 
 const CELL = 16;
 const CHUNK = 12; // tiles per side of one blitter
 const CULL = 48; // base pixels around the view where a chunk has its images
-const hex = s => parseInt(s.slice(1), 16);
-const clamp01 = v => Math.min(1, Math.max(0, v));
 
 export class Buildings {
   constructor(scene, ctx, cfg, lightMap) {

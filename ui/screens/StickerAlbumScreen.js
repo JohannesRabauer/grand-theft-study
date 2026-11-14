@@ -1,4 +1,5 @@
 import { uiLabel, uiText, uiLeave, uiScreenFrame } from '../uiKit.js';
+import { hex } from '../../render/baseMath.js';
 import { ChoiceCursor } from '../../minigames/minigameCore.js';
 
 // The sticker album (story 10.3): a Panini-style page of cards, found ones coloured by category with a gold frame when rare,
@@ -8,7 +9,6 @@ const COLS = 10;
 const ROWS = 3;
 const CARD = { w: 37, h: 42, gx: 4, gy: 4 };
 
-const hex = c => parseInt(c.slice(1), 16);
 const shade = (c, k) => { const n = hex(c); return ((((n >> 16) & 255) * k) << 16) | ((((n >> 8) & 255) * k) << 8) | ((n & 255) * k); };
 
 export class StickerAlbumScreen {

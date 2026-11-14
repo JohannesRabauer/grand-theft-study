@@ -32,6 +32,8 @@ Before drawing a tile, sprite, prop, building, interior, light, shader or partic
 
 ## Recipes on the existing helpers
 
+- **Shared helpers (story 16.16):** colour maths and the seeded `rng` are in `scenes/EnvDraw.js` (`rng`, `mix`, `shade`, `rgbOf`); `render/baseMath.js` has `clamp01`, `lerp`, `smoothT`, `hex`, `rgb01`, `rgba` for the render maths and modules. Import them; `scripts/check-basemath.mjs` fails when a render, scene or screen file defines its own copy.
+
 - **Sprite or prop:** `new Pen(scene, key, w, h)` (`scenes/HiResArt.js`): `ell` for round masses, `px` for detail, `line`,
   then `.shadow(cx, cy, rx, ry)` and `.outline(OUT)` last, `.done()`. Draw lit shapes first, then the shade on the
   bottom-right half, then highlight pixels on the top-left.

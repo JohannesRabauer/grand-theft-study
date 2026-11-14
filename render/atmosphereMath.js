@@ -2,9 +2,9 @@
 // ground (which tiles shine, how much), the seeded noise banks of the Low and Canvas fallback, ripples and reflection picks.
 // No Phaser: scripts/check-atmosphere.mjs runs it in node.
 
-export const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
-export const lerp = (a, b, t) => a + (b - a) * t;
-export const smooth = (a, b, v) => { const t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+import { clamp01, lerp, smoothT } from './baseMath.js';
+export { clamp01, lerp };
+export const smooth = (a, b, v) => smoothT(clamp01((v - a) / (b - a)));
 
 const hash01 = (a, b, c = 0) => {
   let h = Math.imul(a + 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + 0x7f4a7c15, 0xc2b2ae35) ^ Math.imul(c + 0x165667b1, 0x27d4eb2f);

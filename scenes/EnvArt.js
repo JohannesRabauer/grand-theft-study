@@ -31,6 +31,7 @@ const STATE = { ready: false, variants: {}, street: null }; // street: data/stre
 import { U, rng, hash, rgbOf, shade, canvas, px, ell, emit } from './EnvDraw.js';
 import { makeOutdoorArt, wallKeys, outdoorInfo } from './BuildingArt.js';
 import { binAt } from '../render/buildingMath.js';
+import { smoothT } from '../render/baseMath.js';
 import { streetInfo, decalKeys } from '../render/streetMath.js';
 import { makeStreetDecals } from './StreetArt.js';
 import { makeInteriorArt, indoorKeys, indoorInfo } from './InteriorArt.js'; // story 16.10: walls, floors and rugs of the interiors
@@ -49,7 +50,6 @@ function sourceTile(scene, id, v) {
 // lattice vertex to that of its last, so any two strips with a shared vertex join without a notch and a long border wanders
 // by several base pixels instead of repeating once per tile.
 const LEVELS = { tuft: [3, 7, 11], soft: [5, 9, 12], stone: [4, 7, 10], curb: [3, 5, 7] };
-const smooth = t => t * t * (3 - 2 * t);
 function depthProfile(style, r, a, b) {
   const d = new Array(U);
   const [da, db] = [LEVELS[style][a], LEVELS[style][b]];
@@ -75,7 +75,7 @@ function depthProfile(style, r, a, b) {
   for (let x = 0; x < U; x++) {
     const t = x / (U - 1);
     const bump = amp * (0.6 * Math.sin(x * 0.45 + p1) + 0.4 * Math.sin(x * 0.9 + p2)) * Math.sin(Math.PI * t);
-    d[x] = Math.max(2, Math.round(da + (db - da) * smooth(t) + bump + (style === 'tuft' ? r() * 1.2 : 0)));
+    d[x] = Math.max(2, Math.round(da + (db - da) * smoothT(t) + bump + (style === 'tuft' ? r() * 1.2 : 0)));
   }
   if (style === 'tuft') for (let x = 3; x < U - 3; x += 5 + Math.floor(r() * 4)) { d[x] += 3; d[x + 1] += 2; d[x - 1] += 1; } // grass blades poking out
   d[0] = da;

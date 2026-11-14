@@ -11,10 +11,9 @@
 // rectangle carries the night mood. Nothing here is random, nothing is created while playing, nothing touches collision.
 import { ATLAS, GLOW, LAMPS, PROPS, SHAFT, lampKey, propKey, shaftKey } from '../scenes/InteriorProps.js';
 import { BACKDROP } from '../scenes/InteriorArt.js';
+import { clamp01, hex } from './baseMath.js';
 import { daylight, interiorNight, isInterior, itemsOf, lampSchedule, lampTarget, shaftSkew, windowList } from './interiorMath.js';
 
-const hex = s => parseInt(s.slice(1), 16);
-const clamp01 = v => Math.min(1, Math.max(0, v));
 const MARGIN = 640; // base pixels of backdrop around the map
 
 export class Interiors {

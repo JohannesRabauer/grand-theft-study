@@ -2,10 +2,10 @@
 // PostFXPipeline passes. Never on the UI scene (it has its own camera). WebGL only; with Canvas, or a tier with
 // `postFx` off, the camera stays plain and the old tint overlay (physics/Weather.js) carries the mood.
 import { CAMERA_PASSES, OBJECT_PIPELINES } from './pipelines/index.js';
+import { lerp } from './baseMath.js';
 import { fx as gradeFx } from './pipelines/GradeFx.js';
 import { fx as bloomFx } from './pipelines/BloomFx.js';
 
-const lerp = (a, b, t) => a + (b - a) * t;
 
 export class PostFx {
   constructor(scene, ctx, cfg) {

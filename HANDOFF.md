@@ -1,6 +1,6 @@
 # Handoff: Schulweg game
 
-For the next session (human or Claude). Read this first, then `README.md`. Last updated 2026-11-09.
+For the next session (human or Claude). Read this first, then `README.md`. Last updated 2026-11-14.
 
 ## What this is
 
@@ -20,7 +20,7 @@ Open the printed URL (or `http://localhost:8080`). URL options: `?renderer=canva
 
 Controls (P1): WASD move, Space jump/ollie/bell, Shift sprint, F mount/dismount/interact (hold near a bus rear on skates to grab), C or Left Ctrl manual, Q/E switch tool (slingshot, throwing stick, stick), mouse aim + left click, R block, V Kiai, T weather, Esc pause. P2: arrow keys, Right Shift/Right Ctrl/Enter, `;` and `'` for defend/kiai. Full table in `README.md`.
 
-Checks: `node scripts/check-all.mjs` (52 checks, must stay green). Headless smoke test: see `docs/TESTING.md` (`scripts/bench-cdp.mjs --smoke`, ~1120 checks). Performance notes: `docs/PERFORMANCE.md`.
+Checks: `node scripts/check-all.mjs` (83 checks, must stay green). Headless smoke test: see `docs/TESTING.md` (`scripts/bench-cdp.mjs --smoke`, 1445 checks). Art: `docs/ART-BIBLE.md`, the project skill `.claude/skills/schulweg-pixel-art/` (load it before any art change) and the screenshot sets in `docs/shots/overhaul/` (`node scripts/shots.mjs --label <name>`). Performance notes: `docs/PERFORMANCE.md`.
 
 ## Where the plan lives
 
@@ -48,6 +48,12 @@ Since the last handoff: epic 9 is complete (9.1-9.8: missions, Pfand machine, ba
 Also done outside the board: rain puddles that sit on the surface under them, a co-op fix (a caught kid rejoins next to the sibling when home is far, so the shared camera and tether cannot get stuck), the autosave bug fix (see Gotchas).
 
 Playable characters: **Helena** (12), **Kilian** (10), **Lorenz** (8); looks and traits in `family-characters.md`.
+
+## Epic 16: the visual overhaul (built, awaiting the user's review 16.17)
+
+Every visual layer was redone while it stays procedural pixel art (AD-30, AD-31): organic ground, vegetation that breaks the grid, buildings with depth and lit windows, interiors with furniture and light, street dressing, water shader, a light map with lamps and window light, soft shadows, a grade/bloom/atmosphere post chain, rain, fog, snow cover, frost and heat shimmer, richer particles, smooth motion, a pixel UI kit and a sprite shading pass. Where it lives: `render/` (modules and Phaser-free `*Math.js`, `baseMath.js` for the shared colour and easing helpers; pass shaders in `render/pipelines/`), the art drawn in `scenes/` (`EnvDraw.js` has the shared canvas helpers), data in `data/{lighting,postfx,atmosphere,season,water,vegetation,buildings,interiors,street,motion,ui,quality}.json`, access through `ctx.lights`, `ctx.quality`, `ctx.motion`. `docs/ART-BIBLE.md` holds the palette ramps and the numeric limits (`docs/art-limits.json`); the bible and the skill are the rules for any later art. The Effekte setting (Voll, Weniger, Aus; pause overlay and parent settings) is `ctx.quality.setEffects`. `.github/workflows/pages.yml` copies a fixed folder list (it already has `render` and `camera`): a new top-level folder must be added there.
+
+Still exceeding the bible limits on the last shot set (`after-16-16`, listed in the 16.16 plan): the longest straight seam (96 px) in most shots (interiors up to 479, school 297, riverside about 195, oldtown about 165) and the largest flat area (4096 px2) in four Low evening and night shots. Night luminance is met. The Medium frame-time ceiling of +25 percent over the baseline is met in absolute terms (p95 at most 2.1 ms) but is +9 percent (interleaved) to +45 percent (best runs) relative: see the 16.15 plan.
 
 ## What to build next
 

@@ -12,6 +12,7 @@ import { ScaledPen } from '../scenes/NpcArt.js';
 import { outdoorInfo } from '../scenes/BuildingArt.js';
 import { fx } from './pipelines/AtmosphereFx.js';
 import { bayer4 } from './atmosphereMath.js';
+import { hex } from './baseMath.js';
 import {
   approach, coverTarget, coverStep, frostTarget, heatTarget, raysTarget, snowTiles, snowThreshold, snowAlpha, collectSnow, frostPixels,
   pickRays, pickWisps, hash01, KIND_ROOF
@@ -26,7 +27,6 @@ const CAP = { oak: [26, 10], pine: [14, 15], birch: [20, 9] }; // tree cap pictu
 const HEDGE = [20, 8]; // hedge cap picture
 const RAYS = [[7, 44], [10, 52], [13, 58]]; // beam pictures (width, length), they lean right as they fall
 const RAY_LEAN = 0.5;
-const hex = s => parseInt(s.slice(1), 16);
 
 // One lump of snow: lit body, light top left, shaded lower rim (hard pixels, no outline: white reads on every roof and leaf).
 function lump(p, cx, cy, rx, ry) {

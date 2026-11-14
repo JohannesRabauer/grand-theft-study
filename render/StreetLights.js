@@ -9,9 +9,9 @@
 // passes the tier cap (the pool refuses past `limit`). The lit lamp heads are plain sprites, so they also glow on Low and Canvas.
 import { ScaledPen } from '../scenes/NpcArt.js';
 import { OUT } from '../scenes/HiResArt.js';
+import { hex } from './baseMath.js';
 import { fixedBudget, lampLit, warmupLevel } from './lightMath.js';
 
-const hex = s => parseInt(s.slice(1), 16);
 const parse = t => { const [h, m] = t.split(':'); return h * 60 + +m; };
 const W = 14, H = 40, CX = 7, FEET = 37;
 const IRON = { shadow: '#2c2e38', dark: '#3c3f48', base: '#4a4d55', light: '#5a5d66', high: '#7c7f88' };

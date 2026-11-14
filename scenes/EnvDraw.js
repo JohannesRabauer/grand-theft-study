@@ -9,11 +9,11 @@ export function rng(seed) {
 export const hash = s => [...s].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7);
 
 export function rgbOf(c) { const n = parseInt(c.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
-export function shade(c, t) { // t > 0 lightens, t < 0 darkens
-  const target = t > 0 ? 255 : 0;
-  const k = Math.abs(t);
-  return '#' + rgbOf(c).map(v => Math.round(v + (target - v) * k).toString(16).padStart(2, '0')).join('');
+export function mix(a, b, t) { // a blended towards b by t (0..1)
+  const y = rgbOf(b);
+  return '#' + rgbOf(a).map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
 }
+export const shade = (c, t) => mix(c, t > 0 ? '#ffffff' : '#000000', Math.abs(t)); // t > 0 lightens, t < 0 darkens
 
 export function canvas() {
   const c = document.createElement('canvas');

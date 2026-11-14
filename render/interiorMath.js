@@ -2,11 +2,11 @@
 // and lamps of a room, the interior ambient light and the window light by weather. No Phaser: scripts/check-interiors.mjs runs it
 // in node. Everything here is a pure function of the map, data/interiors.json and the clock; nothing is random.
 import { lampLit } from './lightMath.js';
+import { clamp01, hex, rgb01, smoothT } from './baseMath.js';
 
 export const INTERIOR_MAPS = ['home', 'school', 'dojo'];
 export const isInterior = mapId => INTERIOR_MAPS.includes(mapId);
 
-const clamp01 = v => Math.min(1, Math.max(0, v));
 const hash2 = (a, b) => {
   let h = Math.imul(a + 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + 0x7f4a7c15, 0xc2b2ae35);
   h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d);
@@ -113,11 +113,10 @@ export function daylight(cfg, dark, weather) {
   return clamp01(1 - dark / d.fade) * (d.weather[weather] ?? 1);
 }
 
-const rgb = hex => { const n = parseInt(hex.slice(1), 16); return [(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]; };
-const smooth = t => t * t * (3 - 2 * t);
+const rgb = s => rgb01(hex(s));
 
 // Interior mood 0..1 (0 by day, 1 deep night) from the outdoor darkness.
-export const interiorNight = (cfg, dark) => smooth(clamp01((dark - cfg.ambient.from) / (cfg.ambient.to - cfg.ambient.from)));
+export const interiorNight = (cfg, dark) => smoothT(clamp01((dark - cfg.ambient.from) / (cfg.ambient.to - cfg.ambient.from)));
 
 // The multiply colour of the light map indoors: the day colour, blending to the night colour as it gets dark.
 export function interiorAmbient(cfg, dark, out = { r: 1, g: 1, b: 1 }) {

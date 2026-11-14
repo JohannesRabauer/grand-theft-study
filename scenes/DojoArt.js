@@ -2,10 +2,10 @@
 // master in a white gi with a black belt; `dojo-facade`, the building seen from the town street) and the Phaser graphics of the
 // dojo interior (wall panel, scroll, banners, lanterns, mat edges, the belt rack), which entities/Dojo.js creates per map and
 // destroys with it. The authoring grid of the textures is the 2x grid of NpcArt (a 24x32 figure is 12x16 world px at 2x).
+import { hex } from '../render/baseMath.js';
 import { darken, lighten, OUT } from './HiResArt.js';
 import { ScaledPen, person } from './NpcArt.js';
 
-const hex = c => parseInt(c.slice(1), 16);
 
 function sensei(p, o) {
   person(p, o, 2);

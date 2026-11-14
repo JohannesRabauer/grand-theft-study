@@ -8,10 +8,9 @@
 // Collision, surfaces and pathfinding still use the water tiles; this system only draws.
 import { waterBodies, buildBody, maskLayer, fallbackFrame, shoreLayer, flowPhase, pickLights, palette } from './waterMath.js';
 import { fx } from './pipelines/WaterFx.js';
+import { hex, lerp, rgb01 } from './baseMath.js';
 import { mapSeed } from '../scenes/GroundArt.js';
 
-const rgb01 = n => [(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
-const lerp = (a, b, t) => a + (b - a) * t;
 
 export class Water {
   constructor(scene, ctx, cfg) {
@@ -24,7 +23,7 @@ export class Water {
     this.frame = -1;
     this.shader = false;
     this.picked = [];
-    this.daySky = rgb01(parseInt(cfg.sky.day.slice(1), 16));
+    this.daySky = rgb01(hex(cfg.sky.day));
     const pal = palette(cfg);
     [...pal.water, ...pal.foam, pal.shimmer, pal.glint].forEach((c, i) => fx.pal.set(rgb01(c), i * 3));
     fx.bands = cfg.bands;

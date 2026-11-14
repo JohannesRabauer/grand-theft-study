@@ -14,7 +14,7 @@ pixel = 2 texture pixels on Medium/High).
 ## 1. Palette ramps per material
 
 Each material has a 5-step ramp: **shadow, dark, base, light, highlight**. Derive steps from the base with the existing
-`lighten`/`darken` helpers (`scenes/HiResArt.js`) or `shade` (`scenes/EnvArt.js`) and hue-shift: shadows lean blue/purple,
+`lighten`/`darken` helpers (`scenes/HiResArt.js`) or `shade`/`mix` (`scenes/EnvDraw.js`, where `HiResArt` takes them from) and hue-shift: shadows lean blue/purple,
 highlights lean warm yellow. Never use pure black or pure white; the outline colour is `OUT` (`#16161e`).
 
 | Material | Base (data/tiles.json) | Shadow | Dark | Light | Highlight |
@@ -107,7 +107,7 @@ Machine-readable in `docs/art-limits.json`, measured by `scripts/shots.mjs` (met
 | Largest uniform flat area | 4096 | largest connected single-colour region in any shot (16 tiles) |
 | Minimum walkable luminance at night | 0.16 | 5th percentile of the mean luminance (0 to 1) of visible walkable tiles in the night shots |
 
-The `before` set exceeds the first two limits; the `after` set of story 16.19 must meet all three.
+The `before` set exceeds the first two limits. Status at story 16.16 (`after-16-16`): night luminance is met; the flat-area limit is met on Medium and exceeded in four Low evening and night shots (5119 to 7623); the seam limit is exceeded in most shots (interiors up to 479, school 297, riverside about 195, oldtown about 165), mostly long straight walls, roof ridges, facades and kerb lines. The visual review (16.17) decides which of these need another pass.
 
 ## 8. Screenshots and review
 

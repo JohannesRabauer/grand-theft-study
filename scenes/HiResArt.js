@@ -4,23 +4,13 @@
 // one screen pixel. Same keys as the 1x set. Everything is deterministic (seeded), nothing is
 // loaded. Sprites get a dark outline pass; tiles get seeded variants so the ground is not a grid.
 import { shadeSprite } from '../render/spriteShadeMath.js';
+import { mix, rgbOf, rng } from './EnvDraw.js';
 
 const TILE = 32;
 const VARIANTS = { asphalt: 4, cobble: 3, grass: 4, path: 3, concrete: 4, water: 3, lane: 2, hedge: 3, puddle: 1, wood: 3, tatami: 2 };
 
-function rgb(c) { const n = parseInt(c.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
-function mix(a, b, t) {
-  const x = rgb(a);
-  const y = rgb(b);
-  return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
-}
 export const lighten = (c, t) => mix(c, '#ffffff', t);
 export const darken = (c, t) => mix(c, '#000000', t);
-
-function rng(seed) {
-  let s = (seed * 2654435761 + 12345) % 2147483647 || 1;
-  return () => (s = (s * 16807) % 2147483647) / 2147483647;
-}
 
 export class Pen {
   constructor(scene, key, w, h) {
@@ -76,8 +66,7 @@ export class Pen {
   // the plain outline. `hi` is Medium/High; Low only gets the ramp. `turn`: the sprite rotates in game (no baked light direction). Call it last before `.shadow()`.
   lit(out, hi, turn = false) {
     const img = this.c.getImageData(0, 0, this.w, this.h);
-    const n = out ? parseInt(out.slice(1), 16) : 0;
-    shadeSprite(img.data, this.w, this.h, { hi, turn, out: out && hi ? [n >> 16, (n >> 8) & 255, n & 255] : null });
+    shadeSprite(img.data, this.w, this.h, { hi, turn, out: out && hi ? rgbOf(out) : null });
     this.c.putImageData(img, 0, 0);
     return this;
   }

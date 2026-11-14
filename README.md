@@ -114,7 +114,7 @@ skates can still hold on behind a bus or tram. Ordinary shops, including the new
 
 ## Known limitations
 
-- Placeholder procedural art and no audio. Saved mornings, school lessons and the expanded open world are playable; remaining day-flow is tracked in the BMAD backlog.
+- All art is procedural (no image files, AD-30) and drawn in code, so it has no hand-made detail beyond what the art bible describes; sound and music are synthesised (Web Audio). Saved mornings, school lessons and the expanded open world are playable; remaining day-flow is tracked in the BMAD backlog.
 - Phone performance is unmeasured on real hardware (desktop proxy only); the reference phone is not chosen.
 - Touch has no weather or map button; the map key does nothing yet.
 - Bullies, props and the slingshot are tuned by feel, not playtested with children.
@@ -393,14 +393,16 @@ Learning content schema beyond `choice` and `typed` (all validated by `scripts/c
 | Path | Purpose |
 | --- | --- |
 | `index.html`, `main.js` | Entry point, Phaser config (960x540, or 480x270 on Low; pixel art, Matter with zero gravity) |
-| `scenes/` | Boot (load + 1x procedural textures), `HiResArt.js` (2x textures), `ToolArt.js` (stick, frisbee, kite, heart), Menu, Game (owns `ctx`), UI (overlay HUD) |
+| `scenes/` | Boot (load + 1x procedural textures), `HiResArt.js` (2x textures, the `Pen`), `EnvDraw.js` (shared canvas helpers: `rng`, `mix`, `shade`, `rgbOf`), `EnvArt.js`, `GroundArt.js`, `BuildingArt.js`, `StreetArt.js`, `InteriorArt.js`, `VegArt.js` (ground, buildings, street, interiors and trees drawn once at map load), `ToolArt.js` (stick, frisbee, kite, heart), Menu, Game (owns `ctx`), UI (overlay HUD) |
 | `entities/` | `Parking.js` (racks, locks, padlocks), `BikeTheft.js` (borrowed bikes and hideouts), `Garage.js`, Player, `players.js` (`ctx.players`, `ctx.forEachPlayer`, `ctx.nearestPlayer(x, y)`, `ctx.alivePlayers()`, the deprecated `ctx.player` alias for `players[0]`), caught/respawn flow (`Caught.js`), bikes (+ skid, smoke, bell effects), skateboards (`Skateboards.js`: lying boards, mounting, ollie / manual effects), skates (`Skates.js`) bus grabs (`GrabTargets.js`) and bus hits (`Traffic.js`), `pools.js` (pool registry, fade pool), `Prop.js`, `Flag.js`, `Bully.js`, `Npc.js` (pedestrians and dogs), `SpeechBubbles.js` |
 | `vehicles/` | `Ownership.js` (owned vehicles, unlock events), `theftLogic.js` (pure parking and borrowing rules), `MovementController.js`: drives any actor from a profile in `data/vehicles.json`; `skateLogic.js`: pure ollie / manual / grind state machine; `TrickSystem.js` + `trickCore.js` + `trickArt.js`: grinds, stairs, ramps and the Style combo; `grabLogic.js` and `routeLogic.js`: pure bus grab model and looping routes; `trafficLogic.js`: pure traffic hit geometry, launch, tumble timers and coin spill |
 | `tools/` | `Tool` interface, `ToolBelt`, Slingshot, `ThrowingStick.js` + `stickLogic.js` (throw, contact and pickup rules, Phaser-free) |
 | `defense/` | `DefenseController.js` (`ctx.defense`: block, dodge, Kiai), `defenseCore.js` (pure rules), `DefenseFx.js` (guard arc, KIAI! burst, rings), `Karate.js` (`ctx.karate`: belts, points, daily limit, cheer), `beltCore.js` (pure belt and exam rules) |
 | `ai/` | Chase director and level rules, bully state machine, perception, pathfinding, `DogFetch.js` (the dog fetch behaviour, Phaser-free) |
 | `physics/` | `categories.js`, `bodies.js` (only place that creates bodies), surfaces service (with weather overrides), `Wind.js`, `Weather.js`, `WallStreamer.js` (keeps only walls near moving things in the Matter world) |
-| `particles/` | `ParticleHub.js`: pooled emitters, surface effects, rain, ambient life |
+| `particles/` | `ParticleHub.js`: pooled emitters, surface effects, rain, ambient life (`data/particles.json`) |
+| `render/` | The epic-16 render modules (AD-31): light map and lights (`LightMap.js`, `lightMath.js`, `StreetLights.js`), post passes (`PostFx.js`, `pipelines/`: grade, bloom, atmosphere, water, wind, shadows), soft shadows (`Shadows.js`), vegetation (`Vegetation.js`), buildings (`Buildings.js`), interiors (`Interiors.js`), water (`Water.js`), street props (`StreetProps.js`), weather and season layers (`Atmosphere.js`, `Season.js`), off-screen culling (`Culling.js`). Every `*Math.js` is Phaser-free and checked in node; `baseMath.js` holds the shared colour and easing helpers |
+| `camera/` | Camera rig (`CameraRig.js`, `rigMath.js`, `tetherMath.js`) and smooth motion (`Motion.js`, `motionMath.js`) |
 | `state/` | `GameState.js` (store), `actions.js`, `migrations.js`, `SaveSlots.js` (AD-16) |
 | `characters/` | `attributes.js` (pure attribute maths), `AttrGrowth.js` (growth hooks), `Characters.js` (`ctx.characters`: dresses each player with its character) |
 | `learning/` | `engineCore.js` (pure adaptive and repetition logic), `LearningEngine.js` (`ctx.learning`) |
@@ -411,8 +413,9 @@ Learning content schema beyond `choice` and `typed` (all validated by `scripts/c
 | `i18n/` | `de.json`, `en.json`, `i18n.js` (`ctx.t`) |
 | `data/` | Tuning JSON, `maps/` (`index.json` lists the map files; `town.json`, `test-room.json`: ASCII grid, objects in tile coordinates), `object-types.json` (catalog of every allowed map object type), `maps-geo/germany.json` (the Germany map of the Erdkunde minigame) |
 | `ui/` | `input.js` (device reading, per-player intents) + `inputBindings.js` (pure bindings -> intent), `hud/` (HUD modules, listed per mode in `data/hud.json`, registered in `hud/index.js`), `ScreenStack.js` + `screens/` (overlays; `data/screens.json` says which freeze the world), `scaling.js` (integer scaling), `uiKit.js` (UI camera, crisp text) |
-| `scripts/` | `check-*.mjs` and `check-all.mjs`, `bench.js` / `smoke.js` (loaded by `?bench`), `bench-cdp.mjs` (headless runner) |
-| `docs/` | `PERFORMANCE.md`: benchmark results, optimizations, manual phone test |
+| `scripts/` | `check-*.mjs` and `check-all.mjs`, `bench.js` / `smoke.js` (loaded by `?bench`) with `smoke/` scenarios, `bench-cdp.mjs` (headless runner), `shots.mjs` (screenshot set and look metrics), `ui-shots.mjs`, `*-frames.mjs` (frame strips of effects), `lib/` |
+| `docs/` | `ART-BIBLE.md` and `art-limits.json` (the look and its numeric limits), `PERFORMANCE.md` (benchmarks, phone protocol), `TESTING.md`, `CROSS-BROWSER.md`, `shots/overhaul/<label>/` (the screenshot sets and `metrics.json`) |
+| `.claude/skills/schulweg-pixel-art/` | The project skill with the pixel-art rules and recipes; load it before any art, light, shader or particle change |
 
 Design rules live in `_bmad-output/initiative-schulweg/architecture-schulweg-prototype/`.
 - **Sprite shading** (`render/spriteShadeMath.js`, story 16.18): kids, NPCs, animals, vehicles and hats share one shading pass (top-left ramp, rim light, selective outline, emissive halos); see `docs/ART-BIBLE.md`.

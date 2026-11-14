@@ -6,6 +6,8 @@
 // of the water itself. `waterColor` is the one formula of the water surface; render/pipelines/WaterFx.js is its shader twin.
 // Everything is a function of the map and its seed. Collision, pathfinding and the map data are never touched.
 
+import { hex, rgba, smoothT } from './baseMath.js';
+
 export const TILE = 16;
 export const K = { NONE: 0, WATER: 1, HARD: 2, SOFT: 3, BRIDGE: 4 };
 const HARD = new Set(['asphalt', 'lane', 'concrete', 'cobble', 'path', 'puddle', 'fence', 'wall', 'dumpster', 'booth']);
@@ -18,15 +20,14 @@ export function hash01(a, b, c = 0) {
   h = Math.imul(h ^ (h >>> 12), 0x297a2d39);
   return ((h ^ (h >>> 15)) >>> 0) / 4294967296;
 }
-const smooth = t => t * t * (3 - 2 * t);
 // Value noise in -1..1 on a lattice with cells of `cell` px.
 function vnoise(x, y, cell, seed) {
   const fx = x / cell;
   const fy = y / cell;
   const ix = Math.floor(fx);
   const iy = Math.floor(fy);
-  const tx = smooth(fx - ix);
-  const ty = smooth(fy - iy);
+  const tx = smoothT(fx - ix);
+  const ty = smoothT(fy - iy);
   const v = (a, b) => hash01(a, b, seed) * 2 - 1;
   const top = v(ix, iy) + (v(ix + 1, iy) - v(ix, iy)) * tx;
   const bot = v(ix, iy + 1) + (v(ix + 1, iy + 1) - v(ix, iy + 1)) * tx;
@@ -187,11 +188,10 @@ export function buildBody(map, body, cfg, seed) {
 
 // ---- the water surface ----------------------------------------------------------------------------------------------
 const palCache = new WeakMap();
-const rgb = s => parseInt(s.slice(1), 16);
 export function palette(cfg) {
   let p = palCache.get(cfg);
   if (!p) {
-    p = { water: cfg.palette.water.map(rgb), foam: cfg.palette.foam.map(rgb), shimmer: rgb(cfg.palette.shimmer), glint: rgb(cfg.palette.glint) };
+    p = { water: cfg.palette.water.map(hex), foam: cfg.palette.foam.map(hex), shimmer: hex(cfg.palette.shimmer), glint: hex(cfg.palette.glint) };
     palCache.set(cfg, p);
   }
   return p;
@@ -280,7 +280,7 @@ function landKind(b, x, y) {
 }
 
 const parse = s => {
-  if (s[0] === '#') { const n = rgb(s); return [n >> 16, (n >> 8) & 255, n & 255, 255]; }
+  if (s[0] === '#') return rgba(hex(s));
   const m = s.match(/rgba\((\d+),(\d+),(\d+),([\d.]+)\)/);
   return [+m[1], +m[2], +m[3], Math.round(+m[4] * 255)];
 };
@@ -322,7 +322,7 @@ export function shoreLayer(b, cfg, seed) {
     }
   }
   // stones on the bank
-  const st = cfg.stones.colors.map(rgb).map(n => [n >> 16, (n >> 8) & 255, n & 255, 255]);
+  const st = cfg.stones.colors.map(hex).map(rgba);
   for (let y = 2; y < h - 2; y++) for (let x = 2; x < w - 3; x++) {
     if (hash01(b.ox + x, b.oy + y, seed + 11) >= cfg.stones.rate) continue;
     const big = hash01(b.ox + x, b.oy + y, seed + 12) < 0.4;
@@ -343,7 +343,7 @@ export function shoreLayer(b, cfg, seed) {
   // reeds along soft banks, at least `spacing` px apart
   const taken = new Map();
   const sp = cfg.reeds.spacing;
-  const stalk = cfg.reeds.stalk.map(rgb).map(n => [n >> 16, (n >> 8) & 255, n & 255, 255]);
+  const stalk = cfg.reeds.stalk.map(hex).map(rgba);
   const head = parse(cfg.reeds.head);
   for (let y = 4; y < h - 1; y++) for (let x = 3; x < w - 3; x++) {
     const i = y * w + x;
@@ -373,7 +373,7 @@ export function shoreLayer(b, cfg, seed) {
   }
   // bridge piers: stone faces and posts in the water beside a bridge tile, with a shadow on the water
   const pier = cfg.pier;
-  const pst = pier.stone.map(rgb).map(n => [n >> 16, (n >> 8) & 255, n & 255, 255]);
+  const pst = pier.stone.map(hex).map(rgba);
   const psh = parse(pier.shadow);
   for (const [tx, ty] of b.tiles) {
     for (const [dx, dy] of SIDES) {
