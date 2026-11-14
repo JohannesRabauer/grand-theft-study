@@ -147,7 +147,7 @@ export class BootScene extends Phaser.Scene {
     makeDojoArt(this, this.cache.json.get('karate'), res.scale);
     makeBusArt(this, res.scale);
     makeVehicleArt(this, res.scale);
-    makeExpansionArt(this, res.scale);
+    makeExpansionArt(this, res.scale, this.cache.json.get('grab')); // the road vehicles in their paint colours
     makeCosmeticArt(this, res.scale); // story 10.1: hats and rings from the shop
     setInteriorRooms(this.cache.json.get('interiors').rooms); // the walked paths wear the floors of the interiors
     makeEnvArt(this, tiles, this.cache.json.get('map-town').tileSize * res.scale, this.cache.json.get('street')); // AD-30: edges, shores, fences, trunks, tufts

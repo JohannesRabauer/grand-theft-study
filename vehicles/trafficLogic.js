@@ -26,20 +26,69 @@ export function relativeSpeed(vx, vy, wx, wy) {
   return Math.hypot(vx - wx, vy - wy);
 }
 
-export function yieldsTo(t, x, y, radius = 5, ahead = 38) {
-  const dx = x - t.x, dy = y - t.y;
-  const reach = t.kcfg.length / 2 + ahead + radius;
-  if (Math.abs(dx) > reach || Math.abs(dy) > reach) return false;
-  const along = dx * Math.cos(t.heading) + dy * Math.sin(t.heading);
-  const lat = -dx * Math.sin(t.heading) + dy * Math.cos(t.heading);
-  return along > t.kcfg.length / 2 + radius && along < t.kcfg.length / 2 + ahead + radius
-    && Math.abs(lat) < t.kcfg.width / 2 + radius + 2;
+// ---- driving (story 17.x): smooth speed control instead of stop and go. Every number is data/grab.json `yield`.
+// The fastest speed from which a vehicle that brakes at `brake` px/s2 still stops within `dist` px.
+export function stopSpeed(dist, brake) {
+  return Math.sqrt(2 * brake * Math.max(0, dist));
 }
 
-export function trafficStep(t, blocked, dt, cfg) {
-  t.blocked = blocked ? Math.min(cfg.recoverAfter + cfg.retryEvery, (t.blocked ?? 0) + dt) : 0;
-  t.speed = blocked ? 0 : t.cruise;
-  return t.blocked >= cfg.recoverAfter;
+// One frame of speed: eases towards `target` (accelerates gently, brakes harder), never jumps.
+export function approachSpeed(v, target, accel, brake, dt) {
+  return target > v ? Math.min(target, v + accel * dt) : Math.max(target, v - brake * dt);
+}
+
+// How far in front of the vehicle's nose a thing (circle `r` at px, py) is in its way, or Infinity when it is beside, behind or
+// outside the `band` px of free lane around the vehicle's width. The nose of a point inside the hull counts as 0.
+export function gapAhead(x, y, h, length, width, px, py, r, band, look) {
+  const dx = px - x, dy = py - y;
+  if (Math.abs(dx) > look + length || Math.abs(dy) > look + length) return Infinity;
+  const along = dx * Math.cos(h) + dy * Math.sin(h);
+  const lat = -dx * Math.sin(h) + dy * Math.cos(h);
+  if (Math.abs(lat) > width / 2 + r + band) return Infinity;
+  const gap = along - length / 2 - r;
+  if (along < length / 2 - 6 || gap > look) return Infinity;
+  return Math.max(0, gap);
+}
+
+// The speed a vehicle may have so that it can still stop behind a leader `gap` px ahead (nose to tail) going `leaderSpeed`:
+// the leader's own speed plus what it can brake away within the free gap (`minGap` is kept as a safety distance).
+export function followSpeed(gap, leaderSpeed, minGap, comfort) {
+  return leaderSpeed + stopSpeed(gap - minGap, comfort);
+}
+
+// Arc length (px) from `from` forward to `to` on a closed route of length `total`.
+export function arcAhead(from, to, total) {
+  return (((to - from) % total) + total) % total;
+}
+
+// Is a hull of `length` x `width` (px) at (x, y) heading `h` in the way of a circle (px, py, pr)? Used to push a player out of a
+// vehicle that is too slow for a hit (standing, queuing or driving along): the hull is solid, nobody walks over a car.
+// The rear `zone.reach` px of a bus or tram stay open for the grab. Writes the push into out { x, y } (px) and returns true when
+// the circle overlaps the hull.
+export function solidPush(x, y, h, length, width, zone, px, py, pr, out) {
+  const c = Math.cos(h), s = Math.sin(h);
+  const dx = px - x, dy = py - y;
+  const along = dx * c + dy * s;
+  const lat = -dx * s + dy * c;
+  const back = -length / 2 + (zone?.reach ?? 0);
+  const front = length / 2;
+  const half = width / 2;
+  const nx = Math.max(back, Math.min(front, along));
+  const ny = Math.max(-half, Math.min(half, lat));
+  let ox = along - nx, oy = lat - ny;
+  let d = Math.hypot(ox, oy);
+  if (d >= pr) return false;
+  if (d < 1e-6) { // the centre is inside the hull: leave through the nearest face
+    const toFront = front - along, toBack = along - back, toLeft = half - lat, toRight = lat + half;
+    const m = Math.min(toFront, toBack, toLeft, toRight);
+    ox = m === toFront ? 1 : m === toBack ? -1 : 0;
+    oy = m === toLeft ? 1 : m === toRight ? -1 : 0;
+    d = -m;
+  } else { ox /= d; oy /= d; }
+  const k = pr - d; // push distance along (ox, oy), in the vehicle's frame
+  out.x = (ox * c - oy * s) * k;
+  out.y = (ox * s + oy * c) * k;
+  return true;
 }
 
 export function trafficFootprintFree(x, y, heading, length, width, solid) {

@@ -1,3 +1,4 @@
+import { WorldText } from '../render/WorldText.js';
 import { Pools } from '../entities/pools.js';
 import { Surfaces } from '../physics/surfaces.js';
 import { WallStreamer } from '../physics/WallStreamer.js';
@@ -139,6 +140,7 @@ export class GameScene extends Phaser.Scene {
     const spawn = map.objects.find(o => o.type === 'spawn' && o.id === 'player');
     this.toolCfg = cache.get('tool');
     this.zoomCfg = cache.get('camera');
+    this.worldText = new WorldText(this, ctx.res.scale * this.zoomCfg.max); // story 17.x: labels keep their screen size when zoomed out
     this.cfgMotion = cache.get('motion');
     const starters = startPlayers(state.shared, state.players, ctx.maxPlayers, this.startOverride);
     const offsets = starters.length > 1 ? this.zoomCfg.coop.spawnOffsets : [[0, 0]];
@@ -324,17 +326,27 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.preRender(); // worldView, which prop culling and the crowd's first fill read
   }
 
-  // Zoom follows real speed continuously (1.0 standing .. 0.6 at top speed) times the render scale.
-  // The speed is low-passed with a small dead band (hysteresis, so noise in the speed never moves the
-  // target), the zoom itself is a critically damped spring with a maximum rate, so it neither pops nor
-  // overshoots, and it lands exactly on its target (an exact integer at the base zoom, where the
-  // renderer rounds sprites to pixels). Only the main camera zooms; UIScene has its own camera.
+  // Zoom (story 17.x). On the Medium and High tiers (render scale 2) the camera rests on exact integer zoom stops (data/camera.json
+  // `ladder`): fast riding eases out to the second stop and back, and at both stops the 2x textures map 1:1 or as an exact 2x2
+  // box onto the screen, so the world is as crisp zoomed out as it is standing still (a continuous zoom sits between the stops
+  // and smears every texture). The stop changes with hysteresis: out after `holdOut` s above `outAbove` px/s, back in after
+  // `holdIn` s below `inBelow`. On Low (render scale 1) the zoom follows real speed continuously (1.0 standing .. 0.6 at top
+  // speed) times the render scale, as before: the speed is low-passed with a small dead band, the zoom itself is a critically
+  // damped spring with a maximum rate, so it neither pops nor overshoots. Either way the fit zoom of the co-op rig also has to hold.
+  // Only the main camera zooms; UIScene has its own camera.
   updateZoom(dt) {
     const z = this.zoomCfg;
     const scale = this.ctx.res.scale;
-    const t = Math.min(1, this.focus.speed / z.speedForMin);
-    const raw = Math.min(z.max + (z.min - z.max) * t, this.focus.zoomCap) * scale; // the fit zoom of the rig also has to hold (one player: no cap)
-    if (raw >= z.max * scale || raw <= z.min * scale || Math.abs(raw - this.zoomGoal) > z.deadband * scale) this.zoomGoal = raw;
+    const ladder = z.ladder && scale >= 2 ? z.ladder : null;
+    let raw;
+    if (ladder) {
+      raw = this.ladderStop(ladder, dt) * scale;
+      this.zoomGoal = raw;
+    } else {
+      const t = Math.min(1, this.focus.speed / z.speedForMin);
+      raw = Math.min(z.max + (z.min - z.max) * t, this.focus.zoomCap) * scale; // the fit zoom of the rig also has to hold (one player: no cap)
+      if (raw >= z.max * scale || raw <= z.min * scale || Math.abs(raw - this.zoomGoal) > z.deadband * scale) this.zoomGoal = raw;
+    }
     const cam = this.cameras.main;
     const err = this.zoomGoal - cam.zoom;
     if (Math.abs(err) < 1e-4 * scale && Math.abs(this.zoomVel) < 1e-3 * scale) {
@@ -342,8 +354,8 @@ export class GameScene extends Phaser.Scene {
       if (err) cam.setZoom(this.zoomGoal);
       return;
     }
-    const w = z.smooth;
-    const max = z.maxRate * scale;
+    const w = ladder ? ladder.smooth : z.smooth;
+    const max = (ladder ? ladder.maxRate : z.maxRate) * scale;
     const n = Math.ceil(dt / 0.01); // substeps keep the spring stable on slow frames
     const h = dt / n;
     let zoom = cam.zoom;
@@ -353,6 +365,18 @@ export class GameScene extends Phaser.Scene {
       zoom += this.zoomVel * h;
     }
     cam.setZoom(zoom);
+  }
+
+  // The zoom stop (config units, 1 = standing still) the ladder wants this frame; `this.zoomOut` is the stop chosen by speed.
+  ladderStop(ladder, dt) {
+    const speed = this.focus.speed;
+    const toward = this.zoomOut ? speed < ladder.inBelow : speed > ladder.outAbove;
+    this.zoomHold = toward ? (this.zoomHold ?? 0) + dt : 0;
+    if (this.zoomHold >= (this.zoomOut ? ladder.holdIn : ladder.holdOut)) { this.zoomOut = !this.zoomOut; this.zoomHold = 0; }
+    const steps = ladder.steps;
+    const want = this.zoomOut ? steps[steps.length - 1] : steps[0];
+    const cap = this.focus.zoomCap; // co-op: the largest stop that still keeps everyone in view
+    return want <= cap ? want : (steps.find(step => step <= cap) ?? steps[steps.length - 1]);
   }
 
   // Eased follow of the player, in place of Phaser's startFollow: that one floors the scroll to whole
@@ -498,5 +522,6 @@ export class GameScene extends Phaser.Scene {
     this.streamer.update();
     this.markers.update();
     this.beltTags.update();
+    this.worldText.update();
   }
 }

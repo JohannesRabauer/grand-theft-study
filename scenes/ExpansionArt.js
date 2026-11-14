@@ -86,7 +86,7 @@ function tram(p, length, width, color) {
 
 
 
-export function makeExpansionArt(scene, scale) {
+export function makeExpansionArt(scene, scale, grab) {
   for (const [key, color, kind] of [
     ['play-swing', '#f3c66b', 'seat'], ['play-sign', '#669ac9', 'sign'], ['play-plank', '#ba905c', 'plank'],
     ['play-kite', '#ea6c88', 'kite'], ['play-flag', '#65c79a', 'flag'], ['play-cart', '#de8f4c', 'cart'],
@@ -106,9 +106,13 @@ export function makeExpansionArt(scene, scale) {
   }
   const draw = { car, van, tram };
   for (const [kind, length, width, color] of [['car', 34, 18, '#e87567'], ['van', 42, 20, '#75b6d5'], ['tram', 72, 22, '#d8bd58']]) {
-    const p = new ScaledPen(scene, kind, length + 8, width + 6, scale);
-    draw[kind](p, length, width, color);
-    p.lit(OUT, scale > 1, true);
-    p.done();
+    // the base texture, and for cars and vans one more per paint colour of data/grab.json (`<kind>-<n>`)
+    const paints = [[kind, color], ...(grab?.targets[kind]?.colors ?? []).map((c, i) => [`${kind}-${i}`, c])];
+    for (const [key, paint] of paints) {
+      const p = new ScaledPen(scene, key, length + 8, width + 6, scale);
+      draw[kind](p, length, width, paint);
+      p.lit(OUT, scale > 1, true);
+      p.done();
+    }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "_doc": "Looping road routes of vehicles that can be grabbed or driven by (CAP-14; the traffic epic reuses and extends this). `map`: the map id the route belongs to; `kind`: key into `targets` of data/grab.json; `count` vehicles are spread evenly along the loop; `speed` px/s; `points` tile coordinates (x.5/y.5 = tile centres, continuous values allowed) of a closed polyline. Main road of the town: the eastbound lane is y 57 (south), the westbound lane y 55, half-circles turn at both ends.",
+  "_doc": "Looping road routes of vehicles that can be grabbed or driven by (CAP-14; the traffic epic reuses and extends this). `map`: the map id the route belongs to; `kind`: key into `targets` of data/grab.json; `count` vehicles are spread evenly along the loop; `speed` px/s; `points` tile coordinates (x.5/y.5 = tile centres, continuous values allowed) of a closed polyline. `lane` (optional, default the route's own id): routes that share one lane (the same points) form one queue: a vehicle keeps its distance to the one ahead and never passes it. Main road of the town: the eastbound lane is y 57 (south), the westbound lane y 55, half-circles turn at both ends.",
   "routes": [
     {
       "id": "main-road",
@@ -85,6 +85,7 @@
     {
       "id": "main-road-cars",
       "map": "town",
+      "lane": "main-road",
       "kind": "car",
       "count": 4,
       "speed": 135,
@@ -320,6 +321,7 @@
     {
       "id": "riverside-cars",
       "map": "town",
+      "lane": "riverside-tram",
       "kind": "car",
       "count": 2,
       "speed": 118,

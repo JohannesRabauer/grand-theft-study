@@ -6,6 +6,16 @@
   "maxRate": 0.45,
   "deadband": 0.004,
   "follow": 0.15,
+  "ladder": {
+    "_doc": "Zoom stops of the Medium and High tiers (render scale 2, GameScene.updateZoom): the camera rests on exact integer zoom (2 and 1 with the render scale), where the 2x textures stay crisp. `steps`: zoom factors, first = standing, last = fast (0.5 shows twice the world, each texel pair averages into one screen pixel). Out after `holdOut` s above `outAbove` px/s, back after `holdIn` s below `inBelow` px/s; `smooth` (1/s) and `maxRate` (zoom factor per s) shape the glide between the stops. Low keeps the continuous `min`..`max` zoom above.",
+    "steps": [1.0, 0.5],
+    "outAbove": 96,
+    "inBelow": 78,
+    "holdOut": 0.3,
+    "holdIn": 0.9,
+    "smooth": 7,
+    "maxRate": 1.1
+  },
   "coop": {
     "_doc": "spawnOffsets: start offsets (world px) per player from the map spawn; fitMargin: UI px every player stays inside the view edge; pinnedWeight: centre weight of a pinned player; edgeIndicator: fraction of the half view beyond which a chevron shows at the edge",
     "spawnOffsets": [[-12, 0], [12, 0]],

@@ -1,5 +1,5 @@
 {
-  "_doc": "Bus and tram grabs (story 5.3, AD-23, CAP-14); the maths is vehicles/grabLogic.js, the entity entities/GrabTargets.js, the routes data/routes.json. `targets`: per vehicle kind the sprite texture and its origin (the body centre), the turn rate in degrees per second, the size in px (facing right) and the grab `zone` behind the rear edge (length behind it, reach under the back, width; px). A rider on a profile with `grab: true` (skates) who holds interact inside the zone grabs on (press only after letting go of the button since the last grab); within `armRange` px of a vehicle the interact press never gets off the skates, so holding it early works. While grabbing the rider is towed at the vehicle's speed on a rope of `ropeLength` px (pull `pullGain` per second, at most `maxPull` px/s), steering sideways swings it up to `swingMax` px at `swingSpeed` px/s (`swingBack` pulls it straight again). `duration`: seconds a grab lasts (x (1 + busGrabBonus x perkDuration)); `snapSlack`: rope stretch in px (a wall in the way) that makes the rider lose it. `failure`: hazard per second = base x (1 + speedGain x speed / refSpeed) x (1 + bumpGain x ground rattle) x (1 + swingGain x swing share) x (1 + ageGain x time / duration) x max(perkFloor, 1 - busGrabBonus x perkCut); no failure during the first `grace` seconds. `stumble`: seconds of the comic tumble after a failed grab, speed factor and number of spins. `sparkInterval`: seconds between the sparks at the rider's wheels. `bar`: size of the risk bar over the rider.",
+  "_doc": "Bus and tram grabs (story 5.3, AD-23, CAP-14); the maths is vehicles/grabLogic.js, the entity entities/GrabTargets.js, the routes data/routes.json. `targets`: per vehicle kind the sprite texture and its origin (the body centre), the turn rate in degrees per second, the size in px (facing right) and the grab `zone` behind the rear edge (length behind it, reach under the back, width; px). A rider on a profile with `grab: true` (skates) who holds interact inside the zone grabs on (press only after letting go of the button since the last grab); within `armRange` px of a vehicle the interact press never gets off the skates, so holding it early works. While grabbing the rider is towed at the vehicle's speed on a rope of `ropeLength` px (pull `pullGain` per second, at most `maxPull` px/s), steering sideways swings it up to `swingMax` px at `swingSpeed` px/s (`swingBack` pulls it straight again). `duration`: seconds a grab lasts (x (1 + busGrabBonus x perkDuration)); `snapSlack`: rope stretch in px (a wall in the way) that makes the rider lose it. `failure`: hazard per second = base x (1 + speedGain x speed / refSpeed) x (1 + bumpGain x ground rattle) x (1 + swingGain x swing share) x (1 + ageGain x time / duration) x max(perkFloor, 1 - busGrabBonus x perkCut); no failure during the first `grace` seconds. `stumble`: seconds of the comic tumble after a failed grab, speed factor and number of spins. `sparkInterval`: seconds between the sparks at the rider's wheels. `bar`: size of the risk bar over the rider. `targets.<car|van>.colors`: the paint colours (one texture `<texture>-<n>` per entry, see scenes/ExpansionArt.js; a vehicle takes one by its index on the route). `yield` (driving, entities/GrabTargets.js, vehicles/trafficLogic.js): a vehicle eases its speed (`accel` px/s2 up, `brake` px/s2 at most down) towards what is safe; it plans every stop with the comfortable deceleration `comfort`: `look` px (+ `reaction` s of its speed) ahead it watches players, pedestrians, props and vehicles of other lanes inside its width plus `band` px, and stops `stopGap` px before them; behind the vehicle ahead on its lane it keeps `minGap` px and follows its speed; `curve` (`window` px of road around a point, `lateral` px/s2, `floor` px/s) sets the speed in bends, sampled every `profileStep` px, and braking for them starts early. A vehicle that has stood `shoveAfter` s behind a prop in its lane shoves it off the road (it slides sideways in `shoveSeconds` s). A vehicle appears (map load) at least `hideDistance` px from every player and `spawnGap` px from its lane mates; one that has stood still `recoverAfter` s (checked every `retryEvery`) is moved to the next free spot of `recoveryProbes` along the route, only out of sight.",
   "maxTargets": 12,
   "armRange": 110,
   "ropeLength": 16,
@@ -51,6 +51,7 @@
     },
     "car": {
       "texture": "car",
+      "colors": ["#e87567", "#4f86c6", "#e9e6dc", "#5fa86a", "#e8c34a", "#4a4d58", "#e88a3c", "#4fb3b0", "#8a6bb8", "#aab2bd"],
       "origin": [
         0.5,
         0.5
@@ -61,6 +62,7 @@
     },
     "van": {
       "texture": "van",
+      "colors": ["#75b6d5", "#e9e6dc", "#e8c34a", "#5fa86a", "#e87567"],
       "origin": [
         0.5,
         0.5
@@ -86,10 +88,22 @@
     }
   },
   "yield": {
-    "ahead": 38,
-    "recoverAfter": 3,
-    "retryEvery": 1,
-    "recoveryProbes": 16,
-    "recoveryDistance": 160
+    "look": 110,
+    "reaction": 0.35,
+    "band": 4,
+    "stopGap": 10,
+    "minGap": 14,
+    "comfort": 150,
+    "accel": 70,
+    "brake": 280,
+    "curve": { "window": 56, "lateral": 130, "floor": 42 },
+    "profileStep": 8,
+    "spawnGap": 36,
+    "hideDistance": 640,
+    "shoveAfter": 1.2,
+    "shoveSeconds": 0.45,
+    "recoverAfter": 10,
+    "retryEvery": 2,
+    "recoveryProbes": 16
   }
 }

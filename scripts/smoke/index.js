@@ -58,6 +58,7 @@ import { defense } from './defense.js';
 import { belts } from './belts.js';
 import { karate } from './karate.js';
 import { traffic } from './traffic.js';
+import { driving } from './driving.js';
 import { coopMenu, coopCommute, coopChase } from './coop.js';
 import { school } from './school.js';
 import { schoolEvents } from './school-events.js';
@@ -68,4 +69,4 @@ import { openWorld } from './open-world.js';
 import { fullDay } from './fullday.js';
 import { effects } from './effects.js';
 
-export const scenarios = [rideToSchool, turfChase, chaseLevels, grownups, talk, pedestrians, slingshot, weather, snow, ambience, vegetation, buildings, water, particles, atmosphere, motion, season, effects, critters, prompts, dayClock, language, quality, pause, screenStack, hints, commute, shop, quests, missions, progress, stickers, achievements, lernbuch, parent, activities, minimap, phone, important, uikit, age, audio, music, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, belts, traffic, karate, school, schoolEvents, dayFlow, zeugnis, home, openWorld, fullDay, interiors, street];
+export const scenarios = [rideToSchool, turfChase, chaseLevels, grownups, talk, pedestrians, slingshot, weather, snow, ambience, vegetation, buildings, water, particles, atmosphere, motion, season, effects, critters, prompts, dayClock, language, quality, pause, screenStack, hints, commute, shop, quests, missions, progress, stickers, achievements, lernbuch, parent, activities, minimap, phone, important, uikit, age, audio, music, twoPlayers, characters, skateboard, tricks, skatepark, skates, crowdCleanup, worldDoors, quitAndSecondRun, coopMenu, coopCommute, coopChase, learning, grades, minigames, vehicles, newRides, throwingStick, stick, defense, belts, traffic, driving, karate, school, schoolEvents, dayFlow, zeugnis, home, openWorld, fullDay, interiors, street];

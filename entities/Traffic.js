@@ -11,12 +11,15 @@
 // for a while, then is safe from the next hit for a moment. The ridden bike, board or skates are flung off and slide to a
 // stop, lying there to be mounted again; up to 50 cents drop out of the pocket as coins (wallet.spend + LootDrops coins that
 // stay 20 s); the stamina tank loses a share. The bus honks (bubble) and drives on. All numbers are data/traffic.json.
+// Every vehicle is also a solid hull (story 17.x): a player who is not tumbling cannot walk or ride into one. Where a hit does not
+// happen (the vehicle stands, queues or drives along at about the player's speed) the player is pushed out of the hull and loses
+// the speed that pointed into it, so nobody walks over a car. The open rear of a bus or tram (the grab zone) stays passable.
 // Per player and independent (co-op). `threat(x, y)` tells the pedestrian director a vehicle is coming (they step aside early).
 import { CAT, MASK } from '../physics/categories.js';
 import { SpeechBubbles } from './SpeechBubbles.js';
 import {
   DONE, FLY, GETUP, IDLE, LANDED, LIE, UP, canBeHit, classifyHit, createHit, flightAt, inPath, planLaunch, relativeSpeed, slideFraction,
-  spillCoins, startHit, stepHit, clearFraction
+  solidPush, spillCoins, startHit, stepHit, clearFraction
 } from '../vehicles/trafficLogic.js';
 
 const TURN = 2 * Math.PI;
@@ -45,6 +48,7 @@ export class Traffic {
     }));
     this.pos = { x: 0, y: 0 };
     this.vel = { x: 0, y: 0 };
+    this.push = { x: 0, y: 0 };
     this.solid = (x, y) => ctx.surfaces.solid(ctx.surfaces.at(x, y));
     const { events } = ctx;
     events.on('player:caught', e => this.cancel(ctx.players[e.player]));
@@ -85,6 +89,7 @@ export class Traffic {
       if (slot.hit.phase !== IDLE || flags) this.tumble(dt, player, slot, flags);
       if (slot.hit.stun > 0) this.slow(player);
       if (this.enabled && !player.pinned && !player.grabbing && canBeHit(slot.hit)) this.detect(player, slot);
+      if (this.enabled && slot.hit.phase === IDLE && !player.grabbing) this.block(player);
       if (slot.slide.item) this.slide(dt, player, slot);
     }
     this.bubbles.update(dt);
@@ -118,6 +123,37 @@ export class Traffic {
         if ((kind === 'front' || kind === 'side') && !this.airborne(player)) {
           this.hitBy(player, slot, t, kind, speed);
           return;
+        }
+      }
+    }
+  }
+
+  // Pushes the player out of every vehicle hull it overlaps (a standing or slow vehicle does not hit, but is solid all the same).
+  block(player) {
+    const radius = player.body.circleRadius;
+    const m = player.move;
+    const out = this.push;
+    for (const src of this.sources) {
+      for (const t of src.pool) {
+        if (!t.active) continue;
+        const reach = t.kcfg.length / 2 + radius + 2;
+        if (Math.abs(player.x - t.x) > reach || Math.abs(player.y - t.y) > reach) continue;
+        if (classifyHit(t.x, t.y, t.heading, t.kcfg.length, t.kcfg.width, t.kcfg.zone, this.cfg.kinds[t.kind], player.x, player.y, 0) === 'rear') continue;
+        if (!solidPush(t.x, t.y, t.heading, t.kcfg.length, t.kcfg.width, t.kcfg.zone, player.x, player.y, radius, out)) continue;
+        const px = player.x + out.x;
+        const py = player.y + out.y;
+        if (this.solid(px, py)) continue; // a wall behind the player: leave it, the vehicle's own lane never runs there
+        this.pos.x = px;
+        this.pos.y = py;
+        player.matter.body.setPosition(player.body, this.pos);
+        const len = Math.hypot(out.x, out.y) || 1;
+        const nx = out.x / len;
+        const ny = out.y / len;
+        const into = -(m.vel.x * nx + m.vel.y * ny);
+        if (into > 0) { // no speed into the hull; the rider slows down
+          m.vel.x += nx * into;
+          m.vel.y += ny * into;
+          m.speed *= 0.8;
         }
       }
     }

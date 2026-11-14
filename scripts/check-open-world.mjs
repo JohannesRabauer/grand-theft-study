@@ -7,7 +7,7 @@ import { migrate } from '../state/migrations.js';
 import { gridOf, reachable, validateObject } from '../services/worldLogic.js';
 import { streetCatalog, safeStreetPosition, validStreetRecords } from '../vehicles/streetLogic.js';
 import { buildRoute, routeAt, easeHeading } from '../vehicles/routeLogic.js';
-import { trafficFootprintFree, trafficStep, yieldsTo, classifyHit } from '../vehicles/trafficLogic.js';
+import { trafficFootprintFree, gapAhead, stopSpeed, approachSpeed, classifyHit } from '../vehicles/trafficLogic.js';
 import { PLAY_KINDS, playLayout, validatePlay } from '../entities/playLogic.js';
 import { Pathfinder } from '../ai/Pathfinding.js';
 import { StreetRides } from '../entities/StreetRides.js';
@@ -130,11 +130,10 @@ for(const def of routes) {
     assert.ok(trafficFootprintFree(pt.x,pt.y,h,k.length,k.width,solid),`${def.id} hull clips solid at ${pt.x},${pt.y}`);
   }
 }
-const t={x:100,y:100,heading:0,cruise:100,kcfg:grab.targets.car};
-assert.ok(yieldsTo(t,150,100)); assert.equal(yieldsTo(t,50,100),false);
-assert.equal(trafficStep(t,true,1,grab.yield),false);assert.equal(t.speed,0);
-assert.ok(trafficStep(t,true,2,grab.yield));assert.ok(t.blocked<=4);
-assert.equal(trafficStep(t,false,1,grab.yield),false);assert.equal(t.speed,100);
+const yl=grab.yield;
+assert.ok(gapAhead(100,100,0,34,18,150,100,5,yl.band,yl.look)<Infinity&&gapAhead(100,100,0,34,18,50,100,5,yl.band,yl.look)===Infinity,'only what is ahead in the lane is in the way');
+assert.ok(stopSpeed(60,yl.comfort)>0&&stopSpeed(0,yl.comfort)===0&&stopSpeed(-5,yl.comfort)===0);
+assert.ok(approachSpeed(100,0,yl.accel,yl.brake,0.1)>0&&approachSpeed(0,100,yl.accel,yl.brake,0.1)<100,'speed eases, it never jumps');
 assert.equal(classifyHit(100,100,0,34,18,null,traffic.kinds.car,115,100,5),'front','cars have no safe grab zone');
 const play=read('data/play-objects.json');
 assert.ok(validatePlay(play));assert.deepEqual(new Set(town.objects.filter(o=>o.type==='play').map(o=>o.kind)),new Set(PLAY_KINDS));

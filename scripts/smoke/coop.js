@@ -204,7 +204,7 @@ export const coopCommute = {
     assert('the tether kept them together (never far past the limit)', maxRatio < 1.1 && maxRatio > gs.zoomCfg.tether.soft, `max ratio ${maxRatio.toFixed(2)}`);
     assert('the tether slowed the faster one down on the way', slowed);
     assert('both stayed in view on every frame', outOfView === 0, `${outOfView} player-frames outside`);
-    assert('the camera zoomed out to keep them in view', minZoom < gs.zoomCfg.max - 0.02 && minZoom >= gs.zoomCfg.min - 1e-6, `min zoom ${minZoom.toFixed(3)}`);
+    assert('the camera zoomed out to keep them in view', minZoom < gs.zoomCfg.max - 0.02 && minZoom >= gs.rig.zoomMin - 1e-6, `min zoom ${minZoom.toFixed(3)}`);
 
     // ---- one player held (caught frame, screen): the other may go on, the tether pulls gently ----
     step(60);

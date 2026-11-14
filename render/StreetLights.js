@@ -198,7 +198,7 @@ export class StreetLights {
         }
         const c = Math.cos(t.heading), sn = Math.sin(t.heading), half = t.kcfg.length / 2;
         s.head?.move(t.x + c * (half + v.head.ahead), t.y + sn * (half + v.head.ahead)).setIntensity(v.head.intensity * k);
-        s.tail?.move(t.x - c * (half + v.tail.behind), t.y - sn * (half + v.tail.behind)).setIntensity(v.tail.intensity * k);
+        s.tail?.move(t.x - c * (half + v.tail.behind), t.y - sn * (half + v.tail.behind)).setIntensity(Math.min(1, v.tail.intensity * k * (t.braking ? v.tail.brake : 1))); // brake lights are brighter
       }
     }
     for (const p of ctx.players) {

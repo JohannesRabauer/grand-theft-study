@@ -11,15 +11,24 @@
 // 'jump' (ollie off: Style bonus), 'release', 'tired' (out of time), 'lost' (the rope snagged), 'fail' (the grip gave:
 // a comic tumble with a short slowdown, no harm), 'vehicle' (not on skates any more), 'caught', 'map'. `trick:grab`
 // { player, phase: 'start' | 'end', reason, time, score } feeds vehicles/TrickSystem.js (score: the ride counts as a trick).
+// Driving (story 17.x): a vehicle never jumps or stops dead. It eases its speed (`yield.accel`, `yield.brake`) towards what is safe:
+// the cruise speed, slower for bends (the speed profile of its route), behind a leader of its lane (the vehicle ahead on the same
+// `lane` of data/routes.json, safe distance) and before anything in its way (players, pedestrians, props, vehicles of other lanes:
+// it can always stop in time at the comfortable deceleration `yield.comfort`). Vehicles are placed on the road out of sight
+// (`yield.hideDistance` px from every player), come back where the road has taken them after a map change and are only moved
+// further along when they have been stuck for `yield.recoverAfter` s far from all players, so nobody ever sees one pop in or out.
+// A prop that stands in the lane (a cone, a crate) is shoved aside by the waiting vehicle after `yield.shoveAfter` s, sliding off the road in
+// `yield.shoveSeconds` s with a puff of dust (props only: people and animals are never touched).
+//
 // Within `armRange` of a vehicle the interact press never gets a skater off the skates (see `claims`), so the button can
 // be held early; a toast explains it once per game. Co-op: every player has its own grab state.
 import { addSensor } from '../physics/bodies.js';
 import { createGrab, inRearZone, mayStart, startGrab, stepGrab } from '../vehicles/grabLogic.js';
-import { buildRoute, easeHeading, routeAt } from '../vehicles/routeLogic.js';
-import { trafficFootprintFree, trafficStep, yieldsTo } from '../vehicles/trafficLogic.js';
+import { buildRoute, buildSpeedProfile, easeHeading, profileAt, routeAt } from '../vehicles/routeLogic.js';
+import { approachSpeed, arcAhead, followSpeed, gapAhead, stopSpeed, trafficFootprintFree } from '../vehicles/trafficLogic.js';
 
 const DEG = Math.PI / 180;
-const CULL = 96; // px around the view where a vehicle's sprite is drawn
+const CULL = 160; // px around the view where a vehicle's sprite is drawn (the zoomed-out view and its easing included)
 const ROPE = 0xe8d9a8;
 
 export class GrabTargets {
@@ -35,6 +44,9 @@ export class GrabTargets {
     this.pos = { x: 0, y: 0 };
     this.quad = new Float64Array(8);
     this.hinted = false;
+    this.clock = 0; // seconds of traffic time: vehicles of a map left behind keep driving on in it
+    this.memo = new Map(); // vehicle id -> { s, at }: where it was when its map was left
+    this.profiles = new Map(); // route def id -> speed profile
     this.gfx = scene.add.graphics().setDepth(8700); // ropes, risk bars and the zone hint
     this.drawn = false;
     const { events } = ctx;
@@ -52,15 +64,53 @@ export class GrabTargets {
     for (const r of this.routes) {
       if (r.map !== this.ctx.world.id) continue;
       const route = buildRoute(r.points, ts);
-      for (let k = 0; k < r.count; k++) this.spawn(r, route, route.total * (k / r.count + (r.phase ?? 0)), `${r.id}-${k}`);
+      for (let k = 0; k < r.count; k++) {
+        const id = `${r.id}-${k}`;
+        const m = this.memo.get(id);
+        const s0 = m ? m.s + r.speed * 0.8 * (this.clock - m.at) : route.total * (k / r.count + (r.phase ?? 0));
+        this.spawn(r, route, this.spot(r, route, s0), id, k);
+      }
     }
   }
 
   unloadMap() {
-    for (const t of this.pool) if (t.active) this.release(t);
+    for (const t of this.pool) if (t.active) { this.memo.set(t.id, { s: t.s, at: this.clock }); this.release(t); }
   }
 
-  spawn(def, route, s, id) {
+  // Is the road point at arc length `s` out of everybody's sight and clear of the lane mates? >= 0: yes (the distance to the
+  // nearest player); negative: no.
+  spotScore(def, route, s) {
+    const y = this.cfg.yield;
+    routeAt(route, s, this.pt);
+    let far = Infinity;
+    for (const p of this.ctx.players) far = Math.min(far, Math.hypot(p.x - this.pt.x, p.y - this.pt.y));
+    if (far < y.hideDistance) return -far - 1;
+    const lane = def.lane ?? def.id;
+    const kind = this.cfg.targets[def.kind];
+    for (const o of this.pool) {
+      if (!o.active || o.lane !== lane) continue;
+      const d = arcAhead(s, o.s, route.total);
+      if (Math.min(d, route.total - d) < (kind.length + o.kcfg.length) / 2 + y.spawnGap) return -1e6;
+    }
+    const heading = Math.atan2(this.pt.ty, this.pt.tx);
+    const solid = (x, z) => this.ctx.surfaces.solid(this.ctx.surfaces.at(x, z));
+    return trafficFootprintFree(this.pt.x, this.pt.y, heading, kind.length, kind.width, solid) ? far : -1e6;
+  }
+
+  // Where along the road a vehicle can appear without being seen: the wanted spot, else the next one further on that is free.
+  spot(def, route, wanted) {
+    const step = 24;
+    let best = wanted, bestScore = -Infinity;
+    for (let i = 0; i * step < route.total; i++) {
+      const s = wanted + i * step;
+      const score = this.spotScore(def, route, s);
+      if (score >= 0) return s;
+      if (score > bestScore) { bestScore = score; best = s; }
+    }
+    return best;
+  }
+
+  spawn(def, route, s, id, index) {
     const kind = this.cfg.targets[def.kind];
     let t = this.pool.find(p => !p.active && p.kind === def.kind);
     if (!t) {
@@ -69,14 +119,34 @@ export class GrabTargets {
       t = { kind: def.kind, kcfg: kind, sprite, body: addSensor(this.scene, 0, 0, kind.length, kind.width), active: false, hint: false };
       this.pool.push(t);
     } else this.scene.matter.world.add(t.body); // a released body is out of the physics world
-    Object.assign(t, { active: true, id, route, speed: def.speed, cruise: def.speed, blocked: 0, retry: 0, recoveries: 0, s, x: 0, y: 0, heading: 0, vx: 0, vy: 0 });
+    let profile = this.profiles.get(def.id);
+    if (!profile) {
+      const y = this.cfg.yield;
+      profile = buildSpeedProfile(route, y.profileStep, y.curve, y.comfort, def.speed);
+      this.profiles.set(def.id, profile);
+    }
+    Object.assign(t, { active: true, id, route, profile, lane: def.lane ?? def.id, speed: def.speed, cruise: def.speed, blocked: 0, retry: 0, recoveries: 0, braking: false, propAhead: null, propWait: 0, shove: null, s, x: 0, y: 0, heading: 0, vx: 0, vy: 0 });
     routeAt(route, s, this.pt);
     t.heading = Math.atan2(this.pt.ty, this.pt.tx);
+    t.speed = Math.min(def.speed, profileAt(profile, route, s));
+    t.sprite.setTexture(this.livery(def, index, kind));
     this.place(t);
     t.sprite.setVisible(true);
   }
 
+  // The texture of a vehicle: cars and vans come in the colours of data/grab.json `colors` (`<texture>-<n>`); the colour follows
+  // the vehicle's index on its route (the routes start at different offsets of the palette), so neighbours differ.
+  livery(def, index, kind) {
+    const list = kind.colors;
+    if (!list?.length) return kind.texture;
+    let seed = 0;
+    for (const c of def.id) seed += c.charCodeAt(0);
+    const key = `${kind.texture}-${(seed + index * 3) % list.length}`;
+    return this.scene.textures.exists(key) ? key : kind.texture;
+  }
+
   release(t) {
+    t.shove = null;
     t.active = false;
     t.sprite.setVisible(false);
     this.scene.matter.world.remove(t.body);
@@ -102,15 +172,28 @@ export class GrabTargets {
 
   update(dt) {
     const { ctx } = this;
-    const view = this.scene.cameras.main.worldView;
+    this.clock += dt;
+    const y = this.cfg.yield;
+    const cam = this.scene.cameras.main;
+    const hw = cam.width / cam.zoom / 2 + CULL; // from scroll and zoom: always current, unlike worldView
+    const hh = cam.height / cam.zoom / 2 + CULL;
+    const cx = cam.scrollX + cam.width / 2;
+    const cy = cam.scrollY + cam.height / 2;
     for (const t of this.pool) {
       if (!t.active) continue;
-      if (trafficStep(t, this.blocked(t), dt, this.cfg.yield)) this.recover(t, dt);
+      const wish = this.wish(t);
+      t.braking = wish < t.speed - 3;
+      t.speed = approachSpeed(t.speed, wish, y.accel, y.brake, dt);
+      if (t.speed < 1) t.speed = 0;
+      t.blocked = t.speed === 0 && wish < 1 ? t.blocked + dt : 0;
+      if (t.blocked >= y.recoverAfter) this.recover(t, dt);
+      if (t.propAhead && t.speed < 5) { if ((t.propWait += dt) >= y.shoveAfter && !t.shove) this.startShove(t, t.propAhead); } else if (!t.propAhead && !t.shove) t.propWait = 0;
+      if (t.shove) this.stepShove(t, dt);
       t.s += t.speed * dt;
       routeAt(t.route, t.s, this.pt);
       t.heading = easeHeading(t.heading, Math.atan2(this.pt.ty, this.pt.tx), t.kcfg.turnRate * DEG * dt);
       this.place(t);
-      const visible = t.x > view.x - CULL && t.x < view.right + CULL && t.y > view.y - CULL && t.y < view.bottom + CULL;
+      const visible = t.x > cx - hw && t.x < cx + hw && t.y > cy - hh && t.y < cy + hh;
       t.sprite.setVisible(visible);
       if (!visible) continue;
       const west = Math.cos(t.heading) < 0;
@@ -129,32 +212,94 @@ export class GrabTargets {
     this.draw();
   }
 
-  blocked(t) {
-    if (window.SCHULWEG_TESTMAPS && t.testNoYield) return false;
+  // The speed this vehicle wants right now (px/s): cruise, bends, the leader of its lane, whatever stands in its way.
+  wish(t) {
+    if (window.SCHULWEG_TESTMAPS && t.testNoYield) return t.cruise;
     const { ctx } = this;
-    for (const p of ctx.players) if (!p.grabbing && yieldsTo(t, p.x, p.y, 5, this.cfg.yield.ahead)) return true;
-    for (const n of ctx.crowd?.list ?? []) if (n.active && yieldsTo(t, n.x, n.y, 5, this.cfg.yield.ahead)) return true;
-    for (const p of ctx.props?.props ?? []) if (p.alive && yieldsTo(t, p.body.position.x, p.body.position.y, 7, this.cfg.yield.ahead)) return true;
-    for (const other of this.pool) if (other !== t && other.active && yieldsTo(t, other.x, other.y, other.kcfg.length / 2, this.cfg.yield.ahead)) return true;
-    return false;
+    const y = this.cfg.yield;
+    const L = t.kcfg.length, W = t.kcfg.width;
+    let v = Math.min(t.cruise, profileAt(t.profile, t.route, t.s + L / 2));
+    for (const o of this.pool) {
+      if (o === t || !o.active) continue;
+      if (o.lane === t.lane) { // the leader of the lane: the vehicle ahead along the road
+        const gap = arcAhead(t.s, o.s, t.route.total) - (L + o.kcfg.length) / 2;
+        if (gap < y.look + t.speed) v = Math.min(v, followSpeed(gap, o.speed, y.minGap, y.comfort));
+      } else v = Math.min(v, this.obstacle(t, o.x, o.y, o.kcfg.width / 2 + 2, L, W));
+    }
+    for (const p of ctx.players) if (!p.grabbing) v = Math.min(v, this.obstacle(t, p.x, p.y, 5, L, W));
+    for (const n of ctx.crowd?.list ?? []) if (n.active) v = Math.min(v, this.obstacle(t, n.x, n.y, 5, L, W));
+    let vp = Infinity;
+    t.propAhead = null;
+    for (const p of ctx.props?.props ?? []) {
+      if (!p.alive || p === t.shove?.p) continue;
+      const w = this.obstacle(t, p.body.position.x, p.body.position.y, 7, L, W);
+      if (w < vp) { vp = w; t.propAhead = p; }
+    }
+    if (vp >= v) t.propAhead = null; // something else holds it back more
+    return Math.min(v, vp);
   }
 
+  // The speed that still lets this vehicle stop before a circle (x, y, r) in its way; Infinity when nothing is in the way.
+  obstacle(t, x, y, r, L, W) {
+    const cfg = this.cfg.yield;
+    const gap = gapAhead(t.x, t.y, t.heading, L, W, x, y, r, cfg.band, cfg.look + t.speed * cfg.reaction);
+    return gap === Infinity ? Infinity : stopSpeed(gap - cfg.stopGap, cfg.comfort);
+  }
+
+  // The vehicle has waited long enough behind a prop in its lane: the prop is shoved sideways to the kerb on the vehicle's right (the
+  // other side only when that is blocked), clear of the hull.
+  startShove(t, prop) {
+    const y = this.cfg.yield;
+    const px = prop.body.position.x, py = prop.body.position.y;
+    const c = Math.cos(t.heading), s = Math.sin(t.heading);
+    const lat = -(px - t.x) * s + (py - t.y) * c;
+    const need = t.kcfg.width / 2 + 7 + y.band + 8; // lateral distance from the lane's centre line where it is clear of the hull
+    const solid = (x, z) => this.ctx.surfaces.solid(this.ctx.surfaces.at(x, z));
+    for (const side of [1, -1]) { // +lat is the vehicle's right (the kerb side in right-hand traffic): never across the road into the other lane
+      const move = need - side * lat;
+      const tx = px - s * side * move, ty = py + c * side * move;
+      if (move <= 0 || solid(tx, ty) || solid(px - s * side * move * 0.5, py + c * side * move * 0.5)) continue;
+      t.shove = { p: prop, x0: px, y0: py, x1: tx, y1: ty, u: 0 };
+      this.ctx.particles.emit('dust', px, py, { count: 4 });
+      return;
+    }
+    t.propWait = -y.recoverAfter; // nowhere to put it: wait, the recovery will deal with it
+  }
+
+  stepShove(t, dt) {
+    const sh = t.shove;
+    if (!sh.p.alive) { t.shove = null; return; }
+    sh.u = Math.min(1, sh.u + dt / this.cfg.yield.shoveSeconds);
+    const e = sh.u * sh.u * (3 - 2 * sh.u);
+    this.pos.x = sh.x0 + (sh.x1 - sh.x0) * e;
+    this.pos.y = sh.y0 + (sh.y1 - sh.y0) * e;
+    const { matter } = this.scene;
+    matter.body.setPosition(sh.p.body, this.pos);
+    matter.body.setVelocity(sh.p.body, { x: 0, y: 0 });
+    this.ctx.props.sync(sh.p);
+    if (sh.u >= 1) { t.shove = null; t.propWait = 0; }
+  }
+
+  // A vehicle that has been stuck for a long time (a prop in the lane) is moved on, but only where nobody can see it go or arrive.
   recover(t, dt) {
     if ((t.retry -= dt) > 0 || this.slots.some(s => s.target === t)) return;
-    t.retry = this.cfg.yield.retryEvery;
-    const solid = (x, y) => this.ctx.surfaces.solid(this.ctx.surfaces.at(x, y));
-    for (let k = 1; k <= this.cfg.yield.recoveryProbes; k++) {
-      const s = t.s + k * t.route.total / this.cfg.yield.recoveryProbes;
+    const y = this.cfg.yield;
+    t.retry = y.retryEvery;
+    const away = (x, z) => this.ctx.players.every(p => Math.hypot(p.x - x, p.y - z) >= y.hideDistance);
+    if (!away(t.x, t.y)) return;
+    const solid = (x, z) => this.ctx.surfaces.solid(this.ctx.surfaces.at(x, z));
+    for (let k = 1; k <= y.recoveryProbes; k++) {
+      const s = t.s + k * t.route.total / y.recoveryProbes;
       routeAt(t.route, s, this.pt);
       const heading = Math.atan2(this.pt.ty, this.pt.tx);
       if (!trafficFootprintFree(this.pt.x, this.pt.y, heading, t.kcfg.length, t.kcfg.width, solid)
-        || this.ctx.players.some(p => Math.hypot(p.x - this.pt.x, p.y - this.pt.y) < this.cfg.yield.recoveryDistance)
+        || !away(this.pt.x, this.pt.y)
         || this.pool.some(o => o !== t && o.active && Math.hypot(o.x - this.pt.x, o.y - this.pt.y) < 90)
         || this.ctx.props?.props.some(p => p.alive && Math.hypot(p.body.position.x - this.pt.x, p.body.position.y - this.pt.y) < 48)) continue;
       t.s = s;
       t.heading = heading;
       t.blocked = 0;
-      t.speed = t.cruise;
+      t.speed = 0;
       t.recoveries++;
       this.place(t);
       return;

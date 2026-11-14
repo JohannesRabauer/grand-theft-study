@@ -94,21 +94,26 @@ export const skateboard = {
       intent.move.x = 0;
       return { moved: Math.hypot(cone.body.position.x - cx, cone.body.position.y - cy), lifted, maskFree, touched, passed: player.x >= cx + 40 };
     };
-    const hitsBefore = count('prop:hit');
+    let coneHitCount = 0; // only this cone counts: a pedestrian bumping another prop in the wider zoomed-out view does not
+    const onConeHit = e => { if (e.prop === cone) coneHitCount++; };
+    ctx.events.on('prop:hit', onConeHit);
+    const coneHits = () => coneHitCount;
+    const hitsBefore = coneHits();
     const walk = pass(false);
-    assert('without an ollie the cone is run over (pushed)', walk.touched && !walk.maskFree && count('prop:hit') > hitsBefore, `moved ${walk.moved.toFixed(1)}px`);
+    assert('without an ollie the cone is run over (pushed)', walk.touched && !walk.maskFree && coneHits() > hitsBefore, `moved ${walk.moved.toFixed(1)}px`);
     const ollies = [];
     const onOllie = e => ollies.push(e);
     ctx.events.on('trick:ollie', onOllie);
     let bursts = 0;
     const burst = ctx.particles.surfaceBurst;
     ctx.particles.surfaceBurst = function (...a) { if (a[3] >= sk.fx.landDust) bursts++; return burst.apply(this, a); };
-    const hitsMid = count('prop:hit');
+    const hitsMid = coneHits();
     const jump = pass(true);
     ctx.events.off('trick:ollie', onOllie);
     gs.matter.world.off('collisionstart', onContact);
+    ctx.events.off('prop:hit', onConeHit);
     ctx.particles.surfaceBurst = burst;
-    assert('an ollie lifts the rider and skips the cone: not touched, no prop:hit', jump.lifted > sk.trick.ollie.height * 0.8 && jump.maskFree && !jump.touched && count('prop:hit') === hitsMid && jump.passed, `lift ${jump.lifted.toFixed(1)}px, touched ${jump.touched}`);
+    assert('an ollie lifts the rider and skips the cone: not touched, no prop:hit', jump.lifted > sk.trick.ollie.height * 0.8 && jump.maskFree && !jump.touched && coneHits() === hitsMid && jump.passed, `lift ${jump.lifted.toFixed(1)}px (need ${(sk.trick.ollie.height * 0.8).toFixed(1)}), touched ${jump.touched}, maskFree ${jump.maskFree}, passed ${jump.passed}, hits ${coneHits() - hitsMid}`);
     assert('trick:ollie fires at take-off and at landing (with airtime) for player 0', ollies.length === 2 && ollies[0].phase === 'start' && ollies[1].phase === 'end' && ollies[1].airtime > 0.25 && ollies.every(e => e.player === 0), JSON.stringify(ollies.map(e => e.phase)));
     assert('landing restores collisions and kicks up dust', (player.body.collisionFilter.mask & 0x0010) !== 0 && bursts === 1, `${bursts} bursts`);
 

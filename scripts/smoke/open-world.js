@@ -182,16 +182,32 @@ export const openWorld = {
       foot();
     }
     const car=ctx.grabs.pool.find(t=>t.kind==='car');
-    // Place a prop just ahead of its hull; traffic waits and recovers on its own circuit.
+    // Place a prop in its lane ahead of its hull: the vehicle brakes smoothly, stops before the prop, shoves it off the road after a
+    // moment and drives on; a vehicle stuck for good is only moved on out of everybody's sight (story 17.x).
     const obstacle=ctx.props.props[0], old={...obstacle.body.position};
-    const front=car.kcfg.length/2+20;
+    const front=car.kcfg.length/2+60;
     gs.matter.body.setPosition(obstacle.body,{x:car.x+Math.cos(car.heading)*front,y:car.y+Math.sin(car.heading)*front});
-    const rec0=car.recoveries;
-    assert('an obstacle in the lane makes traffic yield',ctx.grabs.blocked(car));
+    const rec0=car.recoveries, yy=ctx.grabs.cfg.yield;
+    car.speed=car.cruise;
+    const v0=car.speed;
+    assert('an obstacle in the lane makes traffic slow down',ctx.grabs.wish(car)<car.cruise);
     ctx.grabs.update(1/60);
-    assert('yielding traffic actually stops, without applying a physical force',car.speed===0&&car.vx===0&&car.vy===0);
-    for(let i=0;i<240&&car.recoveries===rec0;i++)ctx.grabs.update(1/60);
-    assert('blocked traffic recovers within the bounded three-second timeout and 16 probes',car.recoveries>rec0&&ctx.grabs.pool.length<=ctx.grabs.cfg.maxTargets);
+    assert('traffic brakes smoothly instead of stopping dead',car.speed>0&&car.speed<v0&&v0-car.speed<=yy.brake/60+1e-6);
+    for(let i=0;i<400&&!car.shove;i++)ctx.grabs.update(1/60);
+    const gapToProp=Math.hypot(obstacle.body.position.x-car.x,obstacle.body.position.y-car.y)-car.kcfg.length/2;
+    assert('the vehicle stands before the obstacle without applying a physical force, then shoves it aside',car.shove&&car.speed===0&&car.vx===0&&car.vy===0&&gapToProp>0,`gap ${gapToProp}`);
+    for(let i=0;i<120&&car.shove;i++)ctx.grabs.update(1/60);
+    const lateral=Math.abs(-(obstacle.body.position.x-car.x)*Math.sin(car.heading)+(obstacle.body.position.y-car.y)*Math.cos(car.heading));
+    assert('the prop ends up off the lane',!car.shove&&lateral>=car.kcfg.width/2+7+yy.band);
+    for(let i=0;i<180;i++)ctx.grabs.update(1/60);
+    assert('and the vehicle drives on without a recovery jump',car.speed>0&&car.recoveries===rec0);
+    car.blocked=yy.recoverAfter;car.retry=0;
+    ctx.grabs.recover(car,0);
+    assert('a vehicle that somebody can see is never moved on',car.recoveries===rec0);
+    for(const p of ctx.players)p.teleport(40,40);
+    car.retry=0;
+    ctx.grabs.recover(car,0);
+    assert('a vehicle stuck far from every player is moved on, bounded by the recovery probes',car.recoveries>rec0&&ctx.grabs.pool.length<=ctx.grabs.cfg.maxTargets);
     gs.matter.body.setPosition(obstacle.body,old);
     // Saved carried object -> actual menu Continue during morning, with no origin clone or preparation bypass.
     foot();

@@ -43,7 +43,7 @@
   "vehicles": {
     "darkness": 0.12, "reserve": 10,
     "head": { "radius": 32, "ahead": 12, "color": "#fff1c8", "intensity": 0.9 },
-    "tail": { "radius": 15, "behind": 2, "color": "#ff5a46", "intensity": 0.75 },
+    "tail": { "radius": 15, "behind": 2, "color": "#ff5a46", "intensity": 0.75, "brake": 1.35 },
     "bike": { "radius": 36, "ahead": 14, "color": "#fff1c8", "intensity": 0.85 }
   },
   "shadows": {
